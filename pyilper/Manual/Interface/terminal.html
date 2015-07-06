@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+  <title>Terminal Tab</title>
+</head>
+
+<body bgcolor="#FFF677" link="#008F00">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr bgcolor="#FFF000">
+      <th valign="middle" align="left" width="1%"><a href=
+      "../index.html"><img src=
+      "../Images/hpil.png" alt="Home" border="0"></a></th>
+
+      <td valign="middle" align="left" width="98%">
+        <h1><a name="Top">Terminal Tab</a></h1>
+      </td>
+
+      <td valign="middle" align="right" width="1%"><nobr><a href=
+      "../index.html">pyILPER Manual</a> &#187; <a href=
+      "index.html">User Interface</a></nobr></td>
+    </tr>
+  </table>
+
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td valign="middle" align="left" width="99%">
+
+        <h2>Description</h2>
+        <p>This virtual HP-IL device emulates a terminal (display and
+        keyboard).<p>
+
+        <p>HP-IL configuration:</p>
+
+        <table border="1">
+        <tr><td>Accessory ID</td><td>0x3E</td></tr>
+        <tr><td>Default Address</td><td>8</td></tr>
+        <tr><td>Device ID</td><td>PILTERM</td></tr>
+        </table>
+      
+        <p>The display supports the display escape sequences which are 
+        specified on page 328 of the HP-71B reference manual with the following
+        exceptions:</p>
+        <blockquote>
+        <ul>
+        <li>ESC Ctrl C: move cursor far right is not supported</li>
+        <li>ESC Ctrl D: move cursor far left is not supported</li>
+        <li>ESC Q, ESC R, ESC N: the cursor always shows a block shape</li>
+        </ul>
+        </blockquote>
+        <p>The keyboard is supported by the HP-71B with the <i>keyboard</i> lex
+        file and the <i>pilterm</i> basic program (see below) installed. 
+        <b>Due to technical limitations of the PIL-Box the emulation of the
+        keyboard does not work reliable!</b></p>
+
+        <p>To use the keyboard emulator you have to install the
+        <i>keyboard</i> lex and the <i>pilterm</i> basic program first. 
+        Both files are provided in the LIF disk image file 
+        <i>PILIMAGE.DAT</i>.<p>
+
+        <p>Copy the image file to a local directory and select it as LIF
+        image file for a virtual drive. Start pyILPER and copy both
+        files to the HP-71B. Then run <i>pililper</i>. If the display resets
+        click into terminal window. Now you can enter characters that 
+        are sent to the HP-71B as keyboard input.</p>
+
+        <p><b>Type slow!</b> The keyboard may hang from time to time. 
+        To reset the keyboard simply run <i>pilterm</i> again.</p>
+        <p>The keyboard emulator uses the following function key mapping:</p>
+
+        <table border="1">
+        <tr><th>PC keyboard</th><th>HP-71 key</th></tr>
+        <tr><td>Up</td><td>Up</td></tr>
+        <tr><td>Down</td><td>Down</td></tr>
+        <tr><td>Left</td><td>Left</td></tr>
+        <tr><td>Right</td><td>Right</td></tr>
+        <tr><td>Back</td><td>BACK</td></tr>
+        <tr><td>Page Up</td><td>Jump Begin</td></tr>
+        <tr><td>Page Down</td><td>Jump End</td></tr>
+        <tr><td>Home</td><td>Cursor to begin of line</td></tr>
+        <tr><td>End</td><td>Cursor to end of line</td></tr>
+        <tr><td>Insert</td><td>Inset</td></tr>
+        <tr><td>Delete</td><td>-Char</td></tr>
+        <tr><td>F1</td><td>Attn</td></tr>
+        <tr><td>F2</td><td>Run</td></tr>
+        <tr><td>F3</td><td>Cmds</td></tr>
+        <tr><td>F4</td><td>Sst</td></tr>
+        <tr><td>F5</td><td>Del Line</td></tr>
+        <tr><td>F6</td><td>LC</td></tr>
+        </table>
+
+        <P>A status indicator below the terminal window indicates wheter
+        the cursor is in insert or replace mode.</p>
+
+        <P>To enter a numeric character value hold down the <i>ALT</i>
+        key and enter a 3 digit numeric value (000 - 127).</p>
+      </td>
+    </tr>
+
+    <tr>
+      <td valign="middle" align="left" width="99%">
+
+        <h2>Controls</h2>
+        <p>The terminal tab provides the following controls:</b>
+        <ul>
+        <li>Termina active: If checked then the virtual HP-IL terminal
+        device is available on the loop. Please mind to reconfigure
+        the loop each time this box is checked or unchecked.</li>
+        <li>
+        <li>Charcter set: select the character set that is emulated.
+        You may choose between HP-41 character set (alternate character set
+        of the HP82162 thermal printer), HP-71 character set and the
+        Roman-8 character set. The characters are converted to unicode
+        and displayed in the terminal window. For the HP-71 and the
+        HP-41 character numbers above are displayed inverse and the character
+        number two is displayed without overbar.
+        </li>
+        <li>Terminal geometry: You may choose the following terminal
+        geometries: 80x24, 80x40, 132x24.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td valign="middle" align="left" width="99%">
+
+        <h2>PILTERM Basic Program for the HP-71B</h2>
+        <pre>
+ 10 IF POS(VER$,"KBD:")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE" @ END 
+ 20 RESET ESCAPE
+ 30 RESET HPIL @ RESTORE IO @ CLEAR @ KEYBOARD IS :DEVADDR("PILTERM")
+ 40 DISPLAY IS :DEVADDR("PILTERM")
+ 50 CFLAG -23
+ 60 ESCAPE 'A',50 @ ESCAPE 'B',47 @ ESCAPE 'C',48 @ ESCAPE 'D',51
+ 70 ESCAPE 'E',159 @ ESCAPE 'F',160 @ ESCAPE 'G',104 @ ESCAPE 'H',105 @ ESCAPE 'I',107
+ 80 ESCAPE 'J',162 @ ESCAPE 'K',163 @ ESCAPE 'L',43 @ ESCAPE 'M',46 @ ESCAPE 'N',150
+ 90 ESCAPE 'O',106 @ ESCAPE 'P',102 @ ESCAPE 'Q',103 @ ESCAPE 'R',38
+
+        </pre>
+      </td>
+    </tr>
+  </table><br>
+
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr bgcolor="#FFF000">
+      <td valign="center" align="center"><a href=
+      "scope.html"><font color=
+      "#66A000"><b>Scope Tab</b></font></a> :: 
+       <a href="drive.html">Drive Tabs</a> :: 
+       <a href="printer.html">Printer Tab</a> :: 
+       <a href="terminal.html">Terminal Tab</a></td>
+    </tr>
+  </table>
+</body>
+</html>

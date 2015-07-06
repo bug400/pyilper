@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+  <title>Drive Tabs</title>
+</head>
+
+<body bgcolor="#FFF677" link="#008F00">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr bgcolor="#FFF000">
+      <th valign="middle" align="left" width="1%"><a href=
+      "../index.html"><img src=
+      "../Images/hpil.png" alt="Home" border="0"></a></th>
+
+      <td valign="middle" align="left" width="98%">
+        <h1><a name="Top">Drive Tabs</a></h1>
+      </td>
+
+      <td valign="middle" align="right" width="1%"><nobr><a href=
+      "../index.html">pyILPER Manual</a> &#187; <a href=
+      "index.html">User Interface</a></nobr></td>
+    </tr>
+  </table>
+
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td valign="middle" align="left" width="99%">
+        <h2>Description</h2>
+        <p>This virtual emulates either a HP82161A cassette drive, a 
+        HP9114B disk drive or a virtual HDRIVE1 device to process
+        files on a LIF image file.</p>
+
+        <p>The directory listing of the current LIF image file is shown on the
+        tab. The listing is updated after write operations if the loop is idle
+        for 3 seconds. The column headers can be checked to obtain a 
+        sorted list of the directory.</p>
+
+        <p>The virtual devices have the following HP-IL configuration:</p>
+
+        <table border="1">
+        <tr><th>Device</td><th>Accessory ID</th><th>Default Address</th><th>Device ID</th></tr>
+        <tr><td>HP82161A</td><td>0x10</td><td>0x02</td><td>&nbsp;</td></tr>
+        <tr><td>HP9114B</td><td>0x10</td><td>0x02</td><td>HP9114B</td></tr>
+        <tr><td>HDRIVE1</td><td>0x10</td><td>0x02</td><td>HDRIVE1</td></tr>
+        </table>
+
+        <p>Use the HDRIVE1 drive type to work with LIF file images that can
+        be downloaded from the internet. Use the HP9114B drive type if you
+        use software that requires compatibility with that device. Use the
+        HP82161A drive type if you like to use the virtual drive with the
+        HP-41.</p>
+        
+        <p>The following LIF file layouts are supported:</p>
+        <table border="1">
+        <tr><th>Layout</th><th>Tracks</th><th>Sides</th><th>Sectors</th><th>Capacity</th></tr>
+        <tr><td>128KB Cassette</td><td>2</td><td>1</td><td>256</td><td>131.072 Bytes</tr>
+        <tr><td>616KB Disk</td><td>77</td><td>2</td><td>16</td><td>630.784 Bytes</tr>
+        <tr><td>640 KB Disk</td><td>80</td><td>2</td><td>16</td><td>655.360 Bytes</tr>
+        </table>
+
+        <p>Note: the HP-41 can only access the first 130 kbyes of
+        larger disk media.</p>
+
+        <p>The Lif file layouts are compatible with the following emulated drive 
+        types.</p>
+
+        <table border ="1">
+        <tr><td>&nbsp;</td><td>HP82161A</td><td>HP9114A</td><td>HDRIVE1</td></tr>
+        <tr><td>128KB Cassette</td><td>+</td><td>-</td><td>-</td></tr>
+        <tr><td>616KB Disk</td><td>-</td><td>+</td><td>-</td></tr>
+        <tr><td>640KB Disk</td><td>+</td><td>+</td><td>+</td></tr>
+        </table>
+
+        <p>Note: PyILPER requires a valid lif header containig:</p>
+        <p>
+        <ul>
+        <li>The LIF identifier 0x800 at offset 0</li>
+        <li>The LIF Version number 0x01 at offset 20</li>
+        <li>The media size information (number of tracks per surface,
+        number of surfaces, number of blocks per track) starting at offset 24</li>
+        </ul>
+        </p>
+        <p>If a LIF image medium is initialized pyILPER fixes missing 
+        header information.</p>
+      </td>
+    </tr>
+
+    <tr>
+      <td valign="middle" align="left" width="99%">
+        <h2>Controls</h2>
+       <p>The drive tab has the following controls:</p>
+        <blockquote>
+        <ul>
+        <li>LIF image file: Select disk file that contains the image
+        of a LIF file. If a non existing file was specified the medium
+        must be initialized by the controller. Note the file is only
+        opened by pyILPER if read or write operations occur. The layout
+        of the LIF image file must match the emulated drive. See the
+        compatibility matrix above.
+        </li>
+        
+        <li>Drive active: If checked, the virtual HP-IL drive is
+        available and can be used as HP-IL device. The HP-IL loop must 
+        always be reconfigured if this box was checked or unchecked.
+        </li>
+
+        <li>Drive type: Choose the proper drive type that should be
+        emulated (see above). Note that the LIF image file must be
+        reopened, whe the drive type was changed.
+        </li>
+        </ul>
+        </blockquote>
+
+      </td>
+    </tr>
+  </table><br>
+
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr bgcolor="#FFF000">
+      <td valign="center" align="center"><a href=
+      "scope.html"><font color=
+      "#66A000"><b>Scope Tab</b></font></a> :: 
+      <a href="drive.html">Drive Tabs</a> :: 
+       <a href="printer.html">Printer Tab</a> :: 
+       <a href="terminal.html">Terminal Tab</a></td>
+    </tr>
+  </table>
+</body>
+</html>

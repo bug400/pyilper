@@ -1,0 +1,31 @@
+pyilper (1.2-1ubuntu1) trusty; urgency=medium
+
+  * support for virtual HP-IL over TCP/IP
+    pyilpermain.py, pilwidtets.py, piltcpipthread.py, piltcpip.py
+  * new configuration window
+    pyilpermain.py, pilwidgets.py
+
+ -- trusty <trusty@localhost>  Mon, 08 Jun 2015 08:11:03 +0200
+
+pyilper (1.2-0ubuntu1) trusty; urgency=medium
+
+  * gui completely rewritten:
+    __init__.py, pyilpermain.py, pilwidgets.py, pilqterm.py, lifutils.py
+  * pildrive.py: getMediumInfo removed
+  * charset conversion HP-71 to unicode
+  * various fixes in libqterm.py
+
+ -- trusty <trusty@localhost>  Wed, 20 May 2015 11:54:12 +0200
+
+pyilper (1.1-1ubuntu1) trusty; urgency=medium
+
+  * corrected file length in lifutils.py
+  * new LIF directory widget
+
+ -- trusty <trusty@localhost>  Sat, 09 May 2015 17:57:47 +0200
+
+pyilper (1.1-0ubuntu1) trusty; urgency=low
+
+  *  New release. 
+
+ -- precise <precise@slatibartfass.fritz.box>  Sun, 18 Nov 2012 08:35:08 +0100

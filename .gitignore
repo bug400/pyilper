@@ -1,0 +1,11 @@
+/debian/pyilper.debhelper*
+/debian/pyilper.substvars
+/debian/files
+/debian/pyilper/
+/build/
+/p
+/__pycache__/
+/pyilper.egg-info/
+*.pyc
+*.swp
+*~

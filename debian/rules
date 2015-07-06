@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with-python3
+
+override_dh_auto_build:
+	python3 setup.py build; 
+
+#override_dh_auto_test:
+#       echo xx
+
+override_dh_auto_install:
+	python3 setup.py install --skip-build --root debian/pyilper \
+	     --install-layout deb; 
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build
+	rm -rf pyilper.egg-info
+
+
