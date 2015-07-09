@@ -45,7 +45,7 @@ Features
 * Log of scope or virtual printer output to file(s)
 * HP-IL device status
 * Support for the PIL-Box via serial-over-usb interface
-* Experimental support for [virtual HP-IL over TCP-IP](http://http://hp.giesselink.com/hpil.htm)
+* Experimental support for [virtual HP-IL over TCP/IP](http://http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
 
 
 Compatibility
