@@ -9,6 +9,7 @@ Index
 * [Description](#description)
 * [Features](#features)
 * [Compatibility](#compatibility)
+* [Installation] (#installation)
 * [License](#license)
 * [Acknowledgements](#acknowledgements)
 
@@ -54,10 +55,18 @@ Compatibility
 pyILPER has been success tested with LINUX and Windows 7. It should work
 with Mac OS/X but has not been tested up to now.
 
+
+Installation 
+------------
+
+See the INSTALL file.
+
+
 License
 -------
 
-pyILPER is under th GNU General Public License v3.0 License (see LICENSE file).
+pyILPER is published under th GNU General Public License v3.0 License 
+(see LICENSE file).
 
 
 Acknowledgements
@@ -69,7 +78,3 @@ The Terminal emulator widget was taken from pyqterm console widget
 by Henning Schroeder.
 
 
-Install pyILPER
----------------
-
-See the INSTALL file.
