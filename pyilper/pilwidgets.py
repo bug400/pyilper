@@ -1119,10 +1119,10 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.hboxbaud.addStretch(1)
       self.vboxgbox.addLayout(self.hboxbaud)
 #
-#     section TCP-IP communication
+#     section TCP/IP communication
 #
       self.radbutTCPIP = QtGui.QRadioButton(self.gbox)
-      self.radbutTCPIP.setText("TCP-IP (experimental)")
+      self.radbutTCPIP.setText("TCP/IP (experimental)")
       self.radbutTCPIP.clicked.connect(self.setCheckBoxes)
       self.vboxgbox.addWidget(self.radbutTCPIP)
 #

@@ -18,7 +18,7 @@ menu. Ohterwise open a console and type:
 pyilper
 
 The program will not initialize unless you set up the proper tty device.
-Execute "Serial Interface" from the file menu. Select the proper tty 
+Execute "pyILPER configuration" from the file menu. Select the proper tty 
 device. 
 
 Now the application should show "Connected to PIL-Box". If not check the
@@ -72,7 +72,7 @@ Open a console (as Administrator) and type:
 pyilper
 
 The program will not initialize unless you set up the proper COM port.
-Execute "Serial Interface" from the file menu. Enter the proper
+Execute "pyILPER configuration" from the file menu. Enter the proper
 COM port. The device list in the combo box only shows COM1 - COM4, but you
 can enter the names of other COM ports. Do not append the ":" character.
 
