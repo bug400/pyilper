@@ -134,9 +134,13 @@ class cls_piltcpip(object):
          self.__inconn__.shutdown(socket.SHUT_RD)
          self.__inconn__.close()
          self.__inconn__= None
-      self.__insocket__.shutdown(socket.SHUT_RD)
-      self.__insocket__.close()
-      self.__insocket__= None
+      if self.__insocket__ is not None:
+         try:
+            self.__insocket__.shutdown(socket.SHUT_RD)
+         except OSError:
+            pass
+         self.__insocket__.close()
+         self.__insocket__= None
       if self.__outconnected__:
          self.__outsocket__.shutdown(socket.SHUT_WR)
          self.__outsocket__.close()
