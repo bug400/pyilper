@@ -34,13 +34,16 @@
 # - not implemeted: set/get AID, ID$
 #
 # 30.05.2015 fixed error in handling AP, added getstatus
+#
+# 06.10.2015 js:
+# - class statement syntax updates
 
 
 import queue
 import threading
 import time
 
-class cls_terminal(object):
+class cls_terminal:
 
    def __init__(self):
 

@@ -22,9 +22,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
+# pyILPER widget classes ----------------------------------------------------
+#
+# Changelog
+# 24.09.2015 cg
+# - fixed loading file in cls_HelpWindow() when file path contain special characters
+# - fixed name in cls_AboutWindow() text
+# - fixed some errors at error condition
+# - expanded LIF filename filter with *.lif and *.LIF extention
+
+# 05.10.2015 jsi: 
+# - new style signal/slot handling for quit, crash and show_message
+# - new style signal/slot handling for bottonBox widget
+# - adjust super statements to python3+ syntax
+# - removed unusable code to resize main window
 #
 import os
-from urllib.request import pathname2url
 import glob
 import datetime
 import time
@@ -38,6 +51,7 @@ from .pilprinter import cls_printer
 from .pilterminal import cls_terminal
 from .pildrive import cls_drive
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
+from .pilconfig import PilConfigError
 #
 # Constants
 #
@@ -59,7 +73,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
          self.log.write("\nBegin log "+self.filename+" at ")
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
          self.log.write("\n")
-      except OSError:
+      except OSError as e:
          reply=QtGui.QMessageBox.critical(self,'Error',"Cannot open log file: "+ e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
 
    def logClose(self):
@@ -69,7 +83,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
          self.log.write("\n")
          self.log.close()
          self.log= None
-      except OSError:
+      except OSError as e:
          reply=QtGui.QMessageBox.critical(self,'Error',"Cannot close log file: "+ e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
 
    def logWrite(self,line):
@@ -77,7 +91,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
          return
       try:
          self.log.write(line)
-      except OSError:
+      except OSError as e:
          reply=QtGui.QMessageBox.critical(self,'Error',"Cannot write to log file: "+ e.strerror+". Logging disabled",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          try:
             self.log.close()
@@ -280,7 +294,7 @@ class cls_tabscope(cls_tabtermgeneric):
 #
    def out_scope(self,s):
       self.scope_charpos+=len(s)
-      if(self.scope_charpos>self.cols):
+      if self.scope_charpos>self.cols :
          self.hpterm.putchar("\x0D")
          self.hpterm.putchar("\x0A")
          self.cbLogging.logWrite("\n")
@@ -356,6 +370,7 @@ class cls_tabterminal(cls_tabtermgeneric):
       self.comboRes.activated[str].connect(self.do_changeRes)
       self.comboRes.setCurrentIndex(self.comboRes.findText(self.termsize))
       self.comboRes.setEnabled(False)
+      self.do_changeRes(self.termsize)
 #
 #     enable/disable
 #
@@ -403,18 +418,11 @@ class cls_tabterminal(cls_tabtermgeneric):
 #
       self.width= self.font_width*self.cols
       self.height= int(self.font_height* self.rows)
+      self.qterminal.hide()
       self.qterminal.setSize(self.width,self.height)
       self.hpterm.set_size(self.cols,self.rows)
       self.hpterm.refresh()
-#
-#     Resize Main Window (the hard way)
-#
-#     self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-      h=self.parent.ui.height()
-      w=self.parent.ui.width()
-      n_h= h + int(d_rows* self.font_height)
-      n_w= w + int(d_cols* self.font_width)
-      self.parent.ui.resize(n_w,n_h)
+      self.qterminal.show()
 #
 class cls_tabdrive(cls_tabgeneric):
 
@@ -554,7 +562,7 @@ class cls_tabdrive(cls_tabgeneric):
          try:
             self.parent.config.save()
          except PilConfigError as e:
-            reply=QtGui.QMessageBox.critical(parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
@@ -615,7 +623,7 @@ class cls_tabdrive(cls_tabgeneric):
       try:
          self.parent.config.save()
       except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       self.parent.resume_pil_loop()
 
    def do_drivetypeChanged(self):
@@ -641,7 +649,7 @@ class cls_tabdrive(cls_tabgeneric):
       try:
          self.parent.config.save()
       except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       self.parent.resume_pil_loop()
 
 #
@@ -671,12 +679,12 @@ class cls_tabdrive(cls_tabgeneric):
       dialog.setWindowTitle("Select LIF Image File")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-      dialog.setNameFilters( ["LIF Image File (*.dat *.DAT)", "All Files (*.*)"] )
+      dialog.setNameFilters( ["LIF Image File (*.dat *.DAT *.lif *.LIF)", "All Files (*.*)"] )
 #     this does not work if filemod= anyfile
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       dialog.setDirectory(os.path.expanduser('~'))
       if dialog.exec():
-         return(dialog.selectedFiles())
+         return dialog.selectedFiles() 
 #
 #  Check lif image file, returns status, tracks, surfaces, blocks 
 #  If valid LIF1 medium and medium is compatible to device:
@@ -719,7 +727,7 @@ class cls_tabdrive(cls_tabgeneric):
          else:
             fd= os.open(filename,os.O_RDONLY)
          b=os.read(fd,256)
-      except OSError as e:
+      except OSError:
          return [1,0,0,0]   # file does not exist or cannot be opened
       if len(b) < 256:
          return [2,0,0,0]   # not lif type 1 file
@@ -737,7 +745,7 @@ class cls_tabdrive(cls_tabgeneric):
       tracks= getLifInt(b,24,4)
       surfaces= getLifInt(b,28,4)
       blocks= getLifInt(b,32,4)
-      if((tracks == surfaces) and (surfaces == blocks)):
+      if (tracks == surfaces) and (surfaces == blocks) :
          return [3,0,0,0] # no valid media layout information
       return [0, tracks, surfaces, blocks]
 
@@ -774,13 +782,13 @@ class TableModel(QtGui.QStandardItemModel):
 
     def sort(self, column, order):
          self._sort_order = order
-         QtGui.QStandardItemModel.sort(self, column, order)
+         super().sort(column, order)
 
 class cls_LifDirWidget(QtGui.QWidget):
 
 
     def __init__(self,parent,rows):
-        QtGui.QWidget.__init__(self,parent)
+        super().__init__(parent)
         self.__table__ = QtGui.QTableView(self)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
 #
@@ -842,7 +850,7 @@ class cls_LifDirWidget(QtGui.QWidget):
         self.__labelDir__.setText("")
         if self.__rowcount__==0:
            return
-        self.__model__.removeRows(0, self.__rowcount__);
+        self.__model__.removeRows(0, self.__rowcount__)
         self.__rowcount__=0
         return
 
@@ -912,15 +920,14 @@ class cls_HelpWindow(QtGui.QDialog):
 
    def __init__(self,parent=None):
       docpath=os.path.join(os.path.dirname(pyilper.__file__),"Manual","index.html")
-      QtGui.QDialog.__init__(self,None)
+      super().__init__()
       self.setWindowTitle('pyILPER Help')
  
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtWebKit.QWebView()
       self.view.setFixedWidth(600)
-      self.url='file:{}'.format(pathname2url(docpath))
-      self.view.load(QtCore.QUrl(self.url))
+      self.view.load(QtCore.QUrl.fromLocalFile(docpath))
       self.button = QtGui.QPushButton('OK')
       self.button.setFixedWidth(60)
       self.button.clicked.connect(self.do_exit)
@@ -937,14 +944,14 @@ class cls_HelpWindow(QtGui.QDialog):
 class cls_AboutWindow(QtGui.QDialog):
 
    def __init__(self,version):
-      QtGui.QDialog.__init__(self,None)
+      super().__init__()
       self.setWindowTitle('pyILPER About ...')
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtGui.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
-      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gißelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015 Joachim Siebold\n\nGNU General Public License Version 2\n")
+      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015 Joachim Siebold\n\nGNU General Public License Version 2\n")
 
       self.button = QtGui.QPushButton('OK')
       self.button.setFixedWidth(60)
@@ -964,7 +971,7 @@ class cls_AboutWindow(QtGui.QDialog):
 class cls_TtyWindow(QtGui.QDialog):
 
    def __init__(self, parent=None):
-      super(QtGui.QDialog,self).__init__()
+      super().__init__()
 
       self.win = QtGui.QWidget()
       self.win.setWindowTitle("Select serial device")
@@ -1013,8 +1020,8 @@ class cls_TtyWindow(QtGui.QDialog):
       self.buttonBox = QtGui.QDialogButtonBox()
       self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
-      self.connect(self.buttonBox,QtCore.SIGNAL('accepted()'), self.do_ok)
-      self.connect(self.buttonBox,QtCore.SIGNAL('rejected()'), self.do_cancel)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.rejected.connect(self.do_cancel)
       self.vlayout.addWidget(self.label)
       self.vlayout.addWidget(self.__ComboBox__)
       self.hlayout = QtGui.QHBoxLayout()
@@ -1054,7 +1061,7 @@ class cls_TtyWindow(QtGui.QDialog):
 class cls_PilConfigWindow(QtGui.QDialog):
 
    def __init__(self, mode,tty, baudrate,port,remotehost,remoteport,workdir):
-      super(QtGui.QDialog,self).__init__()
+      super().__init__()
       self.__mode__= mode
       self.__tty__= tty
       self.__baudrate__=baudrate
@@ -1186,8 +1193,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.buttonBox = QtGui.QDialogButtonBox()
       self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
-      self.connect(self.buttonBox,QtCore.SIGNAL('accepted()'), self.do_ok)
-      self.connect(self.buttonBox,QtCore.SIGNAL('rejected()'), self.do_cancel)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.rejected.connect(self.do_cancel)
       self.hlayout = QtGui.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBox)
       self.vbox0.addLayout(self.hlayout)
@@ -1222,7 +1229,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       dialog.setFileMode(QtGui.QFileDialog.DirectoryOnly)
       dialog.setDirectory(os.path.expanduser('~'))
       if dialog.exec():
-         return(dialog.selectedFiles())
+         return dialog.selectedFiles() 
 
    def do_config_Workdir(self):
       flist=self.getWorkDirName()
@@ -1264,7 +1271,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
 class cls_TabConfigWindow(QtGui.QDialog):
 
    def __init__(self, config):
-      super(QtGui.QDialog,self).__init__()
+      super().__init__()
       self.__config__= config
 
       self.win = QtGui.QWidget()
@@ -1307,8 +1314,8 @@ class cls_TabConfigWindow(QtGui.QDialog):
       self.buttonBox = QtGui.QDialogButtonBox()
       self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
-      self.connect(self.buttonBox,QtCore.SIGNAL('accepted()'), self.do_ok)
-      self.connect(self.buttonBox,QtCore.SIGNAL('rejected()'), self.do_cancel)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.rejected.connect(self.do_cancel)
       self.hlayout = QtGui.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBox)
       self.vlayout.addWidget(self.buttonBox)
@@ -1345,7 +1352,7 @@ class cls_TabConfigWindow(QtGui.QDialog):
 class cls_DevStatusWindow(QtGui.QDialog):
 
    def __init__(self,parent):
-      super(QtGui.QDialog,self).__init__()
+      super().__init__()
       self.parent=parent
       self.setWindowTitle('HP-IL device status')
       self.vlayout = QtGui.QVBoxLayout()
@@ -1444,7 +1451,7 @@ class cls_DevStatusWindow(QtGui.QDialog):
 #
 class cls_PilMessageBox(QtGui.QMessageBox):
    def __init__(self):
-      QtGui.QMessageBox.__init__(self)
+      super().__init__()
       self.setSizeGripEnabled(True)
 
    def event(self, e):
@@ -1470,9 +1477,16 @@ class cls_PilMessageBox(QtGui.QMessageBox):
 #
 class cls_ui(QtGui.QMainWindow):
 
-   def __init__(self,version,width,height):
-      super(cls_ui, self).__init__()
+   def __init__(self,parent,version,width,height):
+      super().__init__()
       self.setWindowTitle("pyILPER "+version)
+#
+#     signals
+#
+      self.sig_crash= parent.sig_crash
+      self.sig_quit= parent.sig_quit
+      self.sig_show_message= parent.sig_show_message
+
 #
 #     Menu
 #
@@ -1516,15 +1530,15 @@ class cls_ui(QtGui.QMainWindow):
 #  queued emit of the signal to update the message text
 #
    def emit_message(self,s):
-      self.emit(QtCore.SIGNAL("sigmessage(PyQt_PyObject)"),s)
+      self.sig_show_message.emit(s)
 #
 #  queued emit of the signal to indicate crash
 #
    def emit_crash(self):
-      self.emit(QtCore.SIGNAL("sigcrash(PyQt_PyObject)"),0)
+      self.sig_crash.emit()
 #
 #  catch close event
 #
    def closeEvent(self,evnt):
       evnt.accept()
-      self.emit(QtCore.SIGNAL("sigquit(PyQt_PyObject)"),0)
+      self.sig_quit.emit()

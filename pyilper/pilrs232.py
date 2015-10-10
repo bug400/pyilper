@@ -26,8 +26,10 @@
 #
 # Changelog
 # 
-# 07.06.2014 baudrate support
-
+# 07.06.2014 jsi:
+# - baudrate support
+# 06.10.2015 jsi:
+# - class statement syntax update
 #
 import serial,time
 
@@ -39,7 +41,7 @@ class Rs232Error(Exception):
       return repr(self.value)
 
 
-class cls_rs232(object):
+class cls_rs232:
  
    def __init__(self,parent=None):
       self.__device__= None

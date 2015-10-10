@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+﻿#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # pyILPER 1.2.1 for Linux
 #
@@ -28,26 +28,31 @@
 #
 # Changelog
 #
+# 24.09.2015 cg
+# - added real IPv4/IPv6 dual stack mode
+# - reconnecting server and client work now
+# - broken loop don't crash connection any more
+# - removed some unused class variables
+# 05.10.2015 jsi
+# - class statement syntax update
 
 import time
 import select
 import socket
 import threading
 
-
 class TcpIpError(Exception):
    def __init__(self,msg,add_msg=None):
-      self.msg=msg;
-      self.add_msg= add_msg
+      self.msg = msg
+      self.add_msg = add_msg
 
-
-class cls_piltcpip(object):
+class cls_piltcpip:
 
    def __init__(self,port,remotehost,remoteport):
       self.__port__=port       # port for input connection
       self.__remotehost__=remotehost     # host for output connection
       self.__remoteport__=remoteport     # port for output connection
-   
+
       self.__running__ = False     # Connected to Network
       self.__srq__= False          # PIL-Box SRQ State
       self.__devices__ = []        # list of virtual devices
@@ -56,52 +61,51 @@ class cls_piltcpip(object):
       self.__timestamp__= time.time()   # time of last activity
       self.__timestamp_lock__= threading.Lock()
 
-      self.__inconn__= None
-      self.__outconn__= None
-      self.__inaddr__= None
-      self.__outaddr__= None
-      self.__insocket__= None
+      self.__serverlist__ = []
+      self.__clientlist__= []
       self.__outsocket__= None
-      self.__readlist__= []
       self.__outconnected__= False
 
    def isConnected(self):
-      return(self.__outconnected__)
+      return self.__outconnected__
 
    def gettimestamp(self):
       self.__timestamp_lock__.acquire()
       t= self.__timestamp__
       self.__timestamp_lock__.release()
       return t
+
 #
 #  Connect to Network
 #
    def open(self):
 #
 #     open network connections
-# 
+#
       host= None
-      self.__insocket__= None
+      self.__serverlist__.clear()
+      self.__clientlist__.clear()
       for res in socket.getaddrinfo(host, self.__port__, socket.AF_UNSPEC,
                               socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
          af, socktype, proto, canonname, sa = res
          try:
-            self.__insocket__ = socket.socket(af, socktype, proto)
+            s = socket.socket(af, socktype, proto)
          except OSError as msg:
-            self.__insocket__ = None
+            s = None
             continue
          try:
-            self.__insocket__.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.__insocket__.bind(sa)
-            self.__insocket__.listen(1)
-            self.__read_list__=[self.__insocket__]
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(sa)
+            s.listen(1)
+            self.__serverlist__.append(s)
          except OSError as msg:
-            self.__insocket__.close()
-            self.__insocket__ = None
+            s.close()
             continue
-         break
-      if self.__insocket__ is None:
+      if len(self.__serverlist__) is 0:
          raise TcpIpError("cannot bind to port")
+      self.__running__ = True
+
+   def openclient(self):
 #
 #     connect to remote host
 #
@@ -116,57 +120,47 @@ class cls_piltcpip(object):
             continue
          try:
             self.__outsocket__.connect(sa)
+            self.__outconnected__= True
          except OSError as msg:
             self.__outsocket__.close()
             self.__outsocket__ = None
             continue
          break
-      if self.__outsocket__ is None:
-         raise TcpIpError("cannot connect to next virtual HP-IL Device")
-      self.__outconnected__= True
-
 
 #
 #  Disconnect from Network
 #
    def close(self):
-      if self.__inconn__ in self.__readlist__:
-         self.__inconn__.shutdown(socket.SHUT_RD)
-         self.__inconn__.close()
-         self.__inconn__= None
-      if self.__insocket__ is not None:
-         try:
-            self.__insocket__.shutdown(socket.SHUT_RD)
-         except OSError:
-            pass
-         self.__insocket__.close()
-         self.__insocket__= None
+      for s in self.__clientlist__:
+         s.close()
+      for s in self.__serverlist__:
+         s.close()
       if self.__outconnected__:
          self.__outsocket__.shutdown(socket.SHUT_WR)
          self.__outsocket__.close()
          self.__outsocket__= None
+      self.__running__ = False
 
 #
 #  Read HP-IL frame from PIL-Box (2 byte), handle connect to server socket
 #
    def read(self):
-      readable,writable,errored=select.select(self.__read_list__,[],[],0.1)
+      readable,writable,errored=select.select(self.__serverlist__ + self.__clientlist__,[],[],0.1)
       for s in readable:
-         if s is self.__insocket__:
-            self.__inconn__,addr= self.__insocket__.accept()
-            self.__read_list__.append(self.__inconn__)
+         if self.__serverlist__.count(s) > 0:
+            cs,addr = s.accept()
+            self.__clientlist__.append(cs)
          else:
-            bytrx= self.__inconn__.recv(2)
+            bytrx = s.recv(2)
             if bytrx:
-               lo= bytrx[0]
-               hi=bytrx[1]
-               return(socket.ntohs((hi <<8) | lo))
+               return (socket.ntohs((bytrx[1] << 8) | bytrx[0]))
             else:
-               raise TcpIpError ("previous virtual HP-IL device  disconnected from pyilper")
+               self.__clientlist__.remove(s)
+               s.close()
       return None
 
 #
-#  Enable SRQ Mode 
+#  Enable SRQ Mode
 #
    def setServiceRequest(self):
       self.__srq__= True
@@ -181,14 +175,29 @@ class cls_piltcpip(object):
 #     send a IL frame to the PIL-Box
 #
    def sendFrame(self,frame):
+      bRetry = False
       b=bytearray(2)
       f=socket.htons(frame)
-      b[0]= f  & 0xFF
-      b[1]= (f & 0xFF00) >> 8
-      try:
-         self.__outsocket__.send(b)
-      except BrokenPipeError:
-         raise TcpIpError ("remote program not available","")
+      b[0]= f & 0xFF
+      b[1]= f >> 8
+      while True:
+         if self.isConnected():
+            try:
+               self.__outsocket__.send(b)
+               break
+            except BrokenPipeError:
+               raise TcpIpError ("remote program not available","")
+            except ConnectionResetError:
+               if bRetry:
+                  raise TcpIpError ("reconnecting remote program failed","")
+               else:
+                  self.__outsocket__.shutdown(socket.SHUT_WR)
+                  self.__outsocket__.close()
+                  self.__outsocket__= None
+                  self.__outconnected__ = False
+                  bRetry = True
+         else:
+            self.openclient()
 
 #
 #  process frame
@@ -231,14 +240,14 @@ class cls_piltcpip(object):
       if self.srqflags and not self.__srq__:
          switched=True
          self.__srq__= True
-      return(switched)
+      return switched
 
 #
-#     virtualeHP-IL device
+#     virtual HP-IL device
 #
    def register(self, obj):
       if self.__devicecounter__ > 16:
-         raise PilBoxError("Too many virtual HP-IL devices (max 16)","")
+         raise TcpIpError("Too many virtual HP-IL devices (max 16)","")
       obj.setsrqbit(self.__devicecounter__)
       obj.setpilbox(self)
       self.__devices__.append(obj)
@@ -246,11 +255,10 @@ class cls_piltcpip(object):
 #
 #     unregister virtual HP-IL device
 #
-
    def unregister(self,n):
       del self.__devices__[n]
 #
 #     get-/set-
 #
    def isRunning(self):
-      return(self.__running__) 
+      return self.__running__

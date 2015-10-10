@@ -28,10 +28,15 @@ from .pilbox import PilBoxError
 #
 # PIL-Box thread class --------------------------------------------------------
 #
+# Changelog
+# 06.10.2015 jsi:
+# - class statement syntax update
+
+
 class cls_PilBoxThread(QtCore.QThread):
 
    def __init__(self, parent,pilbox):
-      QtCore.QThread.__init__(self,parent)
+      super().__init__(parent)
       self.parent=parent
       self.pilbox=pilbox
       self.pause= False

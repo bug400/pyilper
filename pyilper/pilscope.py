@@ -24,7 +24,12 @@
 #
 # scope object class -------------------------------------------------------
 #
-class cls_scope(object):
+# Changelog
+# 06.10.2015 jsi:
+# - class statement syntax update
+
+#
+class cls_scope:
 
    def __init__ (self):
       self.__mnemo__= ["DAB", "DSR", "END", "ESR", "CMD", "RDY", "IDY", "ISR"]

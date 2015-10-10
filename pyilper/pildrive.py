@@ -49,6 +49,9 @@
 # 19.05.2015 getMediumInfo removed
 #
 # 30.05.2015 fixed error in handling AP, added getstatus
+#
+# 06.10.2015 jsi:
+# - class statement syntax update
 
 
 import os
@@ -72,7 +75,7 @@ def getLifInt(data,offset,length):
       i+=1
    return value
 
-class cls_drive(object):
+class cls_drive:
 
    def __init__(self):
 

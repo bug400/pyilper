@@ -18,12 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# userconfig class ---------------------------------------
-#
-# Initial release derived from ILPER 1.43 for Windows
+# userconfig class ---------------------------------------------------------
 #
 # Changelog
-#
+# 06.10.2015 jsi:
+# - class statement syntax update
 
 import pickle
 import os
@@ -35,7 +34,7 @@ class ConfigError(Exception):
       self.add_msg = add_msg
 
 
-class cls_userconfig(object):
+class cls_userconfig:
 
    def __init__(self,progname,version):
 #

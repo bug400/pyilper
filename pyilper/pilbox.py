@@ -34,6 +34,10 @@
 # 
 # 07.06.2014 baudrate support
 #
+# 06.10.2015 jsi:
+# - class statement syntax update
+
+#
 # PIL-Box Commands
 #
 CON= 0x496    # initialize in controller on mode
@@ -54,7 +58,7 @@ class PilBoxError(Exception):
       self.add_msg= add_msg
 
 
-class cls_pilbox(object):
+class cls_pilbox:
 
    def __init__(self,ttydevice,baudrate,use8bits):
       self.__running__ = False     # Connected to PIL-Box

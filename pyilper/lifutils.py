@@ -22,6 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
+# LIF image file classes ---------------------------------------------------
+#
+# Changelog
+# 01.10.2015 cg
+# - fixed wrong file type for "ROM75"
+# 05.10.2015 jsi:
+# - class statement syntax update
 #
 import platform
 import os
@@ -67,7 +74,7 @@ class LifError(Exception):
       self.msg=msg;
       self.add_msg= add_msg
 
-class cls_LifDir(object):
+class cls_LifDir:
 
    def __init__(self,liffile):
       self.liffile=liffile
@@ -211,7 +218,7 @@ class cls_LifDir(object):
       elif ft== 0xE0FE or ft==0xE088:
          t="BASIC75"
          l= getLifInt(e,16,4)*256
-      elif ft== 0xE088:
+      elif ft== 0xE08B:
          t="ROM75"
          l= getLifInt(e,16,4)*256
 
@@ -224,7 +231,7 @@ class cls_LifDir(object):
 
       
 
-class cls_LifFile(object):
+class cls_LifFile:
 
    def __init__(self):
       self.filename= None           # Name of LIF File

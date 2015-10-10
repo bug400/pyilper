@@ -25,6 +25,11 @@
 #
 # This code was derived from the pyqterm widget of Henning Schröder
 #
+# Changelog
+# 06.10.2015 jsi:
+# - class statement syntax update
+# - adjust super statements to python3+ syntax
+
 
 import array
 import queue
@@ -102,7 +107,7 @@ class QTerminalWidget(QWidget):
 
 
     def __init__(self,parent, font_name, font_size, w,h):
-        super(QTerminalWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setFocusPolicy(Qt.WheelFocus)
         self.setAutoFillBackground(False)
         self.setAttribute(Qt.WA_OpaquePaintEvent, True)
@@ -140,7 +145,7 @@ class QTerminalWidget(QWidget):
         self._kbdfunc= func
 
     def setFont(self, font):
-        super(QTerminalWidget, self).setFont(font)
+        super().setFont(font)
         self._update_metrics()
 
     def setSize(self,w,h):
@@ -364,7 +369,7 @@ class QTerminalWidget(QWidget):
 __version__ = "0.1"
 
 
-class HPTerminal(object):
+class HPTerminal:
 
     def __init__(self, w, h, win):
         self.w = w

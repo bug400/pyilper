@@ -26,12 +26,16 @@
 from PyQt4 import QtCore, QtGui
 from .piltcpip import TcpIpError
 #
-# PIL-Box thread class --------------------------------------------------------
+# tcpip thread class --------------------------------------------------------
+#
+# Chnagelog
+# 06.10.2015 jsi:
+# - adjust super statements to python3+ syntax
 #
 class cls_PilTcpIpThread(QtCore.QThread):
 
    def __init__(self, parent,tcpip):
-      QtCore.QThread.__init__(self,parent)
+      super().__init__(parent)
       self.parent=parent
       self.tcpip=tcpip
       self.pause= False

@@ -34,8 +34,11 @@
 # - not implemeted: set/get AID, ID$
 #
 # 30.05.2015 fixed error in handling AP, added getstatus
+#
+# 06.10.2015 jsi:
+# - class statement syntax update
 
-class cls_printer(object):
+class cls_printer:
 
    def __init__(self):
 

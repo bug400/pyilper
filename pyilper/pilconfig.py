@@ -21,6 +21,8 @@
 # pilconfig class -------------------------------------------
 #
 # Changelog
+# 06.10.2015 jsi:
+# - class statement syntax update
 #
 from .userconfig import cls_userconfig, ConfigError
 
@@ -30,7 +32,7 @@ class PilConfigError(Exception):
       self.add_msg = add_msg
 
 
-class cls_pilconfig(object):
+class cls_pilconfig:
 #
 #  initialize: read in the configuration file into the dictionary
 #  if the configuration file does not exist, an empty file is created

@@ -22,6 +22,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
+# pyILPER main program -----------------------------------------------------
+#
+# Changelog
+# 05.10.2015 jsi:
+# - new style signal/slot handling for quit, crash and show_message
+# - adjust super statements to python3+ syntax
+
 #
 import os
 import sys
@@ -46,10 +53,16 @@ BAUDRATES=[ 9600, 115200] # supported baud rates
 # Main application ------------------------------------------------------ 
 #
 
-class cls_pyilper():
+class cls_pyilper(QtCore.QObject):
+
+   sig_show_message=QtCore.pyqtSignal(str)
+   sig_crash=QtCore.pyqtSignal()
+   sig_quit=QtCore.pyqtSignal()
+
 
    def __init__(self):
  
+      super().__init__()
       self.name="pyilper"
       self.status= STAT_DISABLED
       self.tabobjects= [ ]
@@ -65,7 +78,7 @@ class cls_pyilper():
 #
 #     Initialize Main Window, connect callbacks
 #
-      self.ui= cls_ui(VERSION,850,650)
+      self.ui= cls_ui(self,VERSION,850,650)
       self.ui.actionConfig.triggered.connect(self.do_pyilperConfig)
       self.ui.actionDevConfig.triggered.connect(self.do_DevConfig)
       self.ui.actionDevStatus.triggered.connect(self.do_DevStatus)
@@ -79,9 +92,10 @@ class cls_pyilper():
 #     the user interface that is issued by the thread process and must
 #     be issued as a queued connection
 #
-      QtCore.QObject.connect(self.ui,QtCore.SIGNAL("sigmessage(PyQt_PyObject)"),self.show_message, QtCore.Qt.QueuedConnection)
-      QtCore.QObject.connect(self.ui,QtCore.SIGNAL("sigcrash(PyQt_PyObject)"),self.do_crash_cleanup, QtCore.Qt.QueuedConnection)
-      QtCore.QObject.connect(self.ui,QtCore.SIGNAL("sigquit(PyQt_PyObject)"),self.do_Exit, QtCore.Qt.QueuedConnection)
+      self.sig_show_message.connect(self.show_message, QtCore.Qt.QueuedConnection)
+      self.sig_crash.connect(self.do_crash_cleanup, QtCore.Qt.QueuedConnection)
+      self.sig_quit.connect(self.do_Exit, QtCore.Qt.QueuedConnection)
+
 #
 #     Set up configuration subsystem
 #
