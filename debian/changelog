@@ -1,3 +1,11 @@
+pyilper (1.2-2ubuntu1) wily; urgency=medium
+
+  * documentation updates
+  * syntax updates
+  * various bug fixes 
+
+ -- trusty <achim@trillian>  Sat, 10 Oct 2015 10:37:07 +0200
+
 pyilper (1.2-1ubuntu1) trusty; urgency=medium
 
   * support for virtual HP-IL over TCP/IP
