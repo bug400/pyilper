@@ -1,19 +1,20 @@
-A. Installation Instructions for Linux
+﻿
+. Installation Instructions for Linux
 
 1. Requirements
-Pyilterm needs Pyhton 3.4, PyQt4.8 and pyserial installed. 
+PyiILPER needs Python 3.4, PyQt4.8 and pyserial installed. 
 
-2. Install pyilper
+2. Install pyILPER
 Install the .deb file. On non Debian systems type (as root):
 
 python3 setup.py install
 
-3. Setup pyilper
+3. Setup pyILPER
 Plug in the PIL-Box. No drivers are needed. Check the tty device
 of the PIL-Box. It should be /dev/ttyUSBnn.
 
-If yo installed the Debian package you can start pyilper from the
-menu. Ohterwise open a console and type:
+If yo installed the Debian package you can start pyiILPER from the
+menu. Otherwise open a console and type:
 
 pyilper
 
@@ -24,11 +25,11 @@ device.
 Now the application should show "Connected to PIL-Box". If not check the
 COM port of the PIL-Box.
 
-4. Use pyilper
+4. Use pyILPER
 See the Help menu.
 
-5. Uninstall pyilper
-If you installed the Debian package you can remove pyilper with the
+5. Uninstall pyILPER
+If you installed the Debian package you can remove pyILPER with the
 package manager. Otherwise delete the following files manually:
 /usr/bin/pyilper
 All files of the pyilper directory in the package directory of
@@ -57,14 +58,14 @@ pip install pyserial
 You must have an internet connection. The package gets downloaded
 and installed.
 
-4. Install pypilper
+4. Install pyILPER
 Unpack the package, open a console and type:
 
 python setup.py install
 
-5. Setup pyilper
+5. Setup pyILPER
 Install the appropriate drivers for the USB serial interface of the
-pil box and configure the COM port. See the documentation of the
+PIL-Box and configure the COM port. See the documentation of the
 PIL-Box.
 
 Open a console (as Administrator) and type:
@@ -79,15 +80,15 @@ can enter the names of other COM ports. Do not append the ":" character.
 Now the application should show "Connected to PIL-Box". If not check the
 COM port of the PIL-Box.
 
-6. Use pyilper
+6. Use pyILPER
 See the Help menu.
 
-7. Uninstall pyilper
+7. Uninstall pyILPER
 There is no uninstall script. Remove the files:
 c:\python34\scripts\pyilper.exe
 c:\python34\scripts\pyilper-script.pyw
 and all files of the directory:
-c:\python34\lib\site-packages\pyilper-1.2.1-py34.egg.info
+c:\python34\lib\site-packages\pyilper-1.2.2-py34.egg.info
 
 C. Installation instructions on Mac OS X (Mavericks)
 
@@ -101,25 +102,25 @@ xcode-select --install
 After installation download and install the OS X Package install for your 
 operating system.
 
-The software installed by the port utility requires the following environemnt variables:
+The software installed by the port utility requires the following environment variables:
 export PATH=/opt/local/bin:/opt/local/sbin:$PATH
 export MANPATH=/opt/local/share/man:$MANPATH
 
-You should appy the setting of the environment variables to your .profile file.
+You should sappy the setting of the environment variables to your .profile file.
 
 Then start port and install python34 py34-serial py34-setuptools py34-pyqt4
 
 Do not forget to set python34 as your default python version with
 port select --set python python34
 
-2. Install pyilper
+2. Install pyILPER
 
-Open a command window as super user change to the pyilper distribution directory and type:
+Open a command window as super user change to the pyILPER distribution directory and type:
 
 python setup.py install
 
 This will install python in (horror!!):
-/opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages/pyilper-1.2.1-py3.4.egg/pyiler
+/opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages/pyilper-1.2.2-py3.4.egg/pyiler
 
 Now copy the pyilper file in 
 /opt/local/Library/Frameworks/Python.framework/Versions/3.4/bin
@@ -128,11 +129,11 @@ to
 
 Finally you have to fix the permissions of the installation directory:
 
-chmod -R go+r /opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages/pyilper-1.2.1-py3.4.egg
+chmod -R go+r /opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages/pyilper-1.2.2-py3.4.egg
 
-3. Setup pyilper
-Plug in the PIL-Box. No drivers are needed. Check the tty device
-of the PIL-Box. It should be /dev/cu.usbserialXXX
+3. Letup pyILPER
+Plug in the PIL-Box. No drivers are needed. Check the try device
+of the PIL-Box. It should be /dev/mercurialness
 
 Open a console and type:
 
@@ -145,12 +146,12 @@ device.
 Now the application should show "Connected to PIL-Box". If not check the
 COM port of the PIL-Box.
 
-4. Use pyilper
+4. Use pyILPER
 See the Help menu.
 
-5. Uninstall pyilper
+5. Uninstall pyILPER
 Delete the directory:
-/opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages/pyilper-1.2.1-py3.4.egg/pyiler
+/opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/python3.4/site-packages/pyilper-1.2.2-py3.4.egg/pyiler
 
 and the files
 /opt/local/bin/pyilper

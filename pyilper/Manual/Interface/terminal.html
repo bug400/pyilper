@@ -38,8 +38,8 @@
         <tr><td>Default Address</td><td>8</td></tr>
         <tr><td>Device ID</td><td>PILTERM</td></tr>
         </table>
-      
-        <p>The display supports the display escape sequences which are 
+
+        <p>The display supports the display escape sequences which are
         specified on page 328 of the HP-71B reference manual with the following
         exceptions:</p>
         <blockquote>
@@ -50,22 +50,22 @@
         </ul>
         </blockquote>
         <p>The keyboard is supported by the HP-71B with the <i>keyboard</i> lex
-        file and the <i>pilterm</i> basic program (see below) installed. 
+        file and the <i>pilterm</i> basic program (see below) installed.
         <b>Due to technical limitations of the PIL-Box the emulation of the
         keyboard does not work reliable!</b></p>
 
         <p>To use the keyboard emulator you have to install the
-        <i>keyboard</i> lex and the <i>pilterm</i> basic program first. 
-        Both files are provided in the LIF disk image file 
-        <i>PILIMAGE.DAT</i>.<p>
+        <i>keyboard</i> lex and the <i>pilterm</i> basic program first.
+        Both files are provided in the LIF disk image file
+        <i>PILIMAGE.DAT</i> which is part of the pyILPER package.<p>
 
-        <p>Copy the image file to a local directory and select it as LIF
-        image file for a virtual drive. Start pyILPER and copy both
-        files to the HP-71B. Then run <i>pililper</i>. If the display resets
-        click into terminal window. Now you can enter characters that 
+        <p>Copy the disk image file to a local directory and select it as LIF
+        image file for a virtual drive. Copy both files to the HP-71B. 
+        Then run <i>pyILPERr</i>. After the display has been reset
+        click into terminal window. Now you can enter characters that
         are sent to the HP-71B as keyboard input.</p>
 
-        <p><b>Type slow!</b> The keyboard may hang from time to time. 
+        <p><b>Type slow!</b> The keyboard may hang from time to time.
         To reset the keyboard simply run <i>pilterm</i> again.</p>
         <p>The keyboard emulator uses the following function key mapping:</p>
 
@@ -90,7 +90,7 @@
         <tr><td>F6</td><td>LC</td></tr>
         </table>
 
-        <P>A status indicator below the terminal window indicates wheter
+        <P>A status indicator below the terminal window indicates whether
         the cursor is in insert or replace mode.</p>
 
         <P>To enter a numeric character value hold down the <i>ALT</i>
@@ -104,19 +104,18 @@
         <h2>Controls</h2>
         <p>The terminal tab provides the following controls:</b>
         <ul>
-        <li>Termina active: If checked then the virtual HP-IL terminal
+        <li>Terminal active checkbox: If checked then the virtual HP-IL terminal
         device is available on the loop. Please mind to reconfigure
-        the loop each time this box is checked or unchecked.</li>
+        the loop each time this box has been checked or unchecked.</li>
         <li>
-        <li>Charcter set: select the character set that is emulated.
+        <li>Character set combobox: select the character set that is emulated.
         You may choose between HP-41 character set (alternate character set
         of the HP82162 thermal printer), HP-71 character set and the
         Roman-8 character set. The characters are converted to unicode
-        and displayed in the terminal window. For the HP-71 and the
-        HP-41 character numbers above are displayed inverse and the character
-        number two is displayed without overbar.
+        and displayed in the terminal window. Note: the character with code 002
+        is displayed without overbar.
         </li>
-        <li>Terminal geometry: You may choose the following terminal
+        <li>Terminal geometry combobox: You may choose the following terminal
         geometries: 80x24, 80x40, 132x24.</li>
         </ul>
       </td>
@@ -126,7 +125,7 @@
 
         <h2>PILTERM Basic Program for the HP-71B</h2>
         <pre>
- 10 IF POS(VER$,"KBD:")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE" @ END 
+ 10 IF POS(VER$,"KBD:")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE" @ END
  20 RESET ESCAPE
  30 RESET HPIL @ RESTORE IO @ CLEAR @ KEYBOARD IS :DEVADDR("PILTERM")
  40 DISPLAY IS :DEVADDR("PILTERM")
@@ -145,9 +144,9 @@
     <tr bgcolor="#FFF000">
       <td valign="center" align="center"><a href=
       "scope.html"><font color=
-      "#66A000"><b>Scope Tab</b></font></a> :: 
-       <a href="drive.html">Drive Tabs</a> :: 
-       <a href="printer.html">Printer Tab</a> :: 
+      "#66A000"><b>Scope Tab</b></font></a> ::
+       <a href="drive.html">Drive Tabs</a> ::
+       <a href="printer.html">Printer Tab</a> ::
        <a href="terminal.html">Terminal Tab</a></td>
     </tr>
   </table>

@@ -40,16 +40,16 @@
 
         <p>The connection to PCs was realized by either an generic
         ISA bus card or a serial interface controller. As these
-        devices are not avaibalbe any more, Jean-Francois Garnier
+        devices are not available any more, Jean-Francois Garnier
         published his <a href="http://www.jeffcalc.hp41.eu/hpil/index.html">
         PIL-Box</a> project in 2009 to link a PC via USB to the
         HP-IL system.<p>
 
-        <p>The PC operating system communicates with the PIL-Box as a 
-        virtual serial device over USB. The PIL-Box reads incoming
-        frames from the loop.</p>
+        <p>The PC operating system communicates with the PIL-Box as a
+        virtual serial device over USB. The PIL-Box is connected to
+        the HP-IL Loop.</p>
 
-        <p>pyPIL is a program that reads HP-IL frames from the
+        <p>pyILPER is a program that reads incoming HP-IL frames from the
         PIL-Box, processes them by emulating some virtual HPIL
         devices, like a printer, a disk drive or a terminal and sends
         the processed frames back to the loop.</p>
@@ -57,8 +57,8 @@
         <p>The first program ILPER (HP-IL peripheral emulator) was
         written by Jean-Francois Garnier in VisualBasic. The current
         Version of ILPER is written in Visual C++ and is maintained
-        by Christoph Gie&szlig;elink. pyILPER ist a Python version
-        of ILPER with some modifications and enhencements.</p>
+        by Christoph Gie&szlig;elink. pyILPER is a Python version
+        of ILPER with some modifications and enhancements.</p>
 
         <p>pyILPER provides the following virtual HP-IL devices in
         one application:<p>
@@ -71,20 +71,20 @@
         </ul>
         </blockquote>
 
-        <p>To user pyILPER you need at least the PIL-Box and a
-        HP-IL controller like the HP-41 or HP-71B. Most fun you 
-        will have with the HP-71B wich is a powerful device to
+        <p>To use pyILPER you need at least the PIL-Box and a
+        HP-IL controller such as the HP-41 or the HP-71B. Most fun you
+        will have with the HP-71B which is a powerful device to
         control a HP-IL system.</p>
 
-        <p>As of version 1.2.1 pyILPER supports 
+        <p>As of version 1.2.1 pyILPER supports
         <a href="http://hp.giesselink.com/hpil.htm">virtual HP-IL over TCP/IP</a>.        This feature is experimental. You may hook the
         <a href="http://hp.giesselink.com/emu71.htm">HP-71B Emulator of
-        Christph Gie&szlig;elink</a> with pyILPER.
-        
+        Christoph Gie&szlig;elink</a> with pyILPER.
+
         <p>pyILPER was written in pure Python 3 and its user interface
-        was implemented with the Qt framework. Up to now pyILPER was
-        only tested on Ubuntu LINUX 14.04 and Windows 7.</p>
-        
+        was implemented with the Qt framework. pyILPER 
+        was tested successfully on Ubuntu LINUX 14.04 and Windows 7.</p>
+
       </td>
     </tr>
   </table><br>

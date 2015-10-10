@@ -32,7 +32,7 @@
 
         <p>The program settings are stored in a configuration file. If the
         file gets corrupted it should be deleted. The location of the
-        file is platform dependend:</p>
+        file is platform dependent:</p>
         <table border="1">
         <tr><th>Platform</th><th>Directory</th></tr>
         <tr><td>LINUX</td><td>$HOME/.config/pyilper</td></tr>
@@ -52,16 +52,16 @@
 
         <pre>Cannot connect to PIL-Box </pre>
         <p>The application did not succeed to initialize the PIL-Box.
-        Check if the PIL-Box is connected to the correct port and is
-        configured to run at 115200 baud. Check also, if the correct port
-        is specified in the program configuration.</pre>
+        Check if the PIL-Box is connected to the correct port and if the baud rate
+        is configured according to the PIL-Box jumper setting. Check also, 
+        if the correct port is specified in the program configuration.</pre>
 
         <pre>Cannot create configuration path</pre>
         <p>The application did not succeed to create the directory
         for the configuration file (see above). Check path and
         permissions.</pre>
 
-        <pre>Cannot read configuratioon file></pre>
+        <pre>Cannot read configuration file></pre>
         <p>The application could not read the configuration file. Check
         file permissions. If the permissions are correct, purge the file.</p>
 
@@ -74,7 +74,7 @@
         Check path and permissions.</p>
 
         <pre>Cannot change to working directory</pre>
-        <p>The application did not succeed to change the working 
+        <p>The application did not succeed to change the working
         directory to the configured file path. Check path and permissions.
 
         <pre>Cannot close xxx log file</pre>
@@ -95,25 +95,25 @@
 
         <pre>LIF layout not supported</pre>
         <p>The LIF image file does not contain a medium that is compatible to
-        pyilper. See the <a href="../interface/drive.html">Drive Tabs</a> 
-        Documentation for further information about supported media.</p>
+        pyilper. See the <a href="../interface/drive.html">Drive Tabs</a>
+        documentation for further information about supported media.</p>
 
         <pre>LIF layout not supported for this device</pre>
         <p>The LIF image file layout is not compatible with the current
-        emulated drive type. See the 
-        <a href="../interface/drive.html">Drive Tabs</a> 
-        Documentation for further information about media compatibility.</p>
+        emulated drive type. See the
+        <a href="../interface/drive.html">Drive Tabs</a>
+        documentation for further information about media compatibility.</p>
 
         <pre>File does not contain a LIF type 1 medium with valid layout
-information. Using default layout.</pre>
-        <p>The LIF image file does not contain a propery initialized header
+        information. Using default layout.</pre>
+        <p>The LIF image file does not contain a properly initialized header
         with valid layout information. The default layout is used.</p>
 
         <p><b>Warning!</b> If the default layout does not match the
         current medium data corruption may occur!</p>
-        
+
         <h2>Further hints</h2>
-        
+
         <p>Calling the file pyilpermain.py from the console with the
         python3 interpreter gives access to python runtime errors.</p>
 

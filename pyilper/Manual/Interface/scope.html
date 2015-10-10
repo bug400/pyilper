@@ -28,8 +28,8 @@
       <td valign="middle" align="left" width="99%">
         <h2>Description</h2>
         <p>The scope displays the HP-IL frames read from the PIL-Box
-        before they are processed by the virtual HP-IL devices. The
-        output of the scope can be logged to a file.</p>
+        before they are processed by the virtual HP-IL devices of pyILPER. 
+        The output of the scope can be logged to a file.</p>
       </td>
     </tr>
 
@@ -39,16 +39,16 @@
         <p>The scope tab has the following controls:</p>
         <blockquote>
         <ul>
-        <li>Scope active: If checked the frames are logged to the display
+        <li>Scope active checkbox: If checked the frames are logged to the display
         and the log file (if activated). As the scope is no addressable
-        HP-IL device the HP-IL loop must not be reconfigured if this
-        box was checked or unchecked.
+        HP-IL device the HP-IL loop must not be reconfigured after the scope
+        has been activated or deactivated.
         </li>
-        <li>log Scope: If checked it activates logging to the file 
-        "scope.txt" in the working directory. Output is alwasy appended to
-        that file. A time stamp in the file marks the beginning and the
-        end of each logging. The log file is closed automatically if the
-        program terminates.
+        <li>Log Scope checkbox: Activates writing the output of the scope to the file
+        "scope.txt" in the pyILPR working directory. Output is always appended to
+        that file. A time stamp in the file marks the start and the
+        end of each logging. The log file is closed automatically on
+        program termination.
         </li>
         </ul>
         </blockquote>
@@ -60,9 +60,9 @@
     <tr bgcolor="#FFF000">
       <td valign="center" align="center"><a href=
       "scope.html"><font color=
-      "#66A000"><b>Scope Tab</b></font></a> :: 
-       <a href="drive.html">Drive Tabs</a> :: 
-       <a href="printer.html">Printer Tab</a> :: 
+      "#66A000"><b>Scope Tab</b></font></a> ::
+       <a href="drive.html">Drive Tabs</a> ::
+       <a href="printer.html">Printer Tab</a> ::
        <a href="terminal.html">Terminal Tab</a></td>
     </tr>
   </table>

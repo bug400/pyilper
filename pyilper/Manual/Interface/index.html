@@ -29,18 +29,18 @@
 
         <h2><a name="General Overview">General Overview</a></h2>
 
-        <p>Before you start plug in the PIL-Box and establish
-        the HP-IL loop with at least the controller (HP41 or
-        HP-71B). After starting pyILPER you have to reconfigure
-        the devices on the loop, by either power off and on the
-        controller or by issuing a "RESTORE IO" on the HP-71B.</p>
+        <p>Before you launch pyILPER connect the PC to the PIL-Box and 
+        set up the HP-IL loop with at least the HP-IL controller (HP41 or
+        HP-71B). After the launch of pyILPER you must reconfigure
+        the HP-IL devices on the loop, by either powering the controller  
+        off and on again or by issuing a "RESTORE IO" on the HP-71B.</p>
 
-        <p>The user interface is composed of:</p>
+        <p>The user interface consists of:</p>
         <blockquote>
         <ul>
-        <li>file menu to configure the program</li>
-        <li>tabbed virtual HP-IL devices on the main window</li>
-        <li>status prompt at the bottom of the main window</li>
+        <li>the file menu to configure pyILPER</li>
+        <li>tabbed virtual HP-IL devices</li>
+        <li>status information at the bottom of the main window</li>
         </ul>
         </blockquote>
 
@@ -49,10 +49,10 @@
         <blockquote>
           <h3><a name="pyILPER configuration">pyILPER configuration</a></h3>
 
-          <p>PIL-Box: check this box if pyILPER is connected to a
-          PIL-Box via a serial device. The serial device and the
-          baudrate of the PIL-Box are configured here. The default
-          for the device is /dev/ttyUSB0 on LINUX and COM1 on Windows.
+          <p>PIL-Box: check this button if pyILPER is connected to a
+          PIL-Box via a serial device. The name and baud rate of the 
+          serial device are configured here. The default
+          device name is /dev/ttyUSB0 on LINUX and COM1 on Windows.
           Note: the baud rate must match the hardware configuration of
           the PIL-Box. See the PIL-Box documentation for details.</p>
 
@@ -66,8 +66,8 @@
           </ul>
 
           <p>Configuration of the working directory: This is the location
-          of the log files for the scope and the printer (q.v.).
-          Default is the $HOME directory.</p>
+          of the log files for scope and the printer output (q.v.).
+          Default is the $HOME directory of the current user.</p>
 
           <h3><a name="HP-IL device config">HP-IL device config</a></h3>
 
@@ -78,22 +78,22 @@
           <li>0 to 1 virtual terminal</li>
           </ul>
           <p>Note: the scope tab can not be removed from the application. If
-          the number of devices was chaged you have to restart the 
-          applications to take the changes into effect.</p>
+          the number of devices was changed you have to restart the
+          applications for take the changes to effect.</p>
 
           <h3><a name="HP-IL device ststus">HP-IL device status</a></h3>
 
           <p>Shows a pop up window with status information of the
           virtual HP-IL devices.</p>
           <p>The status information includes the current HP-IL
-          device id, the accessory id, the addesses (simple and extended)
+          device id, the accessory id, the HP-IL address (simple and extended)
           and the internal HP-IL status of the virtual device.</p>
           <p>The status information is updated every 500 ms.</p>
 
           <h3><a name="Reconnect">Reconnect</a></h3>
 
           <p>Restarts the application, if e.g. you forgot to plug in
-          the PIL-Box on program start.</p>
+          the PIL-Box when launching the application.</p>
 
           <h3><a name="Quit">Quit</a></h3>
 
@@ -123,7 +123,7 @@
       <a href="scope.html">Scope</a> ::
       <a href="drive.html">Drive</a> ::
       <a href="printer.html">Printer</a> ::
-      <a href="terminal.html">Terminal</a> 
+      <a href="terminal.html">Terminal</a>
       </td>
     </tr>
   </table>
