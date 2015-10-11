@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# pyILPER 1.2.1 for Linux
+# pyILPER 1.2.2 for Linux
 #
 # An emulator for virtual HP-IL devices for the PIL-Box
 # derived from ILPER 1.4.5 for Windows
@@ -28,6 +28,8 @@
 # 05.10.2015 jsi:
 # - new style signal/slot handling for quit, crash and show_message
 # - adjust super statements to python3+ syntax
+# 11.10.2015 jsi:
+# - bump version number to 1.2.2
 
 #
 import os
@@ -39,7 +41,7 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.2.1"
+VERSION="1.2.2"
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
