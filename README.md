@@ -30,7 +30,7 @@ The PC operating system communicates with the PIL-Box as a virtual serial
 device over USB. The PIL-Box is connected to the HP-IL Loop.
 
 pyILPER is a program that reads incoming HP-IL frames from the PIL-Box, 
-processes them by emulating some virtual HPIL devices, like a printer, 
+processes them by emulating some virtual HP-IL devices, like a printer, 
 a disk drive or a terminal and sends the processed frames back to the loop.
 
 
