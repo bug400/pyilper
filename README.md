@@ -21,17 +21,17 @@ between peripheral devices such as printers, floppy disk drives etc.
 with programmable calculators such as the HP-41C, HP71B and HP-75C/D.
 
 The connection to PCs was realized by either an generic ISA bus card or a 
-serial interface controller. As these devices are not avaibalbe any more, 
+serial interface controller. As these devices are not available any more, 
 Jean-Francois Garnier published his 
 [PIL-Box project](http://http://www.jeffcalc.hp41.eu/hpil/)
 in 2009 to link a PC via USB to the HP-IL system.
 
 The PC operating system communicates with the PIL-Box as a virtual serial 
-device over USB. The PIL-Box reads incoming frames from the loop.
+device over USB. The PIL-Box is connected to the HP-IL Loop.
 
-pyPIL is a program that reads HP-IL frames from the PIL-Box, processes them 
-by emulating some virtual HPIL devices, like a printer, a disk drive or 
-a terminal and sends the processed frames back to the loop.
+pyILPER is a program that reads incoming HP-IL frames from the PIL-Box, 
+processes them by emulating some virtual HPIL devices, like a printer, 
+a disk drive or a terminal and sends the processed frames back to the loop.
 
 
 Features
@@ -65,7 +65,7 @@ See the INSTALL file.
 License
 -------
 
-pyILPER is published under th GNU General Public License v3.0 License 
+pyILPER is published under the GNU General Public License v3.0 License 
 (see LICENSE file).
 
 
