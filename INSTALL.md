@@ -34,11 +34,12 @@ administrator privileges are needed.
 The following instructions apply to Linux, Windows and Mac OS X:
 
 Follow the [Quick Install Guide](http://conda.pydata.org/docs/install/quick.html)
-and install Miniconda first.
+and install Miniconda first. Note: If you install Miniconda the first time
+then let the installer modify the PATH variable of your environment.
 
 Reopen a new terminal window and type:
 
-     conda config --add channel bug400
+     conda config --add channels bug400
      conda install pyilper
 
 This installs pyilper and all required Python runtime components. 
