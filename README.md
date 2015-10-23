@@ -56,7 +56,7 @@ pyILPER has been success tested with LINUX and Windows 7. It should work
 with Mac OS X but has not been tested up to now.
 
 
-Installation 
+Installation
 ------------
 
 pyILPER requires the Python interpreter and the Qt framework installed. 
