@@ -5,8 +5,8 @@ Index
 -----
 
 * [General](#general)
-* [Installation with the ANACONDA platform](#Installation with the ANACONDA platform)
-* [Installation without the ANACONDA platform](#installation without the ANACONDA platform)
+* [Installation with the ANACONDA platform](#installation with the anaconda platform)
+* [Installation without the ANACONDA platform](#installation without the anaconda platform)
 
 General
 -------
