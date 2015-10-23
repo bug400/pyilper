@@ -37,11 +37,18 @@
 # - adjust super statements to python3+ syntax
 # - removed unusable code to resize main window
 #
+# 20.10.2015 jsi
+# - fix leading // for docpath (OSX)
+#
+# 22.10.2015 jsi
+# - raise main window (fix for OSX)
+#
 import os
 import glob
 import datetime
 import time
 import platform
+import re
 import pyilper
 from PyQt4 import QtCore, QtGui, QtWebKit
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
@@ -920,6 +927,10 @@ class cls_HelpWindow(QtGui.QDialog):
 
    def __init__(self,parent=None):
       docpath=os.path.join(os.path.dirname(pyilper.__file__),"Manual","index.html")
+#
+#     fix leading //  (OSX)
+#
+      docpath=re.sub("//","/",docpath,1)
       super().__init__()
       self.setWindowTitle('pyILPER Help')
  
@@ -1525,6 +1536,10 @@ class cls_ui(QtGui.QMainWindow):
 #     Show gui
 #
       self.show()
+#
+#     OS X fix
+#
+      self.raise_()
 
 #
 #  queued emit of the signal to update the message text
