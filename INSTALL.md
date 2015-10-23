@@ -21,17 +21,19 @@ pyILPER requires:
 It is recommended to use the [ANACONDA platform](https://www.continuum.io) 
 to install pyILPER and the required Python software and keep them up to date.
 
-If you already installed the required Python you can install pyILPER without
+If you already installed the required Python software you can install pyILPER without
 ANACONDA. See the last chapter of this manual.
 
 Installation with the ANACONDA platform
 ---------------------------------------
 
-You need approximately 700MB free disk space for the Python runtime environment.
-Everything is installed as a local user and thus no administrator privileges are
-needed. The following instructions apply to Linux, Windows and Mac OS X.
+You need approximately 700MB free disk space for pyILPER and the Python 
+runtime environment. Everything is installed as a local user and thus no 
+administrator privileges are needed. 
 
-Follow the [Quick Install Guide](http://http://conda.pydata.org/docs/install/quick.html)
+The following instructions apply to Linux, Windows and Mac OS X:
+
+Follow the [Quick Install Guide](http://conda.pydata.org/docs/install/quick.html)
 and install Miniconda first.
 
 Reopen a new terminal window and type:
@@ -53,14 +55,15 @@ To start pyILPER type:
 
 in a terminal window.
 
+
 Installation withput the ANACONDA platform
 ------------------------------------------
 
 The requirements specified above must be available on the system.
 
-On LINUX Debian based system you can install the pyilper Debian package.
+On Debian based Linux systems you can install the pyilper Debian package.
 
-On all other systems unzip the pyilper zip file, go to the distribution
+On all other systems unzip the pyilper archive, go to the pyilper software
 directory and type:
 
      python3 setup.py install

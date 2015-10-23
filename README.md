@@ -59,12 +59,12 @@ with Mac OS X but has not been tested up to now.
 Installation 
 ------------
 
-pyILPER requires a Python and Qt environment. But thanks to the
-Anaconda Python distribution system pyILPER and the required
-runtime environmnt can be easily installed on Linux, Windows
-and Mac OS X.
+pyILPER requires the Python interpreter and the Qt framework installed. 
+Thanks to the [Anaconda Python distribution system](https://www.continuum.io/) 
+pyILPER and the required software components can be easily installed on 
+Linux, Windows and Mac OS X.
 
-See [installation instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md)
+See the [Installation Instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md) for details.
 
 
 License
