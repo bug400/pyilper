@@ -64,7 +64,7 @@ Anaconda Python distribution system pyILPER and the required
 runtime environmnt can be easily installed on Linux, Windows
 and Mac OS X.
 
-See [installation instructions](https://cdn.rawgit.com/bug400/pyilper/master/INSTALL.md)
+See [installation instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md)
 
 
 License
