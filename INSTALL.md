@@ -81,7 +81,7 @@ the dialout group to access the device.
 On Windows the device is COMn. If you are uncertain, check the COM ports
 in the device manager.
 
-On Mac OS X the device name is usually /dev/*FTD*.
+On Mac OS X the device name is usually /dev/tty.usbserial-FTDBIRU.
 
 The baudrate must match the baudrate the PIL-Box is configured to. See
 the PIL-Box documentation for details.
