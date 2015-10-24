@@ -30,6 +30,8 @@
 # - adjust super statements to python3+ syntax
 # 11.10.2015 jsi:
 # - bump version number to 1.2.2
+# 24.10.2015 jsi
+# - raise gui (OS X issue)
 
 #
 import os
@@ -155,6 +157,11 @@ class cls_pyilper(QtCore.QObject):
 #     connect callback for tab change to update only the visible tab
 #  
       self.ui.tabs.currentChanged[int].connect(self.tab_current_changed)
+#
+#  show and raise gui
+#
+      self.ui.show()
+      self.ui.raise_()
 #
 #     start application into warm state
 #

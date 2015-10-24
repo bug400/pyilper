@@ -40,8 +40,8 @@
 # 20.10.2015 jsi
 # - fix leading // for docpath (OSX)
 #
-# 22.10.2015 jsi
-# - raise main window (fix for OSX)
+# 24.10.2015 jsi
+# - use non native menus only (OSX issues)
 #
 import os
 import glob
@@ -1502,6 +1502,7 @@ class cls_ui(QtGui.QMainWindow):
 #     Menu
 #
       self.menubar = self.menuBar()
+      self.menubar.setNativeMenuBar(False)
       self.menuFile= self.menubar.addMenu('File')
       self.menuHelp= self.menubar.addMenu('Help')
 
@@ -1532,14 +1533,6 @@ class cls_ui(QtGui.QMainWindow):
 #     Size policy
 #
       self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
-#
-#     Show gui
-#
-      self.show()
-#
-#     OS X fix
-#
-      self.raise_()
 
 #
 #  queued emit of the signal to update the message text
