@@ -42,6 +42,7 @@
 #
 # 24.10.2015 jsi
 # - use non native menus only (OSX issues)
+# - removed ) from date of medium formatted
 #
 import os
 import glob
@@ -885,9 +886,9 @@ class cls_LifDirWidget(QtGui.QWidget):
 #
         if no_tracks> 125 or no_surfaces>8 or no_blocks > 256:
 
-           self.__labelMedium__.setText("Medium Layout: (invalid). Label: {:6s}, formatted: {:s})".format(label, initdatetime))
+           self.__labelMedium__.setText("Medium Layout: (invalid). Label: {:6s}, formatted: {:s}".format(label, initdatetime))
         else:
-           self.__labelMedium__.setText("Medium Layout: ({}/{}/{}), Size: {} blocks ({} bytes). Label: {:6s}, formatted: {:s})".format(no_tracks,no_surfaces,no_blocks,totalblocks, totalbytes, label, initdatetime))
+           self.__labelMedium__.setText("Medium Layout: ({}/{}/{}), Size: {} blocks ({} bytes). Label: {:6s}, formatted: {:s}".format(no_tracks,no_surfaces,no_blocks,totalblocks, totalbytes, label, initdatetime))
         self.__labelDir__.setText("Directory size: {} entries ({} used). Last block used: {}".format(dir_length*8, lifdir.num_entries, lifdir.lastblock))
         while True:
             r= lifdir.getNextEntry()
