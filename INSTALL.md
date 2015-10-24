@@ -46,7 +46,7 @@ This installs pyilper and all required Python runtime components.
 
 To update pyILPER and the Python runtime type:
 
-     conda update
+     conda update --all
 
 in a terminal window.
 
