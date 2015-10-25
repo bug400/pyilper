@@ -107,7 +107,7 @@ The requirements specified above must be available on the system.
 
 On Debian based Linux systems you can install the pyilper Debian package.
 
-On all other systems unzip the pyilper archive, go to the pyilper software
+On all other systems unzip the pyilper source code, go to the pyilper 
 directory and type:
 
      python3 setup.py install
