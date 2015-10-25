@@ -67,7 +67,7 @@ in a terminal window.
 Setup
 -----
 
-If pyILPER is startet for the first time the serial device of the PIL-Box
+If pyILPER is started for the first time the serial device of the PIL-Box
 and the working directory must be configured.
 
 Open the pyILPER configuration dialog from the file menu. Change the
@@ -75,7 +75,7 @@ name of the PIL-Box device to the USB serial device the box is
 connected to.
 
 On Linux the device name is usually /dev/ttyUSBn. Check if you have read and
-write access to the device. Some linux distributions require membership of
+write access to the device. Some Linux distributions require membership of
 the dialout group to access the device.
 
 On Windows the device is COMn. If you are uncertain, check the COM ports
@@ -83,7 +83,7 @@ in the device manager.
 
 On Mac OS X the device name is usually /dev/tty.usbserial-FTDBIRU.
 
-The baudrate must match the baudrate the PIL-Box is configured to. See
+The baud rate must match the baud rate the PIL-Box is configured to. See
 the PIL-Box documentation for details.
 
 The working directory defaults to the users home directory. Change the working
@@ -100,7 +100,7 @@ Operation
 See the online documentation which can be launched from the Help menu.
 
 
-Installation withput the ANACONDA platform
+Installation without the ANACONDA platform
 ------------------------------------------
 
 The requirements specified above must be available on the system.
