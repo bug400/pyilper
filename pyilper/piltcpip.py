@@ -35,6 +35,8 @@
 # - removed some unused class variables
 # 05.10.2015 jsi
 # - class statement syntax update
+# 26.10.2015 cg
+# - stop endless loop in sendFrame() when client connection fail
 
 import time
 import select
@@ -126,6 +128,7 @@ class cls_piltcpip:
             self.__outsocket__ = None
             continue
          break
+      return self.__outconnected__
 
 #
 #  Disconnect from Network
@@ -172,32 +175,28 @@ class cls_piltcpip:
       self.__srq__= False
 
 #
-#     send a IL frame to the PIL-Box
+#     send a IL frame to the virtual loop
 #
    def sendFrame(self,frame):
-      bRetry = False
+      bRetry = True
       b=bytearray(2)
       f=socket.htons(frame)
       b[0]= f & 0xFF
       b[1]= f >> 8
-      while True:
+      while bRetry:
          if self.isConnected():
             try:
                self.__outsocket__.send(b)
                break
             except BrokenPipeError:
-               raise TcpIpError ("remote program not available","")
+               raise TcpIpError ('remote program not available','')
             except ConnectionResetError:
-               if bRetry:
-                  raise TcpIpError ("reconnecting remote program failed","")
-               else:
-                  self.__outsocket__.shutdown(socket.SHUT_WR)
-                  self.__outsocket__.close()
-                  self.__outsocket__= None
-                  self.__outconnected__ = False
-                  bRetry = True
+               self.__outsocket__.shutdown(socket.SHUT_WR)
+               self.__outsocket__.close()
+               self.__outsocket__= None
+               self.__outconnected__ = False
          else:
-            self.openclient()
+            bRetry = self.openclient()
 
 #
 #  process frame
