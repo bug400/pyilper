@@ -32,6 +32,8 @@
 # - bump version number to 1.2.2
 # 24.10.2015 jsi
 # - raise gui (OS X issue)
+# 28.10.2015 jsi
+# - introduced separate version number for config file layout
 
 #
 import os
@@ -43,7 +45,8 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.2.2"
+VERSION="1.2.2"       # pyILPR version number
+CONFIG_VERSION="1"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
@@ -104,7 +107,7 @@ class cls_pyilper(QtCore.QObject):
 #     Set up configuration subsystem
 #
       try:
-         self.config=cls_pilconfig(VERSION)
+         self.config=cls_pilconfig(CONFIG_VERSION)
          self.config.get(self.name,"active_tab",0)
          self.config.get(self.name,"tabconfig",[1,2,1,1])
          self.config.get(self.name,"tabconfigchanged",False)
