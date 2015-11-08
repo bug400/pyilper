@@ -1,3 +1,9 @@
+pyilper (1.2-3ubuntu2) wily; urgency=medium
+
+  * enabled Python 3.5, doku updates
+
+ -- trusty <achim@trillian>  Sun, 08 Nov 2015 18:54:43 +0100
+
 pyilper (1.2-2ubuntu1) wily; urgency=medium
 
   * documentation updates

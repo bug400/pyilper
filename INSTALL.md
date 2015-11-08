@@ -15,10 +15,10 @@ General
 
 pyILPER requires:
 
-* Python 3.4 
+* Python 3.4, 3.5
 * QT 4.8, 
 * PyQt 4.8 
-* pyserial > 2.7 
+* pyserial  2.7 
 
 It is recommended to use the [ANACONDA platform](https://www.continuum.io) 
 to install pyILPER and the required Python software and keep them up to date.
@@ -37,6 +37,8 @@ Installation with the ANACONDA platform
 You need approximately 700MB free disk space for pyILPER and the Python 
 runtime environment. Everything is installed as a local user and thus no 
 administrator privileges are needed. 
+
+Note: for the ANACONDA platform pyILPER is only available for Python 3.5.
 
 The following instructions apply to Linux, Windows and Mac OS X:
 
