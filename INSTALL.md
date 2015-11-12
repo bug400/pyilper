@@ -48,6 +48,7 @@ then let the installer modify the PATH variable of your environment.
 
 Reopen a new terminal window and type:
 
+     conda update conda
      conda config --add channels bug400
      conda install pyilper
 
