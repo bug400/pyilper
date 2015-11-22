@@ -23,7 +23,7 @@ with programmable calculators such as the HP-41C, HP71B and HP-75C/D.
 The connection to PCs was realized by either an generic ISA bus card or a 
 serial interface controller. As these devices are not available any more, 
 Jean-Francois Garnier published his 
-[PIL-Box project](http://http://www.jeffcalc.hp41.eu/hpil/)
+[PIL-Box project](http://www.jeffcalc.hp41.eu/hpil/)
 in 2009 to link a PC via USB to the HP-IL system.
 
 The PC operating system communicates with the PIL-Box as a virtual serial 
@@ -46,7 +46,7 @@ Features
 * Log of scope or virtual printer output to file(s)
 * HP-IL device status
 * Support for the PIL-Box via serial-over-usb interface
-* Experimental support for [virtual HP-IL over TCP/IP](http://http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
+* Experimental support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
 
 
 Compatibility
