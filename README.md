@@ -40,7 +40,7 @@ Features
 * Entirely written in Python3 using the QT GUI-Framework
 * Up to 5 virtual mass storage drives with integrated directory list
 * Up to 3 virtual printers emulating the HP-71B and HP-41C character set
-* Terminal emulator with experimental keyboard support (HP-71B only)
+* Terminal emulator with keyboard support (HP-71B only)
 * HP-IL scope
 * Number of virtual devices is configurable
 * Log of scope or virtual printer output to file(s)
