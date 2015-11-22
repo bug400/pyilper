@@ -52,6 +52,9 @@
 #
 # 06.10.2015 jsi:
 # - class statement syntax update
+#
+# 21.11.2015 jsi:
+# - removed SSRQ/CSRQ approach
 
 
 import os
@@ -116,18 +119,11 @@ class cls_drive:
       self.__buf1__= bytearray(256) # buffer 1
       self.__hdiscfile__= ""        # disc file
       self.__isactive__= False    # device active in loop
-      self.__setsrqbit__=0        # srq bit mask (set)
-      self.__clearsrqbit__=0      # srq bit mask (clear)
       self.__access_lock__= threading.Lock() 
 
       self.__isWindows__=False    # platform idicator for i/o
       if platform.win32_ver()[0] != "":
          self.__isWindows__= True
-
-
-   def setsrqbit(self,devicecounter):
-      self.__setsrqbit__= 1 << devicecounter
-      self.__clearsrqbit= ~(1 << devicecounter)
 
    def setpilbox(self,obj):
       self.__pilbox__=obj

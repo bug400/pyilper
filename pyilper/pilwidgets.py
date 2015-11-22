@@ -44,6 +44,9 @@
 # - use non native menus only (OSX issues)
 # - removed ) from date of medium formatted
 #
+# 21.11.2015 jsi
+# - introduced show IDY frames option in scope tab
+#
 import os
 import glob
 import datetime
@@ -288,6 +291,13 @@ class cls_tabscope(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
       super().__init__(parent,name,True,False)
+      self.showIdy= parent.config.get(self.name,"showidy",False)
+      self.cbShowIdy= QtGui.QCheckBox("Show IDY frames")
+      self.cbShowIdy.setChecked(self.showIdy)
+      self.cbShowIdy.setEnabled(False)
+      self.cbShowIdy.stateChanged.connect(self.do_show_idy)
+      self.hbox2.addWidget(self.cbShowIdy)
+      self.hbox2.setAlignment(self.cbShowIdy,QtCore.Qt.AlignLeft)
       self.hbox2.addStretch(1)
       self.scope_charpos=0
 
@@ -297,6 +307,22 @@ class cls_tabscope(cls_tabtermgeneric):
       self.parent.commobject.register(self.pildevice)
       self.pildevice.setactive(self.parent.config.get(self.name,"active"))
       self.pildevice.register_callback_dispchar(self.out_scope)
+      self.cbShowIdy.setEnabled(True)
+      self.pildevice.set_show_idy(self.showIdy)
+
+   def disable(self):
+      super().disable()
+      self.cbShowIdy.setEnabled(False)
+
+
+   def do_show_idy(self):
+      self.cbShowIdy.setEnabled(False)
+      self.showIdy= self.cbShowIdy.isChecked()
+      self.parent.pause_pil_loop()
+      self.parent.config.put(self.name,"showidy",self.showIdy)
+      self.pildevice.set_show_idy(self.showIdy)
+      self.parent.resume_pil_loop()
+      self.cbShowIdy.setEnabled(True)
 #
 #  callback output char to console
 #

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# pyILPER 1.2.3 for Linux
+# pyILPER 1.2.4 for Linux
 #
 # An emulator for virtual HP-IL devices for the PIL-Box
 # derived from ILPER 1.4.5 for Windows
@@ -36,6 +36,8 @@
 # - introduced separate version number for config file layout
 # 08.11.2015 jsi
 # - bump version number to 1.2.3
+# 14.11.2015 jsi
+# - bump version number to 1.3.0
 
 #
 import os
@@ -47,7 +49,7 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.2.3"       # pyILPR version number
+VERSION="1.3.0"       # pyILPR version number
 CONFIG_VERSION="1"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running

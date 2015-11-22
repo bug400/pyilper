@@ -36,15 +36,17 @@
 #
 # 06.10.2015 jsi:
 # - class statement syntax update
+#
+# 16.10.2015 jsi:
+# - removed SSRQ, CSRQ approach
+# - introduced COFI switch to get real IDY frames from the loop (requires firmware 1.6)
 
 #
 # PIL-Box Commands
 #
-CON= 0x496    # initialize in controller on mode
 COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
-SSRQ= 0x49C   # SRQ on
-CSRQ= 0x49D   # SRQ off
+COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 TMOUTCMD=1    # time out for PIL-Box commands
 TMOUTFRM=0.10 # time out for HP-IL frames
 
@@ -64,11 +66,8 @@ class cls_pilbox:
       self.__running__ = False     # Connected to PIL-Box
       self.__use8bits__= use8bits  # Use 8 bits for transfer
       self.__baudrate__= baudrate  # baudrate
-      self.__srq__= False          # PIL-Box SRQ State
       self.__lasth__ = 0           # Copy of last byte sent
       self.__devices__ = []        # list of virtual devices
-      self.srqflags = 0            # flag of devices to set srqflag
-      self.__devicecounter__=0     # counter of added devices
       self.__tty__= cls_rs232()    # serial device object
       self.__ttydevice__=ttydevice # serial port name
       self.__timestamp__= time.time()   # time of last activity
@@ -107,7 +106,7 @@ class cls_pilbox:
       except Rs232Error as e:
          raise PilBoxError("Cannot connect to PIL-Box", e.value)
       self.__sendCmd__(COFF,TMOUTCMD)
-      self.__sendCmd__(CSRQ,TMOUTCMD)
+      self.__sendCmd__(COFI,TMOUTCMD)
       self.__running__ = True
 
 #
@@ -116,7 +115,6 @@ class cls_pilbox:
    def close(self):
       try:
          self.__sendCmd__(TDIS,TMOUTCMD)
-         self.__sendCmd__(CSRQ,TMOUTCMD)
          self.__running__ = False
       finally:
          self.__tty__.close()    
@@ -130,20 +128,6 @@ class cls_pilbox:
       except Rs232Error as e:
          raise PilBoxError("PIL-Box read frame error", e.value)
       return bytrx
-
-#
-#  Enable PIL-Box SRQ Mode (PIL-Box sets SRQ bit in short-circuited IDY frames)
-#
-   def setServiceRequest(self):
-      self.__sendCmd__(SSRQ,TMOUTCMD)
-      self.__srq__= True
-
-#
-#  Disable PIL-Box SRQ Mode
-#
-   def clearServiceRequest(self):
-      self.__sendCmd__(CSRQ,TMOUTCMD)
-      self.__srq__= False
 
 #
 #     send a IL frame to the PIL-Box
@@ -217,7 +201,6 @@ class cls_pilbox:
 #
          for i in self.__devices__:
             frame=i.process(frame)
-         self.request_service()
 #
 #     If received a cmd frame from the PIL-Box send RFC frame to virtual
 #     HPIL-Devices
@@ -225,45 +208,17 @@ class cls_pilbox:
          if (frame & 0x700) == 0x400:
             for i in self.__devices__:
                frame=i.process(0x500)
-            self.request_service()
 #
 #     send frame
 #
          self.sendFrame(frame)
 
 #
-#  toogle service request mode of PIL-Box
-#
-   def request_service(self):
-      if self.srqflags and not self.__srq__:
-         self.setServiceRequest()
-      if not self.srqflags and self.__srq__:
-         self.clearServiceRequest()
-
-   def request_service2(self):
-      switched=False
-      if self.srqflags and not self.__srq__:
-         sav= self.__lasth__
-         self.__lasth__ = 0
-         switched=True
-         try:
-            self.sendFrame(SSRQ)
-         except Rs232Error as e:
-            raise PilBoxError("PIL-Box command error:", e.value)
-         self.__srq__= True
-         self.__lasth__= sav
-      return(switched)
-
-#
 #     virtualeHP-IL device
 #
    def register(self, obj):
-      if self.__devicecounter__ > 16:
-         raise PilBoxError("Too many virtual HP-IL devices (max 16)","")
-      obj.setsrqbit(self.__devicecounter__)
       obj.setpilbox(self)
       self.__devices__.append(obj)
-      self.__devicecounter__+=1
 #
 #     unregister virtual HP-IL device
 #

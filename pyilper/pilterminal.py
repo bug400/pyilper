@@ -33,10 +33,16 @@
 # - not implemented: auto extended address support switch
 # - not implemeted: set/get AID, ID$
 #
-# 30.05.2015 fixed error in handling AP, added getstatus
-#
-# 06.10.2015 js:
+# 30.05.2015 jsi:
+# - fixed error in handling AP, added getstatus
+# 06.10.2015 jsi:
 # - class statement syntax updates
+# 14.11.2015 jsi:
+# - idy frame srq bit handling
+#
+# 21.11.2015 jsi:
+# - removed SSRQ/CSRQ approach
+# - set SRQ flag if keyboard buffer is not empty
 
 
 import queue
@@ -71,33 +77,24 @@ class cls_terminal:
       self.__ptsdi__ = 0          # output pointer for device id
       self.__ptssi__ = 0          # output pointer for hp-il status
       self.__isactive__= False    # device active in loop
-      self.__setsrqbit__=0        # srq bit mask (set)
-      self.__clearsrqbit__=0      # srq bit mask (clear)
       self.__pilbox__= None       # PIL-Box object
       self.__kbdqueue__= queue.Queue()
       self.__kbdqueue_lock__= threading.Lock()
-      self.__srqflags_lock__= threading.Lock()
+      self.__status_lock__= threading.Lock()
       self.__callback_cldisp__=None
       self.__callback_dispchar__=None
 #
 # --- public ---
 #
 
-   def setsrqbit(self,devicecounter):
-      self.__setsrqbit__= 1 << devicecounter 
-      self.__clearsrqbit= ~(1 << devicecounter)
-
    def setpilbox(self,obj):
       self.__pilbox__=obj
 
    def queueOutput(self,c):
       self.__kbdqueue_lock__.acquire()
-      self.__srqflags_lock__.acquire()
       if not self.__kbdqueue__.full():
          self.__kbdqueue__.put(c)
          self.__status__ = 0xE2 # keyboard data available
-         self.__pilbox__.srqflags |= self.__setsrqbit__ # set srq flag
-      self.__srqflags_lock__.release()
       self.__kbdqueue_lock__.release()
 
    def setactive(self, active):
@@ -116,21 +113,16 @@ class cls_terminal:
 #  --- private ---
 #
    def __getstatus__(self):
-      self.__srqflags_lock__.acquire()
+      self.__status_lock__.acquire()
       status= self.__status__
-      self.__srqflags_lock__.release()
+      self.__status_lock__.release()
       return(status)
       
    def __setstatus__(self,status):
-      self.__srqflags_lock__.acquire()
+      self.__status_lock__.acquire()
       self.__status__= status
-      self.__srqflags_lock__.release()
+      self.__status_lock__.release()
       
-   def __clear_srqflag__(self):
-      self.__srqflags_lock__.acquire()
-      self.__pilbox__.srqflags &= self.__clearsrqbit__ # clear srq flag
-      self.__srqflags_lock__.release()
-
    
 #
 #  output characters
@@ -152,14 +144,11 @@ class cls_terminal:
       s=self.__getstatus__()
       if s == 0xA2 or s == 0xE2:
          self.__kbdqueue_lock__.acquire()
-         self.__srqflags_lock__.acquire()
          outbyte= self.__kbdqueue__.get()
          frame= outbyte
          empty= self.__kbdqueue__.empty()
          if(empty):
             self.__status__= 0 # no data available 
-            self.__pilbox__.srqflags &= self.__clearsrqbit__ # clear srq flag
-         self.__srqflags_lock__.release()
          self.__kbdqueue_lock__.release()
 #        delay
          time.sleep(0.05)
@@ -281,7 +270,6 @@ class cls_terminal:
                 s= self.__getstatus__()
                 s &= 0xBF
                 self.__setstatus__()
-                self.__clear_srqflag__()
                 # update IL status and return no. of status bytes
                 self.__ptssi__ = 1
                 if self.__ptssi__ > 0: # response to status request
@@ -327,10 +315,12 @@ class cls_terminal:
 #
 #     set service request bit if keyboard data available
 #
-#     if self.__getstatus__() & 0x40:
-      if not self.__kbdqueue__.empty():
-         if (frame & 0x700) == 0:
+      if self.__getstatus__() & 0x40:
+#     if not self.__kbdqueue__.empty():
+         if (frame & 0x700) == 0x000:  # data 00x xxxx xxxx -> 001 xxxx xxxx
             frame= frame | 0x100;
-         if (frame & 0x700) == 2:
-            frame= frame | 0x300;
+         if (frame & 0x700) == 0x200:  # end  01x xxxx xxxx -> 011 xxxx xxxx
+            frame= frame | 0x100;
+         if (frame & 0x700) == 0x600:  # idy  11x xxxx xxxx -> 111 xxxx xxxx
+            frame= frame | 0x100;
       return(frame)

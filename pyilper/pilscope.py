@@ -27,7 +27,9 @@
 # Changelog
 # 06.10.2015 jsi:
 # - class statement syntax update
-
+# 21.11.2015 jsi:
+# - removed SSRQ/CSRQ approach
+# - introduced show IDY frames option
 #
 class cls_scope:
 
@@ -40,14 +42,13 @@ class cls_scope:
       self.__scmd9__= ["IFC", "???", "REN", "NRE", "???", "???", "???", "???",
                     "???", "???", "AAU", "LPD", "???", "???", "???", "???"]
       self.__isactive__= False
+      self.__show_idy__= False
       self.__callback_dispchar__= None
       self.__count__ = 0
-      self.__setsrqbit__=0        # srq bit mask (set)
-      self.__clearsrqbit__=0      # srq bit mask (clear)
 
-   def setsrqbit(self,devicecounter):
-      self.__setsrqbit__= 1 << devicecounter
-      self.__clearsrqbit= ~(1 << devicecounter)
+
+   def set_show_idy(self,flag):
+      self.__show_idy__= flag
 
    def setpilbox(self,obj):
       self.__pilbox__=obj
@@ -61,6 +62,12 @@ class cls_scope:
    def process (self,frame):
       if not self.__isactive__:
          return(frame)
+#
+#     ignore IDY frames
+#
+      if ((frame & 0x700) == 0x600) and not self.__show_idy__:
+         return (frame)
+
       n= frame & 255
       s= "{:3s} {:02X}".format(self.__mnemo__[frame // 256], n)
       

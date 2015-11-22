@@ -31,6 +31,8 @@ from .pilbox import PilBoxError
 # Changelog
 # 06.10.2015 jsi:
 # - class statement syntax update
+# 14.11.2015 jsi:
+# - removed PIL-Box srq handling in favour of true IDY fram processing
 
 
 class cls_PilBoxThread(QtCore.QThread):
@@ -95,7 +97,6 @@ class cls_PilBoxThread(QtCore.QThread):
 #         
    def run(self):
 #
-      switched=False
       try:
          self.parent.emit_message("connected to PIL-Box")
 #
@@ -127,10 +128,6 @@ class cls_PilBoxThread(QtCore.QThread):
 #             discarding the handshake byte may discard a frame byte instead
 #
             if byt== b'':
-               switched=self.pilbox.request_service2()
-               continue
-            if (ord(byt) == 0x9C) and switched: # discard handshake
-               switched=False
                continue
 #
 #           process byte read from the PIL-Box
