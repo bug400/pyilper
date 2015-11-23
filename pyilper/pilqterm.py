@@ -29,6 +29,9 @@
 # 06.10.2015 jsi:
 # - class statement syntax update
 # - adjust super statements to python3+ syntax
+# 21.11.2015 jsi:
+# - disabled F7
+# - enhanced error messages about unhandled escape sequences
 
 
 import array
@@ -350,9 +353,9 @@ class QTerminalWidget(QWidget):
               elif s == "~f":      # F6 -> LC ESC O
                  self._kbdfunc(27)
                  self._kbdfunc(79)
-              elif s == "~g":      # F7 -> Ctrl ESC S
-                 self._kbdfunc(27)
-                 self._kbdfunc(83)
+#             elif s == "~g":      # F7 -> Ctrl ESC S
+#                self._kbdfunc(27)
+#                self._kbdfunc(83)
               else:
                  pass
                 
@@ -848,6 +851,6 @@ class HPTerminal:
        elif t==122:  # reset
           self.reset_hard()
        else:
-          print("unhandled escape sequence")
+          print("unhandled escape sequence %d" % t)
        self.fesc= False
  
