@@ -37,6 +37,10 @@
 # - class statement syntax update
 # 26.10.2015 cg
 # - stop endless loop in sendFrame() when client connection fail
+# 22.11.2015 cg
+# - removed remainder call of setsrqbit()
+# 23.11.2015 jsi
+# - removed all of the SSRQ/CSRQ approach
 
 import time
 import select
@@ -56,10 +60,7 @@ class cls_piltcpip:
       self.__remoteport__=remoteport     # port for output connection
 
       self.__running__ = False     # Connected to Network
-      self.__srq__= False          # PIL-Box SRQ State
       self.__devices__ = []        # list of virtual devices
-      self.srqflags = 0            # flag of devices to set srqflag
-      self.__devicecounter__=0     # counter of added devices
       self.__timestamp__= time.time()   # time of last activity
       self.__timestamp_lock__= threading.Lock()
 
@@ -161,19 +162,6 @@ class cls_piltcpip:
                self.__clientlist__.remove(s)
                s.close()
       return None
-
-#
-#  Enable SRQ Mode
-#
-   def setServiceRequest(self):
-      self.__srq__= True
-
-#
-#  Disable PIL-Box SRQ Mode
-#
-   def clearServiceRequest(self):
-      self.__srq__= False
-
 #
 #     send a IL frame to the virtual loop
 #
@@ -211,7 +199,6 @@ class cls_piltcpip:
 #
       for i in self.__devices__:
          frame=i.process(frame)
-#     self.request_service()
 #
 #     If received a cmd frame from the PIL-Box send RFC frame to virtual
 #     HPIL-Devices
@@ -224,33 +211,12 @@ class cls_piltcpip:
 #     send frame
 #
       self.sendFrame(frame)
-
-#
-#  toogle service request mode of PIL-Box
-#
-   def request_service(self):
-      if self.srqflags and not self.__srq__:
-         self.setServiceRequest()
-      if not self.srqflags and self.__srq__:
-         self.clearServiceRequest()
-
-   def request_service2(self):
-      switched=False
-      if self.srqflags and not self.__srq__:
-         switched=True
-         self.__srq__= True
-      return switched
-
 #
 #     virtual HP-IL device
 #
    def register(self, obj):
-      if self.__devicecounter__ > 16:
-         raise TcpIpError("Too many virtual HP-IL devices (max 16)","")
-      obj.setsrqbit(self.__devicecounter__)
       obj.setpilbox(self)
       self.__devices__.append(obj)
-      self.__devicecounter__+=1
 #
 #     unregister virtual HP-IL device
 #

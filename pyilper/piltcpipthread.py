@@ -31,6 +31,8 @@ from .piltcpip import TcpIpError
 # Chnagelog
 # 06.10.2015 jsi:
 # - adjust super statements to python3+ syntax
+# 23.11.2015 jsi:
+# - removed all of the SSRQ/CSRQ approach
 #
 class cls_PilTcpIpThread(QtCore.QThread):
 
@@ -94,7 +96,6 @@ class cls_PilTcpIpThread(QtCore.QThread):
 #         
    def run(self):
 #
-      switched=False
       connected=False
       try:
 #

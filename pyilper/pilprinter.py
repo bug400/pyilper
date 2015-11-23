@@ -37,6 +37,9 @@
 #
 # 06.10.2015 jsi:
 # - class statement syntax update
+#
+# 23.11.2015 jsi:
+# - removed SSRQ/CSRQ approach
 
 class cls_printer:
 
@@ -58,13 +61,8 @@ class cls_printer:
       self.__isactive__= False    # device active in loop
       self.__callback_clprint__= None
       self.__callback_printchar__=None
-      self.__setsrqbit__=0        # srq bit mask (set)
-      self.__clearsrqbit__=0      # srq bit mask (clear)
 
 
-   def setsrqbit(self,devicecounter):
-      self.__setsrqbit__= 1 << devicecounter
-      self.__clearsrqbit= ~(1 << devicecounter)
 
    def setpilbox(self,obj):
       self.__pilbox__=obj
