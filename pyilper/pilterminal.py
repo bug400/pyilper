@@ -151,7 +151,7 @@ class cls_terminal:
             self.__status__= 0 # no data available 
          self.__kbdqueue_lock__.release()
 #        delay
-         time.sleep(0.05)
+#        time.sleep(0.05)
       else:
          frame= 0x540
 
@@ -315,8 +315,8 @@ class cls_terminal:
 #
 #     set service request bit if keyboard data available
 #
-      if self.__getstatus__() & 0x40:
-#     if not self.__kbdqueue__.empty():
+#     if self.__getstatus__() & 0x40:
+      if not self.__kbdqueue__.empty():
          if (frame & 0x700) == 0x000:  # data 00x xxxx xxxx -> 001 xxxx xxxx
             frame= frame | 0x100;
          if (frame & 0x700) == 0x200:  # end  01x xxxx xxxx -> 011 xxxx xxxx
