@@ -47,6 +47,9 @@
 # 21.11.2015 jsi
 # - introduced show IDY frames option in scope tab
 #
+# 28.11.2015 jsi
+# - make help window resizeable
+#
 import os
 import glob
 import datetime
@@ -960,11 +963,11 @@ class cls_HelpWindow(QtGui.QDialog):
       docpath=re.sub("//","/",docpath,1)
       super().__init__()
       self.setWindowTitle('pyILPER Help')
+      self.resize(750,600)
  
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtWebKit.QWebView()
-      self.view.setFixedWidth(600)
       self.view.load(QtCore.QUrl.fromLocalFile(docpath))
       self.button = QtGui.QPushButton('OK')
       self.button.setFixedWidth(60)
