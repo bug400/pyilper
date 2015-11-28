@@ -43,6 +43,9 @@
 # 21.11.2015 jsi:
 # - removed SSRQ/CSRQ approach
 # - set SRQ flag if keyboard buffer is not empty
+#
+# 28.11.2015 jsi:
+# - removed delay in __outdta__
 
 
 import queue
