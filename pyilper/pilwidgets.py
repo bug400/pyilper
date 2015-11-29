@@ -88,7 +88,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
 
    def logOpen(self):
       try:
-         self.log=open(self.filename,"a")
+         self.log=open(self.filename,"a",encoding="UTF-8")
          self.log.write("\nBegin log "+self.filename+" at ")
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
          self.log.write("\n")
