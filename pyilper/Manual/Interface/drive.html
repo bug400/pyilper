@@ -32,7 +32,7 @@
         files on a LIF image file.</p>
 
         <p>The directory listing of the current LIF image file is displayed on the
-        tab. The listing is updated if the loop has been idle for 3 seconds. 
+        tab. The listing is updated if the drive has been idle for 3 seconds. 
         The column headers can be checked to get a sorted list of the directory.</p>
 
         <p>The virtual devices have the following HP-IL configuration:</p>
@@ -64,22 +64,26 @@
 
         <table border ="1">
         <tr><td>&nbsp;</td><td>HP82161A</td><td>HP9114A</td><td>HDRIVE1</td></tr>
-        <tr><td>128KB Cassette</td><td>+</td><td>-</td><td>-</td></tr>
-        <tr><td>616KB Disk</td><td>-</td><td>+</td><td>-</td></tr>
-        <tr><td>640KB Disk</td><td>+</td><td>+</td><td>+</td></tr>
+        <tr><td>128KB Cassette</td><td>+</td><td>-</td><td>+</td></tr>
+        <tr><td>616KB Disk</td><td>-</td><td>+</td><td>+</td></tr>
+        <tr><td>640KB Disk</td><td>-</td><td>-</td><td>+</td></tr>
         </table>
 
         <p>For the HDRIVE1 drive type there is experimental support for larger
         LIF image files (up to 16MB).</p>
 
-        <p>Note: pyILPER requires a valid lif header including:</p>
+        <p>Note: pyILPER requires a valid LIF header when mounting LIF 
+        image files including:</p>
         <p>
         <ul>
         <li>The LIF identifier 0x800 at offset 0</li>
-        <li>The LIF Version number 0x01 at offset 20</li>
         <li>The media size information (number of tracks per surface,
         number of surfaces, number of blocks per track) starting at offset 24</li>
         </ul>
+        <p>If you mount a LIF image file with incorrect header information you
+        get a warning and the default medium size of the current drive type is
+        used. Warning: in this case you must select the proper drive type.
+        Otherwiese the image file may become corrupted.
         </p>
         <p>If a LIF image medium is initialized by a HP-41 HP-IL module or an early
         HP-71B HP-IL module pyILPER fixes wrong or missing header information.</p>
