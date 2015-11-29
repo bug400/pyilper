@@ -47,8 +47,9 @@
 # 21.11.2015 jsi
 # - introduced show IDY frames option in scope tab
 #
-# 28.11.2015 jsi
-# - make help window resizeable
+# 29.11.2015 jsi
+# - working directory is default when opening lif files
+# - do not check lif medium version
 #
 import os
 import glob
@@ -717,9 +718,8 @@ class cls_tabdrive(cls_tabgeneric):
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
       dialog.setNameFilters( ["LIF Image File (*.dat *.DAT *.lif *.LIF)", "All Files (*.*)"] )
-#     this does not work if filemod= anyfile
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(os.path.expanduser('~'))
+      dialog.setDirectory(self.parent.config.get('pyilper','workdir'))
       if dialog.exec():
          return dialog.selectedFiles() 
 #
@@ -772,9 +772,10 @@ class cls_tabdrive(cls_tabgeneric):
 #     do we have a LIF type 1 file
 #
       lifmagic= getLifInt(b,0,2)
-      liftype= getLifInt(b,20,2)
+#     liftype= getLifInt(b,20,2)
       dirstart=getLifInt(b,8,4)
-      if not(lifmagic == 0x8000 and liftype == 1 and dirstart == 2):
+#     if not(lifmagic == 0x8000 and liftype == 1 and dirstart == 2):
+      if not(lifmagic == 0x8000 and dirstart == 2):
          return [2,0,0,0] #  no lif type 1 file
 #
 #     get medium layout
@@ -963,11 +964,11 @@ class cls_HelpWindow(QtGui.QDialog):
       docpath=re.sub("//","/",docpath,1)
       super().__init__()
       self.setWindowTitle('pyILPER Help')
-      self.resize(750,600)
  
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtWebKit.QWebView()
+      self.view.setFixedWidth(600)
       self.view.load(QtCore.QUrl.fromLocalFile(docpath))
       self.button = QtGui.QPushButton('OK')
       self.button.setFixedWidth(60)

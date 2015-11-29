@@ -29,6 +29,8 @@
 # - fixed wrong file type for "ROM75"
 # 05.10.2015 jsi:
 # - class statement syntax update
+# 29.11.2015 jsi:
+# - do not check for lif medium type
 #
 import platform
 import os
@@ -299,9 +301,10 @@ class cls_LifFile:
       for i in range(256):
          self.header[i]= self.buffer[i]
       lifmagic= getLifInt(self.header,0,2)
-      liftype= getLifInt(self.header,20,2)
+#     liftype= getLifInt(self.header,20,2)
       dirstart=getLifInt(self.header,8,4)
-      if lifmagic == 0x8000 and liftype == 1 and dirstart == 2:
+#     if lifmagic == 0x8000 and liftype == 1 and dirstart == 2:
+      if lifmagic == 0x8000 and dirstart == 2:
          self.isLifFile= True
          self.dir_start= dirstart
          self.dir_length= getLifInt(self.header,16,4)
