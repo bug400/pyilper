@@ -50,6 +50,7 @@
 # 29.11.2015 jsi
 # - working directory is default when opening lif files
 # - do not check lif medium version
+# - invalid layout if all media information are zero
 #
 import os
 import glob
@@ -748,7 +749,7 @@ class cls_tabdrive(cls_tabgeneric):
          reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"File does not contain a LIF type 1 medium.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return [False, def_tracks, def_surfaces, def_blocks]
       elif status==3:
-         reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout of current drive type.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return [True, def_tracks, def_surfaces, def_blocks]
 #
 # get media info from lif header
@@ -914,7 +915,8 @@ class cls_LifDirWidget(QtGui.QWidget):
 #
 #       handle invalid values
 #
-        if no_tracks> 125 or no_surfaces>8 or no_blocks > 256:
+        if no_tracks> 125 or no_surfaces>8 or no_blocks > 256 or \
+           no_tracks==0   or no_surfaces==0 or no_blocks ==0:
 
            self.__labelMedium__.setText("Medium Layout: (invalid). Label: {:6s}, formatted: {:s}".format(label, initdatetime))
         else:
