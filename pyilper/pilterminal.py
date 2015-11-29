@@ -46,7 +46,9 @@
 #
 # 28.11.2015 jsi:
 # - removed delay in __outdta__
-
+# 29.11.2015 jsi:
+# - introduced device lock
+#
 
 import queue
 import threading
@@ -84,6 +86,8 @@ class cls_terminal:
       self.__kbdqueue__= queue.Queue()
       self.__kbdqueue_lock__= threading.Lock()
       self.__status_lock__= threading.Lock()
+      self.__islocked__= False
+      self.__access_lock__= threading.Lock()
       self.__callback_cldisp__=None
       self.__callback_dispchar__=None
 #
@@ -113,6 +117,14 @@ class cls_terminal:
       return [self.__isactive__, self.__did__, self.__aid__, self.__addr__, self.__addr2nd__, self.__fterminal__]
 
 #
+#  lock device, all output is disabled
+#
+   def setlocked(self,locked):
+      self.__access_lock__.acquire()
+      self.__islocked__= locked
+      self.__access_lock__.release()
+
+#
 #  --- private ---
 #
    def __getstatus__(self):
@@ -133,7 +145,11 @@ class cls_terminal:
    def __terminal_str__(self,c):
 
       if self.__callback_dispchar__ != None:
-         self.__callback_dispchar__(c)
+         self.__access_lock__.acquire()
+         locked= self.__islocked__
+         self.__access_lock__.release()
+         if not locked:
+            self.__callback_dispchar__(c)
 
 #
 #  clear terminal

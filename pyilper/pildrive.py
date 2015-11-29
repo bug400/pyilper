@@ -55,10 +55,14 @@
 #
 # 21.11.2015 jsi:
 # - removed SSRQ/CSRQ approach
-
+#
+# 29.11.2015 jsi:
+# - introduced talker activity timer
+# - introduced device lock 
 
 import os
 import platform
+import time
 import threading
 
 
@@ -119,7 +123,9 @@ class cls_drive:
       self.__buf1__= bytearray(256) # buffer 1
       self.__hdiscfile__= ""        # disc file
       self.__isactive__= False    # device active in loop
+      self.__islocked__= False    # locked device
       self.__access_lock__= threading.Lock() 
+      self.__timestamp__= time.time() # last time of beeing talker
 
       self.__isWindows__=False    # platform idicator for i/o
       if platform.win32_ver()[0] != "":
@@ -131,15 +137,23 @@ class cls_drive:
    def setactive(self, active):
       self.__isactive__= active
 
+#
+#  lock device, all physical reads or writes issue a "no medium error"
+#
+   def setlocked(self,locked):
+      self.__access_lock__.acquire()
+      self.__islocked__= locked
+      self.__access_lock__.release()
+
    def ismodified(self):
       self.__access_lock__.acquire()
       if self.__modified__:
         self.__modified__= False
         self.__access_lock__.release()
-        return True
+        return (True, self.__timestamp__)
       else:
         self.__access_lock__.release()
-        return False
+        return (False, self.__timestamp__)
 
    def acquireaccesslock(self):
       self.__access_lock__.acquire()
@@ -208,6 +222,10 @@ class cls_drive:
 #
    def __rrec__(self):
       self.__access_lock__.acquire()
+      if self.__islocked__:
+         self.__access_lock__.release()
+         self.__status__= 20   # no medium error
+         return
       try:
          if self.__isWindows__:
             fd= os.open(self.__hdiscfile__,os.O_RDONLY | os.O_BINARY)
@@ -272,6 +290,10 @@ class cls_drive:
 #
    def __wrec__(self):
       self.__access_lock__.acquire()
+      if self.__islocked__:
+         self.__access_lock__.release()
+         self.__status__= 20 # no medium error
+         return
       try:
          if self.__isWindows__:
             fd= os.open(self.__hdiscfile__, os.O_WRONLY | os.O_BINARY)
@@ -301,6 +323,10 @@ class cls_drive:
                b[i]= 0xFF
 
       self.__access_lock__.acquire()
+      if self.__islocked__:
+         self.__access_lock__.release()
+         self.__status__= 20 # no medium error
+         return
       try:
          if self.__isWindows__:
             fd= os.open(self.__hdiscfile__, os.O_WRONLY | os.O_BINARY |  os.O_TRUNC | os.O_CREAT, 0o644)
@@ -621,6 +647,8 @@ class cls_drive:
 
       if not self.__isactive__:
          return(frame)
+      if self.__fstate__ & 0x02 !=0:
+         self.__timestamp__= time.time()
       if (frame & 0x400) == 0:
          frame= self.__do_doe__(frame)
       elif (frame & 0x700) == 0x400:

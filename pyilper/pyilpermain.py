@@ -38,6 +38,8 @@
 # - bump version number to 1.2.3
 # 14.11.2015 jsi
 # - bump version number to 1.3.0
+# 29.11.2015 jsi
+# - removed pause and resume pil loop
 
 #
 import os
@@ -266,16 +268,6 @@ class cls_pyilper(QtCore.QObject):
             pass
       self.commobject=None
       self.status= STAT_DISABLED
-#
-#  pause PIL-Box thread, i.e. to change application configuration
-#
-   def pause_pil_loop(self):
-      self.commthread.halt()
-#
-#  restart paused PIL-Box thread
-#
-   def resume_pil_loop(self):
-      self.commthread.resume()
 #
 #  clean up from thread crash
 #

@@ -51,6 +51,8 @@
 # - working directory is default when opening lif files
 # - do not check lif medium version
 # - invalid layout if all media information are zero
+# - refresh dir list if drive has not been talker for nn seconds
+# - use device lock instead of pausing PIL-Loop
 #
 import os
 import glob
@@ -72,7 +74,8 @@ from .pilconfig import PilConfigError
 # Constants
 #
 UPDATE_TIMER=100      # Refresh timer (ms) for terminal window content
-REFRESH_RATE=5000     # refresh rate for lif directory
+REFRESH_RATE=1000     # refresh rate for lif directory
+NOT_TALKER_SPAN=3     # time span for no talker acitvity of drives
 
 #
 # Logging check box
@@ -244,21 +247,21 @@ class cls_tabtermgeneric(cls_tabgeneric):
    def do_cbLogging(self):
       self.cbLogging.setEnabled(False)
       self.logging= self.cbLogging.isChecked()
-      self.parent.pause_pil_loop()
+      self.pildevice.setlocked(True)
       if self.logging:
          self.cbLogging.logOpen()
       else:
          self.cbLogging.logClose()
       self.parent.config.put(self.name,"logging",self.logging)
-      self.parent.resume_pil_loop()
+      self.pildevice.setlocked(False)
       self.cbLogging.setEnabled(True)
 
    def do_changeCharset(self,text):
       self.charset=self.comboCharset.findText(text)
       self.parent.config.put(self.name,'charset',self.charset)
-      self.parent.pause_pil_loop()
+      self.pildevice.setlocked(True)
       self.hpterm.set_charset(self.charset)
-      self.parent.resume_pil_loop()
+      self.pildevice.setlocked(False)
 
    def enable(self):
       super().enable()
@@ -323,10 +326,8 @@ class cls_tabscope(cls_tabtermgeneric):
    def do_show_idy(self):
       self.cbShowIdy.setEnabled(False)
       self.showIdy= self.cbShowIdy.isChecked()
-      self.parent.pause_pil_loop()
       self.parent.config.put(self.name,"showidy",self.showIdy)
       self.pildevice.set_show_idy(self.showIdy)
-      self.parent.resume_pil_loop()
       self.cbShowIdy.setEnabled(True)
 #
 #  callback output char to console
@@ -584,6 +585,7 @@ class cls_tabdrive(cls_tabgeneric):
 #
       self.timer=QtCore.QTimer()
       self.timer.timeout.connect(self.update_hdrive)
+      self.update_pending= False
 #
 #     enable/disable
 #
@@ -648,22 +650,23 @@ class cls_tabdrive(cls_tabgeneric):
       flist= self.get_lifFilename()
       if flist == None:
          return
-      self.parent.pause_pil_loop()
       status, tracks, surfaces, blocks= self.lifMediumCheck(flist[0])
       if status:
          self.filename=flist[0]
       else:
          self.filename=""
-      self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
-      self.lblFilename.setText(self.filename)
-      self.lifdir.setFileName(self.filename)
-      self.lifdir.refresh()
       self.parent.config.put(self.name,'filename',self.filename)
       try:
          self.parent.config.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-      self.parent.resume_pil_loop()
+
+      self.pildevice.setlocked(True)
+      self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
+      self.pildevice.setlocked(False)
+      self.lblFilename.setText(self.filename)
+      self.lifdir.setFileName(self.filename)
+      self.lifdir.refresh()
 
    def do_drivetypeChanged(self):
       i=0
@@ -672,7 +675,6 @@ class cls_tabdrive(cls_tabgeneric):
             self.drivetype=i
             break
          i+=1
-      self.parent.pause_pil_loop()
       self.parent.config.put(self.name,'drivetype', self.drivetype)
 #
 #     remove filename
@@ -684,12 +686,13 @@ class cls_tabdrive(cls_tabgeneric):
          self.lifdir.clear()
          reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       did,aid= self.deviceinfo[self.drivetype]
-      self.pildevice.setdevice(did,aid)
       try:
          self.parent.config.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-      self.parent.resume_pil_loop()
+      self.pildevice.setlocked(True)
+      self.pildevice.setdevice(did,aid)
+      self.pildevice.setlocked(False)
 
 #
 #  Drive tab: refresh directory listing of medium
@@ -700,9 +703,12 @@ class cls_tabdrive(cls_tabgeneric):
       if self.pildevice is None:
          return
       tm=time.time()
-      if tm - self.parent.commobject.gettimestamp() > 3:
-         if self.pildevice.ismodified():
+      modified, timestamp= self.pildevice.ismodified()
+      self.update_pending= self.update_pending or modified
+      if self.update_pending:
+         if tm - timestamp > NOT_TALKER_SPAN:
             self.refreshDirList()
+            self.update_pending= False
 
    def refreshDirList(self):
       if self.filename=="":

@@ -40,6 +40,9 @@
 # 16.10.2015 jsi:
 # - removed SSRQ, CSRQ approach
 # - introduced COFI switch to get real IDY frames from the loop (requires firmware 1.6)
+#
+# 29.11.2015 jsi:
+# - removed activity timer
 
 #
 # PIL-Box Commands
@@ -50,7 +53,6 @@ COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 TMOUTCMD=1    # time out for PIL-Box commands
 TMOUTFRM=0.10 # time out for HP-IL frames
 
-import time
 import threading
 from .pilrs232 import Rs232Error, cls_rs232
 
@@ -70,8 +72,6 @@ class cls_pilbox:
       self.__devices__ = []        # list of virtual devices
       self.__tty__= cls_rs232()    # serial device object
       self.__ttydevice__=ttydevice # serial port name
-      self.__timestamp__= time.time()   # time of last activity
-      self.__timestamp_lock__= threading.Lock()
 #
 #  send command to PIL-Box, check return value
 #
@@ -89,11 +89,6 @@ class cls_pilbox:
          raise PilBoxError("PIL-Box command error: illegal retval","")
       self.__lasth__= sav
 
-   def gettimestamp(self):
-      self.__timestamp_lock__.acquire()
-      t= self.__timestamp__
-      self.__timestamp_lock__.release()
-      return t
 #
 #  Connect to PIL-Box in controller off mode
 #
@@ -193,9 +188,6 @@ class cls_pilbox:
          else:
             frame = ((self.__lasth__ & 0x1F) << 6) + (byt & 0x3F)
 
-         self.__timestamp_lock__.acquire()
-         self.__timestamp__= time.time()   # time of last activity
-         self.__timestamp_lock__.release()
 #
 #     process virtual HP-IL devices
 #

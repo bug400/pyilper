@@ -30,7 +30,11 @@
 # 21.11.2015 jsi:
 # - removed SSRQ/CSRQ approach
 # - introduced show IDY frames option
+# 29.11.2015 jsi:
+# - introduced device lock
 #
+import threading
+
 class cls_scope:
 
    def __init__ (self):
@@ -43,6 +47,8 @@ class cls_scope:
                     "???", "???", "AAU", "LPD", "???", "???", "???", "???"]
       self.__isactive__= False
       self.__show_idy__= False
+      self.__islocked__= False
+      self.__access_lock__= threading.Lock()
       self.__callback_dispchar__= None
       self.__count__ = 0
 
@@ -58,6 +64,15 @@ class cls_scope:
 
    def register_callback_dispchar(self,func):
       self.__callback_dispchar__= func
+
+#
+#  lock device, all output is disabled
+#
+   def setlocked(self,locked):
+      self.__access_lock__.acquire()
+      self.__islocked__= locked
+      self.__access_lock__.release()
+
 
    def process (self,frame):
       if not self.__isactive__:
@@ -143,5 +158,9 @@ class cls_scope:
 
       s= s.ljust(8)
       if self.__callback_dispchar__ != None:
-         self.__callback_dispchar__(s)
+         self.__access_lock__.acquire()
+         locked= self.__islocked__
+         self.__access_lock__.release()
+         if not locked:
+            self.__callback_dispchar__(s)
       return (frame)

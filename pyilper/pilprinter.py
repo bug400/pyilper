@@ -40,6 +40,11 @@
 #
 # 23.11.2015 jsi:
 # - removed SSRQ/CSRQ approach
+# 29.11.2015 jsi:
+# - introduced device lock
+#
+import threading
+
 
 class cls_printer:
 
@@ -59,6 +64,8 @@ class cls_printer:
       self.__ptssi__ = 0          # output pointer for hp-il status
       self.__fesc__ = False       # no escape sequence
       self.__isactive__= False    # device active in loop
+      self.__islocked__= False
+      self.__access_lock__= threading.Lock()
       self.__callback_clprint__= None
       self.__callback_printchar__=None
 
@@ -78,6 +85,13 @@ class cls_printer:
    
    def getstatus(self):
       return [self.__isactive__, self.__did__, self.__aid__, self.__addr__, self.__addr2nd__, self.__fprinter__]
+#
+#  lock device, all output is disabled
+#
+   def setlocked(self,locked):
+      self.__access_lock__.acquire()
+      self.__islocked__= locked
+      self.__access_lock__.release()
 
 #
 #  handle special characters
@@ -93,8 +107,11 @@ class cls_printer:
             self.__fesc__ = True
          if not self.__fesc__:
             if self.__callback_printchar__ != None:
-               self.__callback_printchar__(c)
-
+               self.__access_lock__.acquire()
+               locked= self.__islocked__
+               self.__access_lock__.release()
+               if not locked:
+                  self.__callback_printchar__(c)
 #
 #     ignore escape sequences
 #

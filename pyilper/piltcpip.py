@@ -41,8 +41,9 @@
 # - removed remainder call of setsrqbit()
 # 23.11.2015 jsi
 # - removed all of the SSRQ/CSRQ approach
+# 29.11.2015 jsi
+# - removed activity timer
 
-import time
 import select
 import socket
 import threading
@@ -61,8 +62,6 @@ class cls_piltcpip:
 
       self.__running__ = False     # Connected to Network
       self.__devices__ = []        # list of virtual devices
-      self.__timestamp__= time.time()   # time of last activity
-      self.__timestamp_lock__= threading.Lock()
 
       self.__serverlist__ = []
       self.__clientlist__= []
@@ -71,12 +70,6 @@ class cls_piltcpip:
 
    def isConnected(self):
       return self.__outconnected__
-
-   def gettimestamp(self):
-      self.__timestamp_lock__.acquire()
-      t= self.__timestamp__
-      self.__timestamp_lock__.release()
-      return t
 
 #
 #  Connect to Network
@@ -191,9 +184,6 @@ class cls_piltcpip:
 #
    def process(self,frame):
 
-      self.__timestamp_lock__.acquire()
-      self.__timestamp__= time.time()   # time of last activity
-      self.__timestamp_lock__.release()
 #
 #     process virtual HP-IL devices
 #
