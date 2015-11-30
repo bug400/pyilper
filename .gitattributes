@@ -1,4 +1,11 @@
 PILIMAGE.DAT binary
+CASSETTE.DAT binary
+FLOPPY.DAT binary
+HDRIVE1.DAT binary
+HDRIVE2.DAT binary
+HDRIVE4.DAT binary
+HDRIVE8.DAT binary
+HDRIVE16.DAT binary
 hpil.png binary
 pyilper_drive.png binary
 pyilper_scope.png binary

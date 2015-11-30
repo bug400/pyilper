@@ -62,6 +62,7 @@
 #
 # 30.11.2015 jsi:
 # - fixed idle timer mechanism
+# - fixed header of HP82161 medium when formatted with an HP-71
 
 import os
 import platform
@@ -268,6 +269,12 @@ class cls_drive:
             putLifInt(self.__buf0__,24,4,self.__tracks__)
             putLifInt(self.__buf0__,28,4,self.__surfaces__)
             putLifInt(self.__buf0__,32,4,self.__blocks__)
+#
+#        fix HP82161A cassette formated with HP-71
+#
+         if tracks==2 and surfaces==1 and blocks ==0:
+            putLifInt(self.__buf0__,32,4,self.__blocks__)
+       
 #
 #       LIF Version 1 fix (for HP41 initialized images)
 #
