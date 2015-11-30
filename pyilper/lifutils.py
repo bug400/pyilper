@@ -31,6 +31,8 @@
 # - class statement syntax update
 # 29.11.2015 jsi:
 # - do not check for lif medium type
+# 30.11.2015 jsi:
+# - raise error in lifopen if not a valid lif image file
 #
 import platform
 import os
@@ -301,7 +303,7 @@ class cls_LifFile:
       for i in range(256):
          self.header[i]= self.buffer[i]
       lifmagic= getLifInt(self.header,0,2)
-#     liftype= getLifInt(self.header,20,2)
+      liftype= getLifInt(self.header,20,2)
       dirstart=getLifInt(self.header,8,4)
 #     if lifmagic == 0x8000 and liftype == 1 and dirstart == 2:
       if lifmagic == 0x8000 and dirstart == 2:
@@ -313,6 +315,8 @@ class cls_LifFile:
          self.no_blocks= getLifInt(self.header,32,4)
          self.label= getLifString(self.header,2,6)
          self.initdatetime= getLifDateTime(self.header,36)
+      else:
+         raise LifError("No valid LIF image file")
 
    def lifclose(self):
       self.__close__()
