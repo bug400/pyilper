@@ -59,6 +59,9 @@
 # 29.11.2015 jsi:
 # - introduced talker activity timer
 # - introduced device lock 
+#
+# 30.11.2015 jsi:
+# - fixed idle timer mechanism
 
 import os
 import platform
