@@ -43,6 +43,8 @@
 #
 # 29.11.2015 jsi:
 # - removed activity timer
+# 30.11.2015 jsi:
+# - introduced idyframe option
 
 #
 # PIL-Box Commands
@@ -64,14 +66,16 @@ class PilBoxError(Exception):
 
 class cls_pilbox:
 
-   def __init__(self,ttydevice,baudrate,use8bits):
+   def __init__(self,ttydevice,baudrate,idyframe,use8bits):
       self.__running__ = False     # Connected to PIL-Box
       self.__use8bits__= use8bits  # Use 8 bits for transfer
       self.__baudrate__= baudrate  # baudrate
+      self.__idyframe__= idyframe  # switch box to send idy frames
       self.__lasth__ = 0           # Copy of last byte sent
       self.__devices__ = []        # list of virtual devices
       self.__tty__= cls_rs232()    # serial device object
       self.__ttydevice__=ttydevice # serial port name
+
 #
 #  send command to PIL-Box, check return value
 #
@@ -101,7 +105,8 @@ class cls_pilbox:
       except Rs232Error as e:
          raise PilBoxError("Cannot connect to PIL-Box", e.value)
       self.__sendCmd__(COFF,TMOUTCMD)
-      self.__sendCmd__(COFI,TMOUTCMD)
+      if self.__idyframe__:
+         self.__sendCmd__(COFI,TMOUTCMD)
       self.__running__ = True
 
 #

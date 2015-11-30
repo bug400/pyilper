@@ -54,6 +54,9 @@
 # - refresh dir list if drive has not been talker for nn seconds
 # - use device lock instead of pausing PIL-Loop
 #
+# 30.11.2015 jsi
+# - introduced idy frame option
+#
 import os
 import glob
 import datetime
@@ -610,8 +613,9 @@ class cls_tabdrive(cls_tabgeneric):
       self.butFilename.setEnabled(True)
       for w in self.gbox_buttonlist:
          w.setEnabled(True)
-      self.lifdir.refresh()
-      self.timer.start(REFRESH_RATE)
+#     only if visible!!
+#     self.lifdir.refresh()
+#     self.timer.start(REFRESH_RATE)
 
    def disable(self):
       super().disable()
@@ -1110,11 +1114,12 @@ class cls_TtyWindow(QtGui.QDialog):
 
 class cls_PilConfigWindow(QtGui.QDialog):
 
-   def __init__(self, mode,tty, baudrate,port,remotehost,remoteport,workdir):
+   def __init__(self, mode,tty, baudrate,idyframe, port,remotehost,remoteport,workdir):
       super().__init__()
       self.__mode__= mode
       self.__tty__= tty
       self.__baudrate__=baudrate
+      self.__idyframe__= idyframe
       self.__port__= port
       self.__remotehost__= remotehost
       self.__remoteport__= remoteport
@@ -1175,6 +1180,12 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.hboxbaud.addWidget(self.comboBaud)
       self.hboxbaud.addStretch(1)
       self.vboxgbox.addLayout(self.hboxbaud)
+
+      self.cbIdyFrame= QtGui.QCheckBox('Enable IDY frames')
+      self.cbIdyFrame.setChecked(self.__idyframe__)
+      self.cbIdyFrame.setEnabled(True)
+      self.cbIdyFrame.stateChanged.connect(self.do_cbIdyFrame)
+      self.vboxgbox.addWidget(self.cbIdyFrame)
 #
 #     section TCP/IP communication
 #
@@ -1257,6 +1268,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
          self.edtPort.setEnabled(False)
          self.edtRemoteHost.setEnabled(False)
          self.edtRemotePort.setEnabled(False)
+         self.cbIdyFrame.setEnabled(True)
       else:
          self.__mode__=1
          self.comboBaud.setEnabled(False)
@@ -1264,6 +1276,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
          self.edtPort.setEnabled(True)
          self.edtRemoteHost.setEnabled(True)
          self.edtRemotePort.setEnabled(True)
+         self.cbIdyFrame.setEnabled(True)
 
    def do_config_Interface(self):
       interface= cls_TtyWindow.getTtyDevice()
@@ -1281,6 +1294,9 @@ class cls_PilConfigWindow(QtGui.QDialog):
       if dialog.exec():
          return dialog.selectedFiles() 
 
+   def do_cbIdyFrame(self):
+      self.__idyframe__= self.cbIdyFrame.isChecked()
+
    def do_config_Workdir(self):
       flist=self.getWorkDirName()
       if flist== None:
@@ -1296,7 +1312,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__remoteport__= int(self.edtRemotePort.text())
       self.__tty__= self.lblTty.text()
       self.__workdir__= self.lblwdir.text()
-      self.__config__=[self.__mode__, self.__tty__, self.__baudrate__, 
+      self.__config__=[self.__mode__, self.__tty__,self.__baudrate__,self.__idyframe__, 
          self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__]
       self.close()
 
@@ -1308,8 +1324,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
       return self.__config__
 
    @staticmethod
-   def getPilConfig(mode,tty,baudrate,port,remotehost,remoteport,workdir):
-      dialog= cls_PilConfigWindow(mode,tty,baudrate,port,remotehost,remoteport,workdir)
+   def getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir):
+      dialog= cls_PilConfigWindow(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir)
       dialog.resize(200,100)
       result= dialog.exec_()
       config= dialog.getConfig()

@@ -40,6 +40,9 @@
 # - bump version number to 1.3.0
 # 29.11.2015 jsi
 # - removed pause and resume pil loop
+# 30.11.2015 jsi
+# - introduced idyframe option
+# - bump version number to 1.3.1
 
 #
 import os
@@ -51,7 +54,7 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.3.0"       # pyILPR version number
+VERSION="1.3.1"       # pyILPR version number
 CONFIG_VERSION="1"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
@@ -119,6 +122,7 @@ class cls_pyilper(QtCore.QObject):
          self.config.get(self.name,"tabconfigchanged",False)
          self.config.get(self.name,"tty","/dev/ttyUSB0")
          self.config.get(self.name,"baudrate",BAUD_115200)
+         self.config.get(self.name,"idyframe",False)
          self.config.get(self.name,"port",60001)
          self.config.get(self.name,"remotehost","localhost")
          self.config.get(self.name,"remoteport",60000)
@@ -202,7 +206,7 @@ class cls_pyilper(QtCore.QObject):
 #        create PIL-Box object, connect to PIL-Box
 #
          try:
-            self.commobject= cls_pilbox(self.config.get(self.name,'tty'),BAUDRATES[self.config.get(self.name,'baudrate')],USE8BITS)
+            self.commobject= cls_pilbox(self.config.get(self.name,'tty'),BAUDRATES[self.config.get(self.name,'baudrate')],self.config.get(self.name,'idyframe'),USE8BITS)
             self.commobject.open()
             self.commthread= cls_PilBoxThread(self.ui,self.commobject)
          except PilBoxError as e:
@@ -310,19 +314,21 @@ class cls_pyilper(QtCore.QObject):
       tty= self.config.get(self.name,"tty")
       baudrate= self.config.get(self.name,"baudrate")
       port= self.config.get(self.name,"port")
+      idyframe= self.config.get(self.name,"idyframe")
       remotehost= self.config.get(self.name,"remotehost")
       remoteport= self.config.get(self.name,"remoteport")
       workdir=  self.config.get(self.name,"workdir")
-      config=cls_PilConfigWindow.getPilConfig(mode,tty,baudrate,port,remotehost,remoteport,workdir)
+      config=cls_PilConfigWindow.getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir)
       if config is None: 
          return
       self.config.put(self.name,"mode",config[0])
       self.config.put(self.name,"tty",config[1])
       self.config.put(self.name,"baudrate",config[2])
-      self.config.put(self.name,"port",config[3])
-      self.config.put(self.name,"remotehost",config[4])
-      self.config.put(self.name,"remoteport",config[5])
-      self.config.put(self.name,"workdir",config[6])
+      self.config.put(self.name,"idyframe",config[3])
+      self.config.put(self.name,"port",config[4])
+      self.config.put(self.name,"remotehost",config[5])
+      self.config.put(self.name,"remoteport",config[6])
+      self.config.put(self.name,"workdir",config[7])
       self.disable()
       try:
          self.config.save()
