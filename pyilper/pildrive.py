@@ -306,6 +306,7 @@ class cls_drive:
 #           print("wrec record %d" % (self.__pe__))
             os.write(fd,self.__buf0__)
             self.__modified__= True
+            self.__timestamp__= time.time()
          except OSError as e:
             self.__status__= 24
          os.close(fd)
@@ -335,6 +336,7 @@ class cls_drive:
          for i in range(0,127):
             os.write(fd,b)
          os.close(fd)
+         self.__timestamp__= time.time()
       except OSError:
          self.__status__= 29
       self.__access_lock__.release()
@@ -647,8 +649,6 @@ class cls_drive:
 
       if not self.__isactive__:
          return(frame)
-      if self.__fstate__ & 0x02 !=0:
-         self.__timestamp__= time.time()
       if (frame & 0x400) == 0:
          frame= self.__do_doe__(frame)
       elif (frame & 0x700) == 0x400:
