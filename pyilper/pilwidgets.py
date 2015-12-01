@@ -57,6 +57,9 @@
 # 30.11.2015 jsi
 # - introduced idy frame option
 #
+# 01.12.2015 jsi
+# - clear dirlist if illegal medium is mounted
+#
 import os
 import glob
 import datetime
@@ -670,7 +673,10 @@ class cls_tabdrive(cls_tabgeneric):
       self.pildevice.setlocked(False)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
-      self.lifdir.refresh()
+      if self.filename=="":
+         self.lifdir.clear()
+      else:
+         self.lifdir.refresh()
 
    def do_drivetypeChanged(self):
       i=0
