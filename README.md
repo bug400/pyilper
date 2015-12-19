@@ -70,7 +70,7 @@ See the [Installation Instructions](https://github.com/bug400/pyilper/blob/maste
 License
 -------
 
-pyILPER is published under the GNU General Public License v3.0 License 
+pyILPER is published under the GNU General Public License v2.0 License 
 (see LICENSE file).
 
 
