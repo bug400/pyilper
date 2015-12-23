@@ -43,6 +43,8 @@
 # 30.11.2015 jsi
 # - introduced idyframe option
 # - bump version number to 1.3.1
+# 18.12.2015 jsi
+# - bump version number to 1.3.2
 
 #
 import os
@@ -54,7 +56,7 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.3.1"       # pyILPR version number
+VERSION="1.3.2"       # pyILPR version number
 CONFIG_VERSION="1"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
