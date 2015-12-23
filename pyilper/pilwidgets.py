@@ -60,6 +60,14 @@
 # 01.12.2015 jsi
 # - clear dirlist if illegal medium is mounted
 #
+# 18.12.2015 jsi
+# - added dropdown command button in drive tab
+# - addec context menu for entries in directory listing
+#
+# 22.12.2015 jsi
+# - added navigation buttons to the help window 
+# - make help window resizeable
+#
 import os
 import glob
 import datetime
@@ -76,6 +84,7 @@ from .pilterminal import cls_terminal
 from .pildrive import cls_drive
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .pilconfig import PilConfigError
+from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport
 #
 # Constants
 #
@@ -155,11 +164,12 @@ class cls_tabgeneric(QtGui.QWidget):
    def enable(self):
       self.cbActive.setEnabled(True)
 
-
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
       self.parent.config.put(self.name,"active",self.active)
       self.pildevice.setactive(self.active)
+      if self.toggle_active() is not None:
+         self.toggle_active()
       return
 
    def __set_termconfig__(self,rows,cols):
@@ -547,7 +557,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.vbox3.addStretch(1)
 
       self.vbox1= QtGui.QVBoxLayout()
-      self.lifdir=cls_LifDirWidget(None,10)
+      self.lifdir=cls_LifDirWidget(self,10)
       self.vbox1.addWidget(self.lifdir)
 
       self.hbox2= QtGui.QHBoxLayout()
@@ -560,6 +570,20 @@ class cls_tabdrive(cls_tabgeneric):
       self.hbox3.addWidget(self.cbActive)
       self.hbox3.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
       self.hbox3.setContentsMargins(10,3,10,3)
+
+      self.tBar= QtGui.QToolBar()
+      self.tBut= QtGui.QToolButton(self.tBar)
+      self.menu= QtGui.QMenu(self.tBut)
+      self.tBut.setMenu(self.menu)
+      self.tBut.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
+      self.actPack= self.menu.addAction("Pack")
+      self.actImport= self.menu.addAction("Import")
+      self.tBut.setText("Tools")
+      self.tBut.setEnabled(False)
+      
+      self.hbox3.addWidget(self.tBut)
+      self.hbox3.setAlignment(self.tBar,QtCore.Qt.AlignLeft)
+      self.hbox3.addStretch(1)
 
       self.vbox= QtGui.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
@@ -586,12 +610,16 @@ class cls_tabdrive(cls_tabgeneric):
       self.radbutDisk.clicked.connect(self.do_drivetypeChanged)
       self.radbutHdrive1.clicked.connect(self.do_drivetypeChanged)
       self.butFilename.clicked.connect(self.do_filenameChanged)
+      self.actPack.triggered.connect(self.do_pack)
+      self.actImport.triggered.connect(self.do_import)
 #
 #     refresh timer
 #
       self.timer=QtCore.QTimer()
       self.timer.timeout.connect(self.update_hdrive)
       self.update_pending= False
+      if not self.active and self.filename != "":
+         self.tBut.setEnabled(True)
 #
 #     enable/disable
 #
@@ -616,9 +644,6 @@ class cls_tabdrive(cls_tabgeneric):
       self.butFilename.setEnabled(True)
       for w in self.gbox_buttonlist:
          w.setEnabled(True)
-#     only if visible!!
-#     self.lifdir.refresh()
-#     self.timer.start(REFRESH_RATE)
 
    def disable(self):
       super().disable()
@@ -627,6 +652,12 @@ class cls_tabdrive(cls_tabgeneric):
       for w in self.gbox_buttonlist:
          w.setEnabled(False)
       self.pildevice= None
+
+   def toggle_active(self):
+      if not self.active and self.filename != "":
+         self.tBut.setEnabled(True)
+      else:
+         self.tBut.setEnabled(False)
 #
 #  set drive type checked
 #
@@ -675,8 +706,13 @@ class cls_tabdrive(cls_tabgeneric):
       self.lifdir.setFileName(self.filename)
       if self.filename=="":
          self.lifdir.clear()
+         self.tBut.setEnabled(False)
       else:
          self.lifdir.refresh()
+         if  not self.active:
+            self.tBut.setEnabled(True)
+         else:
+            self.tBut.setEnabled(False)
 
    def do_drivetypeChanged(self):
       i=0
@@ -694,6 +730,7 @@ class cls_tabdrive(cls_tabgeneric):
          self.parent.config.put(self.name,'filename',self.filename)
          self.lblFilename.setText(self.filename)
          self.lifdir.clear()
+         self.tBut.setEnabled(False)
          reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       did,aid= self.deviceinfo[self.drivetype]
       try:
@@ -703,6 +740,16 @@ class cls_tabdrive(cls_tabgeneric):
       self.pildevice.setlocked(True)
       self.pildevice.setdevice(did,aid)
       self.pildevice.setlocked(False)
+
+   def do_pack(self):
+      cls_lifpack.exec(self.filename)
+      self.lifdir.refresh()
+
+   def do_import(self):
+      workdir=self.parent.config.get('pyilper','workdir')
+      cls_lifimport.exec(self.filename, workdir)
+      self.lifdir.refresh()
+
 
 #
 #  Drive tab: refresh directory listing of medium
@@ -839,17 +886,54 @@ class TableModel(QtGui.QStandardItemModel):
          self._sort_order = order
          super().sort(column, order)
 
-class cls_LifDirWidget(QtGui.QWidget):
+class DirTableView(QtGui.QTableView):
 
+    def __init__(self,parent):
+        super().__init__(parent)
+        self.parent=parent
+#
+#       context menu
+#
+    def contextMenuEvent(self, event):
+        if self.parent.parent.active:
+           event.accept()
+           return
+        if self.selectionModel().selection().indexes():
+            for i in self.selectionModel().selection().indexes():
+                row, column = i.row(), i.column()
+            model=self.parent.getModel()
+            imagefile= self.parent.getFilename()
+            liffilename=model.item(row,0).text()
+#           liffiletype=self.parent.getFtypeNum(row)
+            liffiletype=model.item(row,1).text()
+            menu = QtGui.QMenu()
+            exportAction = menu.addAction("Export")
+            purgeAction = menu.addAction("Purge")
+            renameAction = menu.addAction("Rename")
+            action = menu.exec_(self.mapToGlobal(event.pos()))
+            workdir=self.parent.parent.parent.config.get('pyilper','workdir')
+            if action ==exportAction:
+                cls_lifexport.exec(imagefile,liffilename,liffiletype,workdir)
+            elif action== purgeAction:
+                cls_lifpurge.exec(imagefile,liffilename)
+                self.parent.refresh()
+            elif action== renameAction:
+                cls_lifrename.exec(imagefile,liffilename)
+                self.parent.refresh()
+            event.accept()
+
+class cls_LifDirWidget(QtGui.QWidget):
 
     def __init__(self,parent,rows):
         super().__init__(parent)
-        self.__table__ = QtGui.QTableView(self)  # Table view for dir
+        self.parent=parent
+        self.__table__ = DirTableView(self)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
+        self.__table__.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 #
 #       switch off grid, no focus, no row selection
 #
-        self.__table__.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        self.__table__.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.__table__.setFocusPolicy(QtCore.Qt.NoFocus)
         self.__table__.setShowGrid(False)
         self.__columns__=6     # 5 rows for directory listing
@@ -890,6 +974,13 @@ class cls_LifDirWidget(QtGui.QWidget):
         self.__labelDir__.setText("")
         layout.addWidget(self.__labelDir__)
         layout.addWidget(self.__table__)
+
+    def getModel(self):
+        return(self.__model__)
+
+    def getFilename(self):
+        return(self.__filename__)
+
 #
 #   connect lif data file 
 #
@@ -986,18 +1077,35 @@ class cls_HelpWindow(QtGui.QDialog):
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtWebKit.QWebView()
-      self.view.setFixedWidth(600)
+      self.view.setMinimumWidth(600)
       self.view.load(QtCore.QUrl.fromLocalFile(docpath))
-      self.button = QtGui.QPushButton('OK')
-      self.button.setFixedWidth(60)
-      self.button.clicked.connect(self.do_exit)
+
+      self.buttonExit = QtGui.QPushButton('Exit')
+      self.buttonExit.setFixedWidth(60)
+      self.buttonExit.clicked.connect(self.do_exit)
+      self.buttonBack = QtGui.QPushButton('<')
+      self.buttonBack.setFixedWidth(60)
+      self.buttonBack.clicked.connect(self.do_back)
+      self.buttonForward = QtGui.QPushButton('>')
+      self.buttonForward.setFixedWidth(60)
+      self.buttonForward.clicked.connect(self.do_forward)
       self.vlayout.addWidget(self.view)
       self.hlayout = QtGui.QHBoxLayout()
-      self.hlayout.addWidget(self.button)
+      self.hlayout.addWidget(self.buttonBack)
+      self.hlayout.addWidget(self.buttonExit)
+      self.hlayout.addWidget(self.buttonForward)
       self.vlayout.addLayout(self.hlayout)
 
    def do_exit(self):
       self.hide()
+
+   def do_back(self):
+      self.view.back()
+
+   def do_forward(self):
+      self.view.forward()
+#
+#
 #
 # About Dialog class --------------------------------------------------------
 #
@@ -1033,8 +1141,7 @@ class cls_TtyWindow(QtGui.QDialog):
    def __init__(self, parent=None):
       super().__init__()
 
-      self.win = QtGui.QWidget()
-      self.win.setWindowTitle("Select serial device")
+      self.setWindowTitle("Select serial device")
       self.vlayout= QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
 
@@ -1133,7 +1240,6 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__config__= None
       
 
-      self.win = QtGui.QWidget()
       self.setWindowTitle("pyILPER configuration")
       self.vbox0= QtGui.QVBoxLayout()
       self.setLayout(self.vbox0)
@@ -1346,8 +1452,7 @@ class cls_TabConfigWindow(QtGui.QDialog):
       super().__init__()
       self.__config__= config
 
-      self.win = QtGui.QWidget()
-      self.win.setWindowTitle("Configure virtual HP-IL devices")
+      self.setWindowTitle("Configure virtual HP-IL devices")
       self.vlayout= QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
 
