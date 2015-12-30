@@ -68,6 +68,9 @@
 # - added navigation buttons to the help window 
 # - make help window resizeable
 #
+# 28.12.2015 jsi
+# - do_cbActive: check for method toggle_active fixed
+#
 import os
 import glob
 import datetime
@@ -168,8 +171,10 @@ class cls_tabgeneric(QtGui.QWidget):
       self.active= self.cbActive.isChecked()
       self.parent.config.put(self.name,"active",self.active)
       self.pildevice.setactive(self.active)
-      if self.toggle_active() is not None:
+      try:
          self.toggle_active()
+      except AttributeError:
+         pass
       return
 
    def __set_termconfig__(self,rows,cols):
