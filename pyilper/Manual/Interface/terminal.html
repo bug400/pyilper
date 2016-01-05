@@ -50,7 +50,8 @@
         </ul>
         </blockquote>
         <p>The keyboard is supported by the HP-71B with the <i>keyboard</i> lex
-        file and the <i>pilterm</i> basic program (see below) installed.
+        file (Rev C is needed) and the <i>pilterm</i> basic program (see below) 
+        installed.
         <b>You need the firmware version 1.6 installed on the PIL-Box as well!</b></p>
 
         <p>To use the keyboard emulator you have to install the
@@ -65,8 +66,8 @@
         are sent to the HP-71B as keyboard input.</p>
 
         <p><b>Type with moderate speed!</b> There may be occasional locks
-        if you type too fast.  To reset the keyboard simply run 
-        <i>pilterm</i> again.</p>
+        if you type too fast.  To reset the keyboard or to reconfigure the
+        loop simply run <i>pilterm</i> again.</p>
 
         <p>The keyboard emulator uses the following function key mapping:</p>
 
@@ -105,7 +106,7 @@
         <h2>Controls</h2>
         <p>The terminal tab provides the following controls:</b>
         <ul>
-        <li>Terminal active checkbox: If checked then the virtual HP-IL terminal
+        <li>Device enabled checkbox: If checked then the virtual HP-IL terminal
         device is available on the loop. Please mind to reconfigure
         the loop each time this box has been checked or unchecked.</li>
         <li>Character set combobox: select the character set that is emulated.
@@ -125,7 +126,7 @@
 
         <h2>PILTERM Basic Program for the HP-71B</h2>
         <pre>
- 10 IF POS(VER$,"KBD:")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE" @ END
+ 10 IF POS(VER$,"KBD:C")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE" @ END
  20 RESET ESCAPE
  30 RESET HPIL @ RESTORE IO @ CLEAR @ KEYBOARD IS :DEVADDR("PILTERM")
  40 DISPLAY IS :DEVADDR("PILTERM")

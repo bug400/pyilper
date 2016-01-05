@@ -104,14 +104,17 @@
         compatibility information above.
         </li>
 
-        <li>Drive active checkbox: If checked, the virtual HP-IL drive is
-        available and can be used as HP-IL device. The HP-IL loop must
-        always be reconfigured after this box has been checked or unchecked.
-        </li>
-
         <li>Drive type combobox: Choose the proper drive type that shall be
         emulated (see above). The LIF image file must be reopened, after the 
         drive type has been changed.
+
+        <li>Device enabled checkbox: If checked, the virtual HP-IL drive is
+        available and can be used as HP-IL device. The HP-IL loop must
+        always be reconfigured after this box has been checked or unchecked.
+        Note: the LIF image file button and the drive type combobox are
+        disabled, if the drive is disabled.
+        </li>
+
         </li>
         </ul>
         </blockquote>
@@ -127,19 +130,27 @@
         <ul>
         <li>Pack the LIF image file (very fast!)</li>
         <li>Import a file from the local file system into the LIF image file</li>
+        <li>Label the LIF image file</li>
         </ul>
         <p>File context menu (right mouse button click on selected file in the directory listing):</p>
         <ul>
         <li>Purge the selected file</li>
         <li>Rename the selected file</li>
         <li>Export the selected file to the local file system</li>
+        <li>View the contents or summary information of the selected file. Note: this
+        entry is only available for certain file types</li>
         </ul>
         <p>Requirements:</p>
         <ul>
-        <li>The drive must be deactivated (drive active check box unchecked) in order
+        <li>The drive must be deactivated (Device enabled check box unchecked) in order
         to use these functions</li>
         <li>The <a href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
-        must be installed. At least version 1.7.3 is recommended.</li>
+        must be installed. At least version 1.7.4 is recommended.</li>
+        <p>Note:</p>
+        <p>The LIF image file operations only support file names which contain
+        letters and digits. Unfortunately, the HP-41 IL-Module is less strict and 
+        file names may contain other characters. You should rename these files to 
+        proper LIF file names.
       </td>
     </tr>
 

@@ -39,12 +39,14 @@
         <blockquote>
         <ul>
         <li>the file menu to configure pyILPER</li>
+        <li>the utlities menu</li>
+        <li>the help menu</li>
         <li>tabbed virtual HP-IL devices</li>
         <li>status information at the bottom of the main window</li>
         </ul>
         </blockquote>
 
-        <h2><a name="Menu Entries">File Menu Entries</a></h2>
+        <h2><a name="File Menu Entries">File Menu Entries</a></h2>
 
         <blockquote>
           <h3><a name="pyILPER configuration">pyILPER configuration</a></h3>
@@ -107,6 +109,46 @@
           <p>Terminates the application.</p>
 
         </blockquote>
+
+        <h2><a name="Utilities Menu Entries">Utilities Menu Entries</a></h2>
+
+        <blockquote>
+          <h3><a name="Initialize LIF image file">Initialize LIF image file</a></h3>
+
+          <p>Initialize a LIF image file. Various media types, the number of
+          directory entries an an optional label can be specified. This utility
+          allows the initialization of media types which can not be created
+          from the HP-71 by default.</p>
+
+          <p>Warning:</p>
+          <p>Do not initialize a LIF image file that is mounted to a virtual drive.</p>
+
+          <h3><a name="Fix header of LIF image file">Fix header of LIF image file</a></h3>
+
+          <p>Some HP-IL controller do not initialize the LIF image file header
+          properly. pyILPER will issue a warning if the image file header does
+          not contain valid medium size information. This menu entry fixes this
+          information. Be careful to specify the proper medium type.</p>
+
+          <p>Warning:</p>
+          <p>Do not fix the header of a LIF image file that is mounted to a 
+          virtual drive.</p>
+
+        </blockquote>
+
+        <h2><a name="Help Menu Entries">Utilities Menu Entries</a></h2>
+
+        <blockquote>
+          <h3><a name="About">About</a></h3>
+
+          <p>Displays a short summary of pyILPER</p>
+
+          <h3><a name="Manual">Manual</a></h3>
+
+          <p>Shows the online manual in a browser window.</p>
+
+        </blockquote>
+
 
         <h2><a name="Tabs">Virtual HP-IL device tabs</a></h2>
 

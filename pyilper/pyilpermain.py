@@ -51,7 +51,7 @@ import os
 import sys
 import platform
 from PyQt4 import QtCore, QtGui
-from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfig, PilConfigError, cls_ui,cls_tabscope, cls_PilBoxThread, cls_PilTcpIpThread, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, cls_tabprinter, cls_tabterminal, cls_tabdrive, cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
+from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfig, PilConfigError, cls_ui,cls_tabscope, cls_PilBoxThread, cls_PilTcpIpThread, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, cls_tabprinter, cls_tabterminal, cls_tabdrive, cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_lifinit, cls_liffix
 
 #
 # Program constants --------------------------------------------------
@@ -102,6 +102,8 @@ class cls_pyilper(QtCore.QObject):
       self.ui.actionDevStatus.triggered.connect(self.do_DevStatus)
       self.ui.actionReconnect.triggered.connect(self.do_Reconnect)
       self.ui.actionExit.triggered.connect(self.do_Exit)
+      self.ui.actionInit.triggered.connect(self.do_Init)
+      self.ui.actionFix.triggered.connect(self.do_Fix)
       self.ui.actionAbout.triggered.connect(self.do_About)
       self.ui.actionHelp.triggered.connect(self.do_Help)
 
@@ -378,6 +380,20 @@ class cls_pyilper(QtCore.QObject):
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       QtGui.qApp.quit()
+#
+#  callback initialize LIF medium
+#
+   def do_Init(self):
+      workdir=  self.config.get(self.name,"workdir")
+      cls_lifinit.exec(workdir)
+
+#
+#  callback fix LIF Medium
+#
+   def do_Fix(self):
+      workdir=  self.config.get(self.name,"workdir")
+      cls_liffix.exec(workdir)
+
 #
 #  callback show about window
 #

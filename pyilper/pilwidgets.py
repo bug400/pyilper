@@ -62,7 +62,7 @@
 #
 # 18.12.2015 jsi
 # - added dropdown command button in drive tab
-# - addec context menu for entries in directory listing
+# - added context menu for entries in directory listing
 #
 # 22.12.2015 jsi
 # - added navigation buttons to the help window 
@@ -70,6 +70,17 @@
 #
 # 28.12.2015 jsi
 # - do_cbActive: check for method toggle_active fixed
+#
+# 31.12.2015 jsi
+# - add view option to context menu
+#
+# 03.01.2016 jsi
+# - added label option to dropdown command menu
+# - filename and drivetype controls are disabled if the drive is enabled
+# - rename 'Help' menu entry to 'Manual'
+#
+# 05.01.2016 jsi
+# - initialize filename an drivetype controls properly at program start
 #
 import os
 import glob
@@ -87,7 +98,7 @@ from .pilterminal import cls_terminal
 from .pildrive import cls_drive
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .pilconfig import PilConfigError
-from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport
+from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel
 #
 # Constants
 #
@@ -583,6 +594,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.tBut.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
       self.actPack= self.menu.addAction("Pack")
       self.actImport= self.menu.addAction("Import")
+      self.actLabel=self.menu.addAction("Label")
       self.tBut.setText("Tools")
       self.tBut.setEnabled(False)
       
@@ -617,14 +629,23 @@ class cls_tabdrive(cls_tabgeneric):
       self.butFilename.clicked.connect(self.do_filenameChanged)
       self.actPack.triggered.connect(self.do_pack)
       self.actImport.triggered.connect(self.do_import)
+      self.actLabel.triggered.connect(self.do_label)
 #
 #     refresh timer
 #
       self.timer=QtCore.QTimer()
       self.timer.timeout.connect(self.update_hdrive)
       self.update_pending= False
+#
+#     enable/disable GUI elements
+#
       if not self.active and self.filename != "":
          self.tBut.setEnabled(True)
+      if not self.active:
+         self.butFilename.setEnabled(True)
+         for w in self.gbox_buttonlist:
+            w.setEnabled(True)
+
 #
 #     enable/disable
 #
@@ -646,23 +667,35 @@ class cls_tabdrive(cls_tabgeneric):
       self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
-      self.butFilename.setEnabled(True)
-      for w in self.gbox_buttonlist:
-         w.setEnabled(True)
+#     self.butFilename.setEnabled(True)
+#     for w in self.gbox_buttonlist:
+#        w.setEnabled(True)
 
    def disable(self):
       super().disable()
       self.timer.stop()
-      self.butFilename.setEnabled(False)
-      for w in self.gbox_buttonlist:
-         w.setEnabled(False)
+#     self.butFilename.setEnabled(False)
+#     for w in self.gbox_buttonlist:
+#        w.setEnabled(False)
       self.pildevice= None
+#
+#  enable/disable lif image file controls:
+#  change file name
+#  change drive type
+#  tools teardown menu
 
    def toggle_active(self):
-      if not self.active and self.filename != "":
-         self.tBut.setEnabled(True)
-      else:
+      if self.active:
          self.tBut.setEnabled(False)
+         self.butFilename.setEnabled(False)
+         for w in self.gbox_buttonlist:
+            w.setEnabled(False)
+      else:
+         self.butFilename.setEnabled(True)
+         for w in self.gbox_buttonlist:
+            w.setEnabled(True)
+         if self.filename != "":
+            self.tBut.setEnabled(True)
 #
 #  set drive type checked
 #
@@ -755,6 +788,10 @@ class cls_tabdrive(cls_tabgeneric):
       cls_lifimport.exec(self.filename, workdir)
       self.lifdir.refresh()
 
+   def do_label(self):
+      oldlabel=self.lifdir.getLabel()
+      cls_liflabel.exec(self.filename, oldlabel)
+      self.lifdir.refresh()
 
 #
 #  Drive tab: refresh directory listing of medium
@@ -909,13 +946,19 @@ class DirTableView(QtGui.QTableView):
             model=self.parent.getModel()
             imagefile= self.parent.getFilename()
             liffilename=model.item(row,0).text()
-#           liffiletype=self.parent.getFtypeNum(row)
             liffiletype=model.item(row,1).text()
             menu = QtGui.QMenu()
             exportAction = menu.addAction("Export")
             purgeAction = menu.addAction("Purge")
             renameAction = menu.addAction("Rename")
+            if liffiletype == "TEXT" or liffiletype == "TEXT75" or liffiletype== "PROG41" or liffiletype=="KEY41" or liffiletype=="SDATA" or liffiletype=="STAT41" or liffiletype=="WALL41" or liffiletype=="LEX71":
+               viewAction= menu.addAction("View")
+            else:
+               viewAction= None
             action = menu.exec_(self.mapToGlobal(event.pos()))
+            if action== None:
+               event.accept()
+               return
             workdir=self.parent.parent.parent.config.get('pyilper','workdir')
             if action ==exportAction:
                 cls_lifexport.exec(imagefile,liffilename,liffiletype,workdir)
@@ -925,6 +968,8 @@ class DirTableView(QtGui.QTableView):
             elif action== renameAction:
                 cls_lifrename.exec(imagefile,liffilename)
                 self.parent.refresh()
+            elif action== viewAction:
+                cls_lifview.exec(imagefile, liffilename, liffiletype)
             event.accept()
 
 class cls_LifDirWidget(QtGui.QWidget):
@@ -944,6 +989,7 @@ class cls_LifDirWidget(QtGui.QWidget):
         self.__columns__=6     # 5 rows for directory listing
         self.__rowcount__=0    # number of rows in table
         self.__filename__=""   # LIF filename
+        self.__label__=""      # Label of lif file
         self.__model__ = TableModel(rows, self.__columns__, self.__table__)
 #
 #       populate header , set column size
@@ -986,6 +1032,9 @@ class cls_LifDirWidget(QtGui.QWidget):
     def getFilename(self):
         return(self.__filename__)
 
+    def getLabel(self):
+        return(self.__label__)
+
 #
 #   connect lif data file 
 #
@@ -1022,6 +1071,7 @@ class cls_LifDirWidget(QtGui.QWidget):
         lifdir.open()
         lifdir.rewind()
         dir_start, dir_length, no_tracks, no_surfaces, no_blocks, label, initdatetime=lif.getLifHeader()
+        self.__label__= label
         totalblocks=no_tracks* no_surfaces* no_blocks
         totalbytes= totalblocks* 256
 #
@@ -1077,7 +1127,7 @@ class cls_HelpWindow(QtGui.QDialog):
 #
       docpath=re.sub("//","/",docpath,1)
       super().__init__()
-      self.setWindowTitle('pyILPER Help')
+      self.setWindowTitle('pyILPER Manual')
  
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
@@ -1675,6 +1725,7 @@ class cls_ui(QtGui.QMainWindow):
       self.menubar = self.menuBar()
       self.menubar.setNativeMenuBar(False)
       self.menuFile= self.menubar.addMenu('File')
+      self.menuUtil= self.menubar.addMenu('Utilities')
       self.menuHelp= self.menubar.addMenu('Help')
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
@@ -1683,8 +1734,11 @@ class cls_ui(QtGui.QMainWindow):
       self.actionReconnect=self.menuFile.addAction("Reconnect")
       self.actionExit=self.menuFile.addAction("Quit")
 
+      self.actionInit=self.menuUtil.addAction("Initialize LIF image file")
+      self.actionFix=self.menuUtil.addAction("Fix Header of LIF image file")
+
       self.actionAbout=self.menuHelp.addAction("About")
-      self.actionHelp=self.menuHelp.addAction("Help")
+      self.actionHelp=self.menuHelp.addAction("Manual")
 #
 #     Central widget (tabs only)
 #
