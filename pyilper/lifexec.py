@@ -981,25 +981,18 @@ class cls_liffix (QtGui.QDialog):
    def do_butclicked(self):
 
       if self.radio1.isChecked():
-         self.leditDirSize.setText("150")
          self.mt="cass"
       if self.radio2.isChecked():
-         self.leditDirSize.setText("500")
          self.mt="disk"
       if self.radio3.isChecked():
-         self.leditDirSize.setText("500")
          self.mt="hdrive1"
       if self.radio4.isChecked():
-         self.leditDirSize.setText("1000")
          self.mt="hdrive2"
       if self.radio5.isChecked():
-         self.leditDirSize.setText("2000")
          self.mt="hdrive4"
       if self.radio6.isChecked():
-         self.leditDirSize.setText("2000")
          self.mt="hdrive8"
       if self.radio7.isChecked():
-         self.leditDirSize.setText("2000")
          self.mt="hdrive16"
       self.do_checkenable()
 #
