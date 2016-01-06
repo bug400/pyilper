@@ -82,6 +82,10 @@
 # 05.01.2016 jsi
 # - initialize filename an drivetype controls properly at program start
 #
+# 06.01.2016 jsi
+# - initialize charset properly at program start
+# - use utf-8-sig as charset for logging
+#
 import os
 import glob
 import datetime
@@ -117,7 +121,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
 
    def logOpen(self):
       try:
-         self.log=open(self.filename,"a",encoding="UTF-8")
+         self.log=open(self.filename,"a",encoding="UTF-8-SIG")
          self.log.write("\nBegin log "+self.filename+" at ")
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
          self.log.write("\n")
@@ -275,6 +279,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.comboCharset.activated[str].connect(self.do_changeCharset)
          self.comboCharset.setCurrentIndex(self.charset)
          self.comboCharset.setEnabled(False)
+         self.hpterm.set_charset(self.charset)
 
    def do_cbLogging(self):
       self.cbLogging.setEnabled(False)
