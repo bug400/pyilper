@@ -34,11 +34,15 @@
 # - added viewing LEX file contents
 # - decode output of textfiles in HP-ROMAN8 character set
 #
+# 08.01.2016 - jsi
+# - introduced lifglobal.py, refactoring
+#
 import os
 import subprocess
 import platform
 import tempfile
 from PyQt4 import QtCore, QtGui
+from .lifcore import *
 
 #
 # exec single command
@@ -596,7 +600,9 @@ class cls_chkxrom(QtGui.QDialog):
       self.hlayout= QtGui.QHBoxLayout()
       self.hlayout.addWidget(self.exitButton)
       self.vlayout.addLayout(self.hlayout)
-
+#
+# exit, return the parameters of the selected modules
+#
    def do_exit(self):
       if self.cardrdr.isChecked():
          self.call.append("-x")
@@ -671,29 +677,29 @@ class cls_lifview(QtGui.QDialog):
       self.viewer.setText(output)
       return
    
+#
+# exit, do nothing
+#
    def do_exit(self):
       self.close()
 
+#
+# get file and pipe it to filter program, show output in editor window
+#
    @staticmethod
    def exec(lifimagefile, liffilename, liffiletype):
       d=cls_lifview()
-      if liffiletype== "TEXT":
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],"liftext","")
-      elif liffiletype== "TEXT75":
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],"text75","")
-      elif liffiletype== "PROG41":
+      ft=get_finfo_name(liffiletype)
+      call= get_finfo_type(ft)[1]
+#
+# decomp41 needs additional parameters (xrmoms)
+#
+      if call == "decomp41":
          call= cls_chkxrom.exec()
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],call,"")
-      elif liffiletype== "KEY41":
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],"key41","")
-      elif liffiletype== "STAT41":
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],"stat41","")
-      elif liffiletype== "SDATA":
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],"sdata","")
-      elif liffiletype== "WALL41":
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],"wall41","")
-      elif liffiletype== "LEX71":
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],"lexcat71","")
+      output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],call,"")
+#
+# at the moment the text is only converted to ROMAN-8
+#
       if output == None:
          return
       try:

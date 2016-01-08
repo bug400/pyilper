@@ -86,6 +86,10 @@
 # - initialize charset properly at program start
 # - use utf-8-sig as charset for logging
 #
+# 08.01.2016 jsi
+# - introduced lifcore, refactoring
+# - do not lock pildevice, if pyilper is disabled
+#
 import os
 import glob
 import datetime
@@ -102,7 +106,9 @@ from .pilterminal import cls_terminal
 from .pildrive import cls_drive
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .pilconfig import PilConfigError
+from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel
+
 #
 # Constants
 #
@@ -742,9 +748,10 @@ class cls_tabdrive(cls_tabgeneric):
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
 
-      self.pildevice.setlocked(True)
-      self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
-      self.pildevice.setlocked(False)
+      if self.pildevice is not None:
+         self.pildevice.setlocked(True)
+         self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
+         self.pildevice.setlocked(False)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
       if self.filename=="":
@@ -780,9 +787,10 @@ class cls_tabdrive(cls_tabgeneric):
          self.parent.config.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-      self.pildevice.setlocked(True)
-      self.pildevice.setdevice(did,aid)
-      self.pildevice.setlocked(False)
+      if self.pildevice is not None:
+         self.pildevice.setlocked(True)
+         self.pildevice.setdevice(did,aid)
+         self.pildevice.setlocked(False)
 
    def do_pack(self):
       cls_lifpack.exec(self.filename)
@@ -956,8 +964,10 @@ class DirTableView(QtGui.QTableView):
             exportAction = menu.addAction("Export")
             purgeAction = menu.addAction("Purge")
             renameAction = menu.addAction("Rename")
-            if liffiletype == "TEXT" or liffiletype == "TEXT75" or liffiletype== "PROG41" or liffiletype=="KEY41" or liffiletype=="SDATA" or liffiletype=="STAT41" or liffiletype=="WALL41" or liffiletype=="LEX71":
-               viewAction= menu.addAction("View")
+            ft=get_finfo_name(liffiletype)
+            if ft is not None:
+               if get_finfo_type(ft)[1] != "":
+                  viewAction= menu.addAction("View")
             else:
                viewAction= None
             action = menu.exec_(self.mapToGlobal(event.pos()))

@@ -34,44 +34,12 @@
 # 30.11.2015 jsi:
 # - raise error in lifopen if not a valid lif image file
 #
+# 08.01.2016 jsi:
+# - introduced lifcore.py, refactoring
+#
 import platform
 import os
-
-def putLifInt(data,offset,length,value):
-   i=length - 1
-   while i >= 0:
-      data[offset+i]= value & 0xFF
-      value=value >> 8
-      i-=1
-   return
-
-def getLifInt(data,offset,length):
-   i=0
-   value=0
-   while i < length:
-      value= (value <<8) + data[offset+i]
-      i+=1
-   return value
-
-def bcdtodec(c):
-   return(((c&0xf0)>>4)*10 +(c &0x0f))
-
-def getLifDateTime(b,offset):
-   day=bcdtodec(b[offset])
-   month=bcdtodec(b[offset+1])
-   year=bcdtodec(b[offset+2])
-   hour=bcdtodec(b[offset+3])
-   minute=bcdtodec(b[offset+4])
-   sec=bcdtodec(b[offset+5])
-   return("{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(day,month,year,hour,minute,sec))
-
-def getLifString(data,offset,length):
-   str_list= []
-   for i in range(length):
-      if data[offset+i] == 0x20:
-         break;
-      str_list.append(chr(data[offset+i]))
-   return "".join(str_list)
+from .lifcore import *
 
 class LifError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -152,84 +120,90 @@ class cls_LifDir:
    def getTypeLen(self):
       e=self.lifdir[self.cur_entry]
       ft=getLifInt(e,10,2)
+#
+#    LIF1 (Text)
+#
 
-      if ft == 1 or ft  == 0xE0D1:
-         t="TEXT"
+      if ft == 1 or ft== 0xE0D5:
+         t=get_finfo_type(ft)[0]
          l=getLifInt(e,16,4)* 256
 #
 #     HP-71 filetypes
 #
-      elif ft == 0xE0D0:
-         t= "SDATA"
-         l= getLifInt(e,28,2)*8
-      elif ft== 0xE0F0 or ft == 0xE0F1:
-         t= "DATA71"
+      elif ft== 0xE0F0 or ft== 0xE0F1:
+         t=get_finfo_type(ft)[0]
          l= (e[28] + (e[29] <<8)) * (e[30] + (e[31]<<8))
       elif ft >= 0xE204 and ft<= 0xE207:
-         t= "BIN71"
+         t=get_finfo_type(ft)[0]
          l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
-      elif ft== 0xE208 or ft == 0xE209:
-         t= "LEX71"
+      elif ft>= 0xE208 and ft <= 0xE20B:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+      elif ft== 0x00FF:
+         t=get_finfo_type(ft)[0]
          l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
       elif ft==0xE20C or ft== 0xE20D:
-         t= "KEY71"
+         t=get_finfo_type(ft)[0]
          l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
       elif ft>= 0xE214 and ft<=0xE217:
-         t= "BASIC71"
+         t=get_finfo_type(ft)[0]
          l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
       elif ft>= 0xE218 and ft<=0xE21B:
-         t= "FORTH71"
+         t=get_finfo_type(ft)[0]
          l=getLifInt(e,16,4)* 256
       elif ft == 0xE21C:
-         t= "ROM71"
+         t=get_finfo_type(ft)[0]
          l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
       elif ft == 0xE222:
-         t= "GRAPH71"
+         t=get_finfo_type(ft)[0]
          l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
 #
 #     HP-41 filetypes
 #
+      elif ft == 0xE0D0:
+         t=get_finfo_type(ft)[0]
+         l= getLifInt(e,28,2)*8
       elif ft== 0xE040:
-         t= "WALL41"
+         t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
       elif ft== 0xE050:
-         t= "KEY41"
+         t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
       elif ft== 0xE060:
-         t= "STAT41"
+         t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
       elif ft== 0xE070:
-         t= "ROM41"
+         t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
       elif ft== 0xE080:
-         t= "PROG41"
+         t=get_finfo_type(ft)[0]
          l= getLifInt(e,28,2)+1
 #
 #     HP-75 filetypes
 #
       elif ft== 0xE052:
-         t="TEXT75"
+         t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
       elif ft== 0xE053:
-         t="APPT75"
+         t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
       elif ft== 0xE089:
-         t="LEX75"
+         t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
       elif ft== 0xE08A:
-         t="VCALC75"
+         t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
       elif ft== 0xE0FE or ft==0xE088:
-         t="BASIC75"
+         t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
       elif ft== 0xE08B:
-         t="ROM75"
+         t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
 
 #     other ...
 #
       else:
-         t= "{:4X}".format(ft)
+         t= "0x{:4X}".format(ft)
          l= getLifInt(e,16,4)* 256
       return [t , l]
 
