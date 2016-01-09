@@ -33,9 +33,10 @@
 # - do not check for lif medium type
 # 30.11.2015 jsi:
 # - raise error in lifopen if not a valid lif image file
-#
 # 08.01.2016 jsi:
 # - introduced lifcore.py, refactoring
+# 09.01.2016 jsi:
+# - adde filetypes
 #
 import platform
 import os
@@ -120,88 +121,115 @@ class cls_LifDir:
    def getTypeLen(self):
       e=self.lifdir[self.cur_entry]
       ft=getLifInt(e,10,2)
-#
 #    LIF1 (Text)
-#
-
-      if ft == 1 or ft== 0xE0D5:
+      if ft == 1 or ft== 0xE0D1:
          t=get_finfo_type(ft)[0]
          l=getLifInt(e,16,4)* 256
-#
-#     HP-71 filetypes
-#
-      elif ft== 0xE0F0 or ft== 0xE0F1:
-         t=get_finfo_type(ft)[0]
-         l= (e[28] + (e[29] <<8)) * (e[30] + (e[31]<<8))
-      elif ft >= 0xE204 and ft<= 0xE207:
-         t=get_finfo_type(ft)[0]
-         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
-      elif ft>= 0xE208 and ft <= 0xE20B:
-         t=get_finfo_type(ft)[0]
-         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     D-LEX
       elif ft== 0x00FF:
          t=get_finfo_type(ft)[0]
          l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
-      elif ft==0xE20C or ft== 0xE20D:
-         t=get_finfo_type(ft)[0]
-         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
-      elif ft>= 0xE214 and ft<=0xE217:
-         t=get_finfo_type(ft)[0]
-         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
-      elif ft>= 0xE218 and ft<=0xE21B:
-         t=get_finfo_type(ft)[0]
-         l=getLifInt(e,16,4)* 256
-      elif ft == 0xE21C:
-         t=get_finfo_type(ft)[0]
-         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
-      elif ft == 0xE222:
-         t=get_finfo_type(ft)[0]
-         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
-#
-#     HP-41 filetypes
-#
+#     SDATA
       elif ft == 0xE0D0:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,28,2)*8
+#     HP-71 Data file
+      elif ft== 0xE0F0 or ft== 0xE0F1:
+         t=get_finfo_type(ft)[0]
+         l= (e[28] + (e[29] <<8)) * (e[30] + (e[31]<<8))
+#     HP-71 BIN
+      elif ft >= 0xE204 and ft<= 0xE207:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-71 LEX
+      elif ft>= 0xE208 and ft <= 0xE20B:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-71 KEY
+      elif ft==0xE20C or ft== 0xE20D:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-71 Basic
+      elif ft>= 0xE214 and ft<=0xE217:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-71 Forth
+      elif ft>= 0xE218 and ft<=0xE21B:
+         t=get_finfo_type(ft)[0]
+         l=getLifInt(e,16,4)* 256
+#     HP-71 ROM
+      elif ft == 0xE21C:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-71 Graphics
+      elif ft == 0xE222:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-71 Address
+      elif ft == 0xE224:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-71 Symbol file??
+      elif ft == 0xE22E:
+         t=get_finfo_type(ft)[0]
+         l= int((( e[28] + (e[29] <<8) + (e[30]<<16))+1)/2)
+#     HP-41 WALL with X-MEM
+      elif ft== 0xE020:
+         t=get_finfo_type(ft)[0]
+         l= (getLifInt(e,28,2)*8)+1
+#     HP-41 X-MEM
+      elif ft== 0xE030:
+         t=get_finfo_type(ft)[0]
+         l= (getLifInt(e,28,2)*8)+1
+#     HP-41 WALL
       elif ft== 0xE040:
          t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
+#     HP-41 KEYS
       elif ft== 0xE050:
          t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
+#     HP-41 Status
       elif ft== 0xE060:
          t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
+#     HP-41 ROM/MLDL dump
       elif ft== 0xE070:
          t=get_finfo_type(ft)[0]
          l= (getLifInt(e,28,2)*8)+1
+#     HP-41 FOCAL program
       elif ft== 0xE080:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,28,2)+1
-#
-#     HP-75 filetypes
-#
+#     HP-75 text
       elif ft== 0xE052:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
+#     HP-75 Appointments
       elif ft== 0xE053:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
+#     HP-75 Data
+      elif ft== 0xE058:
+         t=get_finfo_type(ft)[0]
+         l= getLifInt(e,16,4)*256
+#     HP-75 LEX
       elif ft== 0xE089:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
+#     HP-75 Visicalc
       elif ft== 0xE08A:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
+#     HP-75 Basic
       elif ft== 0xE0FE or ft==0xE088:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
+#     HP-75 ROM
       elif ft== 0xE08B:
          t=get_finfo_type(ft)[0]
          l= getLifInt(e,16,4)*256
-
 #     other ...
-#
       else:
          t= "0x{:4X}".format(ft)
          l= getLifInt(e,16,4)* 256
