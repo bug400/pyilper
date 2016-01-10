@@ -45,7 +45,10 @@
 # - bump version number to 1.3.1
 # 18.12.2015 jsi
 # - bump version number to 1.3.2
-
+# 26.12.2015 cg
+# -fixed misspelling
+# 10.1.2016 jsi
+# - store last windows position as proposed by cg
 #
 import os
 import sys
@@ -96,7 +99,8 @@ class cls_pyilper(QtCore.QObject):
 #
 #     Initialize Main Window, connect callbacks
 #
-      self.ui= cls_ui(self,VERSION,850,650)
+#     self.ui= cls_ui(self,VERSION,850,650)
+      self.ui= cls_ui(self,VERSION,0,0)
       self.ui.actionConfig.triggered.connect(self.do_pyilperConfig)
       self.ui.actionDevConfig.triggered.connect(self.do_DevConfig)
       self.ui.actionDevStatus.triggered.connect(self.do_DevStatus)
@@ -132,6 +136,7 @@ class cls_pyilper(QtCore.QObject):
          self.config.get(self.name,"remoteport",60000)
          self.config.get(self.name,"mode",MODE_PILBOX)
          self.config.get(self.name,"workdir",os.path.expanduser('~'))
+         self.config.get(self.name,"position","")
          self.config.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
@@ -174,6 +179,12 @@ class cls_pyilper(QtCore.QObject):
 #     connect callback for tab change to update only the visible tab
 #  
       self.ui.tabs.currentChanged[int].connect(self.tab_current_changed)
+#
+#  move window to last position
+#
+      position=self.config.get(self.name,"position")
+      if position !="":
+         self.ui.move(position)
 #
 #  show and raise gui
 #
@@ -354,7 +365,7 @@ class cls_pyilper(QtCore.QObject):
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return
-      reply=QtGui.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration chaged. Restart Application.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtGui.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration chagned. Restart Application.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       
 #
 #  callback show hp-il device status
@@ -375,7 +386,9 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_Exit(self):
       self.disable()
+      position=self.ui.mapToGlobal(QtCore.QPoint())
       try:
+         self.config.put(self.name,"position",position)
          self.config.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)

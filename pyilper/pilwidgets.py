@@ -90,6 +90,9 @@
 # - introduced lifcore, refactoring
 # - do not lock pildevice, if pyilper is disabled
 #
+# 10.01.2016 jsi
+# - show tooltips for disabled controls in the drive tab
+#
 import os
 import glob
 import datetime
@@ -650,12 +653,7 @@ class cls_tabdrive(cls_tabgeneric):
 #
 #     enable/disable GUI elements
 #
-      if not self.active and self.filename != "":
-         self.tBut.setEnabled(True)
-      if not self.active:
-         self.butFilename.setEnabled(True)
-         for w in self.gbox_buttonlist:
-            w.setEnabled(True)
+      self.toggle_controls()
 
 #
 #     enable/disable
@@ -678,16 +676,10 @@ class cls_tabdrive(cls_tabgeneric):
       self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
-#     self.butFilename.setEnabled(True)
-#     for w in self.gbox_buttonlist:
-#        w.setEnabled(True)
 
    def disable(self):
       super().disable()
       self.timer.stop()
-#     self.butFilename.setEnabled(False)
-#     for w in self.gbox_buttonlist:
-#        w.setEnabled(False)
       self.pildevice= None
 #
 #  enable/disable lif image file controls:
@@ -696,12 +688,21 @@ class cls_tabdrive(cls_tabgeneric):
 #  tools teardown menu
 
    def toggle_active(self):
+      self.toggle_controls()
+
+   def toggle_controls(self):
       if self.active:
          self.tBut.setEnabled(False)
          self.butFilename.setEnabled(False)
          for w in self.gbox_buttonlist:
             w.setEnabled(False)
+         self.butFilename.setToolTip("Please deactivate this virtual drive to use this button")
+         self.tBut.setToolTip("Please deactivate this virtual drive to use this menu")
+         self.gbox.setToolTip("Please deactivate this virtual drive to use these buttons")
       else:
+         self.butFilename.setToolTip("")
+         self.tBut.setToolTip("")
+         self.gbox.setToolTip("")
          self.butFilename.setEnabled(True)
          for w in self.gbox_buttonlist:
             w.setEnabled(True)
@@ -756,13 +757,9 @@ class cls_tabdrive(cls_tabgeneric):
       self.lifdir.setFileName(self.filename)
       if self.filename=="":
          self.lifdir.clear()
-         self.tBut.setEnabled(False)
       else:
          self.lifdir.refresh()
-         if  not self.active:
-            self.tBut.setEnabled(True)
-         else:
-            self.tBut.setEnabled(False)
+      self.toggle_controls()
 
    def do_drivetypeChanged(self):
       i=0
@@ -780,7 +777,6 @@ class cls_tabdrive(cls_tabgeneric):
          self.parent.config.put(self.name,'filename',self.filename)
          self.lblFilename.setText(self.filename)
          self.lifdir.clear()
-         self.tBut.setEnabled(False)
          reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       did,aid= self.deviceinfo[self.drivetype]
       try:
@@ -791,6 +787,7 @@ class cls_tabdrive(cls_tabgeneric):
          self.pildevice.setlocked(True)
          self.pildevice.setdevice(did,aid)
          self.pildevice.setlocked(False)
+      self.toggle_controls()
 
    def do_pack(self):
       cls_lifpack.exec(self.filename)
