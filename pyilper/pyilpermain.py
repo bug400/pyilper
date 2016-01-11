@@ -49,6 +49,8 @@
 # -fixed misspelling
 # 10.1.2016 jsi
 # - store last windows position as proposed by cg
+# 11.1.2016 jsi
+# - corrected error im my implementation of determining the windows position
 #
 import os
 import sys
@@ -386,7 +388,7 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_Exit(self):
       self.disable()
-      position=self.ui.mapToGlobal(QtCore.QPoint())
+      position=self.ui.pos()
       try:
          self.config.put(self.name,"position",position)
          self.config.save()
