@@ -37,6 +37,9 @@
 # 08.01.2016 - jsi
 # - introduced lifglobal.py, refactoring
 #
+# 16.01.2016 - jsi
+# - introduced cls_chk_import
+#
 import os
 import subprocess
 import platform
@@ -78,16 +81,22 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
          reply=QtGui.QMessageBox.critical(d,'Error',err1.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          tmpfile.close()
          os.close(fd)
+         return
+      os.close(fd)
 #
 #  execute second command
 #
+      tmpfile.seek(0)
+      if  not cls_chk_import.exec(tmpfile.fileno(), None):
+         tmpfile.close()
+         return
       tmpfile.seek(0)
       p2= subprocess.Popen(cmd2,stdin=tmpfile,stderr=subprocess.PIPE)
       output2,err2=p2.communicate()
       if err2.decode() != "":
          reply=QtGui.QMessageBox.critical(parent,'Error',err2.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          tmpfile.close()
-         os.close(fd)
+         return
 #
 #  catch errors
 #
@@ -96,7 +105,6 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
    except subprocess.CalledProcessError as exc:
       reply=QtGui.QMessageBox.critical(parent,'Error',exc.output.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       tmpfile.close()
-      os.close(fd)
 #
 # exec piped command, write output to file or stdout
 #
@@ -547,7 +555,8 @@ class cls_lifimport (QtGui.QDialog):
             elif self.radio3.isChecked():
                exec_double_import(self,["raw41lif",self.liffilename],["lifput",self.lifimagefile],self.inputfile)
          else:
-            exec_single(self,["lifput",self.lifimagefile,self.inputfile])
+            if  cls_chk_import.exec(None, self.inputfile):
+               exec_single(self,["lifput",self.lifimagefile,self.inputfile])
       self.close()
 
 #
@@ -560,6 +569,106 @@ class cls_lifimport (QtGui.QDialog):
    def exec(lifimagefile,workdir):
       d=cls_lifimport(lifimagefile,workdir)
       result= d.exec_()
+#
+# check import dialog, ensure that we import a valid LIF transport file
+#
+class cls_chk_import(QtGui.QDialog):
+   def __init__(self,fd,inputfile,parent=None):
+      super().__init__()
+      self.b=bytearray(32)
+      self.filename=""
+      self.ftype_num=0
+      self.ftype_name=""
+      self.blocks=0
+      self.retval=False
+      self.setWindowTitle("Import File to LIF Image file")
+      self.vlayout= QtGui.QVBoxLayout()
+      self.setLayout(self.vlayout)
+      self.vlayout.addWidget(QtGui.QLabel("Import this file?"))
+      self.grid=QtGui.QGridLayout()
+      self.grid.addWidget(QtGui.QLabel("Filename:"),0,0)
+      self.grid.addWidget(QtGui.QLabel("Filetype:"),1,0)
+      self.grid.addWidget(QtGui.QLabel("Filesize (Blocks):"),2,0)
+      self.lblFilename=QtGui.QLabel("")
+      self.grid.addWidget(self.lblFilename,0,1)
+      self.lblFiletype=QtGui.QLabel("")
+      self.grid.addWidget(self.lblFiletype,1,1)
+      self.lblFilesize=QtGui.QLabel("")
+      self.grid.addWidget(self.lblFilesize,2,1)
+
+      self.vlayout.addLayout(self.grid)
+      self.lblMessage=QtGui.QLabel("")
+      self.vlayout.addWidget(self.lblMessage)
+      self.buttonBox = QtGui.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox.setCenterButtons(True)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.rejected.connect(self.do_cancel)
+      self.vlayout.addWidget(self.buttonBox)
+#
+#     examine header information, if inputfile is None then we have a file descriptor
+#
+      try:
+         if inputfile is not None:
+            if platform.win32_ver()[0] != "":
+               fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
+            else:
+               fd= os.open(inputfile, os.O_RDONLY)
+         b=os.read(fd,32)
+         if len(b) <32:
+            self.lblMessage.setText("File is too short")
+         else:
+            self.filename=getLifString(b,0,10)
+            self.ftype_num=getLifInt(b,10,2)
+            self.blocks=getLifInt(b,16,4)
+            self.filetype=get_finfo_type(self.ftype_num)
+            if self.filetype== None:
+               self.filetype="Unknown"
+            else:
+               self.filetype= self.filetype[0]
+            self.lblFilename.setText(self.filename)
+            self.lblFiletype.setText(self.filetype)
+            self.lblFilesize.setText(str(self.blocks))
+         if inputfile is not None:
+            os.close(fd)
+#
+#        Check valid header
+#
+         if self.blocks < 1:
+            self.lblMessage.setText("Illegal file length")
+            return
+         if self.filetype=="Unknown":
+            self.lblMessage.setText("Unknown file type")
+            return
+         self.regexp = QtCore.QRegExp('[A-Z][A-Z,0-9]*')
+         self.validator = QtGui.QRegExpValidator(self.regexp)
+         result=self.validator.validate(self.filename,0)[0]
+         if result != QtGui.QValidator.Acceptable:
+            self.lblMessage.setText("Illegal file name")
+            return
+         self.lblMessage.setText("Ready to import")
+         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+      
+      except OSError as e:
+         self.lblMessage.setText("Error while examining file")
+
+   def do_ok(self):
+      self.retval=True
+      self.close()
+
+   def do_cancel(self):
+      self.close()
+
+   def get_retval(self):
+      return self.retval
+
+
+   @staticmethod
+   def exec(fd,inputfile):
+      d=cls_chk_import(fd,inputfile)
+      result= d.exec_()
+      return d.get_retval()
 #
 # check xroms dialog
 #
