@@ -93,6 +93,10 @@
 # 10.01.2016 jsi
 # - show tooltips for disabled controls in the drive tab
 #
+# 16.01.2016 jsi
+# - revert disabling filename and drivetype controls if the drive is enabled
+# - allow arbitrary disk layouts for HDRIVE1
+#
 import os
 import glob
 import datetime
@@ -683,29 +687,22 @@ class cls_tabdrive(cls_tabgeneric):
       self.pildevice= None
 #
 #  enable/disable lif image file controls:
-#  change file name
-#  change drive type
-#  tools teardown menu
+#  - change drive type
+#  - change drive type
+#  - tools teardown menu
 
    def toggle_active(self):
       self.toggle_controls()
 
    def toggle_controls(self):
+      self.butFilename.setEnabled(True)
+      for w in self.gbox_buttonlist:
+         w.setEnabled(True)
       if self.active:
          self.tBut.setEnabled(False)
-         self.butFilename.setEnabled(False)
-         for w in self.gbox_buttonlist:
-            w.setEnabled(False)
-         self.butFilename.setToolTip("Please deactivate this virtual drive to use this button")
-         self.tBut.setToolTip("Please deactivate this virtual drive to use this menu")
-         self.gbox.setToolTip("Please deactivate this virtual drive to use these buttons")
+         self.tBut.setToolTip("To use this menu, please disable the device first")
       else:
-         self.butFilename.setToolTip("")
          self.tBut.setToolTip("")
-         self.gbox.setToolTip("")
-         self.butFilename.setEnabled(True)
-         for w in self.gbox_buttonlist:
-            w.setEnabled(True)
          if self.filename != "":
             self.tBut.setEnabled(True)
 #
@@ -851,9 +848,9 @@ class cls_tabdrive(cls_tabgeneric):
       status, tracks, surfaces, blocks= self.getMediumInfo(filename)
       if status ==0: # medium info found
          medium=self.getMediumInfobyLayout(tracks,surfaces,blocks)
-         if medium== self.MEDIUM_UNKNOWN:
-            reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"LIF layout not supported.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-            return [False, def_tracks, def_surfaces, def_blocks]
+#        if medium== self.MEDIUM_UNKNOWN:
+#           reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"LIF layout not supported.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+#           return [False, def_tracks, def_surfaces, def_blocks]
          if not self.isMediumCompatible(medium, self.drivetype):
             reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"LIF layout not supported for this device.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
             return [False, def_tracks, def_surfaces, def_blocks]
