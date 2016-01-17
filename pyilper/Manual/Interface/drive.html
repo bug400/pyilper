@@ -48,7 +48,7 @@
         Apply the HP9114B drive type if you use software that requires compatibility 
         with that device. Use the HP82161A drive type if the controller is a HP-41.</p>
 
-        <p>The following LIF file layouts are supported:</p>
+        <p>The following standard LIF medium layouts are supported:</p>
         <table border="1">
         <tr><th>Layout</th><th>Tracks</th><th>Sides</th><th>Sectors</th><th>Capacity</th></tr>
         <tr><td>128KB Cassette</td><td>2</td><td>1</td><td>256</td><td>131.072 Bytes</tr>
@@ -59,7 +59,7 @@
         <p>Note: the HP-41 can only access the first 130 bytes of
         larger disk media.</p>
 
-        <p>The Lif file layouts are compatible with the following emulated drive
+        <p>The standard LIF medium layouts are compatible with the following emulated drive
         types.</p>
 
         <table border ="1">
@@ -69,8 +69,7 @@
         <tr><td>640KB Disk</td><td>-</td><td>-</td><td>+</td></tr>
         </table>
 
-        <p>For the HDRIVE1 drive type there is experimental support for larger
-        LIF image files (up to 16MB).</p>
+        <p>Non standard LIF medium layouts are supported for the HDRIVE1 drive type.</p>
 
         <p>Note: pyILPER requires a valid LIF header when mounting LIF 
         image files including:</p>
@@ -83,7 +82,7 @@
         <p>If you mount a LIF image file with incorrect header information you
         get a warning and the default medium size of the current drive type is
         used. Warning: in this case you must select the proper drive type.
-        Otherwiese the image file may become corrupted.
+        Otherwise the image file may become corrupted.
         </p>
         <p>If a LIF image medium is initialized by a HP-41 HP-IL module or an early
         HP-71B HP-IL module pyILPER fixes wrong or missing header information.</p>
@@ -111,8 +110,6 @@
         <li>Device enabled checkbox: If checked, the virtual HP-IL drive is
         available and can be used as HP-IL device. The HP-IL loop must
         always be reconfigured after this box has been checked or unchecked.
-        Note: the LIF image file button and the drive type combobox are
-        disabled, if the drive is disabled.
         </li>
 
         </li>
@@ -123,9 +120,9 @@
     </tr>
     <tr>
       <td valign="middle" align="left" width="99%">
-        <h2>LIF image file operations</h2>
+        <h2>LIF image file management</h2>
         <p>The drive tab provides the following controls to perform
-        certain tasks on the LIF image file:</p>
+        file management tasks on the LIF image file:</p>
         <p>Tools drop down menu at the bottom of the tab:</p>
         <ul>
         <li>Pack the LIF image file (very fast!)</li>
@@ -143,11 +140,11 @@
         <p>Requirements:</p>
         <ul>
         <li>The drive must be deactivated (Device enabled check box unchecked) in order
-        to use these functions</li>
+        to use LIF image file management functions</li>
         <li>The <a href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
         must be installed. At least version 1.7.4 is recommended.</li>
         <p>Note:</p>
-        <p>The LIF image file operations only support file names which contain
+        <p>The LIF image file management functions only support file names which contain
         letters and digits. Unfortunately, the HP-41 IL-Module is less strict and 
         file names may contain other characters. You should rename these files to 
         proper LIF file names.
