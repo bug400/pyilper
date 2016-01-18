@@ -38,40 +38,23 @@
         <p>The virtual devices have the following HP-IL configuration:</p>
 
         <table border="1">
-        <tr><th>Device</td><th>Accessory ID</th><th>Default Address</th><th>Device ID</th></tr>
-        <tr><td>HP82161A</td><td>0x10</td><td>0x02</td><td>&nbsp;</td></tr>
-        <tr><td>HP9114B</td><td>0x10</td><td>0x02</td><td>HP9114B</td></tr>
-        <tr><td>HDRIVE1</td><td>0x10</td><td>0x02</td><td>HDRIVE1</td></tr>
+        <tr><th>Device Type</td><th>Accessory ID</th><th>Default Address</th><th>Device ID</th><th>Standard Capacity</th></tr>
+        <tr><td>HP82161A</td><td>0x10</td><td>0x02</td><td>&nbsp;</td><td>131.072 Bytes</td></tr>
+        <tr><td>HP9114B</td><td>0x10</td><td>0x02</td><td>HP9114B</td><td>630.784 Bytes</td></tr>
+        <tr><td>HDRIVE1</td><td>0x10</td><td>0x02</td><td>HDRIVE1</td><td>655.360 Bytes</td></tr>
         </table>
+        <p>If a non existing file is mounted to the virtual drive it must be
+        initialized by the HP-IL controller first. The resulting LIF image file
+        is initialized with the standard capacity of the current device type</p>
 
         <p>In most cases you should apply the HDRIVE1 drive type.
         Apply the HP9114B drive type if you use software that requires compatibility 
         with that device. Use the HP82161A drive type if the controller is a HP-41.</p>
 
-        <p>The following standard LIF medium layouts are supported:</p>
-        <table border="1">
-        <tr><th>Layout</th><th>Tracks</th><th>Sides</th><th>Sectors</th><th>Capacity</th></tr>
-        <tr><td>128KB Cassette</td><td>2</td><td>1</td><td>256</td><td>131.072 Bytes</tr>
-        <tr><td>616KB Disk</td><td>77</td><td>2</td><td>16</td><td>630.784 Bytes</tr>
-        <tr><td>640 KB Disk</td><td>80</td><td>2</td><td>16</td><td>655.360 Bytes</tr>
-        </table>
-
         <p>Note: the HP-41 can only access the first 130 bytes of
         larger disk media.</p>
 
-        <p>The standard LIF medium layouts are compatible with the following emulated drive
-        types.</p>
-
-        <table border ="1">
-        <tr><td>&nbsp;</td><td>HP82161A</td><td>HP9114A</td><td>HDRIVE1</td></tr>
-        <tr><td>128KB Cassette</td><td>+</td><td>-</td><td>+</td></tr>
-        <tr><td>616KB Disk</td><td>-</td><td>+</td><td>+</td></tr>
-        <tr><td>640KB Disk</td><td>-</td><td>-</td><td>+</td></tr>
-        </table>
-
-        <p>Non standard LIF medium layouts are supported for the HDRIVE1 drive type.</p>
-
-        <p>Note: pyILPER requires a valid LIF header when mounting LIF 
+        <p>Note: pyILPER requires a valid LIF header when mounting existing LIF 
         image files including:</p>
         <p>
         <ul>
@@ -98,21 +81,17 @@
         <li>LIF image file button: Selects a disk file that contains the image
         of a LIF file. If a non existing file was specified the medium
         must be initialized by the controller. Note: the file is only
-        opened by pyILPER during HP-IL read or write operations. The layout
-        of the LIF image file must match the emulated drive type. See the
-        compatibility information above.
-        </li>
+        opened by pyILPER during HP-IL read or write operations. </li>
 
-        <li>Drive type combobox: Choose the proper drive type that shall be
+        <li>Drive type combo box: Choose the proper drive type that shall be
         emulated (see above). The LIF image file must be reopened, after the 
-        drive type has been changed.
+        drive type was changed.</li>
 
-        <li>Device enabled checkbox: If checked, the virtual HP-IL drive is
+        <li>Device enabled check box: If checked, the virtual HP-IL drive is
         available and can be used as HP-IL device. The HP-IL loop must
         always be reconfigured after this box has been checked or unchecked.
         </li>
 
-        </li>
         </ul>
         </blockquote>
 

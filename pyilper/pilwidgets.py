@@ -95,7 +95,7 @@
 #
 # 16.01.2016 jsi
 # - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts for HDRIVE1
+# - allow arbitrary disk layouts 
 #
 import os
 import glob
@@ -265,13 +265,10 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.lbltxtc=QtGui.QLabel("Charset ")
          self.lbltxtc.setFixedHeight(10)
          self.lbltxtc.setFixedWidth(50)
-#        self.hbox2.addWidget(self.lbltxtc)
-#        self.hbox2.setAlignment(self.lbltxtc,QtCore.Qt.AlignLeft)
          self.comboCharset=QtGui.QComboBox()
          for txt in charsets:
             self.comboCharset.addItem(txt)
          self.hbox2.addWidget(self.comboCharset)
-#     self.hbox2.addStretch(1)
       self.hbox2.setContentsMargins(10,3,10,3)
       self.vbox= QtGui.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
@@ -847,13 +844,6 @@ class cls_tabdrive(cls_tabgeneric):
       def_name, def_tracks, def_surfaces, def_blocks= self.mediainfo[defaultmedium]
       status, tracks, surfaces, blocks= self.getMediumInfo(filename)
       if status ==0: # medium info found
-         medium=self.getMediumInfobyLayout(tracks,surfaces,blocks)
-#        if medium== self.MEDIUM_UNKNOWN:
-#           reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"LIF layout not supported.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-#           return [False, def_tracks, def_surfaces, def_blocks]
-         if not self.isMediumCompatible(medium, self.drivetype):
-            reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"LIF layout not supported for this device.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-            return [False, def_tracks, def_surfaces, def_blocks]
          return [True, tracks, surfaces, blocks]
       elif status==1: # file dos not exist or cannot be opened
             return [True, def_tracks, def_surfaces, def_blocks]
@@ -885,9 +875,7 @@ class cls_tabdrive(cls_tabgeneric):
 #     do we have a LIF type 1 file
 #
       lifmagic= getLifInt(b,0,2)
-#     liftype= getLifInt(b,20,2)
       dirstart=getLifInt(b,8,4)
-#     if not(lifmagic == 0x8000 and liftype == 1 and dirstart == 2):
       if not(lifmagic == 0x8000 and dirstart == 2):
          return [2,0,0,0] #  no lif type 1 file
 #
@@ -900,20 +888,6 @@ class cls_tabdrive(cls_tabgeneric):
          return [3,0,0,0] # no valid media layout information
       return [0, tracks, surfaces, blocks]
 
-
-   def getMediumInfobyLayout(self,tracks,surfaces,blocks):
-      for i in self.mediainfo.keys():
-         t=self.mediainfo[i]
-         if t[1]== tracks and t[2]== surfaces and t[3]== blocks:
-            return i
-      return self.MEDIUM_UNKNOWN
-
-   def isMediumCompatible(self,media_type,device_type):
-      if device_type == self.DEV_CASS and media_type != self.MEDIUM_CASS:
-         return False
-      if device_type == self.DEV_DISK and media_type != self.MEDIUM_DISK:
-         return False
-      return True
 
    def getDefaultMedium(self,device):
       if device== self.DEV_CASS:
