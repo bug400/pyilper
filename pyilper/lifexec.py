@@ -27,18 +27,22 @@
 # - added descramble HP-41 rom postprocessing option
 # - added scramble HP-41 rom to HEPAX sdata file preprocessing option
 # - refactoring
-#
 # 05.01.2016 - jsi
 # - replaced process pipelines with temporary files to catch error conditions more
 #   reliable
 # - added viewing LEX file contents
 # - decode output of textfiles in HP-ROMAN8 character set
-#
 # 08.01.2016 - jsi
 # - introduced lifglobal.py, refactoring
-#
 # 16.01.2016 - jsi
 # - introduced cls_chk_import
+# 24.01.2016 - jsi
+# - corrected regexp syntax of validators, hint by cg
+# - new validator class automatically converts to capital letters
+# - fixed "cancel" behaviour of cls_liflabel, refactores cls_lifrename
+# - disable ok button if filename is empty in cls_lifrename
+# - fixed "OK" not enabled in cls_lifimport for FOCAL raw files
+# - check if outputfile overwrites existing file in cls_lifexport
 #
 import os
 import subprocess
@@ -169,6 +173,16 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
    return output2
 
 #
+# validator checks for valid lif label or file names, converts to capital lettes
+#
+class cls_LIF_validator(QtGui.QValidator):
+
+   def validate(self,string,pos):
+      self.regexp = QtCore.QRegExp('[A-Za-z][A-Za-z0-9]*')
+      self.validator = QtGui.QRegExpValidator(self.regexp)
+      result=self.validator.validate(string,pos)
+      return result[0], result[1].upper(), result[2]
+#
 # pack lif image file dialog
 #
 class cls_lifpack(QtGui.QDialog):
@@ -203,9 +217,10 @@ class cls_lifpurge(QtGui.QDialog):
 #
 class cls_lifrename (QtGui.QDialog):
 
-   def __init__(self,filename,parent= None):
+   def __init__(self,lifimagefile,filename,parent= None):
       super().__init__()
-      self.newfilename=""
+      self.lifimagefile=lifimagefile
+      self.oldfilename=filename
       self.setWindowTitle("Rename File")
       self.vlayout= QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
@@ -215,8 +230,8 @@ class cls_lifrename (QtGui.QDialog):
       self.leditFileName=QtGui.QLineEdit(self)
       self.leditFileName.setText(filename)
       self.leditFileName.setMaxLength(10)
-      self.regexp = QtCore.QRegExp('[A-Z][A-Z,0-9]*')
-      self.validator = QtGui.QRegExpValidator(self.regexp)
+      self.leditFileName.textChanged.connect(self.do_checkenable)
+      self.validator = cls_LIF_validator()
       self.leditFileName.setValidator(self.validator)
       self.vlayout.addWidget(self.leditFileName)
 
@@ -227,25 +242,34 @@ class cls_lifrename (QtGui.QDialog):
       self.buttonBox.rejected.connect(self.do_cancel)
       self.vlayout.addWidget(self.buttonBox)
 
+#
+#  check, if the OK button can be enabled
+#
+   def do_checkenable(self):
+      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      if (self.leditFileName.text() != ""):
+         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+      return
 
+# 
+#  ok rename file
+#
    def do_ok(self):
-      self.newfilename=self.leditFileName.text()
+      newfilename=self.leditFileName.text()
+      if newfilename != "":
+         exec_single(self,["lifrename",self.lifimagefile,self.oldfilename,newfilename])
       self.close()
 
+#
+#  cancel do nothing
+#
    def do_cancel(self):
-      self.newfilename=""
       self.close()
-
-   def getFilename(self):
-      return(self.newfilename)
 
    @staticmethod
    def exec(lifimagefile,liffile):
-      d=cls_lifrename(liffile)
+      d=cls_lifrename(lifimagefile,liffile)
       result= d.exec_()
-      newfilename= d.getFilename()
-      if newfilename != "":
-         exec_single(d,["lifrename",lifimagefile, liffile,newfilename])
 #
 # export file dialog
 #
@@ -350,6 +374,11 @@ class cls_lifexport (QtGui.QDialog):
 #
    def do_ok(self):
       if self.outputfile != "":
+         if os.access(self.outputfile,os.W_OK):
+            reply=QtGui.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.outputfile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
+            if reply== QtGui.QMessageBox.Cancel:
+               return
+
          if self.radio1.isChecked():
             exec_double_export(self,["lifget","-r",self.lifimagefile,self.liffilename],"liftext",self.outputfile)
          elif self.radio2.isChecked():
@@ -375,10 +404,9 @@ class cls_lifexport (QtGui.QDialog):
 #
 class cls_liflabel (QtGui.QDialog):
 
-   def __init__(self,oldlabel,parent= None):
+   def __init__(self,lifimagefile,oldlabel,parent= None):
       super().__init__()
-      self.newlabel=""
-      self.oldlabel=oldlabel
+      self.lifimagefile=lifimagefile
       self.setWindowTitle("Label LIF image file")
       self.vlayout= QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
@@ -388,8 +416,7 @@ class cls_liflabel (QtGui.QDialog):
       self.leditLabel=QtGui.QLineEdit(self)
       self.leditLabel.setText(oldlabel)
       self.leditLabel.setMaxLength(6)
-      self.regexp = QtCore.QRegExp('[A-Z][A-Z,0-9]*')
-      self.validator = QtGui.QRegExpValidator(self.regexp)
+      self.validator = cls_LIF_validator()
       self.leditLabel.setValidator(self.validator)
       self.vlayout.addWidget(self.leditLabel)
 
@@ -401,25 +428,20 @@ class cls_liflabel (QtGui.QDialog):
       self.vlayout.addWidget(self.buttonBox)
 
    def do_ok(self):
-      self.newlabel=self.leditLabel.text()
+      newlabel=self.leditLabel.text()
+      if newlabel != "":
+         exec_single(self,["liflabel",self.lifimagefile, newlabel])
+      else:
+         exec_single(self,["liflabel","-c",self.lifimagefile])
       self.close()
 
    def do_cancel(self):
-      self.newlabel=""
       self.close()
-
-   def getLabel(self):
-      return(self.newlabel)
 
    @staticmethod
    def exec(lifimagefile,oldlabel):
-      d=cls_liflabel(oldlabel)
+      d=cls_liflabel(lifimagefile,oldlabel)
       result= d.exec_()
-      newlabel= d.getLabel()
-      if newlabel != "":
-         exec_single(d,["liflabel",lifimagefile, newlabel])
-      else:
-         exec_single(d,["liflabel","-c",lifimagefile])
 #
 # import file dialog
 #
@@ -471,8 +493,7 @@ class cls_lifimport (QtGui.QDialog):
       self.leditFileName=QtGui.QLineEdit(self)
       self.leditFileName.setText(self.liffilename)
       self.leditFileName.setMaxLength(10)
-      self.regexp = QtCore.QRegExp('[A-Z][A-Z,0-9]*')
-      self.validator = QtGui.QRegExpValidator(self.regexp)
+      self.validator = cls_LIF_validator()
       self.leditFileName.setValidator(self.validator)
       self.leditFileName.setEnabled(False)
       self.leditFileName.textChanged.connect(self.do_checkenable)
@@ -535,7 +556,7 @@ class cls_lifimport (QtGui.QDialog):
 #
    def do_checkenable(self):
       self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
-      if (self.radio1.isChecked() or self.radio2.isChecked() or self.radio2.isChecked()) and self.leditFileName.text() != "":
+      if (self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked()) and self.leditFileName.text() != "":
          self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
       if self.radio4.isChecked():
          self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
@@ -641,7 +662,7 @@ class cls_chk_import(QtGui.QDialog):
          if self.filetype=="Unknown":
             self.lblMessage.setText("Unknown file type")
             return
-         self.regexp = QtCore.QRegExp('[A-Z][A-Z,0-9]*')
+         self.regexp = QtCore.QRegExp('[A-Z][A-Z0-9]*')
          self.validator = QtGui.QRegExpValidator(self.regexp)
          result=self.validator.validate(self.filename,0)[0]
          if result != QtGui.QValidator.Acceptable:
@@ -891,8 +912,7 @@ class cls_lifinit (QtGui.QDialog):
       self.leditLabel=QtGui.QLineEdit(self)
       self.leditLabel.setText("")
       self.leditLabel.setMaxLength(6)
-      self.regexpLabel = QtCore.QRegExp('[A-Z][A-Z,0-9]*')
-      self.validatorLabel = QtGui.QRegExpValidator(self.regexpLabel)
+      self.validatorLabel =  cls_LIF_validator()
       self.leditLabel.setValidator(self.validatorLabel)
       self.hbox2.addWidget(self.leditLabel)
       self.vbox.addLayout(self.hbox2)
@@ -969,7 +989,7 @@ class cls_lifinit (QtGui.QDialog):
 #
    def do_checkenable(self):
       self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
-      if (self.leditDirSize != "" and self.lifimagefile != ""):
+      if (self.leditDirSize.text() != "" and self.lifimagefile != ""):
          self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
       return
 

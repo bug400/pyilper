@@ -51,6 +51,8 @@
 # - store last windows position as proposed by cg
 # 11.1.2016 jsi
 # - corrected error im my implementation of determining the windows position
+# 22.1.2016 jsi
+# - corrected typo in Message box if HP-IL device config was changed, hint by cg
 #
 import os
 import sys
@@ -367,7 +369,7 @@ class cls_pyilper(QtCore.QObject):
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return
-      reply=QtGui.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration chagned. Restart Application.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtGui.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration changed. Restart Application.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       
 #
 #  callback show hp-il device status

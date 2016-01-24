@@ -31,6 +31,9 @@
 # 16.01.16 jsi
 # fixed missing file types
 #
+# 23.01.16 - jsi
+# fixed getLifString to handle empty strings
+#
 import platform
 import os
 
@@ -99,13 +102,14 @@ def getLifDateTime(b,offset):
 #
 def getLifString(data,offset,length):
    str_list= []
-   j=0
-   for i in range(length-1,0,-1):
+   j= -1
+   for i in range(length):
       if data[offset+i] != 0x20:
          j=i
-         break
-   j+=1
-   for i in range (j):
-      str_list.append(chr(data[offset+i]))
-   return "".join(str_list)
-
+   if j == -1:
+      return ""
+   else:
+      for i in range(j+1):
+         str_list.append(chr(data[offset+i]))
+      return "".join(str_list)
+ 
