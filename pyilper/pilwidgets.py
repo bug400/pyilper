@@ -30,72 +30,62 @@
 # - fixed name in cls_AboutWindow() text
 # - fixed some errors at error condition
 # - expanded LIF filename filter with *.lif and *.LIF extention
-
 # 05.10.2015 jsi: 
 # - new style signal/slot handling for quit, crash and show_message
 # - new style signal/slot handling for bottonBox widget
 # - adjust super statements to python3+ syntax
 # - removed unusable code to resize main window
-#
 # 20.10.2015 jsi
 # - fix leading // for docpath (OSX)
-#
 # 24.10.2015 jsi
 # - use non native menus only (OSX issues)
 # - removed ) from date of medium formatted
-#
 # 21.11.2015 jsi
 # - introduced show IDY frames option in scope tab
-#
 # 29.11.2015 jsi
 # - working directory is default when opening lif files
 # - do not check lif medium version
 # - invalid layout if all media information are zero
 # - refresh dir list if drive has not been talker for nn seconds
 # - use device lock instead of pausing PIL-Loop
-#
 # 30.11.2015 jsi
 # - introduced idy frame option
-#
 # 01.12.2015 jsi
 # - clear dirlist if illegal medium is mounted
-#
 # 18.12.2015 jsi
 # - added dropdown command button in drive tab
 # - added context menu for entries in directory listing
-#
 # 22.12.2015 jsi
 # - added navigation buttons to the help window 
 # - make help window resizeable
-#
 # 28.12.2015 jsi
 # - do_cbActive: check for method toggle_active fixed
-#
 # 31.12.2015 jsi
 # - add view option to context menu
-#
 # 03.01.2016 jsi
 # - added label option to dropdown command menu
 # - filename and drivetype controls are disabled if the drive is enabled
 # - rename 'Help' menu entry to 'Manual'
-#
 # 05.01.2016 jsi
 # - initialize filename an drivetype controls properly at program start
-#
 # 06.01.2016 jsi
 # - initialize charset properly at program start
 # - use utf-8-sig as charset for logging
-#
 # 08.01.2016 jsi
 # - introduced lifcore, refactoring
 # - do not lock pildevice, if pyilper is disabled
-#
 # 10.01.2016 jsi
 # - show tooltips for disabled controls in the drive tab
-#
 # 16.01.2016 jsi
 # - revert disabling filename and drivetype controls if the drive is enabled
 # - allow arbitrary disk layouts 
+# 29.01.2016 jsi
+# - improve os detection
+# 30.01.2016 jsi
+# - enable file management controls only if a compatible version of the LIF
+#   utilities is installed
+# - use font metrics to determine terminal window size
+# - removed experimental mark from TCP/IP configuration
 #
 import os
 import glob
@@ -114,7 +104,7 @@ from .pildrive import cls_drive
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .pilconfig import PilConfigError
 from .lifcore import *
-from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel
+from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils
 
 #
 # Constants
@@ -206,23 +196,17 @@ class cls_tabgeneric(QtGui.QWidget):
       return
 
    def __set_termconfig__(self,rows,cols):
-      if platform.dist()[0] != "":
-#
-#        Linux
-#
-          self.font_name="Monospace"
-          self.font_size=15
-          self.font_width=9
-          self.font_height=18
+      self.font_size=15
+      if platform.system()=="Linux":
+         self.font_name="Monospace"
       else:
-#
-#        all other
-#
-          self.font_name="Courier New"
-          self.font_size=15
-          self.font_width=9
-#         self.font_height=17.28
-          self.font_height=17
+         self.font_name="Courier New"
+
+      font = QtGui.QFont(self.font_name)
+      font.setPixelSize(self.font_size)
+      metrics= QtGui.QFontMetrics(font)
+      self.font_width=metrics.width("A")
+      self.font_height=metrics.height()
       self.width= self.font_width*cols
       self.height= int(self.font_height* rows)
 
@@ -700,7 +684,7 @@ class cls_tabdrive(cls_tabgeneric):
          self.tBut.setToolTip("To use this menu, please disable the device first")
       else:
          self.tBut.setToolTip("")
-         if self.filename != "":
+         if self.filename != "" and self.parent.ui.lifutils_installed:
             self.tBut.setEnabled(True)
 #
 #  set drive type checked
@@ -862,7 +846,7 @@ class cls_tabdrive(cls_tabgeneric):
 #     read lif file header
 #
       try:
-         if platform.win32_ver()[0] != "":
+         if platform.system()=="Windows":
             fd= os.open(filename,os.O_RDONLY | os.O_BINARY)
          else:
             fd= os.open(filename,os.O_RDONLY)
@@ -919,6 +903,9 @@ class DirTableView(QtGui.QTableView):
 #
     def contextMenuEvent(self, event):
         if self.parent.parent.active:
+           event.accept()
+           return
+        if not self.parent.parent.parent.ui.lifutils_installed:
            event.accept()
            return
         if self.selectionModel().selection().indexes():
@@ -1190,14 +1177,14 @@ class cls_TtyWindow(QtGui.QDialog):
       self.__ComboBox__ = QtGui.QComboBox() 
       self.__ComboBox__.setEditable(True)
 
-      if platform.win32_ver()[0] != "":
+      if platform.system()=="Windows":
 #
 #        Windows COM1 .. COM4
 #
          for i in range (1,5):
             port="COM"+str(i)
             self.__ComboBox__.addItem( port, port )
-      elif platform.dist()[0] != "":
+      elif platform.system()=="Linux":
 #
 #        Linux /dev/ttyUSB?
 #
@@ -1207,7 +1194,7 @@ class cls_TtyWindow(QtGui.QDialog):
 #
 #        Mac OS X /dev/*serial*
 #
-      elif platform.mac_ver()[0] != "":
+      elif platform.system()=="Darwin":
          devlist=glob.glob("/dev/*FTD*")
          for port in devlist:
             self.__ComboBox__.addItem( port, port )
@@ -1340,7 +1327,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #     section TCP/IP communication
 #
       self.radbutTCPIP = QtGui.QRadioButton(self.gbox)
-      self.radbutTCPIP.setText("TCP/IP (experimental)")
+      self.radbutTCPIP.setText("TCP/IP")
       self.radbutTCPIP.clicked.connect(self.setCheckBoxes)
       self.vboxgbox.addWidget(self.radbutTCPIP)
 #
@@ -1696,6 +1683,10 @@ class cls_ui(QtGui.QMainWindow):
       super().__init__()
       self.setWindowTitle("pyILPER "+version)
 #
+#     check if lifutils are installed
+#
+      self.lifutils_installed= check_lifutils()
+#
 #     signals
 #
       self.sig_crash= parent.sig_crash
@@ -1709,6 +1700,8 @@ class cls_ui(QtGui.QMainWindow):
       self.menubar.setNativeMenuBar(False)
       self.menuFile= self.menubar.addMenu('File')
       self.menuUtil= self.menubar.addMenu('Utilities')
+      if not self.lifutils_installed:
+         self.menuUtil.setEnabled(False)
       self.menuHelp= self.menubar.addMenu('Help')
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")

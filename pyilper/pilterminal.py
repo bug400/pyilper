@@ -32,23 +32,22 @@
 # - fixed __fterminal__ handling in do_cmd LAD/SAD
 # - not implemented: auto extended address support switch
 # - not implemeted: set/get AID, ID$
-#
 # 30.05.2015 jsi:
 # - fixed error in handling AP, added getstatus
 # 06.10.2015 jsi:
 # - class statement syntax updates
 # 14.11.2015 jsi:
 # - idy frame srq bit handling
-#
 # 21.11.2015 jsi:
 # - removed SSRQ/CSRQ approach
 # - set SRQ flag if keyboard buffer is not empty
-#
 # 28.11.2015 jsi:
 # - removed delay in __outdta__
 # 29.11.2015 jsi:
 # - introduced device lock
-#
+# 31.01.2016 jsi:
+# - corrected call of __setstatus__, hint by cg
+# - set service request bit according to status
 
 import queue
 import threading
@@ -288,7 +287,7 @@ class cls_terminal:
                 # reset keyboard data available bit
                 s= self.__getstatus__()
                 s &= 0xBF
-                self.__setstatus__()
+                self.__setstatus__(s)
                 # update IL status and return no. of status bytes
                 self.__ptssi__ = 1
                 if self.__ptssi__ > 0: # response to status request
@@ -334,8 +333,8 @@ class cls_terminal:
 #
 #     set service request bit if keyboard data available
 #
-#     if self.__getstatus__() & 0x40:
-      if not self.__kbdqueue__.empty():
+      if self.__getstatus__() & 0x40:
+#     if not self.__kbdqueue__.empty():
          if (frame & 0x700) == 0x000:  # data 00x xxxx xxxx -> 001 xxxx xxxx
             frame= frame | 0x100;
          if (frame & 0x700) == 0x200:  # end  01x xxxx xxxx -> 011 xxxx xxxx

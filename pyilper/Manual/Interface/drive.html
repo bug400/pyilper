@@ -100,7 +100,11 @@
     <tr>
       <td valign="middle" align="left" width="99%">
         <h2>LIF image file management</h2>
-        <p>The drive tab provides the following controls to perform
+        <p>The <a href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
+        must be installed. At least version 1.7.5 is reqired. Otherwise the
+        file management controls are disabled.</p>
+        <p>If pyILPER detects a compatible version of LIFUTILS at launch the 
+        drive tab provides the following controls to perform
         file management tasks on the LIF image file:</p>
         <p>Tools drop down menu at the bottom of the tab:</p>
         <ul>
@@ -116,17 +120,15 @@
         <li>View the contents or summary information of the selected file. Note: this
         entry is only available for certain file types</li>
         </ul>
-        <p>Requirements:</p>
+        <p>Limitations:</p>
         <ul>
         <li>The drive must be deactivated (Device enabled check box unchecked) in order
         to use LIF image file management functions</li>
-        <li>The <a href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
-        must be installed. At least version 1.7.4 is recommended.</li>
-        <p>Note:</p>
-        <p>The LIF image file management functions only support file names which contain
+        <li>The LIF image file management functions only support file names which 
+        contain
         letters and digits. Unfortunately, the HP-41 IL-Module is less strict and 
         file names may contain other characters. You should rename these files to 
-        proper LIF file names.
+        proper LIF file names.</li>
       </td>
     </tr>
 

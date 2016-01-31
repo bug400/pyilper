@@ -43,6 +43,9 @@
 # - disable ok button if filename is empty in cls_lifrename
 # - fixed "OK" not enabled in cls_lifimport for FOCAL raw files
 # - check if outputfile overwrites existing file in cls_lifexport
+# 30.01.2016 - jsi:
+# - added unpack HEPAX ROM file postprocessiong option to cls_lifexport
+# - added check if LIFUTILS are installed
 #
 import os
 import subprocess
@@ -51,6 +54,20 @@ import tempfile
 from PyQt4 import QtCore, QtGui
 from .lifcore import *
 
+#
+# check if lifutils are installed, return if required version found
+#
+def check_lifutils():
+   installed=False
+   try:
+      installed_version=subprocess.check_output("lifversion")
+      if int(installed_version) >= LIFUTILS_REQUIRED_VERSION:
+         installed=True
+   except OSError as e:
+      pass
+   except subprocess.CalledProcessError as exp:
+      pass
+   return installed
 #
 # exec single command
 #
@@ -296,10 +313,12 @@ class cls_lifexport (QtGui.QDialog):
       self.gBox1=QtGui.QGroupBox("Postprocessing options")
       self.radio1= QtGui.QRadioButton("convert LIF-Text to ASCII")
       self.radio1.setEnabled(False)
-      self.radio2= QtGui.QRadioButton("descramble HP41 rom file")
+      self.radio2= QtGui.QRadioButton("descramble HP41 ROM file")
       self.radio2.setEnabled(False)
-      self.radio3= QtGui.QRadioButton("remove LIF header")
-      self.radio4= QtGui.QRadioButton("None")
+      self.radio3= QtGui.QRadioButton("unpack HEPAX HP41 SDATA ROM file")
+      self.radio3.setEnabled(False)
+      self.radio4= QtGui.QRadioButton("remove LIF header")
+      self.radio5= QtGui.QRadioButton("None")
 
       if self.liffiletype== "TEXT":
          self.radio1.setEnabled(True)
@@ -309,8 +328,12 @@ class cls_lifexport (QtGui.QDialog):
          self.radio2.setEnabled(True)
          self.radio2.setChecked(True)
          self.outputextension=".rom"
+      elif self.liffiletype== "SDATA":
+         self.radio5.setChecked(True)
+         self.radio3.setEnabled(True)
+         self.outputextension=".lif"
       else:
-         self.radio4.setChecked(True)
+         self.radio5.setChecked(True)
          self.outputextension=".lif"
 
       self.vbox=QtGui.QVBoxLayout()
@@ -318,6 +341,7 @@ class cls_lifexport (QtGui.QDialog):
       self.vbox.addWidget(self.radio2)
       self.vbox.addWidget(self.radio3)
       self.vbox.addWidget(self.radio4)
+      self.vbox.addWidget(self.radio5)
       self.vbox.addStretch(1)
       self.gBox1.setLayout(self.vbox)
 
@@ -384,8 +408,10 @@ class cls_lifexport (QtGui.QDialog):
          elif self.radio2.isChecked():
             exec_double_export(self,["lifget","-r",self.lifimagefile,self.liffilename],"rom41",self.outputfile)
          elif self.radio3.isChecked():
-            exec_single(self,["lifget","-r",self.lifimagefile,self.liffilename,self.outputfile])
+            exec_double_export(self,["lifget","-r",self.lifimagefile,self.liffilename],"hx41rom",self.outputfile)
          elif self.radio4.isChecked():
+            exec_single(self,["lifget","-r",self.lifimagefile,self.liffilename,self.outputfile])
+         elif self.radio5.isChecked():
             exec_single(self,["lifget",self.lifimagefile,self.liffilename,self.outputfile])
       self.close()
 #
