@@ -48,6 +48,7 @@
 # - added check if LIFUTILS are installed
 # 01.02.2016 - jsi
 # - added save button to save the contents of the viewer to a file
+# - added LIFUTILS installation check dialog
 #
 import os
 import subprocess
@@ -57,19 +58,31 @@ from PyQt4 import QtCore, QtGui
 from .lifcore import *
 
 #
+# decode version number of lifutils to x.yy.zz
+#
+def decode_version(version_number):
+   version=str(version_number)
+   major=int(version[0])
+   minor=int(version[1:3])
+   subversion=int(version[3:5])
+   return "{:d}.{:d}.{:d}".format(major,minor,subversion)
+   
+#
 # check if lifutils are installed, return if required version found
 #
 def check_lifutils():
-   installed=False
+   required_version_installed=False
+   installed_version=0
    try:
-      installed_version=subprocess.check_output("lifversion")
+      result=subprocess.check_output("lifversion")
+      installed_version=int(result.decode())
       if int(installed_version) >= LIFUTILS_REQUIRED_VERSION:
-         installed=True
+         required_version_installed=True
    except OSError as e:
       pass
    except subprocess.CalledProcessError as exp:
       pass
-   return installed
+   return required_version_installed, installed_version
 #
 # exec single command
 #
@@ -1231,3 +1244,43 @@ class cls_liffix (QtGui.QDialog):
       d=cls_liffix(workdir)
       result= d.exec_()
 #
+# Check installation of LIFUTILS dialog
+#
+class cls_installcheck(QtGui.QDialog):
+
+   def __init__(self):
+      super().__init__()
+      self.setWindowTitle('Status of LIFUTILS installation')
+      self.vlayout = QtGui.QVBoxLayout()
+      self.setLayout(self.vlayout)
+      self.view = QtGui.QLabel()
+      self.view.setFixedWidth(500)
+      self.view.setWordWrap(True)
+      self.button = QtGui.QPushButton('OK')
+      self.button.setFixedWidth(60)
+      self.button.clicked.connect(self.do_exit)
+      self.vlayout.addWidget(self.view)
+      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout.addWidget(self.button)
+      self.vlayout.addLayout(self.hlayout)
+      required_version_installed, installed_version= check_lifutils()
+
+      text="This version of pyILPER requires at least version "+decode_version(LIFUTILS_REQUIRED_VERSION)+" of the LIFUTILS installed."
+
+      if required_version_installed:
+         text+=" Version "+decode_version(installed_version)+" was found on this system. File management controls are enabled."
+      else:
+         if installed_version !=0:
+            text+=" Version "+decode_version(installed_version)+" was found of this system. Please upgrade to the latest version of LIFUTILS and restart pyILPER."
+         else:
+            text+=" No version of LIFUTILS was found on this system or the installed version is too old to report a version number. Please install the latest version of LIFUTILS and restart pyILPER."
+         text+=" File management controls are disabled."
+      self.view.setText(text)
+
+   def do_exit(self):
+      self.close()
+
+   @staticmethod
+   def exec():
+      d=cls_installcheck()
+      result= d.exec_()

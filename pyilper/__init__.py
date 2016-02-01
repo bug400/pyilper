@@ -12,5 +12,5 @@ from .pilconfig import cls_pilconfig,PilConfigError
 from .pilboxthread import cls_PilBoxThread
 from .piltcpipthread import  cls_PilTcpIpThread
 from .piltcpip import cls_piltcpip, TcpIpError
-from .lifexec import cls_lifinit, cls_liffix
+from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
 from .pyilpermain import main

@@ -88,6 +88,8 @@
 # - removed experimental mark from TCP/IP configuration
 # 31.01.2016 jsi
 # - added workdir parameter to call of cls_lifview
+# 01.02.2016 jsi
+# - added InstallCheck menu callback
 #
 import os
 import glob
@@ -1687,7 +1689,7 @@ class cls_ui(QtGui.QMainWindow):
 #
 #     check if lifutils are installed
 #
-      self.lifutils_installed= check_lifutils()
+      self.lifutils_installed= check_lifutils()[0]
 #
 #     signals
 #
@@ -1702,8 +1704,6 @@ class cls_ui(QtGui.QMainWindow):
       self.menubar.setNativeMenuBar(False)
       self.menuFile= self.menubar.addMenu('File')
       self.menuUtil= self.menubar.addMenu('Utilities')
-      if not self.lifutils_installed:
-         self.menuUtil.setEnabled(False)
       self.menuHelp= self.menubar.addMenu('Help')
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
@@ -1714,6 +1714,10 @@ class cls_ui(QtGui.QMainWindow):
 
       self.actionInit=self.menuUtil.addAction("Initialize LIF image file")
       self.actionFix=self.menuUtil.addAction("Fix Header of LIF image file")
+      self.actionInstallCheck=self.menuUtil.addAction("Check LIFUTILS installation")
+      if not self.lifutils_installed:
+         self.actionInit.setEnabled(False)
+         self.actionFix.setEnabled(False)
 
       self.actionAbout=self.menuHelp.addAction("About")
       self.actionHelp=self.menuHelp.addAction("Manual")

@@ -53,12 +53,14 @@
 # - corrected error im my implementation of determining the windows position
 # 22.1.2016 jsi
 # - corrected typo in Message box if HP-IL device config was changed, hint by cg
+# 01.02.2016 jsi
+# - added InstallCheck menu entry
 #
 import os
 import sys
 import platform
 from PyQt4 import QtCore, QtGui
-from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfig, PilConfigError, cls_ui,cls_tabscope, cls_PilBoxThread, cls_PilTcpIpThread, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, cls_tabprinter, cls_tabterminal, cls_tabdrive, cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_lifinit, cls_liffix
+from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfig, PilConfigError, cls_ui,cls_tabscope, cls_PilBoxThread, cls_PilTcpIpThread, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, cls_tabprinter, cls_tabterminal, cls_tabdrive, cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_lifinit, cls_liffix, cls_installcheck
 
 #
 # Program constants --------------------------------------------------
@@ -112,6 +114,7 @@ class cls_pyilper(QtCore.QObject):
       self.ui.actionExit.triggered.connect(self.do_Exit)
       self.ui.actionInit.triggered.connect(self.do_Init)
       self.ui.actionFix.triggered.connect(self.do_Fix)
+      self.ui.actionInstallCheck.triggered.connect(self.do_InstallCheck)
       self.ui.actionAbout.triggered.connect(self.do_About)
       self.ui.actionHelp.triggered.connect(self.do_Help)
 
@@ -410,6 +413,11 @@ class cls_pyilper(QtCore.QObject):
    def do_Fix(self):
       workdir=  self.config.get(self.name,"workdir")
       cls_liffix.exec(workdir)
+#
+#  callback check LIFUTILS installation
+#
+   def do_InstallCheck(self):
+      cls_installcheck.exec()
 
 #
 #  callback show about window
