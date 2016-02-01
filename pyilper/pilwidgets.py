@@ -86,6 +86,8 @@
 #   utilities is installed
 # - use font metrics to determine terminal window size
 # - removed experimental mark from TCP/IP configuration
+# 31.01.2016 jsi
+# - added workdir parameter to call of cls_lifview
 #
 import os
 import glob
@@ -939,7 +941,7 @@ class DirTableView(QtGui.QTableView):
                 cls_lifrename.exec(imagefile,liffilename)
                 self.parent.refresh()
             elif action== viewAction:
-                cls_lifview.exec(imagefile, liffilename, liffiletype)
+                cls_lifview.exec(imagefile, liffilename, liffiletype,workdir)
             event.accept()
 
 class cls_LifDirWidget(QtGui.QWidget):

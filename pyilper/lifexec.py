@@ -46,6 +46,8 @@
 # 30.01.2016 - jsi:
 # - added unpack HEPAX ROM file postprocessiong option to cls_lifexport
 # - added check if LIFUTILS are installed
+# 01.02.2016 - jsi
+# - added save button to save the contents of the viewer to a file
 #
 import os
 import subprocess
@@ -331,6 +333,7 @@ class cls_lifexport (QtGui.QDialog):
       elif self.liffiletype== "SDATA":
          self.radio5.setChecked(True)
          self.radio3.setEnabled(True)
+         self.radio3.clicked.connect(self.do_radio3)
          self.outputextension=".lif"
       else:
          self.radio5.setChecked(True)
@@ -349,7 +352,7 @@ class cls_lifexport (QtGui.QDialog):
 
       self.gBox2=QtGui.QGroupBox("Output file")
       self.hbox=QtGui.QHBoxLayout()
-      self.outputfile=os.path.join(workdir, liffilename.lower()+self.outputextension)
+      self.outputfile=os.path.join(self.workdir, self.liffilename.lower()+self.outputextension)
       self.lblFilename=QtGui.QLabel(self.outputfile)
       self.hbox.addWidget(self.lblFilename)
       self.hbox.addStretch(1)
@@ -366,6 +369,14 @@ class cls_lifexport (QtGui.QDialog):
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
       self.vlayout.addWidget(self.buttonBox)
+
+   def do_radio3(self):
+      if self.radio3.isChecked():
+         self.outputextension=".rom"
+      else:
+         self.outputextension=".lif"
+      self.outputfile=os.path.join(self.workdir, self.liffilename.lower()+self.outputextension)
+      self.lblFilename.setText(self.outputfile)
 #
 #  enter output file name dialog
 #
@@ -802,8 +813,10 @@ class cls_chkxrom(QtGui.QDialog):
 #
 class cls_lifview(QtGui.QDialog):
 
-   def __init__(self,parent= None):
+   def __init__(self,workdir,parent= None):
       super().__init__()
+      self.workdir=workdir
+      self.outputfile=""
 
       self.setWindowTitle("View File")
       self.vlayout= QtGui.QVBoxLayout()
@@ -813,7 +826,7 @@ class cls_lifview(QtGui.QDialog):
       self.viewer.setMinimumWidth(600)
       self.viewer.setMinimumHeight(600)
       self.viewer.setReadOnly(True)
-      if platform.dist()[0] != "":
+      if platform.system()== "Linux":
          fontname="Monospace"
       else:
          fontname="Courier New"
@@ -822,17 +835,52 @@ class cls_lifview(QtGui.QDialog):
       self.viewer.setFont(self.font)
 
       self.vlayout.addWidget(self.viewer)
+      self.saveButton= QtGui.QPushButton("Save")
+      self.saveButton.setFixedWidth(60)
+      self.saveButton.clicked.connect(self.do_save)
       self.exitButton= QtGui.QPushButton("Exit")
       self.exitButton.setFixedWidth(60)
       self.exitButton.clicked.connect(self.do_exit)
       self.hlayout= QtGui.QHBoxLayout()
+      self.hlayout.addWidget(self.saveButton)
       self.hlayout.addWidget(self.exitButton)
       self.vlayout.addLayout(self.hlayout)
 
    def set_text(self,output):
       self.viewer.setText(output)
       return
-   
+#
+#  enter output file name dialog
+#
+   def get_outputFilename(self):
+      dialog=QtGui.QFileDialog()
+      dialog.setWindowTitle("Select Output File")
+      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtGui.QFileDialog.AnyFile)
+      dialog.setNameFilters( ["All Files (*.*)"] )
+      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setDirectory(self.workdir)
+      if dialog.exec():
+         return dialog.selectedFiles()
+#
+# save content to file
+#
+   def do_save(self):
+      flist= self.get_outputFilename()
+      if flist == None:
+         return
+      self.outputfile=flist[0]
+      if os.access(self.outputfile,os.W_OK):
+         reply=QtGui.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.outputfile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
+         if reply== QtGui.QMessageBox.Cancel:
+            return
+      try:
+         with open(self.outputfile,"w") as outfile:
+            outfile.write(str(self.viewer.toPlainText()))
+      except OSError as e:
+         reply=QtGui.QMessageBox.critical(self,'Error',"Cannot write to file: "+ e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      return
+
 #
 # exit, do nothing
 #
@@ -843,8 +891,8 @@ class cls_lifview(QtGui.QDialog):
 # get file and pipe it to filter program, show output in editor window
 #
    @staticmethod
-   def exec(lifimagefile, liffilename, liffiletype):
-      d=cls_lifview()
+   def exec(lifimagefile, liffilename, liffiletype,workdir):
+      d=cls_lifview(workdir)
       ft=get_finfo_name(liffiletype)
       call= get_finfo_type(ft)[1]
 #
