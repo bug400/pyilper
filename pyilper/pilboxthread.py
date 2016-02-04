@@ -33,6 +33,8 @@ from .pilbox import PilBoxError
 # - class statement syntax update
 # 14.11.2015 jsi:
 # - removed PIL-Box srq handling in favour of true IDY fram processing
+# 04.02.2015 jsi:
+# - removed unnecessary comment
 
 
 class cls_PilBoxThread(QtCore.QThread):
@@ -118,15 +120,6 @@ class cls_PilBoxThread(QtCore.QThread):
 #           read byte from PIL-Box
 #
             byt=self.pilbox.read()
-#
-#           if timeout check whether a virtual HP-IL device requests service
-#           if a device requests service then send s SSRQ to the PIL-Box
-#           without handshake. This does not work reliable, because
-#           - a SSRQ sent to the PIL-Box may disturb a frame byte that
-#             arrives at the PIL-Box at the same time
-#           - the handshake byte may be overtaken by a frame byte
-#             discarding the handshake byte may discard a frame byte instead
-#
             if byt== b'':
                continue
 #
