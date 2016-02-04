@@ -32,6 +32,7 @@
 # - fixed __fterminal__ handling in do_cmd LAD/SAD
 # - not implemented: auto extended address support switch
 # - not implemeted: set/get AID, ID$
+#
 # 30.05.2015 jsi:
 # - fixed error in handling AP, added getstatus
 # 06.10.2015 jsi:
@@ -45,9 +46,12 @@
 # - removed delay in __outdta__
 # 29.11.2015 jsi:
 # - introduced device lock
-# 31.01.2016 jsi:
-# - corrected call of __setstatus__, hint by cg
-# - set service request bit according to status
+# 29.01.2016 cg:
+# - fixed Python syntax error in SST frame handler
+# 01.02.2016 jsi:
+# - corrected check SDA/SDI/SST? against 0x02 in do_doe
+# - improved internal documentation
+
 
 import queue
 import threading
@@ -168,11 +172,8 @@ class cls_terminal:
          if(empty):
             self.__status__= 0 # no data available 
          self.__kbdqueue_lock__.release()
-#        delay
-#        time.sleep(0.05)
       else:
          frame= 0x540
-
       if frame == 0x540:
          self.__fterminal__= 0x40 # addressed talker
       return (frame)
@@ -187,7 +188,7 @@ class cls_terminal:
 
          if (self.__fterminal__ & 0x40) != 0: # addressed talker?
  
-            if self.__fterminal__ & 0x03 !=0: # SDA/SDI/SST? 0x02->0x03
+            if self.__fterminal__ & 0x02 !=0: # SDA/SDI/SST? 0x02->0x03, set back 0x02
 #
                if (self.__fterminal__ & 0x01) != 0: #SST,SDI,SAI
                   if self.__ptssi__ > 0:   # SST
@@ -203,12 +204,12 @@ class cls_terminal:
                         self.__ptsdi__= self.__ptsdi__+1
                   if self.__ptssi__ == 0 and self.__ptsdi__ == 0 : # EOT
                      frame= 0x540
-                     self.__fterminal__= 0x40 # set bit 6
+                     self.__fterminal__= 0x40 # set addressed talker
                else: # SDA
                   frame=self.__outdta__() # SDA
             else:
                frame= 0x540 # end of SAI
-               self.__fterminal__= 0x40 # adressed talker
+               self.__fterminal__= 0x40 # set adressed talker
          else:
 #
 # listener
@@ -225,33 +226,33 @@ class cls_terminal:
       t= n >> 5
       if t == 0:
          if n == 4:   # SDC
-            if (self.__fterminal__ & 0x80) != 0: # addressed listener?
+            if (self.__fterminal__ & 0x80) != 0: # not addressed listener?
                self.__clear_terminal__()
          elif n == 20: # DCL
              self.__clear_terminal__()
       elif t == 1:  # LAD
          n= n & 31
          if n == 31: # UNL, if not talker then go to idle state
-             if (self.__fterminal__ & 0x50) == 0: # talker?
+             if (self.__fterminal__ & 0x50) == 0: # not talker ?
                 self.__fterminal__= 0 # idle
          else:       # if MLA go to listen state
              if (self.__fterminal__ &0x80) ==0 and  n == (self.__addr__ & 31):
                 if (self.__addr2nd__ & 0x80) == 0:
-                   self.__fterminal__ = 0x80 # listener
+                   self.__fterminal__ = 0x80 # set addressed listener
                 else:
-                   self.__fterminal__ = 0x20 # listener second. add mode
+                   self.__fterminal__ = 0x20 # set addressed listener second. add mode
       elif t == 2:  # TAD  
          n= n & 31
          if n == (self.__addr__ & 31):
             if (self.__addr2nd__ & 0x80) == 0: # if MTA go to talker state
-               self.__fterminal__= 0x40 # talker
+               self.__fterminal__= 0x40 # set addressed talker
             else:
-               self.__fterminal__= 0x10 # talker, second. add. mode
+               self.__fterminal__= 0x10 # set addressed talker, second. add. mode
          else:
-            if ( self.__fterminal__ & 0x50) != 0: # talker?
+            if ( self.__fterminal__ & 0x50) != 0: # addressed talker?
                self.__fterminal__= 0 # idle
       elif t == 3: # SAD
-         if (self.__fterminal__ & 0x30) !=0:
+         if (self.__fterminal__ & 0x30) !=0: # addressed talker or listener 2nd addr mode?
             n = n & 31
             if n == (self.__addr2nd__ & 31):
                self.__fterminal__<<=2  # switch to addressed listener/talker
@@ -297,10 +298,10 @@ class cls_terminal:
                if self.__did__ != None:
                   frame= ord(self.__did__[0])
                   self.__ptsdi__ = 1 # other 2
-                  self.__fterminal__= 0xC3 # active talker
+                  self.__fterminal__= 0xC3 # active talker, SDA/SDI, SST/SDI/SAI
             elif n == 99: # SAI
                   frame= self.__aid__ & 0xFF
-                  self.__fterminal__= 0xC1 # active talker
+                  self.__fterminal__= 0xC1 # active talker, SST/SDI/SAI
       else:
          if n < 0x80 +31: # AAD
             if ((self.__addr__ & 0x80) == 0 and self.__addr2nd__ ==0):
