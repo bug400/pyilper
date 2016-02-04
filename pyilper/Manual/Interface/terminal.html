@@ -49,15 +49,19 @@
         <li>ESC Q, ESC R, ESC N: the cursor always shows a block shape</li>
         </ul>
         </blockquote>
-        <p>The keyboard is supported by the HP-71B with the <i>keyboard</i> lex
-        file (Rev C is needed) and the <i>pilterm</i> basic program (see below) 
-        installed.
-        <b>You need the firmware version 1.6 installed on the PIL-Box as well!</b></p>
+
+        <h2>Requirements</h2>
 
         <p>To use the keyboard emulator you have to install the
         <i>keyboard</i> lex and the <i>pilterm</i> basic program first.
         Both files are provided in the LIF disk image file
         <i>PILIMAGE.DAT</i> which is part of the pyILPER package.<p>
+
+        <p><b>You need the firmware version 1.6 installed on the 
+        PIL-Box as well!</b></p>
+
+        <p>You must enable the <i>Enable IDY frames</i> option in the
+        <i>pyilper</i>configuration.</p>
 
         <p>Copy the disk image file to a local directory and select it as LIF
         image file for a virtual drive. Copy both files to the HP-71B. 
@@ -65,9 +69,12 @@
         click into terminal window. Now you can enter characters that
         are sent to the HP-71B as keyboard input.</p>
 
-        <p><b>Type with moderate speed!</b> There may be occasional locks
-        if you type too fast.  To reset the keyboard or to reconfigure the
-        loop simply run <i>pilterm</i> again.</p>
+       
+        <h2>Use</h2>
+
+        <p>If the keyboard hangs press the <i>ATTN</i> key at the HP-71 and
+        rerun <i>pilterm</i>. If you need to reconfigure the loop simply run
+        <i>pilterm</i> from the terminal window again.</p>
 
         <p>The keyboard emulator uses the following function key mapping:</p>
 
@@ -97,6 +104,8 @@
 
         <P>To enter a numeric character value hold down the <i>ALT</i>
         key and enter a 3 digit numeric value (000 - 127).</p>
+
+        <p>You may issue a <i>DELAY 0,0</i> to enable fast scrolling.</p>
       </td>
     </tr>
 
@@ -126,7 +135,7 @@
 
         <h2>PILTERM Basic Program for the HP-71B</h2>
         <pre>
- 10 IF POS(VER$,"KBD:C")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE" @ END
+ 10 IF POS(VER$,"KBD:C")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE (Rev. C)" @ END
  20 RESET ESCAPE
  30 RESET HPIL @ RESTORE IO @ CLEAR @ KEYBOARD IS :DEVADDR("PILTERM")
  40 DISPLAY IS :DEVADDR("PILTERM")
