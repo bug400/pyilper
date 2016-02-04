@@ -32,19 +32,19 @@
 # - send RFC to virtual devices after each cmd frame
 # - high byte detection
 # 
-# 07.06.2014 baudrate support
-#
+# 07.06.2014 jsi
+# - introduce configurable baudrate support
 # 06.10.2015 jsi:
 # - class statement syntax update
-#
 # 16.10.2015 jsi:
 # - removed SSRQ, CSRQ approach
 # - introduced COFI switch to get real IDY frames from the loop (requires firmware 1.6)
-#
 # 29.11.2015 jsi:
 # - removed activity timer
 # 30.11.2015 jsi:
 # - introduced idyframe option
+# 03.02.2015 jsi
+# - set frame timeout to 50 msec
 
 #
 # PIL-Box Commands
@@ -53,7 +53,7 @@ COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 TMOUTCMD=1    # time out for PIL-Box commands
-TMOUTFRM=0.10 # time out for HP-IL frames
+TMOUTFRM=0.05 # time out for HP-IL frames
 
 import threading
 from .pilrs232 import Rs232Error, cls_rs232
