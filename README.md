@@ -38,7 +38,7 @@ Features
 --------
 
 * Entirely written in Python3 using the QT GUI-Framework
-* Up to 5 virtual mass storage drives with integrated directory list
+* Up to 5 virtual mass storage drives with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize).
 * Up to 3 virtual printers emulating the HP-71B and HP-41C character set
 * Terminal emulator with keyboard support (HP-71B only)
 * HP-IL scope
@@ -46,14 +46,13 @@ Features
 * Log of scope or virtual printer output to file(s)
 * HP-IL device status
 * Support for the PIL-Box via serial-over-usb interface
-* Experimental support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
+* Support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
 
 
 Compatibility
 -------------
 
-pyILPER has been success tested with LINUX and Windows 7. It should work
-with Mac OS X but has not been tested up to now.
+pyILPER has been success tested with LINUX, Windows 7 and Mac OS X.
 
 
 Installation
@@ -65,6 +64,9 @@ pyILPER and the required software components can be easily installed on
 Linux, Windows and Mac OS X.
 
 See the [Installation Instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md) for details.
+
+In order to use the file and disk management functions an up to date version of the
+[LIFUTILS] (https://github.com/bug400/lifutils/releases) are required as well.
 
 
 License
