@@ -22,6 +22,9 @@
 #
 # Changelog
 #
+# 19.02.2016 jsi:
+# - added stringconv function
+#
 CHARSET_HP71=0
 CHARSET_HP41=1
 CHARSET_ROMAN8=2
@@ -561,3 +564,21 @@ def charconv(s, charset):
       b[0]= ord(s)
       s=b.decode("HP-ROMAN8","ignore")
       return(s)
+
+#
+# convert a bytearray to a string
+#
+
+def stringconv(barr, charset):
+   slist= []
+   for c in barr:
+      if charset== CHARSET_HP71:
+         slist.append(hp71_unicode[c])
+      elif charset== CHARSET_HP41:
+         slist.append(hp41_unicode[c])
+      elif charset == CHARSET_ROMAN8:
+         b=bytearray(1)
+         b[0]= c
+         slist.append(b.decode("HP-ROMAN8","ignore"))
+   return "".join(slist)
+

@@ -1,5 +1,6 @@
 from .pilrs232 import Rs232Error,cls_rs232
 from .pilbox import cls_pilbox, PilBoxError
+from .pildevbase import cls_pildevbase
 from .pilprinter import cls_printer
 from .pilscope import cls_scope
 from .pildrive import cls_drive

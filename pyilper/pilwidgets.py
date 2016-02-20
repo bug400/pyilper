@@ -90,6 +90,11 @@
 # - added workdir parameter to call of cls_lifview
 # 01.02.2016 jsi
 # - added InstallCheck menu callback
+# 07.02.2016 jsi:
+# - renamed register callbacks because of code recatoring of the virtual HP-IL devices
+# 19.02.2016 jsi:
+# - added character set combo box to cls_tabdrive
+# - put text in front of the combo boxes at the bottom of the tabs
 #
 import os
 import glob
@@ -251,11 +256,12 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
       if self.cbcharset:
          self.lbltxtc=QtGui.QLabel("Charset ")
-         self.lbltxtc.setFixedHeight(10)
-         self.lbltxtc.setFixedWidth(50)
+#        self.lbltxtc.setFixedHeight(10)
+#        self.lbltxtc.setFixedWidth(50)
          self.comboCharset=QtGui.QComboBox()
          for txt in charsets:
             self.comboCharset.addItem(txt)
+         self.hbox2.addWidget(self.lbltxtc)
          self.hbox2.addWidget(self.comboCharset)
       self.hbox2.setContentsMargins(10,3,10,3)
       self.vbox= QtGui.QVBoxLayout()
@@ -349,7 +355,7 @@ class cls_tabscope(cls_tabtermgeneric):
       self.pildevice= cls_scope()
       self.parent.commobject.register(self.pildevice)
       self.pildevice.setactive(self.parent.config.get(self.name,"active"))
-      self.pildevice.register_callback_dispchar(self.out_scope)
+      self.pildevice.register_callback_output(self.out_scope)
       self.cbShowIdy.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
 
@@ -391,8 +397,8 @@ class cls_tabprinter(cls_tabtermgeneric):
       self.pildevice= cls_printer()
       self.parent.commobject.register(self.pildevice)
       self.pildevice.setactive(self.parent.config.get(self.name,"active"))
-      self.pildevice.register_callback_printchar(self.out_printer)
-      self.pildevice.register_callback_clprint(self.hpterm.reset)
+      self.pildevice.register_callback_output(self.out_printer)
+      self.pildevice.register_callback_clear(self.hpterm.reset)
 
 #
 #  callback for virtual printer device to output a character 
@@ -423,12 +429,13 @@ class cls_tabterminal(cls_tabtermgeneric):
 #     add Combobox for terminal size
 #
       self.lbltxt1=QtGui.QLabel("Terminal size ")
-      self.lbltxt1.setFixedHeight(10)
-      self.lbltxt1.setFixedWidth(50)
+#     self.lbltxt1.setFixedHeight(10)
+#     self.lbltxt1.setFixedWidth(50)
       self.comboRes=QtGui.QComboBox()
       self.comboRes.addItem("80x24")
       self.comboRes.addItem("80x40")
       self.comboRes.addItem("120x25")
+      self.hbox2.addWidget(self.lbltxt1)
       self.hbox2.addWidget(self.comboRes)
       self.hbox2.setAlignment(self.comboRes,QtCore.Qt.AlignLeft)
 #
@@ -436,8 +443,8 @@ class cls_tabterminal(cls_tabtermgeneric):
 #
       self.lblTermstatus=QtGui.QLabel()
       self.lblTermstatus.setText("Replace")
-      self.lblTermstatus.setFixedWidth(50)
-      self.lblTermstatus.setFixedHeight(10)
+#     self.lblTermstatus.setFixedWidth(50)
+#     self.lblTermstatus.setFixedHeight(10)
       self.hbox2.addStretch(1)
       self.hbox2.addWidget(self.lblTermstatus)
       self.hbox2.setAlignment(self.lblTermstatus,QtCore.Qt.AlignRight)
@@ -454,8 +461,8 @@ class cls_tabterminal(cls_tabtermgeneric):
       self.pildevice= cls_terminal()
       self.parent.commobject.register(self.pildevice)
       self.pildevice.setactive(self.parent.config.get(self.name,"active"))
-      self.pildevice.register_callback_dispchar(self.out_terminal)
-      self.pildevice.register_callback_cldisp(self.hpterm.reset)
+      self.pildevice.register_callback_output(self.out_terminal)
+      self.pildevice.register_callback_clear(self.hpterm.reset)
       self.hpterm.set_kbdfunc(self.pildevice.queueOutput)
       self.hpterm.set_irindicfunc(self.do_irindic)
       self.comboRes.setEnabled(True)
@@ -538,6 +545,8 @@ class cls_tabdrive(cls_tabgeneric):
 #
       self.filename= parent.config.get(self.name,"filename","")
       self.drivetype= parent.config.get(self.name,"drivetype",self.DEV_HDRIVE1)
+      self.charset= parent.config.get(self.name,"charset",CHARSET_HP71)
+
 #
 #     Build GUI 
 #
@@ -589,7 +598,9 @@ class cls_tabdrive(cls_tabgeneric):
       self.hbox3.addWidget(self.cbActive)
       self.hbox3.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
       self.hbox3.setContentsMargins(10,3,10,3)
-
+#
+#     Initialize file management tool bar
+#
       self.tBar= QtGui.QToolBar()
       self.tBut= QtGui.QToolButton(self.tBar)
       self.menu= QtGui.QMenu(self.tBut)
@@ -600,8 +611,18 @@ class cls_tabdrive(cls_tabgeneric):
       self.actLabel=self.menu.addAction("Label")
       self.tBut.setText("Tools")
       self.tBut.setEnabled(False)
-      
       self.hbox3.addWidget(self.tBut)
+#
+#     Initialize charset combo box
+#
+      self.lbltxtc=QtGui.QLabel("Charset ")
+      self.comboCharset=QtGui.QComboBox()
+      for txt in charsets:
+         self.comboCharset.addItem(txt)
+      self.hbox3.addWidget(self.lbltxtc)
+      self.hbox3.addWidget(self.comboCharset)
+      self.comboCharset.setEnabled(False)
+
       self.hbox3.setAlignment(self.tBar,QtCore.Qt.AlignLeft)
       self.hbox3.addStretch(1)
 
@@ -623,6 +644,8 @@ class cls_tabdrive(cls_tabgeneric):
          w.setEnabled(False)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
+      self.comboCharset.setCurrentIndex(self.charset)
+
 #
 #     connect actions
 #   
@@ -633,6 +656,8 @@ class cls_tabdrive(cls_tabgeneric):
       self.actPack.triggered.connect(self.do_pack)
       self.actImport.triggered.connect(self.do_import)
       self.actLabel.triggered.connect(self.do_label)
+      self.comboCharset.activated[str].connect(self.do_changeCharset)
+
 #
 #     refresh timer
 #
@@ -685,11 +710,13 @@ class cls_tabdrive(cls_tabgeneric):
          w.setEnabled(True)
       if self.active:
          self.tBut.setEnabled(False)
+         self.comboCharset.setEnabled(False)
          self.tBut.setToolTip("To use this menu, please disable the device first")
       else:
          self.tBut.setToolTip("")
          if self.filename != "" and self.parent.ui.lifutils_installed:
             self.tBut.setEnabled(True)
+            self.comboCharset.setEnabled(True)
 #
 #  set drive type checked
 #
@@ -716,6 +743,10 @@ class cls_tabdrive(cls_tabgeneric):
 #
 #  Callbacks
 #
+   def do_changeCharset(self,text):
+      self.charset=self.comboCharset.findText(text)
+      self.parent.config.put(self.name,'charset',self.charset)
+
    def do_filenameChanged(self):
       flist= self.get_lifFilename()
       if flist == None:
@@ -934,6 +965,7 @@ class DirTableView(QtGui.QTableView):
                event.accept()
                return
             workdir=self.parent.parent.parent.config.get('pyilper','workdir')
+            charset=self.parent.parent.charset
             if action ==exportAction:
                 cls_lifexport.exec(imagefile,liffilename,liffiletype,workdir)
             elif action== purgeAction:
@@ -943,7 +975,7 @@ class DirTableView(QtGui.QTableView):
                 cls_lifrename.exec(imagefile,liffilename)
                 self.parent.refresh()
             elif action== viewAction:
-                cls_lifview.exec(imagefile, liffilename, liffiletype,workdir)
+                cls_lifview.exec(imagefile, liffilename, liffiletype,workdir, charset)
             event.accept()
 
 class cls_LifDirWidget(QtGui.QWidget):

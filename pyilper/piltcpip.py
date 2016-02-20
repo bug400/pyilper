@@ -43,6 +43,8 @@
 # - removed all of the SSRQ/CSRQ approach
 # 29.11.2015 jsi
 # - removed activity timer
+# 07.02.2016 jsi
+# - setpilbox call removed
 
 import select
 import socket
@@ -205,7 +207,6 @@ class cls_piltcpip:
 #     virtual HP-IL device
 #
    def register(self, obj):
-      obj.setpilbox(self)
       self.__devices__.append(obj)
 #
 #     unregister virtual HP-IL device

@@ -45,6 +45,8 @@
 # - introduced idyframe option
 # 03.02.2015 jsi
 # - set frame timeout to 50 msec
+# 07.02.2015 jsi
+# - set pilbox call removed
 
 #
 # PIL-Box Commands
@@ -54,6 +56,7 @@ TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 TMOUTCMD=1    # time out for PIL-Box commands
 TMOUTFRM=0.05 # time out for HP-IL frames
+#TMOUTFRM=None # time out for HP-IL frames
 
 import threading
 from .pilrs232 import Rs232Error, cls_rs232
@@ -209,12 +212,13 @@ class cls_pilbox:
 #     send frame
 #
          self.sendFrame(frame)
+#        if frame & 0x700 == 0x100 or frame & 0x700 == 0x300 or frame & 0x700 == 0x700:
+#           print("srq bit set")
 
 #
 #     virtualeHP-IL device
 #
    def register(self, obj):
-      obj.setpilbox(self)
       self.__devices__.append(obj)
 #
 #     unregister virtual HP-IL device

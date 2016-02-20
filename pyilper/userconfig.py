@@ -23,6 +23,8 @@
 # Changelog
 # 06.10.2015 jsi:
 # - class statement syntax update
+# 08.02.2016 jsi:
+# - changed os detection to platform.system()
 
 import pickle
 import os
@@ -49,17 +51,17 @@ class cls_userconfig:
 #
       self.__userhome__=os.path.expanduser("~")
 
-      if platform.dist()[0] != "":
+      if platform.system()=="Linux":
 #
 #        LINUX
 #        
          self.__configpath__=os.path.join(self.__userhome__,".config",progname)
-      elif platform.win32_ver()[0] != "":
+      elif platform.system()=="Windows":
 #
 #        Windows
 #
          self.__configpath__=os.path.join(self.__userhome__,"Appdata","Roaming",progname)
-      elif platform.mac_ver()[0] != "":
+      elif platform.system()=="Darwin":
 #
 #        Mac OS X
 #

@@ -55,17 +55,24 @@
 # - corrected typo in Message box if HP-IL device config was changed, hint by cg
 # 01.02.2016 jsi
 # - added InstallCheck menu entry
+# 16.02.2016 jsi
+# - bump version number to 1.3.3 (Development)
+# 20.02.2016 jsi
+# - dump stacks introduced
 #
 import os
 import sys
 import platform
+import signal
+import threading
+import traceback
 from PyQt4 import QtCore, QtGui
 from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfig, PilConfigError, cls_ui,cls_tabscope, cls_PilBoxThread, cls_PilTcpIpThread, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, cls_tabprinter, cls_tabterminal, cls_tabdrive, cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_lifinit, cls_liffix, cls_installcheck
 
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.3.2"       # pyILPR version number
+VERSION="1.3.3 (Development)"       # pyILPR version number
 CONFIG_VERSION="1"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
@@ -450,7 +457,6 @@ class cls_pyilper(QtCore.QObject):
       if dialog.exec():
          return(dialog.selectedFiles())
 
-      
 #
 #  enter working directory ename
 #
@@ -463,11 +469,17 @@ class cls_pyilper(QtCore.QObject):
       if dialog.exec():
          return(dialog.selectedFiles())
 
+def dumpstacks(signal, frame):
+  for threadId, stack in sys._current_frames().items():
+    print("Thread ID %x" % threadId)
+    traceback.print_stack(f=stack)
 
 def main():
+   signal.signal(signal.SIGQUIT, dumpstacks)
    app = QtGui.QApplication(sys.argv)
    pyilper= cls_pyilper()
    sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
 

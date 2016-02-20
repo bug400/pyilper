@@ -29,49 +29,43 @@
 # Changelog
 #
 # 09.02.2015 improvements and chages of ILPER 1.5 
-# - renamed __fetat__ to __fstate__ 
+# - renamed __fetat__ to __ilstate__ 
 # - renamed __outdta__ to __outdata__ 
 # - fixed increase of __ptout__ in __outdta__ (case 3: block)
 # - delete zero __ptout__ in DDT section of do_cmd
 # - inserte zero __ptout__ in SDA section of do_rdy
-# - fixed __fstate__ usage in do_cmd (LAD/SAD)
-#
+# - fixed __ilstate__ usage in do_cmd (LAD/SAD)
 # 03.03.2015 windows i/o compatibility
 # - rewritten: __rrec__, __wrec__, __format_disc__ to
-#
 # 11.03.2015 more improvements and changes of ILPER 1.5
 # - fix first sector of LIF-Image
 # - set pyhsical medium information, set id
 # - not implemented: enable auto extended address switch
-#
 # 21.03.2015 more header fixes for HP-41
-#
 # 19.05.2015 getMediumInfo removed
-#
 # 30.05.2015 fixed error in handling AP, added getstatus
-#
 # 06.10.2015 jsi:
 # - class statement syntax update
-#
 # 21.11.2015 jsi:
 # - removed SSRQ/CSRQ approach
-#
 # 29.11.2015 jsi:
 # - introduced talker activity timer
 # - introduced device lock 
-#
 # 30.11.2015 jsi:
 # - fixed idle timer mechanism
 # - fixed header of HP82161 medium when formatted with an HP-71
-#
 # 02.12.2015 jsi:
 # - fixed composition of the implementation byte array (4 byt int not byte!)
 # - removed fix header of HP82161 medium when formatted with an HP-71 
+# 19.02.2016 jsi
+# - refactored and merged new Ildev base class of Christoph Giesselink
+# - improved os detection
 
 import os
 import platform
 import time
 import threading
+from .pildevbase import cls_pildevbase
 
 
 def putLifInt(data,offset,length,value):
@@ -90,9 +84,10 @@ def getLifInt(data,offset,length):
       i+=1
    return value
 
-class cls_drive:
+class cls_drive(cls_pildevbase):
 
    def __init__(self):
+      super().__init__()
 
 #
 #     HP-IL data and variables
@@ -100,15 +95,6 @@ class cls_drive:
       self.__aid__ = 0x10         # accessory id = mass storage
       self.__defaddr__ = 2        # default address alter AAU
       self.__did__ = None         # device id 
-      self.__status__ = 0         # HP-IL status (always 0 here)
-      self.__addr__ = 0           # HP-IL primary address (by TAD,LAD)
-                                  # bits 0-5=AAD or AEP, bit 7=1 means
-                                  # auto address taken
-      self.__addr2nd__ = 0        # HP-IL secondary address (by SAD)
-                                  # bits 0-5=AES, bit 7 means auto addr taken
-      self.__fstate__ = 0         # HP-IL state machine flag
-      self.__ptsdi__ = 0          # output pointer for device id
-      self.__ptssi__ = 0          # output pointer for hp-il status
 #
 #     disk management variables
 #
@@ -125,8 +111,8 @@ class cls_drive:
       self.__surfaces__= 0        # no of surfaces of medium
       self.__blocks__= 0          # no of blocks of medium
 
-      self.__lif__= bytearray(12)
-      self.__nbe__=0
+      self.__lif__= bytearray(12) # device info
+      self.__nbe__=0              # last record number
       self.__buf0__= bytearray(256) # buffer 0
       self.__buf1__= bytearray(256) # buffer 1
       self.__hdiscfile__= ""        # disc file
@@ -136,23 +122,16 @@ class cls_drive:
       self.__timestamp__= time.time() # last time of beeing talker
 
       self.__isWindows__=False    # platform idicator for i/o
-      if platform.win32_ver()[0] != "":
+      if platform.system()== "Windows":
          self.__isWindows__= True
 
-   def setpilbox(self,obj):
-      self.__pilbox__=obj
-
-   def setactive(self, active):
-      self.__isactive__= active
+#
+# public ------------
+#
 
 #
-#  lock device, all physical reads or writes issue a "no medium error"
+#  was image modified since last timestamp
 #
-   def setlocked(self,locked):
-      self.__access_lock__.acquire()
-      self.__islocked__= locked
-      self.__access_lock__.release()
-
    def ismodified(self):
       self.__access_lock__.acquire()
       if self.__modified__:
@@ -162,26 +141,19 @@ class cls_drive:
       else:
         self.__access_lock__.release()
         return (False, self.__timestamp__)
-
+#
+#  lock device
+#
    def acquireaccesslock(self):
       self.__access_lock__.acquire()
 
+#
+#  release device
+#
    def releaseaccesslock(self):
       self.__access_lock__.release()
 
-   def getstatus(self):
-      return [self.__isactive__, self.__did__, self.__aid__, self.__addr__, self.__addr2nd__, self.__fstate__]
 
-#
-#  clear drive reset internal pointers
-#
-   def __cldrv__ (self):
-      self.__fpt__= False
-      self.__pe__ = 0    
-      self.__oc__ = 0   
-      self.__access_lock__.acquire()
-      self.__modified__= False
-      self.__access_lock__.release()
 #
 #  set new filename (disk change) and medium information
 #
@@ -211,8 +183,11 @@ class cls_drive:
          self.__did__= None
       else:
          self.__did__=did
-      self.__cldrv__()
+      self.__clear_device__()
       return
+#
+# private
+#
 #
 # copy buffer 0 to buffer 1
 #
@@ -231,17 +206,6 @@ class cls_drive:
          x=self.__buf1__[i]
          self.__buf1__[i]= self.__buf0__[i]
          self.__buf0__[i]= x
-      return
-#
-# set aid and did of device
-#
-   def setdevice(self,did,aid):
-      self.__aid__= aid
-      if did== "":
-         self.__did__= None
-      else:
-         self.__did__=did
-      self.__cldrv__()
       return
 #
 # copy buffer 0 to buffer 1
@@ -387,6 +351,19 @@ class cls_drive:
       self.__access_lock__.release()
       return
 #
+#  private (overloaded) -------------------------
+#
+#  clear drive reset internal pointers
+#
+   def __clear_device__ (self):
+      self.__fpt__= False
+      self.__pe__ = 0    
+      self.__oc__ = 0   
+      self.__access_lock__.acquire()
+      self.__modified__= False
+      self.__access_lock__.release()
+
+#
 # receive data to disc according to DDL command
 #
    def __indata__(self,n):
@@ -434,7 +411,10 @@ class cls_drive:
 #
 # send data from disc according to DDT command
 #
-   def __outdata__(self):
+   def __outdata__(self,frame):
+      if frame== 0x560 :   # initial SDA
+         self.__ptout__=0
+
       if (self.__devt__== 0) or (self.__devt__==2): # send buffer 0, read
          frame= self.__buf0__[self.__oc__]
          self.__oc__+=1
@@ -483,112 +463,18 @@ class cls_drive:
       else:
          frame= 0x540
 
-      if frame == 0x540:
-         self.__fstate__= 0x40
       return (frame)
 
 #
+#  extended DDL/DDT commands
 #
-#  manage HPIL data frames, returns the returned frame
-#
-   def __do_doe__(self,frame):
-
-      if (self.__fstate__ & 0x80) !=0:
-#
-#        addressed
-#
-         if (self.__fstate__ & 0x40) != 0:
-#
-#           talker
-#
-            if self.__fstate__ & 0x02 !=0:
-#
-#              data(SDA) status (SST) or accessory ID (SDI)
-#
-               if (self.__fstate__ & 0x01) != 0:
-                  if self.__ptssi__ > 0:   # SST
-                     self.__ptssi__= self.__ptssi__-1 
-                     if self.__ptssi__ > 0:
-                        frame= (self.__status__ >> (( self.__ptssi__ -1) * 8)) & 0xFF
-                  if self.__ptsdi__ > 0:   # SDI
-                     if self.__ptsdi__ == len(self.__did__):
-                        frame=0
-                        self.__ptsdi__=0
-                     else:
-                        frame= ord(self.__did__ [self.__ptsdi__])
-                        self.__ptsdi__= self.__ptsdi__+1
-                  if self.__ptssi__ == 0 and self.__ptsdi__ == 0 : # EOT
-                     frame= 0x540
-                     self.__fstate__= 0x40
-               else:
-                  frame=self.__outdata__() # SDA
-            else:
-               frame= 0x540 # end of SAI
-               self.__fstate__= 0x40
-         else:
-#
-# listener
-#
-            self.__indata__(frame)
-
-      return(frame)
-#
-# manage HP-IL command frames
-#
-   def __do_cmd__(self,frame):
-
+   def __cmd_ext__(self,frame):
       n= frame & 0xff
       t= n >> 5
 
-      if t == 0:
-         if n == 4:   # SDC
-            if (self.__fstate__ & 0x80) != 0:
-               self.__cldrv__()
-         elif n == 20: # DCL
-             self.__cldrv__()
-
-      elif t == 1:  # LAD
-         n= n & 31
-         if n == 31: # UNL, if not talker then go to idle state
-             if (self.__fstate__ & 0x50) == 0: 
-                self.__fstate__= 0
-         else:       # if MLA go to listen state
-             if (self.__fstate__ & 0x80)==0 and  n == (self.__addr__ & 31):
-                if (self.__addr2nd__ & 0x80) == 0:
-                   self.__fstate__ = 0x80  
-                else:
-                   self.__fstate__ = 0x20
-
-      elif t == 2:  # TAD  
-         n= n & 31
-         if n == (self.__addr__ & 31):
-            if (self.__addr2nd__ & 0x80) == 0: # if MTA go to talker state
-               self.__fstate__= 0x40   # addressed talker
-            else:
-               self.__fstate__= 0x10   # addressed talker in second. addr.
-         else:
-            if ( self.__fstate__ & 0x50) != 0:
-               self.__fstate__= 0
-
-      elif t == 3: # SAD
-         if (self.__fstate__ & 0x30) != 0: # LAD or TAD address matched
-            n = n & 31
-            if n == (self.__addr2nd__ & 31):
-               self.__fstate__<<=2  # switch to addressed listener/talker
-            else:
-               self.__fstate__=0
-
-      elif t == 4: 
-         n= n & 31
-         if n == 16: # IFC
-            self.__fstate__= 0x00
-         elif n == 26: # AAU
-            self.__addr__=  self.__defaddr__
-            self.__addr2nd__= 0
-
-      elif t == 5: # DDL
+      if t == 5: # DDL
          n=n & 31
-         if (self.__fstate__ & 0xC0) == 0x80:
+         if (self.__ilstate__ & 0xC0) == 0x80: # are we listener?
             self.__devl__= n & 0xFF
             if n== 1:
                self.__flpwr__=0
@@ -618,7 +504,7 @@ class cls_drive:
 
       elif t == 6: # DDT
          n= n& 31
-         if (self.__fstate__ & 0x40) == 0x40:
+         if (self.__ilstate__ & 0x40) == 0x40:
             self.__devt__= n & 0xFF
             if n== 0:
                self.__flpwr__=0
@@ -629,75 +515,4 @@ class cls_drive:
                self.__pe__+=1
             elif n == 4:
                self.__exchbuf__()
-      return(frame)
-            
-#
-# HP-IL ready frames
-#
-   def __do_rdy__(self,frame):
-
-      n= frame & 0xFF
-      if n <= 127:
-         if ( self.__fstate__ & 0x40) !=0:  # SOT
-
-#           if addressed talker
-            if  n == 66:  #NRD
-               self.__ptdsi__ = 0
-               self.__ptssi__=0
-               self.__fstate__ &=0xFD # abort Transfer
-
-            elif n == 96: # SDA
-               self.__ptout__= 0
-               self.__fstate__= 0xC2
-               frame=self.__outdata__()
-
-            elif n == 97: # SST
-                # update IL status and return no. of status bytes
-                self.__ptssi__ = 1
-                if self.__ptssi__ > 0: # response to status request
-                   frame = (self.__status__ >> ((self.__ptssi__ -1) * 8)) & 0xFF
-                   self.__status__ &= 0xE0
-                   self.__fstate__= 0xC0 # active talker
-
-            elif n == 98:  # SDI
-               if self.__did__ != None:
-                  frame= ord(self.__did__[0])
-                  self.__ptsdi__ = 1 # other 2
-                  self.__fstate__= 0xC3
-
-            elif n == 99: # SAI
-                  frame= self.__aid__ & 0xFF
-                  self.__fstate__= 0xC1
-      else:
-         if n < 0x80 +31: # AAD
-            if ((self.__addr__ & 0x80) == 0 and self.__addr2nd__ ==0):
-               # AAD, if not already an assigned address, take it
-               self.__addr__ = n
-               frame=frame+1
-
-         elif  (n >= 0xA0 and n < 0xA0 + 31): # AEP
-            # AEP, if not already an assigned address and got an AES frame,
-            if ((self.__addr__ & 0x80) == 0 and (self.__addr2nd__ & 0x80) != 0):
-               # take it
-               self.__addr__= n & 0x9F
-
-         elif (n >= 0xC0 and n < 0xC0 +31): # AES
-            if (self.__addr__ & 0x80) == 0:
-               self.__addr2nd__= n & 0x9F
-               frame=frame + 1
-      return (frame)
-
-#
-#  Process device
-#
-   def process(self,frame):
-
-      if not self.__isactive__:
-         return(frame)
-      if (frame & 0x400) == 0:
-         frame= self.__do_doe__(frame)
-      elif (frame & 0x700) == 0x400:
-         frame= self.__do_cmd__(frame)
-      elif (frame & 0x700) == 0x500:
-         frame= self.__do_rdy__(frame)
       return(frame)

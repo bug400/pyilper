@@ -36,7 +36,9 @@
 # 08.01.2016 jsi:
 # - introduced lifcore.py, refactoring
 # 09.01.2016 jsi:
-# - adde filetypes
+# - added filetypes
+# 08.02.2016 jsi:
+# - changed os detection to platform.system()
 #
 import platform
 import os
@@ -252,7 +254,7 @@ class cls_LifFile:
       self.no_tracks=0
       self.no_surfaces=0
       self.no_blocks=0
-      if platform.win32_ver()[0] != "":
+      if platform.system()=="Windows":
          self.isWindows= True
 
    def set_filename(self,name):

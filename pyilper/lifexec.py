@@ -49,6 +49,10 @@
 # 01.02.2016 - jsi
 # - added save button to save the contents of the viewer to a file
 # - added LIFUTILS installation check dialog
+# 08.02.2016 - jsi
+# - changed os detection to platform.system()
+# 19.02.2016 jsi
+# - added configurable character set encoding to cls_lifview
 #
 import os
 import subprocess
@@ -56,6 +60,8 @@ import platform
 import tempfile
 from PyQt4 import QtCore, QtGui
 from .lifcore import *
+from .pilcharconv import charconv, stringconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
+
 
 #
 # decode version number of lifutils to x.yy.zz
@@ -100,7 +106,7 @@ def exec_single(parent,cmd):
 def exec_double_import(parent,cmd1,cmd2,inputfile):
 
    try:
-      if platform.win32_ver()[0] != "":
+      if platform.system()== "Windows":
          fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
       else:
          fd= os.open(inputfile, os.O_RDONLY)
@@ -155,7 +161,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
             reply=QtGui.QMessageBox.warning(parent,'Warning',"Do you really want to overwrite file "+outputfile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
             if reply== QtGui.QMessageBox.Cancel:
                return
-         if platform.win32_ver()[0] != "":
+         if platform.system()== "Windows":
             fd= os.open(outputfile, os.O_WRONLY | os.O_BINARY |  os.O_TRUNC | os.O_CREAT, 0o644)
          else:
             fd= os.open(outputfile, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0o644)
@@ -682,7 +688,7 @@ class cls_chk_import(QtGui.QDialog):
 #
       try:
          if inputfile is not None:
-            if platform.win32_ver()[0] != "":
+            if platform.system()== "Windows":
                fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
             else:
                fd= os.open(inputfile, os.O_RDONLY)
@@ -904,7 +910,7 @@ class cls_lifview(QtGui.QDialog):
 # get file and pipe it to filter program, show output in editor window
 #
    @staticmethod
-   def exec(lifimagefile, liffilename, liffiletype,workdir):
+   def exec(lifimagefile, liffilename, liffiletype,workdir,charset):
       d=cls_lifview(workdir)
       ft=get_finfo_name(liffiletype)
       call= get_finfo_type(ft)[1]
@@ -915,12 +921,13 @@ class cls_lifview(QtGui.QDialog):
          call= cls_chkxrom.exec()
       output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],call,"")
 #
-# at the moment the text is only converted to ROMAN-8
+# convert and show the file content
 #
       if output == None:
          return
       try:
-         d.set_text(output.decode("HP-ROMAN8"))
+         d.set_text(stringconv(output,charset))
+#        d.set_text(output.decode("HP-ROMAN8"))
       except UnicodeDecodeError as e:
          reply=QtGui.QMessageBox.critical(d,'Error','cannot decode file',QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return

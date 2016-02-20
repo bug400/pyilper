@@ -32,12 +32,16 @@
 # - introduced show IDY frames option
 # 29.11.2015 jsi:
 # - introduced device lock
-#
-import threading
+# 07.02.2016 jsi
+# - refactored and merged new Ildev base class of Christoph Giesselink
 
-class cls_scope:
+from .pildevbase import cls_pildevbase
+
+
+class cls_scope(cls_pildevbase):
 
    def __init__ (self):
+      super().__init__()
       self.__mnemo__= ["DAB", "DSR", "END", "ESR", "CMD", "RDY", "IDY", "ISR"]
       self.__scmd0__= ["NUL", "GTL", "???", "???", "SDC", "PPD", "???", "???",
                     "GET", "???", "???", "???", "???", "???", "???", "ELN",
@@ -45,35 +49,19 @@ class cls_scope:
                     "EAR", "???", "???", "???", "???", "???", "???", "???" ]
       self.__scmd9__= ["IFC", "???", "REN", "NRE", "???", "???", "???", "???",
                     "???", "???", "AAU", "LPD", "???", "???", "???", "???"]
-      self.__isactive__= False
       self.__show_idy__= False
-      self.__islocked__= False
-      self.__access_lock__= threading.Lock()
-      self.__callback_dispchar__= None
       self.__count__ = 0
 
+#
+# public -------
+#
 
    def set_show_idy(self,flag):
       self.__show_idy__= flag
 
-   def setpilbox(self,obj):
-      self.__pilbox__=obj
-
-   def setactive(self, active):
-      self.__isactive__= active
-
-   def register_callback_dispchar(self,func):
-      self.__callback_dispchar__= func
-
 #
-#  lock device, all output is disabled
+#  public (overloaded) -------
 #
-   def setlocked(self,locked):
-      self.__access_lock__.acquire()
-      self.__islocked__= locked
-      self.__access_lock__.release()
-
-
    def process (self,frame):
       if not self.__isactive__:
          return(frame)
@@ -157,10 +145,10 @@ class cls_scope:
                   s = "RDY {:2X}".format(n)
 
       s= s.ljust(8)
-      if self.__callback_dispchar__ != None:
+      if self.__callback_output__ != None:
          self.__access_lock__.acquire()
          locked= self.__islocked__
          self.__access_lock__.release()
          if not locked:
-            self.__callback_dispchar__(s)
+            self.__callback_output__(s)
       return (frame)

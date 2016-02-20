@@ -32,6 +32,9 @@
 # 21.11.2015 jsi:
 # - disabled F7
 # - enhanced error messages about unhandled escape sequences
+# 20.02.2016 jsi:
+# - _kbdfunc escape sequence handling improved
+# - do not send non printable characters to keyboard buffer
 
 
 import array
@@ -291,71 +294,51 @@ class QTerminalWidget(QWidget):
         if text:
            t=ord(text)
            if t== 13:  # lf -> Endline
-              self._kbdfunc(27)
-              self._kbdfunc(82)
+              self._kbdfunc(82, True)
            elif t== 8: # BACK  ESC Q
-              self._kbdfunc(27)
-              self._kbdfunc(81)
+              self._kbdfunc(81, True)
            elif t== 127: # -CHAR ESC G
-              self._kbdfunc(27)
-              self._kbdfunc(71)
+              self._kbdfunc(71, True)
            else:
-              if t < 128: # > 127 generates BASIC KEYWORDS!
-                 self._kbdfunc(t)
+              if t < 128 and t > 0x1F: # > 127 generates BASIC KEYWORDS!
+                 self._kbdfunc(t, False)
         else:
            s = self.keymap.get(key)
            if s:
               if s == "~A":        # cursor up ESC A
-                 self._kbdfunc(27)
-                 self._kbdfunc(65)
+                 self._kbdfunc(65,True)
               elif s == "~B":      # cursor down ESC D
-                 self._kbdfunc(27)
-                 self._kbdfunc(68)
+                 self._kbdfunc(68, True)
               elif s == "~C":      # cursor right ESC C
-                 self._kbdfunc(27)
-                 self._kbdfunc(67)
+                 self._kbdfunc(67,True)
               elif s == "~D":      # cursor left ESC B
-                 self._kbdfunc(27)
-                 self._kbdfunc(66)
+                 self._kbdfunc(66, True)
               elif s == "~3":      # I/R ESC H
-                 self._kbdfunc(27)
-                 self._kbdfunc(72)
+                 self._kbdfunc(72, True)
               elif s == "~4":      # -CHAR ESC G
-                 self._kbdfunc(27)
-                 self._kbdfunc(71)
+                 self._kbdfunc(71,True)
               elif s == "~1":      # Page Up ESC J
-                 self._kbdfunc(27)
-                 self._kbdfunc(74)
+                 self._kbdfunc(74,True)
               elif s == "~2":      # Page Down ESC K
-                 self._kbdfunc(27)
-                 self._kbdfunc(75)
+                 self._kbdfunc(75, True)
               elif s == "~H":      # Begin of line ESC E
-                 self._kbdfunc(27)
-                 self._kbdfunc(69)
+                 self._kbdfunc(69,True)
               elif s == "~F":      # End of line ESC F
-                 self._kbdfunc(27)
-                 self._kbdfunc(70)
+                 self._kbdfunc(70, True)
               elif s == "~a":      # F1 -> Attn ESC L
-                 self._kbdfunc(27)
-                 self._kbdfunc(76)
+                 self._kbdfunc(76, True)
               elif s == "~b":      # F2 -> Run ESC M
-                 self._kbdfunc(27)
-                 self._kbdfunc(77)
+                 self._kbdfunc(77, True)
               elif s == "~c":      # F3 -> Cmds ESC N
-                 self._kbdfunc(27)
-                 self._kbdfunc(78)
+                 self._kbdfunc(78, True)
               elif s == "~d":      # F4 -> SST ESC P
-                 self._kbdfunc(27)
-                 self._kbdfunc(80)
+                 self._kbdfunc(80, True)
               elif s == "~e":      # F5 -> -Line ESC I
-                 self._kbdfunc(27)
-                 self._kbdfunc(73)
+                 self._kbdfunc(73, True)
               elif s == "~f":      # F6 -> LC ESC O
-                 self._kbdfunc(27)
-                 self._kbdfunc(79)
+                 self._kbdfunc(79, True)
 #             elif s == "~g":      # F7 -> Ctrl ESC S
-#                self._kbdfunc(27)
-#                self._kbdfunc(83)
+#                self._kbdfunc(83, True)
               else:
                  pass
                 
