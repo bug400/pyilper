@@ -59,6 +59,8 @@
 # - bump version number to 1.3.3 (Development)
 # 20.02.2016 jsi
 # - dump stacks introduced
+# 21.02.2016 jsi
+# - dump stacks disabled for windows
 #
 import os
 import sys
@@ -475,7 +477,8 @@ def dumpstacks(signal, frame):
     traceback.print_stack(f=stack)
 
 def main():
-   signal.signal(signal.SIGQUIT, dumpstacks)
+   if platform.system() != "Windows":
+      signal.signal(signal.SIGQUIT, dumpstacks)
    app = QtGui.QApplication(sys.argv)
    pyilper= cls_pyilper()
    sys.exit(app.exec_())
