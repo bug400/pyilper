@@ -47,6 +47,8 @@
 # - set frame timeout to 50 msec
 # 07.02.2015 jsi
 # - set pilbox call removed
+# 22.02.2016 cg
+# - send the cmd and not the RFC frame back to the PIL-Box
 
 #
 # PIL-Box Commands
@@ -207,7 +209,7 @@ class cls_pilbox:
 #
          if (frame & 0x700) == 0x400:
             for i in self.__devices__:
-               frame=i.process(0x500)
+               i.process(0x500)
 #
 #     send frame
 #
