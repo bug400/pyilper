@@ -34,12 +34,14 @@
 # - enhanced error messages about unhandled escape sequences
 # 20.02.2016 jsi:
 # - _kbdfunc escape sequence handling improved
-# - do not send non printable characters to keyboard buffer
-
+# 26.02.2016 jsi:
+# - keyboard input delay introduced to improve stability
+# - do not update terminal window if not visible
 
 import array
 import queue
 import threading
+import time
 
 from PyQt4.QtCore import QRect, Qt, pyqtSignal, QTimer, QSize
 from PyQt4.QtGui import (
@@ -49,6 +51,7 @@ from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 
 
 DEBUG = False
+KEYBOARD_DELAY=0.2
 
 class QTerminalWidget(QWidget):
 
@@ -300,7 +303,7 @@ class QTerminalWidget(QWidget):
            elif t== 127: # -CHAR ESC G
               self._kbdfunc(71, True)
            else:
-              if t < 128 and t > 0x1F: # > 127 generates BASIC KEYWORDS!
+              if t < 128: # > 127 generates BASIC KEYWORDS!
                  self._kbdfunc(t, False)
         else:
            s = self.keymap.get(key)
@@ -343,6 +346,7 @@ class QTerminalWidget(QWidget):
                  pass
                 
         event.accept()
+        time.sleep(KEYBOARD_DELAY)
 
 
     def column_count(self):
@@ -370,6 +374,7 @@ class HPTerminal:
         self.irindicfunc= None
         self.win=win
         self.charset=CHARSET_HP71
+        self.update_win= False
 
         self.vt100_charset_graph = [
             0x25ca, 0x2026, 0x2022, 0x3f,
@@ -707,7 +712,7 @@ class HPTerminal:
  
     def start_update(self,ms):
        self.timer.start(ms)
- 
+
     def stop_update(self):
        self.timer.stop()
  
@@ -733,7 +738,8 @@ class HPTerminal:
        self.termqueue_lock.release()
        for c in items:
           self.process(c)
-       self.win.update_term(self.dump)
+       if self.update_win:
+          self.win.update_term(self.dump)
  
     def refresh(self):
         self.win.update_term(self.dump)

@@ -95,6 +95,8 @@
 # 19.02.2016 jsi:
 # - added character set combo box to cls_tabdrive
 # - put text in front of the combo boxes at the bottom of the tabs
+# 26.02.2016 jsi:
+# - do not update terminal, if not visible
 #
 import os
 import glob
@@ -269,6 +271,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.vbox.addLayout(self.hbox2)
       self.setLayout(self.vbox)
       self.hpterm=HPTerminal(self.cols,self.rows,self.qterminal)
+      self.hpterm.start_update(UPDATE_TIMER)
 #
 #     initialize logging checkbox
 #
@@ -326,13 +329,15 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #  becomes visible, activate update timer
 #
    def becomes_visible(self):
+      self.hpterm.update_win=True
       self.hpterm.refresh()
-      self.hpterm.start_update(UPDATE_TIMER)
+      return
 #
 #  becomes invisible, deactivate update timer
 #
    def becomes_invisible(self):
-      self.hpterm.start_update(UPDATE_TIMER*50)
+      self.hpterm.update_win=False
+      return
 #
 # tabscope widget ----------------------------------------------------
 #
@@ -374,6 +379,8 @@ class cls_tabscope(cls_tabtermgeneric):
 #  callback output char to console
 #
    def out_scope(self,s):
+#     ts= datetime.datetime.now()
+#     print("%s %d:%d:%d:%d %s" % (self.name,ts.hour, ts.minute, ts.second, ts.microsecond, s))
       self.scope_charpos+=len(s)
       if self.scope_charpos>self.cols :
          self.hpterm.putchar("\x0D")
