@@ -230,6 +230,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       super().__init__(parent,name)
       self.cblog= cblog
       self.cbcharset= cbcharset
+      self.kbd_delay=False
 #
 #     Set default values
 #
@@ -241,10 +242,15 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.rows=24
       self.cols=80
 #
+#     Keyboard input delay if we are connected to the PIL-Box
+#
+      if parent.config.get("pyilper","mode") == 0:
+         self.kbd_delay=True
+#
 #     Build GUI 
 #
       super().__set_termconfig__(self.rows,self.cols)
-      self.qterminal=QTerminalWidget(None,self.font_name, self.font_size, self.width, self.height)
+      self.qterminal=QTerminalWidget(None,self.font_name, self.font_size, self.width, self.height,self.kbd_delay)
       self.hbox1= QtGui.QHBoxLayout()
       self.hbox1.addWidget(self.qterminal)
       self.hbox1.setAlignment(self.qterminal,QtCore.Qt.AlignHCenter)

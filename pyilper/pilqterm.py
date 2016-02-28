@@ -37,15 +37,18 @@
 # 26.02.2016 jsi:
 # - keyboard input delay introduced to improve stability
 # - do not update terminal window if not visible
+# 28.02.2016 jsi:
+# - removed dead code
+# - scroll line left and right does now work for wrapped lines
 
 import array
 import queue
 import threading
 import time
 
-from PyQt4.QtCore import QRect, Qt, pyqtSignal, QTimer, QSize
+from PyQt4.QtCore import QRect, Qt, pyqtSignal, QTimer, QSize, QPoint
 from PyQt4.QtGui import (
-    QApplication, QClipboard, QWidget, QPainter, QFont, QBrush, QColor,
+    QApplication, QClipboard, QWidget, QPainter, QFont, QBrush, QColor, QPolygon,
     QPen, QPixmap, QImage, QContextMenuEvent)
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 
@@ -115,7 +118,7 @@ class QTerminalWidget(QWidget):
     }
 
 
-    def __init__(self,parent, font_name, font_size, w,h):
+    def __init__(self,parent, font_name, font_size, w,h, kbd_delay):
         super().__init__(parent)
         self.setFocusPolicy(Qt.WheelFocus)
         self.setAutoFillBackground(False)
@@ -128,18 +131,19 @@ class QTerminalWidget(QWidget):
         self._screen = []
         self._text = []
         self._cursor_rect = None
+        self._cursor_poygon= None
         self._cursor_col = 0
         self._cursor_row = 0
         self._dirty = False
         self._blink = False
         self._press_pos = None
-        self._clipboard = QApplication.clipboard()
         self._kbdfunc= None
         self._w=w
         self._h=h
         self._alt_sequence= False
         self._alt_seq_length=0
         self._alt_seq_value=0
+        self._kbd_delay= kbd_delay
 
     def sizeHint(self):
         return QSize(self._w,self._h)
@@ -164,10 +168,10 @@ class QTerminalWidget(QWidget):
     
     def update_term(self,dump):
         (self._cursor_col, self._cursor_row), self._screen = dump()
-        self._update_cursor_rect()
+#       self._update_cursor_rect()
         self._dirty = True
-        if self.hasFocus():
-            self._blink = not self._blink
+#       if self.hasFocus():
+#           self._blink = not self._blink
         self.update()
 
 
@@ -179,10 +183,11 @@ class QTerminalWidget(QWidget):
     def _update_cursor_rect(self):
         cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
         self._cursor_rect = QRect(cx, cy, self._char_width, self._char_height)
+        self._cursor_polygon=QPolygon([QPoint(cx,cy+(self._char_height/2)),QPoint(cx+self._char_width,cy+self._char_height),QPoint(cx+self._char_width,cy),QPoint(cx,cy+(self._char_height/2))])
 
     def _reset(self):
         self._update_metrics()
-        self._update_cursor_rect()
+#       self._update_cursor_rect()
 #       self.resizeEvent(None)
         self.update_screen()
 
@@ -212,7 +217,8 @@ class QTerminalWidget(QWidget):
         else:
             color = "#fff"
         painter.setPen(QPen(QColor(color)))
-        painter.drawRect(self._cursor_rect)
+#       painter.drawRect(self._cursor_rect)
+        painter.drawPoygon(self._cursor_polygon)
 
     def _paint_screen(self, painter):
         # Speed hacks: local name lookups are faster
@@ -346,7 +352,8 @@ class QTerminalWidget(QWidget):
                  pass
                 
         event.accept()
-        time.sleep(KEYBOARD_DELAY)
+        if self._kbd_delay:
+          time.sleep(KEYBOARD_DELAY)
 
 
     def column_count(self):
@@ -354,9 +361,6 @@ class QTerminalWidget(QWidget):
 
     def row_count(self):
         return self._rows
-
-
-__version__ = "0.1"
 
 
 class HPTerminal:
@@ -375,67 +379,6 @@ class HPTerminal:
         self.win=win
         self.charset=CHARSET_HP71
         self.update_win= False
-
-        self.vt100_charset_graph = [
-            0x25ca, 0x2026, 0x2022, 0x3f,
-            0xb6, 0x3f, 0xb0, 0xb1,
-            0x3f, 0x3f, 0x2b, 0x2b,
-            0x2b, 0x2b, 0x2b, 0xaf,
-            0x2014, 0x2014, 0x2014, 0x5f,
-            0x2b, 0x2b, 0x2b, 0x2b,
-            0x7c, 0x2264, 0x2265, 0xb6,
-            0x2260, 0xa3, 0xb7, 0x7f
-        ]
-        self.vt100_keyfilter_ansikeys = {
-            '~': '~',
-            'A': '\x1b[A',
-            'B': '\x1b[B',
-            'C': '\x1b[C',
-            'D': '\x1b[D',
-            'F': '\x1b[F',
-            'H': '\x1b[H',
-            '1': '\x1b[5~',
-            '2': '\x1b[6~',
-            '3': '\x1b[2~',
-            '4': '\x1b[3~',
-            'a': '\x1bOP',
-            'b': '\x1bOQ',
-            'c': '\x1bOR',
-            'd': '\x1bOS',
-            'e': '\x1b[15~',
-            'f': '\x1b[17~',
-            'g': '\x1b[18~',
-            'h': '\x1b[19~',
-            'i': '\x1b[20~',
-            'j': '\x1b[21~',
-            'k': '\x1b[23~',
-            'l': '\x1b[24~',
-        }
-        self.vt100_keyfilter_appkeys = {
-            '~': '~',
-            'A': '\x1bOA',
-            'B': '\x1bOB',
-            'C': '\x1bOC',
-            'D': '\x1bOD',
-            'F': '\x1bOF',
-            'H': '\x1bOH',
-            '1': '\x1b[5~',
-            '2': '\x1b[6~',
-            '3': '\x1b[2~',
-            '4': '\x1b[3~',
-            'a': '\x1bOP',
-            'b': '\x1bOQ',
-            'c': '\x1bOR',
-            'd': '\x1bOS',
-            'e': '\x1b[15~',
-            'f': '\x1b[17~',
-            'g': '\x1b[18~',
-            'h': '\x1b[19~',
-            'i': '\x1b[20~',
-            'j': '\x1b[21~',
-            'k': '\x1b[23~',
-            'l': '\x1b[24~',
-        }
         self.reset_hard()
 
     # Reset functions
@@ -447,17 +390,6 @@ class HPTerminal:
         #	F:	Foreground
         #	B:	Background
         self.attr = 0x00fe0000
-        # Key filter
-        self.vt100_keyfilter_escape = False
-        # Last char
-        self.vt100_lastchar = 0
-        # Control sequences
-        self.vt100_parse_len = 0
-        self.vt100_parse_state = ""
-        self.vt100_parse_func = ""
-        self.vt100_parse_param = ""
-        # Buffers
-        self.vt100_out = ""
         # Invoke other resets
         self.reset_screen()
         self.reset_soft()
@@ -473,35 +405,22 @@ class HPTerminal:
         # Scroll parameters
         self.scroll_area_y0 = 0
         self.scroll_area_y1 = self.h
-        # Character sets
-        self.vt100_charset_is_single_shift = False
-        self.vt100_charset_is_graphical = False
-        self.vt100_charset_g_sel = 0
-        self.vt100_charset_g = [0, 0]
         # Modes
         self.vt100_mode_insert = False
         self.vt100_mode_lfnewline = False
-        self.vt100_mode_cursorkey = False
-        self.vt100_mode_column_switch = False
         self.vt100_mode_inverse = False
-        self.vt100_mode_origin = False
-        self.vt100_mode_autowrap = True
         self.vt100_mode_cursor = True
-        self.vt100_mode_alt_screen = False
-        self.vt100_mode_backspace = False
 
     def reset_screen(self):
         # Screen
         self.screen = array.array('i', [self.attr | 0x20] * self.w * self.h)
-        self.screen2 = array.array('i', [self.attr | 0x20] * self.w * self.h)
+        self.linelength= array.array('i', [0] * self.h)
         # Scroll parameters
         self.scroll_area_y0 = 0
         self.scroll_area_y1 = self.h
         # Cursor position
         self.cx = 0
         self.cy = 0
-        # Tab stops
-        self.tab_stops = range(0, self.w, 8)
 
     def set_charset(self,charset):
        self.charset= charset
@@ -530,34 +449,40 @@ class HPTerminal:
         self.fill(y0, x0, y1, x1, self.attr | 0x20)
 
     # Scrolling functions
-    def scroll_area_up(self, y0, y1, n=1):
-        n = min(y1 - y0, n)
+    def scroll_area_up(self, y0, y1):
+        n = 1
         self.poke(y0, 0, self.peek(y0 + n, 0, y1, self.w))
         self.clear(y1 - n, 0, y1, self.w)
+        self.linelength[0:self.h-1]=self.linelength[1:]
+        self.linelength[self.h-1]=0
 
-    def scroll_area_down(self, y0, y1, n=1):
-        n = min(y1 - y0, n)
-        self.poke(y0 + n, 0, self.peek(y0, 0, y1 - n, self.w))
-        self.clear(y0, 0, y0 + n, self.w)
-
-    def scroll_area_set(self, y0, y1):
-        y0 = max(0, min(self.h - 1, y0))
-        y1 = max(1, min(self.h, y1))
-        if y1 > y0:
-            self.scroll_area_y0 = y0
-            self.scroll_area_y1 = y1
-
-    def scroll_line_right(self, y, x, n=1):
+    def scroll_line_right(self, y, x):
         if x < self.w:
-            n = min(self.w - self.cx, n)
-            self.poke(y, x + n, self.peek(y, x, y + 1, self.w - n))
-            self.clear(y, x, y + 1, x + n)
+            # scroll up needed?
+            if self.linelength[y] > self.w and y== self.h-1:
+               self.scroll_area_up(self.scroll_area_y0, self.scroll_area_y1)
+               y=y-1
+               self.cy=self.cy-1
+               self.linelength[y+1]=-1
 
-    def scroll_line_left(self, y, x, n=1):
+            # wrap line
+            if self.linelength[y] > self.w:
+               self.poke(y+1,1,self.peek(y+1, 0, y + 2, self.w))
+               self.poke(y+1,0,self.peek(y,self.w-1,y+1,self.w))
+            self.poke(y, x + 1, self.peek(y, x, y + 1, self.w - 1))
+            self.clear(y, x, y + 1, x + 1)
+
+    def scroll_line_left(self, y, x):
         if x < self.w:
-            n = min(self.w - self.cx, n)
-            self.poke(y, x, self.peek(y, x + n, y + 1, self.w))
-            self.clear(y, self.w - n, y + 1, self.w)
+            self.poke(y, x, self.peek(y, x + 1, y + 1, self.w))
+            self.clear(y, self.w - 1, y + 1, self.w)
+            # wrapped line
+            if self.linelength[y] > self.w:
+               self.poke(y,self.w-1,self.peek(y+1,0,y+2,1))
+               self.poke(y+1, 0, self.peek(y+1, 1, y + 2, self.w))
+               if self.linelength[y]== self.w+1:
+                  self.linelength[y+1]=0
+            self.linelength[y]-=1
 
     # Cursor functions
     def cursor_line_width(self, next_char):
@@ -575,11 +500,24 @@ class HPTerminal:
     def cursor_down(self, n=1):
         self.cy = min(self.scroll_area_y1 - 1, self.cy + n)
 
-    def cursor_left(self, n=1):
-        self.cx = max(0, self.cx - n)
+    def cursor_left(self):
+        self.cx= self.cx -1
+        if self.cx < 0:
+           self.cx= self.w-1
+           self.cy= self.cy-1
+           if self.cy < 0:
+              self.cy=0
+              self.cx=0
 
-    def cursor_right(self, n=1):
-        self.cx = min(self.w - 1, self.cx + n)
+    def cursor_right(self):
+        self.cx= self.cx +1
+        if self.cx == self.w:
+           self.cx=0
+           self.cy= self.cy+1
+           if self.cy == self.h:
+              self.scroll_area_up(self.scroll_area_y0, self.scroll_area_y1)
+              self.cy=self.cy-1
+              self.linelength[self.cy]=-1
 
     def cursor_set_x(self, x):
         self.cx = max(0, x)
@@ -591,26 +529,23 @@ class HPTerminal:
         self.cursor_set_x(x)
         self.cursor_set_y(y)
 
+    def cursor_far_left(self):
+        if self.linelength[self.cy] == -1:
+           self.cursor_set(self.cy-1,0)
+        else:
+           self.cursor_set(self.cy,0)
+
+    def cursor_far_right(self):
+        if self.linelength[self.cy] == -1:
+           self.cursor_set(self.cy, (self.linelengt[self.cy-1]-self.w-1))
+        else:
+           self.cursor_set(self.cy, (self.linelength[self.cy]-1))
+
     # Dumb terminal
     def ctrl_BS(self):
         delta_y, cx = divmod(self.cx - 1, self.w)
         cy = max(self.scroll_area_y0, self.cy + delta_y)
         self.cursor_set(cy, cx)
-
-    def ctrl_HT(self, n=1):
-        if n > 0 and self.cx >= self.w:
-            return
-        if n <= 0 and self.cx == 0:
-            return
-        ts = 0
-        for i in range(len(self.tab_stops)):
-            if self.cx >= self.tab_stops[i]:
-                ts = i
-        ts += n
-        if ts < len(self.tab_stops) and ts >= 0:
-            self.cursor_set_x(self.tab_stops[ts])
-        else:
-            self.cursor_set_x(self.w - 1)
 
     def ctrl_LF(self):
         if self.vt100_mode_lfnewline:
@@ -623,29 +558,19 @@ class HPTerminal:
     def ctrl_CR(self):
         self.cursor_set_x(0)
 
-    def dumb_write(self, char):
-        if char < 32:
-            if char == 8:
-                self.ctrl_BS()
-            elif char == 9:
-                self.ctrl_HT()
-            elif char >= 10 and char <= 12:
-                self.ctrl_LF()
-            elif char == 13:
-                self.ctrl_CR()
-            return True
-        return False
 
     def dumb_echo(self, char):
-        # Check right bound
+        if self.linelength[self.cy]== -1:
+           self.linelength[self.cy-1]+=1
+        else: 
+           self.linelength[self.cy]+=1
+        # wrap
         wx, cx = self.cursor_line_width(char)
-        # Newline
         if wx > self.w:
-            if self.vt100_mode_autowrap:
-                self.ctrl_CR()
-                self.ctrl_LF()
-            else:
-                self.cx = cx - 1
+             self.ctrl_CR()
+             self.ctrl_LF()
+             self.linelength[self.cy]= -1
+        # insert
         if self.vt100_mode_insert:
             self.scroll_line_right(self.cy, self.cx)
         self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
@@ -785,20 +710,9 @@ class HPTerminal:
           return
  
        if t== 67: # cursor right (ESC C)
-          self.cx= self.cx +1
-          if self.cx > self.w:
-             self.cx=0
-             self.cy= self.cy+1
-             if self.cy > self.h:
-                self.cy=0
+          self.cursor_right()
        elif t== 68: # cursor left (ESC D)
-          self.cx= self.cx -1
-          if self.cx < 0:
-             self.cx= self.w-1
-             self.cy= self.cy-1
-             if self.cy < 0:
-                self.cy=0
-                self.cx=0
+          self.cursor_left()
        elif t== 65: # cursor up (ESC A)
           self.cursor_up(1)
        elif t== 66: # cursor down (ESC B)
@@ -819,7 +733,7 @@ class HPTerminal:
        elif t== 80: # Clear Character (ESC P) ??
           self.clear(self.cy,self.cx,self.cy+1,self.cx)
        elif t== 79: # Clear Character with wrap back (ESC O)
-          self.scroll_line_left(self.cy, self.cx,1)
+          self.scroll_line_left(self.cy, self.cx)
        elif t== 81: # switch to insert cursor (ESC Q)
           self.vt100_mode_insert = True
        elif t== 78: # swicht to insert cursor and insert mode (ESC N)
@@ -831,12 +745,11 @@ class HPTerminal:
        elif t== 101: # reset hard (ESC e)
           self.reset_hard()
        elif t== 3:  # move cursor far right (ESC Ctrl c)
-          pass
+          self.cursor_far_right()
        elif t== 4:  # move cursor far left (ESC ctrl d)
-          pass
+          self.cursor_far_left()
        elif t== 37: # Move Cursor to display position (ESC %)
           self.movecursor=1
-          return
        elif t==122:  # reset
           self.reset_hard()
        else:
