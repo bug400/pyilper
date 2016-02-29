@@ -40,15 +40,8 @@
         </table>
 
         <p>The display supports the display escape sequences which are
-        specified on page 328 of the HP-71B reference manual with the following
+        specified on page 328 of the HP-71B reference manual.</p>
         exceptions:</p>
-        <blockquote>
-        <ul>
-        <li>ESC Ctrl C: move cursor far right is not supported</li>
-        <li>ESC Ctrl D: move cursor far left is not supported</li>
-        <li>ESC Q, ESC R, ESC N: the cursor always shows a block shape</li>
-        </ul>
-        </blockquote>
 
         <h2>Requirements</h2>
 
@@ -99,13 +92,10 @@
         <tr><td>F6</td><td>LC</td></tr>
         </table>
 
-        <P>A status indicator below the terminal window indicates whether
-        the cursor is in insert or replace mode.</p>
-
         <P>To enter a numeric character value hold down the <i>ALT</i>
         key and enter a 3 digit numeric value (000 - 127).</p>
 
-        <p>You may issue a <i>DELAY 0,0</i> to enable fast scrolling.</p>
+        <p>You may issue a <i>DELAY 0,INF</i> to enable fast scrolling.</p>
       </td>
     </tr>
 
@@ -135,7 +125,7 @@
 
         <h2>PILTERM Basic Program for the HP-71B</h2>
         <pre>
- 10 IF POS(VER$,"KBD:C")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE (Rev. C)" @ END
+ 10 IF POS(VER$,"KBD")=0 THEN BEEP 1450,.1 @ DISP "NEED KEYBOARD LEX FILE" @ END
  20 RESET ESCAPE
  30 RESET HPIL @ RESTORE IO @ CLEAR @ KEYBOARD IS :DEVADDR("PILTERM")
  40 DISPLAY IS :DEVADDR("PILTERM")
@@ -144,6 +134,7 @@
  70 ESCAPE 'E',159 @ ESCAPE 'F',160 @ ESCAPE 'G',104 @ ESCAPE 'H',105 @ ESCAPE 'I',107
  80 ESCAPE 'J',162 @ ESCAPE 'K',163 @ ESCAPE 'L',43 @ ESCAPE 'M',46 @ ESCAPE 'N',150
  90 ESCAPE 'O',106 @ ESCAPE 'P',102 @ ESCAPE 'Q',103 @ ESCAPE 'R',38
+ 100 DELAY 0,INF
 
         </pre>
       </td>
