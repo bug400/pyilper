@@ -97,6 +97,8 @@
 # - put text in front of the combo boxes at the bottom of the tabs
 # 26.02.2016 jsi:
 # - do not update terminal, if not visible
+# 28.02.2016 jsi:
+# - removed insert/replace idicator
 #
 import os
 import glob
@@ -442,8 +444,6 @@ class cls_tabterminal(cls_tabtermgeneric):
 #     add Combobox for terminal size
 #
       self.lbltxt1=QtGui.QLabel("Terminal size ")
-#     self.lbltxt1.setFixedHeight(10)
-#     self.lbltxt1.setFixedWidth(50)
       self.comboRes=QtGui.QComboBox()
       self.comboRes.addItem("80x24")
       self.comboRes.addItem("80x40")
@@ -451,17 +451,8 @@ class cls_tabterminal(cls_tabtermgeneric):
       self.hbox2.addWidget(self.lbltxt1)
       self.hbox2.addWidget(self.comboRes)
       self.hbox2.setAlignment(self.comboRes,QtCore.Qt.AlignLeft)
-#
-#     add insert/replace indicator
-#
-      self.lblTermstatus=QtGui.QLabel()
-      self.lblTermstatus.setText("Replace")
-#     self.lblTermstatus.setFixedWidth(50)
-#     self.lblTermstatus.setFixedHeight(10)
       self.hbox2.addStretch(1)
-      self.hbox2.addWidget(self.lblTermstatus)
-      self.hbox2.setAlignment(self.lblTermstatus,QtCore.Qt.AlignRight)
-
+#
       self.comboRes.activated[str].connect(self.do_changeRes)
       self.comboRes.setCurrentIndex(self.comboRes.findText(self.termsize))
       self.comboRes.setEnabled(False)
@@ -477,7 +468,6 @@ class cls_tabterminal(cls_tabtermgeneric):
       self.pildevice.register_callback_output(self.out_terminal)
       self.pildevice.register_callback_clear(self.hpterm.reset)
       self.hpterm.set_kbdfunc(self.pildevice.queueOutput)
-      self.hpterm.set_irindicfunc(self.do_irindic)
       self.comboRes.setEnabled(True)
 
    def disable(self):
@@ -488,14 +478,6 @@ class cls_tabterminal(cls_tabtermgeneric):
 #
    def out_terminal(self,s):
       self.hpterm.putchar(s)
-#
-#  callback update Insert/Replace indicator
-#
-   def do_irindic(self,insert):
-      if insert:
-         self.lblTermstatus.setText("Insert")
-      else:
-         self.lblTermstatus.setText("Replace")
 #
 #  callback change resolutiom
 #

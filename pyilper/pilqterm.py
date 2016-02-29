@@ -40,6 +40,7 @@
 # 28.02.2016 jsi:
 # - removed dead code
 # - scroll line left and right does now work for wrapped lines
+# - implemented block and arrow cursor, removed indicator function
 
 import array
 import queue
@@ -55,6 +56,9 @@ from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 
 DEBUG = False
 KEYBOARD_DELAY=0.2
+CURSOR_OFF=0
+CURSOR_INSERT=1
+CURSOR_OVERWRITE=2
 
 class QTerminalWidget(QWidget):
 
@@ -144,6 +148,7 @@ class QTerminalWidget(QWidget):
         self._alt_seq_length=0
         self._alt_seq_value=0
         self._kbd_delay= kbd_delay
+        self._cursortype= CURSOR_OVERWRITE
 
     def sizeHint(self):
         return QSize(self._w,self._h)
@@ -153,6 +158,9 @@ class QTerminalWidget(QWidget):
 
     def resizeEvent(self, event):
         self.resize(self._w, self._h)
+
+    def setCursorType(self,t):
+        self._cursortype=t
 
     def setkbdfunc(self,func):
         self._kbdfunc= func
@@ -165,15 +173,16 @@ class QTerminalWidget(QWidget):
         self._w=w
         self._h=h
         self.resize(w,h)
-    
+#
+#   Update screen routine
+#    
     def update_term(self,dump):
         (self._cursor_col, self._cursor_row), self._screen = dump()
-#       self._update_cursor_rect()
+        self._update_cursor_rect()
         self._dirty = True
 #       if self.hasFocus():
 #           self._blink = not self._blink
         self.update()
-
 
     def _update_metrics(self):
         fm = self.fontMetrics()
@@ -187,19 +196,20 @@ class QTerminalWidget(QWidget):
 
     def _reset(self):
         self._update_metrics()
-#       self._update_cursor_rect()
+        self._update_cursor_rect()
 #       self.resizeEvent(None)
         self.update_screen()
-
-    def update_screen(self):
         self._dirty = True
         self.update()
+
 
     def paintEvent(self, event):
         painter = QPainter(self)
         if self._dirty:
             self._dirty = False
             self._paint_screen(painter)
+        else:
+            self._paint_cursor(painter)
 
     def _pixel2pos(self, x, y):
         col = int(round(x / self._char_width))
@@ -212,13 +222,19 @@ class QTerminalWidget(QWidget):
         return x, y
 
     def _paint_cursor(self, painter):
+        if self._cursortype== CURSOR_OFF:
+           return
         if self._blink:
-            color = "#aaa"
+            color = "#777"
         else:
-            color = "#fff"
+            color = "#aaa"
+        brush = QBrush(QColor(color))
         painter.setPen(QPen(QColor(color)))
-#       painter.drawRect(self._cursor_rect)
-        painter.drawPoygon(self._cursor_polygon)
+        painter.setBrush(brush)
+        if self._cursortype== CURSOR_OVERWRITE:
+           painter.drawRect(self._cursor_rect)
+        else:
+           painter.drawPolygon(self._cursor_polygon)
 
     def _paint_screen(self, painter):
         # Speed hacks: local name lookups are faster
@@ -267,6 +283,7 @@ class QTerminalWidget(QWidget):
             y += char_height
             text_append(text_line)
         self._text = text
+        self._paint_cursor(painter)
 
 
     def keyPressEvent(self, event):
@@ -373,9 +390,8 @@ class HPTerminal:
         self.fesc= False
         self.movecursor= 0
         self.movecol=0
-        self.timer= QTimer()
-        self.timer.timeout.connect(self.update)
-        self.irindicfunc= None
+        self.UpdateTimer= QTimer()
+        self.UpdateTimer.timeout.connect(self.update)
         self.win=win
         self.charset=CHARSET_HP71
         self.update_win= False
@@ -597,8 +613,8 @@ class HPTerminal:
                 char = d & 0xffff
                 attr = d >> 16
                 # Cursor
-                if cy == y and cx == x and self.vt100_mode_cursor:
-                    attr = attr & 0xfff0 | 0x000c
+#               if cy == y and cx == x and self.vt100_mode_cursor:
+#                   attr = attr & 0xfff0 | 0x000c
                 # Attributes
                 if attr != attr_:
                     if attr_ != -1:
@@ -632,14 +648,11 @@ class HPTerminal:
     def set_kbdfunc(self,func):
        self.win.setkbdfunc(func)
  
-    def set_irindicfunc(self,func):
-       self.irindicfunc= func
- 
     def start_update(self,ms):
-       self.timer.start(ms)
+       self.UpdateTimer.start(ms)
 
     def stop_update(self):
-       self.timer.stop()
+       self.UpdateTimer.stop()
  
     def putchar (self,c):
        self.termqueue_lock.acquire()
@@ -724,8 +737,13 @@ class HPTerminal:
        elif t== 75: # erase from cursor to end of the line (ESC K)
           self.clear(self.cy,self.cx,self.cy+1,self.w)
        elif t== 62: # Cursor on (ESC >)
+          if self.vt100_mode_insert:
+             self.win.setCursorType(CURSOR_INSERT)
+          else:
+             self.win.setCursorType(CURSOR_OVERWRITE)
           self.vt100_mode_cursor = True
        elif t== 60: # Cursor off (ESC <)
+          self.win.setCursorType(CURSOR_OFF)
           self.vt100_mode_cursor = False
        elif t== 69: # Reset (ESC E)
           self.reset_soft()
@@ -735,13 +753,14 @@ class HPTerminal:
        elif t== 79: # Clear Character with wrap back (ESC O)
           self.scroll_line_left(self.cy, self.cx)
        elif t== 81: # switch to insert cursor (ESC Q)
+          self.win.setCursorType(CURSOR_INSERT)
           self.vt100_mode_insert = True
        elif t== 78: # swicht to insert cursor and insert mode (ESC N)
           self.vt100_mode_insert = True
-          self.irindicfunc(True)
+          self.win.setCursorType(CURSOR_INSERT)
        elif t== 82: # switch to replace cursor and replace mode (ESC R)
           self.vt100_mode_insert = False
-          self.irindicfunc(False)
+          self.win.setCursorType(CURSOR_OVERWRITE)
        elif t== 101: # reset hard (ESC e)
           self.reset_hard()
        elif t== 3:  # move cursor far right (ESC Ctrl c)
