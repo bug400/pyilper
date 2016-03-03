@@ -30,6 +30,8 @@
 #
 # 16.02.2016 jsi:
 # - merged new Ildev base class of Christoph Giesselink
+# 01.03.2016 cg:
+# - removed EOT response from __outdata__ to implement "no response" feature
 
 
 import threading
@@ -149,7 +151,6 @@ class cls_pildevbase:
 #  output data stub
 #
    def __outdata__(self,frame):
-      frame= 0x540
       return frame
 
 #
