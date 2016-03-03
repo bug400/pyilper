@@ -41,6 +41,8 @@
 # - removed dead code
 # - scroll line left and right does now work for wrapped lines
 # - implemented block and arrow cursor, removed indicator function
+# 01.03.2016 jsi:
+# - removed more unneeded code, introduced first color scheme support
 
 import array
 import queue
@@ -62,37 +64,16 @@ CURSOR_OVERWRITE=2
 
 class QTerminalWidget(QWidget):
 
-    foreground_color_map = {
-        0: "#000",
-        1: "#b00",
-        2: "#0b0",
-        3: "#bb0",
-        4: "#00b",
-        5: "#b0b",
-        6: "#0bb",
-        7: "#bbb",
-        8: "#666",
-        9: "#f00",
-        10: "#0f0",
-        11: "#ff0",
-        12: "#00f",  # concelaed
-        13: "#f0f",
-        14: "#000",  # negative
-        15: "#fff",  # default
-    }
-    background_color_map = {
-        0: "#000",
-        1: "#b00",
-        2: "#0b0",
-        3: "#bb0",
-        4: "#00b",
-        5: "#b0b",
-        6: "#0bb",
-        7: "#bbb",
-        12: "#aaa",  # cursor
-        14: "#000",  # default
-        15: "#fff",  # negative
-    }
+# color scheme: normal_foreground, normal_background, inverse_foreground, inverse_background, cursor_color
+
+    color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
+
+    color_schemes= [
+       [ "#000", "#fff", "#aaa" ],
+       [ "#000", "#ffbe00", "#aa0" ],
+       [ "#000", "#18f018", "#0a0" ],
+    ]
+
     keymap = {
         Qt.Key_Backspace: chr(127),
         Qt.Key_Escape: chr(27),
@@ -122,7 +103,7 @@ class QTerminalWidget(QWidget):
     }
 
 
-    def __init__(self,parent, font_name, font_size, w,h, kbd_delay):
+    def __init__(self,parent, font_name, font_size, w,h, colorscheme,kbd_delay):
         super().__init__(parent)
         self.setFocusPolicy(Qt.WheelFocus)
         self.setAutoFillBackground(False)
@@ -131,7 +112,6 @@ class QTerminalWidget(QWidget):
         font = QFont(font_name)
         font.setPixelSize(font_size)
         self.setFont(font)
-        self._last_update = None
         self._screen = []
         self._text = []
         self._cursor_rect = None
@@ -139,8 +119,6 @@ class QTerminalWidget(QWidget):
         self._cursor_col = 0
         self._cursor_row = 0
         self._dirty = False
-        self._blink = False
-        self._press_pos = None
         self._kbdfunc= None
         self._w=w
         self._h=h
@@ -149,6 +127,7 @@ class QTerminalWidget(QWidget):
         self._alt_seq_value=0
         self._kbd_delay= kbd_delay
         self._cursortype= CURSOR_OVERWRITE
+        self._color_scheme=self.color_scheme_names[colorscheme]
 
     def sizeHint(self):
         return QSize(self._w,self._h)
@@ -180,8 +159,6 @@ class QTerminalWidget(QWidget):
         (self._cursor_col, self._cursor_row), self._screen = dump()
         self._update_cursor_rect()
         self._dirty = True
-#       if self.hasFocus():
-#           self._blink = not self._blink
         self.update()
 
     def _update_metrics(self):
@@ -222,12 +199,9 @@ class QTerminalWidget(QWidget):
         return x, y
 
     def _paint_cursor(self, painter):
-        if self._cursortype== CURSOR_OFF:
+        if self._cursortype== CURSOR_OFF or self._cursor_rect== None:
            return
-        if self._blink:
-            color = "#777"
-        else:
-            color = "#aaa"
+        color = self.color_schemes[self._color_scheme][2]
         brush = QBrush(QColor(color))
         painter.setPen(QPen(QColor(color)))
         painter.setBrush(brush)
@@ -239,17 +213,17 @@ class QTerminalWidget(QWidget):
     def _paint_screen(self, painter):
         # Speed hacks: local name lookups are faster
         vars().update(QColor=QColor, QBrush=QBrush, QPen=QPen, QRect=QRect)
-        background_color_map = self.background_color_map
-        foreground_color_map = self.foreground_color_map
         char_width = self._char_width
         char_height = self._char_height
         painter_drawText = painter.drawText
         painter_fillRect = painter.fillRect
         painter_setPen = painter.setPen
         align = Qt.AlignTop | Qt.AlignLeft
+        color_schemes= self.color_schemes
+        color_scheme= self._color_scheme
         # set defaults
-        background_color = background_color_map[14]
-        foreground_color = foreground_color_map[15]
+        background_color = color_schemes[color_scheme][1]
+        foreground_color = color_schemes[color_scheme][0]
         brush = QBrush(QColor(background_color))
         painter_fillRect(self.rect(), brush)
         pen = QPen(QColor(foreground_color))
@@ -271,15 +245,17 @@ class QTerminalWidget(QWidget):
                     col += length
                     text_line += item
                 else:
-                    foreground_color_idx, background_color_idx, underline_flag = item
-                    foreground_color = foreground_color_map[
-                        foreground_color_idx]
-                    background_color = background_color_map[
-                        background_color_idx]
+                    invers_flag = item
+                    if invers_flag:
+                       background_color = color_schemes[color_scheme][1]
+                       foreground_color = color_schemes[color_scheme][0]
+                    else:
+                       background_color = color_schemes[color_scheme][0]
+                       foreground_color = color_schemes[color_scheme][1]
                     pen = QPen(QColor(foreground_color))
                     brush = QBrush(QColor(background_color))
                     painter_setPen(pen)
-                    # painter.setBrush(brush)
+                    painter.setBrush(brush)
             y += char_height
             text_append(text_line)
         self._text = text
@@ -399,33 +375,24 @@ class HPTerminal:
 
     # Reset functions
     def reset_hard(self):
-        # Attribute mask: 0x0XFB0000
-        #	X:	Bit 0 - Underlined
+        # Attribute mask: 0x0X000000
+        #	X:	Bit 0 - Underlined (not used)
         #		Bit 1 - Negative
-        #		Bit 2 - Concealed
-        #	F:	Foreground
-        #	B:	Background
-        self.attr = 0x00fe0000
+        #		Bit 2 - Concealed (not used)
+        self.attr = 0x00000000
         # Invoke other resets
         self.reset_screen()
         self.reset_soft()
 
     def reset_soft(self):
-        # Attribute mask: 0x0XFB0000
-        #	X:	Bit 0 - Underlined
-        #		Bit 1 - Negative
-        #		Bit 2 - Concealed
-        #	F:	Foreground
-        #	B:	Background
-        self.attr = 0x00fe0000
+        self.attr = 0x00000000
         # Scroll parameters
         self.scroll_area_y0 = 0
         self.scroll_area_y1 = self.h
         # Modes
-        self.vt100_mode_insert = False
-        self.vt100_mode_lfnewline = False
-        self.vt100_mode_inverse = False
-        self.vt100_mode_cursor = True
+        self.insert = False
+        self.inverse = False
+        self.cursor = True
 
     def reset_screen(self):
         # Screen
@@ -564,8 +531,6 @@ class HPTerminal:
         self.cursor_set(cy, cx)
 
     def ctrl_LF(self):
-        if self.vt100_mode_lfnewline:
-            self.ctrl_CR()
         if self.cy == self.scroll_area_y1 - 1:
             self.scroll_area_up(self.scroll_area_y0, self.scroll_area_y1)
         else:
@@ -587,7 +552,7 @@ class HPTerminal:
              self.ctrl_LF()
              self.linelength[self.cy]= -1
         # insert
-        if self.vt100_mode_insert:
+        if self.insert:
             self.scroll_line_right(self.cy, self.cx)
         self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
         self.cursor_set_x(self.cx + 1)
@@ -612,29 +577,13 @@ class HPTerminal:
                 d = self.screen[y * self.w + x]
                 char = d & 0xffff
                 attr = d >> 16
-                # Cursor
-#               if cy == y and cx == x and self.vt100_mode_cursor:
-#                   attr = attr & 0xfff0 | 0x000c
-                # Attributes
+                # Attributes (inverse only)
                 if attr != attr_:
                     if attr_ != -1:
                         line.append("")
-                    bg = attr & 0x000f
-                    fg = (attr & 0x00f0) >> 4
                     # Inverse
                     inv = attr & 0x0200
-                    inv2 = self.vt100_mode_inverse
-                    if (inv and not inv2) or (inv2 and not inv):
-                        fg, bg = bg, fg
-                    # Concealed
-                    if attr & 0x0400:
-                        fg = 0xc
-                    # Underline
-                    if attr & 0x0100:
-                        ul = True
-                    else:
-                        ul = False
-                    line.append((fg, bg, ul))
+                    line.append(inv)
                     line.append("")
                     attr_ = attr
                 wx += self.utf8_charwidth(char)
@@ -690,7 +639,7 @@ class HPTerminal:
           return
  
        if not self.fesc:
-          if t == 0xD:         # CR
+          if t == 0xD:      # CR
              self.ctrl_CR()
           elif t == 0xA:    # LF
              self.ctrl_LF()
@@ -705,7 +654,7 @@ class HPTerminal:
                 if t > 127 and (not self.charset == CHARSET_ROMAN8):
                    self.attr |= 0x02000000
                 self.dumb_echo(ord(cc[i])) 
-                self.attr = 0x00fe0000
+                self.attr = 0x00000000
           return
  #
  #     process escape sequences, translate to pyqterm
@@ -737,14 +686,14 @@ class HPTerminal:
        elif t== 75: # erase from cursor to end of the line (ESC K)
           self.clear(self.cy,self.cx,self.cy+1,self.w)
        elif t== 62: # Cursor on (ESC >)
-          if self.vt100_mode_insert:
+          if self.insert:
              self.win.setCursorType(CURSOR_INSERT)
           else:
              self.win.setCursorType(CURSOR_OVERWRITE)
-          self.vt100_mode_cursor = True
+          self.cursor = True
        elif t== 60: # Cursor off (ESC <)
           self.win.setCursorType(CURSOR_OFF)
-          self.vt100_mode_cursor = False
+          self.cursor = False
        elif t== 69: # Reset (ESC E)
           self.reset_soft()
           self.reset_screen()
@@ -754,12 +703,12 @@ class HPTerminal:
           self.scroll_line_left(self.cy, self.cx)
        elif t== 81: # switch to insert cursor (ESC Q)
           self.win.setCursorType(CURSOR_INSERT)
-          self.vt100_mode_insert = True
+          self.insert = True
        elif t== 78: # swicht to insert cursor and insert mode (ESC N)
-          self.vt100_mode_insert = True
+          self.insert = True
           self.win.setCursorType(CURSOR_INSERT)
        elif t== 82: # switch to replace cursor and replace mode (ESC R)
-          self.vt100_mode_insert = False
+          self.insert = False
           self.win.setCursorType(CURSOR_OVERWRITE)
        elif t== 101: # reset hard (ESC e)
           self.reset_hard()

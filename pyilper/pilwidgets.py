@@ -98,7 +98,11 @@
 # 26.02.2016 jsi:
 # - do not update terminal, if not visible
 # 28.02.2016 jsi:
-# - removed insert/replace idicator
+# - removed insert/replace indicator for the terminal widget
+# 02.02.2016 jsi:
+# - removed the terminal size combobox for the terminal widget
+# - added the following configuration options to the pyilper configuration for
+#   the generic terminal: terminal size, color scheme, character size
 #
 import os
 import glob
@@ -209,7 +213,6 @@ class cls_tabgeneric(QtGui.QWidget):
       return
 
    def __set_termconfig__(self,rows,cols):
-      self.font_size=15
       if platform.system()=="Linux":
          self.font_name="Monospace"
       else:
@@ -236,13 +239,19 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
 #     Set default values
 #
+      self.termsize=parent.config.get("pyilper","terminalsize")
+      self.cols=int(self.termsize.split(sep="x")[0])
+      self.rows=int(self.termsize.split(sep="x")[1])
+#
+      self.colorscheme=parent.config.get("pyilper","colorscheme")
+#
+      self.font_size=parent.config.get("pyilper","terminalcharsize")
+#
       if self.cblog:
          self.logging= parent.config.get(self.name,"logging",False)
       if self.cbcharset:
          self.charset= parent.config.get(self.name,"charset",CHARSET_HP71)
 
-      self.rows=24
-      self.cols=80
 #
 #     Keyboard input delay if we are connected to the PIL-Box
 #
@@ -252,7 +261,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #     Build GUI 
 #
       super().__set_termconfig__(self.rows,self.cols)
-      self.qterminal=QTerminalWidget(None,self.font_name, self.font_size, self.width, self.height,self.kbd_delay)
+      self.qterminal=QTerminalWidget(None,self.font_name, self.font_size, self.width, self.height,self.colorscheme,self.kbd_delay)
       self.hbox1= QtGui.QHBoxLayout()
       self.hbox1.addWidget(self.qterminal)
       self.hbox1.setAlignment(self.qterminal,QtCore.Qt.AlignHCenter)
@@ -266,8 +275,6 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
       if self.cbcharset:
          self.lbltxtc=QtGui.QLabel("Charset ")
-#        self.lbltxtc.setFixedHeight(10)
-#        self.lbltxtc.setFixedWidth(50)
          self.comboCharset=QtGui.QComboBox()
          for txt in charsets:
             self.comboCharset.addItem(txt)
@@ -430,33 +437,7 @@ class cls_tabterminal(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
       super().__init__(parent,name, False, True)
-#
-#     Set default values
-#
-      self.termsize=parent.config.get(self.name,"terminalsize","80x24")
-      self.cols=int(self.termsize.split(sep="x")[0])
-      self.rows=int(self.termsize.split(sep="x")[1])
-#
-#     Build GUI 
-#
-      super().__set_termconfig__(self.rows,self.cols)
-#
-#     add Combobox for terminal size
-#
-      self.lbltxt1=QtGui.QLabel("Terminal size ")
-      self.comboRes=QtGui.QComboBox()
-      self.comboRes.addItem("80x24")
-      self.comboRes.addItem("80x40")
-      self.comboRes.addItem("120x25")
-      self.hbox2.addWidget(self.lbltxt1)
-      self.hbox2.addWidget(self.comboRes)
-      self.hbox2.setAlignment(self.comboRes,QtCore.Qt.AlignLeft)
       self.hbox2.addStretch(1)
-#
-      self.comboRes.activated[str].connect(self.do_changeRes)
-      self.comboRes.setCurrentIndex(self.comboRes.findText(self.termsize))
-      self.comboRes.setEnabled(False)
-      self.do_changeRes(self.termsize)
 #
 #     enable/disable
 #
@@ -468,38 +449,14 @@ class cls_tabterminal(cls_tabtermgeneric):
       self.pildevice.register_callback_output(self.out_terminal)
       self.pildevice.register_callback_clear(self.hpterm.reset)
       self.hpterm.set_kbdfunc(self.pildevice.queueOutput)
-      self.comboRes.setEnabled(True)
 
    def disable(self):
       super().disable()
-      self.comboRes.setEnabled(False)
 #
 #  callback to output character to teminal
 #
    def out_terminal(self,s):
       self.hpterm.putchar(s)
-#
-#  callback change resolutiom
-#
-   def do_changeRes(self,text):
-      self.termsize=text
-      self.parent.config.put(self.name,'terminalsize',self.termsize)
-      cols=int(text.split(sep="x")[0])
-      rows=int(text.split(sep="x")[1])
-      d_cols= cols- self.cols
-      d_rows= rows- self.rows
-      self.cols=cols
-      self.rows=rows
-#
-#     Resize terminal
-#
-      self.width= self.font_width*self.cols
-      self.height= int(self.font_height* self.rows)
-      self.qterminal.hide()
-      self.qterminal.setSize(self.width,self.height)
-      self.hpterm.set_size(self.cols,self.rows)
-      self.hpterm.refresh()
-      self.qterminal.show()
 #
 class cls_tabdrive(cls_tabgeneric):
 
@@ -1283,7 +1240,7 @@ class cls_TtyWindow(QtGui.QDialog):
 
 class cls_PilConfigWindow(QtGui.QDialog):
 
-   def __init__(self, mode,tty, baudrate,idyframe, port,remotehost,remoteport,workdir):
+   def __init__(self, mode,tty, baudrate,idyframe, port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
       super().__init__()
       self.__mode__= mode
       self.__tty__= tty
@@ -1293,6 +1250,9 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__remotehost__= remotehost
       self.__remoteport__= remoteport
       self.__workdir__= workdir
+      self.__termsize__= termsize
+      self.__colorscheme__= colorscheme
+      self.__charsize__= charsize
       self.__config__= None
       
 
@@ -1415,6 +1375,40 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.vboxgboxw.addLayout(self.hboxwdir)
       self.vbox0.addWidget(self.gboxw)
 #
+#     Section Terminal configuration
+#
+      self.gboxt= QtGui.QGroupBox()
+      self.gboxt.setFlat(True)
+      self.gboxt.setTitle("Terminal Settings (restart required)")
+      self.gridt= QtGui.QGridLayout()
+      self.gridt.setSpacing(3)
+      self.gridt.addWidget(QtGui.QLabel("Termial size"),1,0)
+      self.gridt.addWidget(QtGui.QLabel("Color Scheme"),2,0)
+      self.gridt.addWidget(QtGui.QLabel("Font Size"),3,0)
+
+      self.comboRes=QtGui.QComboBox()
+      self.comboRes.addItem("80x24")
+      self.comboRes.addItem("80x40")
+      self.comboRes.addItem("120x25") 
+      self.gridt.addWidget(self.comboRes,1,1)
+      self.comboRes.setCurrentIndex(self.comboRes.findText(self.__termsize__))
+
+      self.comboCol=QtGui.QComboBox()
+      self.comboCol.addItem("white")
+      self.comboCol.addItem("amber")
+      self.comboCol.addItem("green") 
+      self.gridt.addWidget(self.comboCol,2,1)
+      self.comboCol.setCurrentIndex(self.comboCol.findText(self.__colorscheme__))
+
+      self.spinCharsize=QtGui.QSpinBox()
+      self.spinCharsize.setMinimum(15)
+      self.spinCharsize.setMaximum(20)
+      self.spinCharsize.setValue(self.__charsize__)
+      self.gridt.addWidget(self.spinCharsize,3,1)
+
+      self.gboxt.setLayout(self.gridt)
+      self.vbox0.addWidget(self.gboxt)
+#
 #     add ok/cancel buttons
 #
       self.gbox_buttonlist=[self.radbutPIL, self.radbutTCPIP]
@@ -1480,8 +1474,11 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__remoteport__= int(self.edtRemotePort.text())
       self.__tty__= self.lblTty.text()
       self.__workdir__= self.lblwdir.text()
+      self.__termsize__= self.comboRes.currentText()
+      self.__colorscheme__= self.comboCol.currentText()
+      self.__charsize__= self.spinCharsize.value()
       self.__config__=[self.__mode__, self.__tty__,self.__baudrate__,self.__idyframe__, 
-         self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__]
+         self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__, self.__termsize__,self.__colorscheme__,self.__charsize__]
       self.close()
 
    def do_cancel(self):
@@ -1492,8 +1489,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
       return self.__config__
 
    @staticmethod
-   def getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir):
-      dialog= cls_PilConfigWindow(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir)
+   def getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
+      dialog= cls_PilConfigWindow(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize)
       dialog.resize(200,100)
       result= dialog.exec_()
       config= dialog.getConfig()

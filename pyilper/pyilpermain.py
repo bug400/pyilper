@@ -61,6 +61,8 @@
 # - dump stacks introduced
 # 21.02.2016 jsi
 # - dump stacks disabled for windows
+# 02.03.2016 jsi
+# - added generic terminal configuration
 #
 import os
 import sys
@@ -153,6 +155,9 @@ class cls_pyilper(QtCore.QObject):
          self.config.get(self.name,"mode",MODE_PILBOX)
          self.config.get(self.name,"workdir",os.path.expanduser('~'))
          self.config.get(self.name,"position","")
+         self.config.get(self.name,"terminalsize","80x24")
+         self.config.get(self.name,"colorscheme","white")
+         self.config.get(self.name,"terminalcharsize",15)
          self.config.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
@@ -162,6 +167,7 @@ class cls_pyilper(QtCore.QObject):
 #
       self.tabconfig=self.config.get(self.name,"tabconfig")
       self.registerTab(cls_tabscope,"Scope")
+#     self.registerTab(cls_tabscope,"Scope1")
       for i in range (self.tabconfig[1]):
          devname="Drive"+str(int(i+1))
          self.registerTab(cls_tabdrive,devname)
@@ -170,6 +176,7 @@ class cls_pyilper(QtCore.QObject):
          self.registerTab(cls_tabprinter,devname)
       if self.tabconfig[3] ==1:
          self.registerTab(cls_tabterminal,"Terminal")
+#     self.registerTab(cls_tabscope,"Scope2")
 #
 #     remove config of non existing tabs
 #
@@ -349,7 +356,11 @@ class cls_pyilper(QtCore.QObject):
       remotehost= self.config.get(self.name,"remotehost")
       remoteport= self.config.get(self.name,"remoteport")
       workdir=  self.config.get(self.name,"workdir")
-      config=cls_PilConfigWindow.getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir)
+      terminalsize= self.config.get(self.name,"terminalsize")
+      colorscheme= self.config.get(self.name,"colorscheme")
+      terminalcharsize=self.config.get(self.name,"terminalcharsize")
+      
+      config=cls_PilConfigWindow.getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir,terminalsize,colorscheme,terminalcharsize)
       if config is None: 
          return
       self.config.put(self.name,"mode",config[0])
@@ -360,6 +371,9 @@ class cls_pyilper(QtCore.QObject):
       self.config.put(self.name,"remotehost",config[5])
       self.config.put(self.name,"remoteport",config[6])
       self.config.put(self.name,"workdir",config[7])
+      self.config.put(self.name,"terminalsize",config[8])
+      self.config.put(self.name,"colorscheme",config[9])
+      self.config.put(self.name,"terminalcharsize",config[10])
       self.disable()
       try:
          self.config.save()
