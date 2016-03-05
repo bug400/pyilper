@@ -346,8 +346,8 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #  becomes visible, activate update timer
 #
    def becomes_visible(self):
-      self.hpterm.update_win=True
       self.hpterm.refresh()
+      self.hpterm.update_win=True
       return
 #
 #  becomes invisible, deactivate update timer

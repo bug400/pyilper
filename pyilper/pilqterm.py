@@ -43,6 +43,10 @@
 # - implemented block and arrow cursor, removed indicator function
 # 01.03.2016 jsi:
 # - removed more unneeded code, introduced first color scheme support
+# 05.03.2016 jsi:
+# - removed more unneeded code
+# - disable autorepeat
+# - fixed BS and ESC % handling
 
 import array
 import queue
@@ -56,7 +60,6 @@ from PyQt4.QtGui import (
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 
 
-DEBUG = False
 KEYBOARD_DELAY=0.2
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -147,11 +150,6 @@ class QTerminalWidget(QWidget):
     def setFont(self, font):
         super().setFont(font)
         self._update_metrics()
-
-    def setSize(self,w,h):
-        self._w=w
-        self._h=h
-        self.resize(w,h)
 #
 #   Update screen routine
 #    
@@ -171,14 +169,6 @@ class QTerminalWidget(QWidget):
         self._cursor_rect = QRect(cx, cy, self._char_width, self._char_height)
         self._cursor_polygon=QPolygon([QPoint(cx,cy+(self._char_height/2)),QPoint(cx+self._char_width,cy+self._char_height),QPoint(cx+self._char_width,cy),QPoint(cx,cy+(self._char_height/2))])
 
-    def _reset(self):
-        self._update_metrics()
-        self._update_cursor_rect()
-#       self.resizeEvent(None)
-        self.update_screen()
-        self._dirty = True
-        self.update()
-
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -187,11 +177,6 @@ class QTerminalWidget(QWidget):
             self._paint_screen(painter)
         else:
             self._paint_cursor(painter)
-
-    def _pixel2pos(self, x, y):
-        col = int(round(x / self._char_width))
-        row = int(round(y / self._char_height))
-        return col, row
 
     def _pos2pixel(self, col, row):
         x = (col * self._char_width)
@@ -263,6 +248,8 @@ class QTerminalWidget(QWidget):
 
 
     def keyPressEvent(self, event):
+        if event.isAutoRepeat():
+           return
         text = event.text()
         key = event.key()
         modifiers = event.modifiers()
@@ -349,13 +336,6 @@ class QTerminalWidget(QWidget):
           time.sleep(KEYBOARD_DELAY)
 
 
-    def column_count(self):
-        return self._columns
-
-    def row_count(self):
-        return self._rows
-
-
 class HPTerminal:
 
     def __init__(self, w, h, win):
@@ -391,8 +371,7 @@ class HPTerminal:
         self.scroll_area_y1 = self.h
         # Modes
         self.insert = False
-        self.inverse = False
-        self.cursor = True
+        self.movecursor=0
 
     def reset_screen(self):
         # Screen
@@ -404,6 +383,7 @@ class HPTerminal:
         # Cursor position
         self.cx = 0
         self.cy = 0
+        self.movecursor=0
 
     def set_charset(self,charset):
        self.charset= charset
@@ -526,8 +506,17 @@ class HPTerminal:
 
     # Dumb terminal
     def ctrl_BS(self):
-        delta_y, cx = divmod(self.cx - 1, self.w)
-        cy = max(self.scroll_area_y0, self.cy + delta_y)
+#       delta_y, cx = divmod(self.cx - 1, self.w)
+#       cy = max(self.scroll_area_y0, self.cy + delta_y)
+        cx= self.cx-1
+        cy= self.cy
+        if cx < 0:
+           cy= cy-1
+           if cy < 0:
+              cx=0
+              cy=0
+           else:
+              cx=self.w-1
         self.cursor_set(cy, cx)
 
     def ctrl_LF(self):
@@ -558,14 +547,6 @@ class HPTerminal:
         self.cursor_set_x(self.cx + 1)
 
     # External interface
-    def set_size(self, w, h):
-        if w < 2 or w > 256 or h < 2 or h > 256:
-            return False
-        self.w = w
-        self.h = h
-        self.reset_screen()
-        return True
-
     def dump(self):
         screen = []
         attr_ = -1
@@ -637,8 +618,82 @@ class HPTerminal:
        if t == 27:
           self.fesc= True
           return
+ #
+ #     process escape sequences, translate to pyqterm
+ #
  
-       if not self.fesc:
+       if self.fesc:
+          if t== 67: # cursor right (ESC C)
+             self.cursor_right()
+          elif t== 68: # cursor left (ESC D)
+             self.cursor_left()
+          elif t== 65: # cursor up (ESC A)
+             self.cursor_up(1)
+          elif t== 66: # cursor down (ESC B)
+             self.cursor_down(1)
+          elif t== 72: # move cursor to home position (ESC H)
+             self.cursor_set(0,0)
+          elif t== 74: # erase from cursor to end of screen (ESC J)
+             self.clear(self.cy,self.cx,self.h, self.w)
+          elif t== 75: # erase from cursor to end of the line (ESC K)
+             self.clear(self.cy,self.cx,self.cy+1,self.w)
+          elif t== 62: # Cursor on (ESC >)
+             if self.insert:
+                self.win.setCursorType(CURSOR_INSERT)
+             else:
+                self.win.setCursorType(CURSOR_OVERWRITE)
+          elif t== 60: # Cursor off (ESC <)
+             self.win.setCursorType(CURSOR_OFF)
+          elif t== 69: # Reset (ESC E)
+             self.reset_soft()
+             self.reset_screen()
+          elif t== 80: # Clear Character (ESC P) ??
+             self.clear(self.cy,self.cx,self.cy+1,self.cx+1)
+          elif t== 79: # Clear Character with wrap back (ESC O)
+             self.scroll_line_left(self.cy, self.cx)
+          elif t== 81: # switch to insert cursor (ESC Q)
+             self.win.setCursorType(CURSOR_INSERT)
+             self.insert = True
+          elif t== 78: # swicht to insert cursor and insert mode (ESC N)
+             self.insert = True
+             self.win.setCursorType(CURSOR_INSERT)
+          elif t== 82: # switch to replace cursor and replace mode (ESC R)
+             self.insert = False
+             self.win.setCursorType(CURSOR_OVERWRITE)
+          elif t== 101: # reset hard (ESC e)
+             self.reset_hard()
+          elif t== 3:  # move cursor far right (ESC Ctrl c)
+             self.cursor_far_right()
+          elif t== 4:  # move cursor far left (ESC ctrl d)
+             self.cursor_far_left()
+          elif t== 37: # Move Cursor to display position (ESC %)
+             self.movecursor=1
+          elif t==122:  # reset
+             self.reset_hard()
+          else:
+             print("unhandled escape sequence %d" % t)
+          self.fesc= False
+
+       else:
+#
+#      Move cursor sequence part 1
+#
+          if self.movecursor == 1:
+             self.movecursor=2
+             self.movecol=t
+             return
+
+#
+#      Move cursor sequence part 2
+#
+          if self.movecursor == 2:
+             self.movecursor=0
+             if self.movecol < self.w and t < self.h:
+                self.cursor_set(t,self.movecol)
+             return
+#
+#     single character processing
+# 
           if t == 0xD:      # CR
              self.ctrl_CR()
           elif t == 0xA:    # LF
@@ -650,77 +705,10 @@ class HPTerminal:
           else:
              cc= charconv(c,self.charset)
              for i in range(len(cc)):
-                tc=ord(cc[i])
                 if t > 127 and (not self.charset == CHARSET_ROMAN8):
                    self.attr |= 0x02000000
                 self.dumb_echo(ord(cc[i])) 
                 self.attr = 0x00000000
-          return
- #
- #     process escape sequences, translate to pyqterm
- #
-       if self.movecursor == 1:
-          self.movecursor=2
-          self.movecol=t
-          return
+       return
  
-       if self.movecursor == 2:
-          self.cursor_set(self.movecol,t)
-          self.movecursor=0
-          self.win.update_term(self.dump)
-          self.fesc= False
-          return
- 
-       if t== 67: # cursor right (ESC C)
-          self.cursor_right()
-       elif t== 68: # cursor left (ESC D)
-          self.cursor_left()
-       elif t== 65: # cursor up (ESC A)
-          self.cursor_up(1)
-       elif t== 66: # cursor down (ESC B)
-          self.cursor_down(1)
-       elif t== 72: # move cursor to home position (ESC H)
-          self.cursor_set(0,0)
-       elif t== 74: # erase from cursor to end of screen (ESC J)
-          self.clear(self.cy,self.cx,self.h, self.w)
-       elif t== 75: # erase from cursor to end of the line (ESC K)
-          self.clear(self.cy,self.cx,self.cy+1,self.w)
-       elif t== 62: # Cursor on (ESC >)
-          if self.insert:
-             self.win.setCursorType(CURSOR_INSERT)
-          else:
-             self.win.setCursorType(CURSOR_OVERWRITE)
-          self.cursor = True
-       elif t== 60: # Cursor off (ESC <)
-          self.win.setCursorType(CURSOR_OFF)
-          self.cursor = False
-       elif t== 69: # Reset (ESC E)
-          self.reset_soft()
-          self.reset_screen()
-       elif t== 80: # Clear Character (ESC P) ??
-          self.clear(self.cy,self.cx,self.cy+1,self.cx)
-       elif t== 79: # Clear Character with wrap back (ESC O)
-          self.scroll_line_left(self.cy, self.cx)
-       elif t== 81: # switch to insert cursor (ESC Q)
-          self.win.setCursorType(CURSOR_INSERT)
-          self.insert = True
-       elif t== 78: # swicht to insert cursor and insert mode (ESC N)
-          self.insert = True
-          self.win.setCursorType(CURSOR_INSERT)
-       elif t== 82: # switch to replace cursor and replace mode (ESC R)
-          self.insert = False
-          self.win.setCursorType(CURSOR_OVERWRITE)
-       elif t== 101: # reset hard (ESC e)
-          self.reset_hard()
-       elif t== 3:  # move cursor far right (ESC Ctrl c)
-          self.cursor_far_right()
-       elif t== 4:  # move cursor far left (ESC ctrl d)
-          self.cursor_far_left()
-       elif t== 37: # Move Cursor to display position (ESC %)
-          self.movecursor=1
-       elif t==122:  # reset
-          self.reset_hard()
-       else:
-          print("unhandled escape sequence %d" % t)
-       self.fesc= False
- 
+    
