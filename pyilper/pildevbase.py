@@ -32,6 +32,8 @@
 # - merged new Ildev base class of Christoph Giesselink
 # 01.03.2016 cg:
 # - removed EOT response from __outdata__ to implement "no response" feature
+# 05.03.2016 jsi:
+# - wrong variable name __ptdsi__ corrected
 
 
 import threading
@@ -280,7 +282,7 @@ class cls_pildevbase:
       if n <= 127:
          if ( self.__ilstate__ & 0x40) !=0:  # SOT, addressed talker?
             if  n == 66:  #NRD
-               self.__ptdsi__ = 0
+               self.__ptsdi__ = 0
                self.__ptssi__ = 0
                self.__ilstate__ = 0x41 # abort transfer, clear SDA/SDI
 
