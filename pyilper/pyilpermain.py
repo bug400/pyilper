@@ -63,6 +63,8 @@
 # - dump stacks disabled for windows
 # 02.03.2016 jsi
 # - added generic terminal configuration
+# 05.03.2016 jsi
+# - renmoved dead code
 #
 import os
 import sys
@@ -85,6 +87,7 @@ MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
 USE8BITS= True        # use 8 bit data transfer to PIL-Box
 BAUD_9600=0
 BAUD_115200=1
+
 BAUDRATES=[ 9600, 115200] # supported baud rates
 
 #
@@ -458,32 +461,6 @@ class cls_pyilper(QtCore.QObject):
          self.helpwin= cls_HelpWindow()
       self.helpwin.show()
       self.helpwin.raise_()
-#
-#  enter lif filename
-#
-   def get_lifFilename(self):
-      dialog=QtGui.QFileDialog()
-      dialog.setWindowTitle("Select LIF Image File")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-      dialog.setNameFilters( ["LIF Image File (*.dat *.DAT)", "All Files (*.*)"] )
-#     this does not work if filemod= anyfile
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(os.path.expanduser('~'))
-      if dialog.exec():
-         return(dialog.selectedFiles())
-
-#
-#  enter working directory ename
-#
-   def getWorkDirName(self):
-      dialog=QtGui.QFileDialog()
-      dialog.setWindowTitle("Select pyILPER working directory")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.DirectoryOnly)
-      dialog.setDirectory(os.path.expanduser('~'))
-      if dialog.exec():
-         return(dialog.selectedFiles())
 
 def dumpstacks(signal, frame):
   for threadId, stack in sys._current_frames().items():

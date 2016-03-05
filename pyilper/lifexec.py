@@ -53,6 +53,8 @@
 # - changed os detection to platform.system()
 # 19.02.2016 jsi
 # - added configurable character set encoding to cls_lifview
+# 05.03.2016 jsi
+# - removed unneeded variables
 #
 import os
 import subprocess
@@ -652,10 +654,8 @@ class cls_lifimport (QtGui.QDialog):
 class cls_chk_import(QtGui.QDialog):
    def __init__(self,fd,inputfile,parent=None):
       super().__init__()
-      self.b=bytearray(32)
       self.filename=""
       self.ftype_num=0
-      self.ftype_name=""
       self.blocks=0
       self.retval=False
       self.setWindowTitle("Import File to LIF Image file")
