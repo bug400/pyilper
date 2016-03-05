@@ -99,10 +99,12 @@
 # - do not update terminal, if not visible
 # 28.02.2016 jsi:
 # - removed insert/replace indicator for the terminal widget
-# 02.02.2016 jsi:
+# 02.03.2016 jsi:
 # - removed the terminal size combobox for the terminal widget
 # - added the following configuration options to the pyilper configuration for
 #   the generic terminal: terminal size, color scheme, character size
+# 05.03.2016 jsi:
+# - improved HP-IL device status window
 #
 import os
 import glob
@@ -1618,6 +1620,7 @@ class cls_DevStatusWindow(QtGui.QDialog):
       h6.setText("HP-IL Status")
       self.__table__.setHorizontalHeaderItem(5,h6)
       self.__table__.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+      self.__table__.resizeColumnsToContents()
 #
 #     no vertical header
 #
@@ -1636,7 +1639,6 @@ class cls_DevStatusWindow(QtGui.QDialog):
             self.__items__[row,col].setText(" ")
             self.__table__.setItem(row,col,self.__items__[row,col])
 
-      self.__table__.resizeColumnsToContents()
       self.__table__.resizeRowsToContents()
       self.vlayout.addWidget(self.__table__)
       self.button = QtGui.QPushButton('OK')
@@ -1645,7 +1647,7 @@ class cls_DevStatusWindow(QtGui.QDialog):
       self.hlayout = QtGui.QHBoxLayout()
       self.hlayout.addWidget(self.button)
       self.vlayout.addLayout(self.hlayout)
-      self.resize(500,120+16*self.rows)
+      self.resize(600,self.sizeHint().height())
       self.do_refresh()
 
    def hideEvent(self,event):
@@ -1675,7 +1677,7 @@ class cls_DevStatusWindow(QtGui.QDialog):
          self.__items__[row,2].setText("{0:x}".format(aid))
          self.__items__[row,3].setText("{0:x}".format(addr& 0xF))
          self.__items__[row,4].setText("{0:x}".format(addr2nd &0xF))
-         self.__items__[row,5].setText("{0:b}".format(hpilstatus))
+         self.__items__[row,5].setText("{0:s}".format(hpilstatus))
 # 
 # Error message Dialog Class --------------------------------------------------
 #

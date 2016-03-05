@@ -34,6 +34,7 @@
 # - removed EOT response from __outdata__ to implement "no response" feature
 # 05.03.2016 jsi:
 # - wrong variable name __ptdsi__ corrected
+# - improved getstatus, use accesss lock and return ilstate as text
 
 
 import threading
@@ -96,7 +97,19 @@ class cls_pildevbase:
 #  return device status
 #
    def getstatus(self):
-      return [self.__isactive__, self.__did__, self.__aid__, self.__addr__, self.__addr2nd__, self.__ilstate__]
+      self.__access_lock__.acquire()
+      status="idle"
+      if self.__ilstate__ & 0x03:
+         status="act. talker"
+      else:
+         if self.__ilstate__ & 0xA0:
+            status="addr. listener"
+         elif self.__ilstate__ & 0x50:
+            status="addr. talker"
+
+      ret= [self.__isactive__, self.__did__, self.__aid__, self.__addr__, self.__addr2nd__, status]
+      self.__access_lock__.release()
+      return ret
 
 #
 #  lock device, all output is disabled
