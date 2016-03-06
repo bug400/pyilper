@@ -47,6 +47,8 @@
 # - removed more unneeded code
 # - disable autorepeat
 # - fixed BS and ESC % handling
+# 06.03.2016 jsi:
+# - refactoring
 
 import array
 import queue
@@ -248,15 +250,13 @@ class QTerminalWidget(QWidget):
 
 
     def keyPressEvent(self, event):
-        if event.isAutoRepeat():
-           return
         text = event.text()
         key = event.key()
         modifiers = event.modifiers()
-        if self._kbdfunc == None:
+        alt = modifiers == Qt.AltModifier 
+        if (event.isAutoRepeat() and text) or self._kbdfunc == None:
            event.accept()
            return
-        alt = modifiers == Qt.AltModifier 
         if alt:
            if key== Qt.Key_1 or key == Qt.Key_2 or key== Qt.Key_3 or \
            key== Qt.Key_4 or key == Qt.Key_5 or key== Qt.Key_6 or  \
@@ -272,15 +272,10 @@ class QTerminalWidget(QWidget):
               if self._alt_seq_length == 3:
                  text= chr(self._alt_seq_value)
                  self._alt_sequence= False
-              else:
-                 event.accept()
-                 return
            else:
               self._alt_sequence= False
-              event.accept()
-              return
 
-        if text:
+        elif text:
            t=ord(text)
            if t== 13:  # lf -> Endline
               self._kbdfunc(82, True)
@@ -352,8 +347,9 @@ class HPTerminal:
         self.charset=CHARSET_HP71
         self.update_win= False
         self.reset_hard()
-
-    # Reset functions
+#
+#   Reset functions
+#
     def reset_hard(self):
         # Attribute mask: 0x0X000000
         #	X:	Bit 0 - Underlined (not used)
@@ -384,19 +380,9 @@ class HPTerminal:
         self.cx = 0
         self.cy = 0
         self.movecursor=0
-
-    def set_charset(self,charset):
-       self.charset= charset
-
-    def utf8_charwidth(self, char):
-        if char == 0x0304:
-            return 0
-        if char >= 0x2e80:
-            return 2
-        else:
-            return 1
-
-    # Low-level terminal functions
+#
+#   Low-level terminal functions
+#
     def peek(self, y0, x0, y1, x1):
         return self.screen[self.w * y0 + x0:self.w * (y1 - 1) + x1]
 
@@ -410,8 +396,9 @@ class HPTerminal:
 
     def clear(self, y0, x0, y1, x1):
         self.fill(y0, x0, y1, x1, self.attr | 0x20)
-
-    # Scrolling functions
+#
+#   Scrolling functions
+#
     def scroll_area_up(self, y0, y1):
         n = 1
         self.poke(y0, 0, self.peek(y0 + n, 0, y1, self.w))
@@ -446,8 +433,18 @@ class HPTerminal:
                if self.linelength[y]== self.w+1:
                   self.linelength[y+1]=0
             self.linelength[y]-=1
+#
+#   Cursor functions
+#
 
-    # Cursor functions
+    def utf8_charwidth(self, char):
+        if char == 0x0304:
+            return 0
+        if char >= 0x2e80:
+            return 2
+        else:
+            return 1
+
     def cursor_line_width(self, next_char):
         wx = self.utf8_charwidth(next_char)
         lx = 0
@@ -503,11 +500,10 @@ class HPTerminal:
            self.cursor_set(self.cy, (self.linelengt[self.cy-1]-self.w-1))
         else:
            self.cursor_set(self.cy, (self.linelength[self.cy]-1))
-
-    # Dumb terminal
+#
+#   Dumb terminal output
+#
     def ctrl_BS(self):
-#       delta_y, cx = divmod(self.cx - 1, self.w)
-#       cy = max(self.scroll_area_y0, self.cy + delta_y)
         cx= self.cx-1
         cy= self.cy
         if cx < 0:
@@ -528,7 +524,6 @@ class HPTerminal:
     def ctrl_CR(self):
         self.cursor_set_x(0)
 
-
     def dumb_echo(self, char):
         if self.linelength[self.cy]== -1:
            self.linelength[self.cy-1]+=1
@@ -545,8 +540,9 @@ class HPTerminal:
             self.scroll_line_right(self.cy, self.cx)
         self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
         self.cursor_set_x(self.cx + 1)
-
-    # External interface
+#
+#   dump screen to terminal window
+#
     def dump(self):
         screen = []
         attr_ = -1
@@ -573,28 +569,9 @@ class HPTerminal:
             screen.append(line)
 
         return (cx, cy), screen
-
-
-    def set_kbdfunc(self,func):
-       self.win.setkbdfunc(func)
- 
-    def start_update(self,ms):
-       self.UpdateTimer.start(ms)
-
-    def stop_update(self):
-       self.UpdateTimer.stop()
- 
-    def putchar (self,c):
-       self.termqueue_lock.acquire()
-       self.termqueue.put(c)
-       self.termqueue_lock.release()
- 
-    def reset(self):
-       self.termqueue_lock.acquire()
-       self.termqueue.put("\x1b")
-       self.termqueue.put("e")
-       self.termqueue_lock.release()
-        
+#
+#   process terminal output queue
+#        
     def update(self):
        self.termqueue_lock.acquire()
        if self.termqueue.empty():
@@ -608,13 +585,15 @@ class HPTerminal:
           self.process(c)
        if self.update_win:
           self.win.update_term(self.dump)
- 
-    def refresh(self):
-        self.win.update_term(self.dump)
- 
+#
+#   process keyboard input
+# 
     def process(self,c):
  
        t=ord(c)
+#
+#      start of ESC sequence, set flag and return
+#
        if t == 27:
           self.fesc= True
           return
@@ -681,34 +660,75 @@ class HPTerminal:
           if self.movecursor == 1:
              self.movecursor=2
              self.movecol=t
-             return
 
 #
 #      Move cursor sequence part 2
 #
-          if self.movecursor == 2:
+          elif self.movecursor == 2:
              self.movecursor=0
              if self.movecol < self.w and t < self.h:
                 self.cursor_set(t,self.movecol)
-             return
 #
 #     single character processing
 # 
-          if t == 0xD:      # CR
-             self.ctrl_CR()
-          elif t == 0xA:    # LF
-             self.ctrl_LF()
-          elif t== 0x08:    # BS
-             self.ctrl_BS()
-          elif t== 0x7F:    # DEL
-             self.clear(self.cy, self.cx, self.cy+1, self.cx+1)
           else:
-             cc= charconv(c,self.charset)
-             for i in range(len(cc)):
-                if t > 127 and (not self.charset == CHARSET_ROMAN8):
-                   self.attr |= 0x02000000
-                self.dumb_echo(ord(cc[i])) 
-                self.attr = 0x00000000
+             if t == 0xD:      # CR
+                self.ctrl_CR()
+             elif t == 0xA:    # LF
+                self.ctrl_LF()
+             elif t== 0x08:    # BS
+                self.ctrl_BS()
+             elif t== 0x7F:    # DEL
+                self.clear(self.cy, self.cx, self.cy+1, self.cx+1)
+             else:
+                cc= charconv(c,self.charset)
+                for i in range(len(cc)):
+                   if t > 127 and (not self.charset == CHARSET_ROMAN8):
+                      self.attr |= 0x02000000
+                   self.dumb_echo(ord(cc[i])) 
+                   self.attr = 0x00000000
        return
  
-    
+#
+#   External interface
+#
+#
+#   set character set
+#
+    def set_charset(self,charset):
+       self.charset= charset
+#
+#   register keyboard function
+#
+    def set_kbdfunc(self,func):
+       self.win.setkbdfunc(func)
+#
+#   start processing the terminal output buffer
+# 
+    def start_update(self,ms):
+       self.UpdateTimer.start(ms)
+#
+#   stop processing the terminal output buffer
+#
+    def stop_update(self):
+       self.UpdateTimer.stop()
+#
+#   put character into terminal output buffer
+# 
+    def putchar (self,c):
+       self.termqueue_lock.acquire()
+       self.termqueue.put(c)
+       self.termqueue_lock.release()
+#
+#   reset terminal
+# 
+    def reset(self):
+       self.termqueue_lock.acquire()
+       self.termqueue.put("\x1b")
+       self.termqueue.put("e")
+       self.termqueue_lock.release()
+#
+#   refresh terminal
+# 
+    def refresh(self):
+        self.win.update_term(self.dump)
