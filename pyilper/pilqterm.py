@@ -49,6 +49,7 @@
 # - fixed BS and ESC % handling
 # 06.03.2016 jsi:
 # - refactoring
+# - use non blocking get in terminal output queue
 
 import array
 import queue
@@ -573,18 +574,22 @@ class HPTerminal:
 #   process terminal output queue
 #        
     def update(self):
-       self.termqueue_lock.acquire()
-       if self.termqueue.empty():
-          self.termqueue_lock.release()
-          return
        items=[]
-       while not self.termqueue.empty():
-           items.append(self.termqueue.get())
+       self.termqueue_lock.acquire()
+       while True:
+          try:
+             i=self.termqueue.get_nowait()
+             items.append(i)
+             self.termqueue.task_done()
+          except queue.Empty:
+             break
        self.termqueue_lock.release()
-       for c in items:
-          self.process(c)
-       if self.update_win:
-          self.win.update_term(self.dump)
+       if len(items):
+          for c in items:
+             self.process(c)
+          if self.update_win:
+             self.win.update_term(self.dump)
+       return
 #
 #   process keyboard input
 # 

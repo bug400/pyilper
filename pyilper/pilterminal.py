@@ -62,7 +62,8 @@
 # 20.02.2016 jsi:
 # - queueOutput now handles complete escape sequences
 # - ATTN is ignored if the keyboard queue is not empty
-#   
+# 06.03.2016 jsi:
+# - use no blocking queue get   
 
 
 import queue
@@ -116,8 +117,12 @@ class cls_terminal(cls_pildevbase):
    def __clear_device__(self):
       super().__clear_device__()
       self.__status_lock__.acquire()
-      while not self.__kbdqueue__.empty():
-         self.__kbdqueue__.get() 
+      while True:
+         try:
+            self.__kbdqueue__.get_nowait() 
+            self.__kbdqueue__.task_done()
+         except queue.Empty:
+            break
       self.__status_lock__.release()
       if self.__callback__clear__ != None:
          self.__callback__clear__() 
@@ -128,10 +133,14 @@ class cls_terminal(cls_pildevbase):
    def __outdata__(self,frame):
       self.__status_lock__.acquire()
       if self.__status__ == 0xE2:
-         outbyte= self.__kbdqueue__.get()
-         frame= outbyte
-         if self.__kbdqueue__.empty():
-            self.__status__= 0 # no data available 
+         try:
+            outbyte= self.__kbdqueue__.get_nowait()
+            self.__kbdqueue__.task_done()
+            frame= outbyte
+         except queue.Empty:
+            self.__status__=0
+            self.__status_lock__.release()
+            return 0x540
       else:
          frame= 0x540
       self.__status_lock__.release()
