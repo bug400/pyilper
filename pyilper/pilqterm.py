@@ -51,7 +51,7 @@
 # - refactoring
 # - use non blocking get in terminal output queue
 # 07.03.2016 jsi:
-# - fixed alt key
+# - fixed alt key, MAC OSX fix
 
 import array
 import queue
@@ -270,20 +270,15 @@ class QTerminalWidget(QWidget):
                  self._alt_seq_length=0
                  self._alt_seq_value=0
               self._alt_seq_value*=10
-              self._alt_seq_value+= ord(text)-0x30
+              self._alt_seq_value+= key - Qt.Key_0
               self._alt_seq_length+=1
               if self._alt_seq_length == 3:
-                 text= chr(self._alt_seq_value)
+                 self._kbdfunc(self._alt_seq_value,False)
                  self._alt_sequence= False
-              else:
-                 event.accept()
-                 return
            else:
               self._alt_sequence= False
-              event.accept()
-              return
 
-        if text:
+        elif text:
            t=ord(text)
            if t== 13:  # lf -> Endline
               self._kbdfunc(82, True)
