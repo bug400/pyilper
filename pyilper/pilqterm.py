@@ -50,6 +50,8 @@
 # 06.03.2016 jsi:
 # - refactoring
 # - use non blocking get in terminal output queue
+# 07.03.2016 jsi:
+# - fixed alt key
 
 import array
 import queue
@@ -273,10 +275,15 @@ class QTerminalWidget(QWidget):
               if self._alt_seq_length == 3:
                  text= chr(self._alt_seq_value)
                  self._alt_sequence= False
+              else:
+                 event.accept()
+                 return
            else:
               self._alt_sequence= False
+              event.accept()
+              return
 
-        elif text:
+        if text:
            t=ord(text)
            if t== 13:  # lf -> Endline
               self._kbdfunc(82, True)
