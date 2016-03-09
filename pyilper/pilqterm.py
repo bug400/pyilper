@@ -52,6 +52,9 @@
 # - use non blocking get in terminal output queue
 # 07.03.2016 jsi:
 # - fixed alt key, MAC OSX fix
+# - introduced OS X like ALT shortcuts for { [ ] } @
+# 09.03.2016 jsi:
+# - introduced shortcut ALT-I to toggle insert mode
 
 import array
 import queue
@@ -255,29 +258,54 @@ class QTerminalWidget(QWidget):
     def keyPressEvent(self, event):
         text = event.text()
         key = event.key()
+        print(key)
         modifiers = event.modifiers()
         alt = modifiers == Qt.AltModifier 
         if (event.isAutoRepeat() and text) or self._kbdfunc == None:
            event.accept()
            return
         if alt:
-           if key== Qt.Key_1 or key == Qt.Key_2 or key== Qt.Key_3 or \
-           key== Qt.Key_4 or key == Qt.Key_5 or key== Qt.Key_6 or  \
-           key== Qt.Key_7 or key == Qt.Key_8 or key== Qt.Key_9 or \
-           key== Qt.Key_0:
-              if not self._alt_sequence:
-                 self._alt_sequence= True
-                 self._alt_seq_length=0
-                 self._alt_seq_value=0
-              self._alt_seq_value*=10
-              self._alt_seq_value+= key - Qt.Key_0
-              self._alt_seq_length+=1
-              if self._alt_seq_length == 3:
-                 self._kbdfunc(self._alt_seq_value,False)
-                 self._alt_sequence= False
+           if not self._alt_sequence:
+              self._alt_sequence= True
+              self._alt_seq_length=0
+              self._alt_seq_value=0
+           if self._alt_seq_length==0:
+              if key== Qt.Key_5:
+                 self._kbdfunc(ord("["),False)
+                 self._alt_sequence=False
+              elif key== Qt.Key_6:
+                 self._kbdfunc(ord("]"),False)
+                 self._alt_sequence=False
+              elif key== Qt.Key_7:
+                 self._kbdfunc(124,False)
+                 self._alt_sequence=False
+              elif key== Qt.Key_8:
+                 self._kbdfunc(ord("{"),False)
+                 self._alt_sequence=False
+              elif key== Qt.Key_9:
+                 self._kbdfunc(ord("}"),False)
+                 self._alt_sequence=False
+              elif key== Qt.Key_L:
+                 self._kbdfunc(ord("@"),False)
+                 self._alt_sequence=False
+              elif key== Qt.Key_I:
+                 self._kbdfunc(72,True)
+                 self._alt_sequence=False
+              elif key== Qt.Key_1 or key == Qt.Key_0:
+                 self._alt_seq_value+= key - Qt.Key_0
+                 self._alt_seq_length+=1
+              else:
+                 self._alt_sequence=False
            else:
-              self._alt_sequence= False
-
+              if key >= Qt.Key_0 and key <= Qt.Key_9:
+                 self._alt_seq_value*=10
+                 self._alt_seq_value+= key - Qt.Key_0
+                 self._alt_seq_length+=1
+                 if self._alt_seq_length == 3:
+                    self._kbdfunc(self._alt_seq_value,False)
+                    self._alt_sequence= False
+              else:
+                 self._alt_sequence= False
         elif text:
            t=ord(text)
            if t== 13:  # lf -> Endline
