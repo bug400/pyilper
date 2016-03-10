@@ -55,6 +55,8 @@
 # - introduced OS X like ALT shortcuts for { [ ] } @
 # 09.03.2016 jsi:
 # - introduced shortcut ALT-I to toggle insert mode
+# 10.03.2016 jsi:
+# - introduced transparent cursor
 
 import array
 import queue
@@ -80,9 +82,9 @@ class QTerminalWidget(QWidget):
     color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
 
     color_schemes= [
-       [ "#000", "#fff", "#aaa" ],
-       [ "#000", "#ffbe00", "#aa0" ],
-       [ "#000", "#18f018", "#0a0" ],
+       [ QColor("#000"),QColor("#fff"), QColor(0xaa,0xaa, 0xaa,0xb0) ],
+       [ QColor("#000"), QColor("#ffbe00"), QColor(0xaa, 0x7d, 0x00,0xb0) ],
+       [ QColor("#000"), QColor("#18f018"), QColor(0x00,0xaa,0x00,0xb0) ],
     ]
 
     keymap = {
@@ -138,7 +140,10 @@ class QTerminalWidget(QWidget):
         self._alt_seq_value=0
         self._kbd_delay= kbd_delay
         self._cursortype= CURSOR_OVERWRITE
-        self._color_scheme=self.color_scheme_names[colorscheme]
+        self._color_scheme=self.color_schemes[self.color_scheme_names[colorscheme]]
+#
+#  overwrite standard methods
+#
 
     def sizeHint(self):
         return QSize(self._w,self._h)
@@ -149,9 +154,6 @@ class QTerminalWidget(QWidget):
     def resizeEvent(self, event):
         self.resize(self._w, self._h)
 
-    def setCursorType(self,t):
-        self._cursortype=t
-
     def setkbdfunc(self,func):
         self._kbdfunc= func
 
@@ -159,25 +161,8 @@ class QTerminalWidget(QWidget):
         super().setFont(font)
         self._update_metrics()
 #
-#   Update screen routine
-#    
-    def update_term(self,dump):
-        (self._cursor_col, self._cursor_row), self._screen = dump()
-        self._update_cursor_rect()
-        self._dirty = True
-        self.update()
-
-    def _update_metrics(self):
-        fm = self.fontMetrics()
-        self._char_height = fm.height()
-        self._char_width = fm.width("W")
-
-    def _update_cursor_rect(self):
-        cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
-        self._cursor_rect = QRect(cx, cy, self._char_width, self._char_height)
-        self._cursor_polygon=QPolygon([QPoint(cx,cy+(self._char_height/2)),QPoint(cx+self._char_width,cy+self._char_height),QPoint(cx+self._char_width,cy),QPoint(cx,cy+(self._char_height/2))])
-
-
+#   overwrite standard events
+#
     def paintEvent(self, event):
         painter = QPainter(self)
         if self._dirty:
@@ -186,79 +171,9 @@ class QTerminalWidget(QWidget):
         else:
             self._paint_cursor(painter)
 
-    def _pos2pixel(self, col, row):
-        x = (col * self._char_width)
-        y = row * self._char_height
-        return x, y
-
-    def _paint_cursor(self, painter):
-        if self._cursortype== CURSOR_OFF or self._cursor_rect== None:
-           return
-        color = self.color_schemes[self._color_scheme][2]
-        brush = QBrush(QColor(color))
-        painter.setPen(QPen(QColor(color)))
-        painter.setBrush(brush)
-        if self._cursortype== CURSOR_OVERWRITE:
-           painter.drawRect(self._cursor_rect)
-        else:
-           painter.drawPolygon(self._cursor_polygon)
-
-    def _paint_screen(self, painter):
-        # Speed hacks: local name lookups are faster
-        vars().update(QColor=QColor, QBrush=QBrush, QPen=QPen, QRect=QRect)
-        char_width = self._char_width
-        char_height = self._char_height
-        painter_drawText = painter.drawText
-        painter_fillRect = painter.fillRect
-        painter_setPen = painter.setPen
-        align = Qt.AlignTop | Qt.AlignLeft
-        color_schemes= self.color_schemes
-        color_scheme= self._color_scheme
-        # set defaults
-        background_color = color_schemes[color_scheme][1]
-        foreground_color = color_schemes[color_scheme][0]
-        brush = QBrush(QColor(background_color))
-        painter_fillRect(self.rect(), brush)
-        pen = QPen(QColor(foreground_color))
-        painter_setPen(pen)
-        y = 0
-        text = []
-        text_append = text.append
-        for row, line in enumerate(self._screen):
-            col = 0
-            text_line = ""
-            for item in line:
-                if isinstance(item, str):
-                    x = col * char_width
-                    length = len(item)
-                    rect = QRect(
-                        x, y, x + char_width * length, y + char_height)
-                    painter_fillRect(rect, brush)
-                    painter_drawText(rect, align, item)
-                    col += length
-                    text_line += item
-                else:
-                    invers_flag = item
-                    if invers_flag:
-                       background_color = color_schemes[color_scheme][1]
-                       foreground_color = color_schemes[color_scheme][0]
-                    else:
-                       background_color = color_schemes[color_scheme][0]
-                       foreground_color = color_schemes[color_scheme][1]
-                    pen = QPen(QColor(foreground_color))
-                    brush = QBrush(QColor(background_color))
-                    painter_setPen(pen)
-                    painter.setBrush(brush)
-            y += char_height
-            text_append(text_line)
-        self._text = text
-        self._paint_cursor(painter)
-
-
     def keyPressEvent(self, event):
         text = event.text()
         key = event.key()
-        print(key)
         modifiers = event.modifiers()
         alt = modifiers == Qt.AltModifier 
         if (event.isAutoRepeat() and text) or self._kbdfunc == None:
@@ -360,6 +275,103 @@ class QTerminalWidget(QWidget):
         event.accept()
         if self._kbd_delay:
           time.sleep(KEYBOARD_DELAY)
+#
+#   internal methods
+#
+    def _update_metrics(self):
+        fm = self.fontMetrics()
+        self._char_height = fm.height()
+        self._char_width = fm.width("W")
+
+    def _update_cursor_rect(self):
+        cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
+        self._cursor_rect = QRect(cx, cy, self._char_width, self._char_height)
+        self._cursor_polygon=QPolygon([QPoint(cx,cy+(self._char_height/2)),QPoint(cx+self._char_width,cy+self._char_height),QPoint(cx+self._char_width,cy),QPoint(cx,cy+(self._char_height/2))])
+
+    def _pos2pixel(self, col, row):
+        x = (col * self._char_width)
+        y = row * self._char_height
+        return x, y
+
+    def _paint_cursor(self, painter):
+        if self._cursortype== CURSOR_OFF or self._cursor_rect== None:
+           return
+        brush = QBrush(self._color_scheme[2])
+        painter.setPen(QPen(self._color_scheme[2]))
+        painter.setBrush(brush)
+        if self._cursortype== CURSOR_OVERWRITE:
+           painter.drawRect(self._cursor_rect)
+        else:
+           painter.drawPolygon(self._cursor_polygon)
+
+    def _paint_screen(self, painter):
+        # Speed hacks: local name lookups are faster
+        vars().update(QColor=QColor, QBrush=QBrush, QPen=QPen, QRect=QRect)
+        char_width = self._char_width
+        char_height = self._char_height
+        painter_drawText = painter.drawText
+        painter_fillRect = painter.fillRect
+        painter_setPen = painter.setPen
+        align = Qt.AlignTop | Qt.AlignLeft
+        color_scheme= self._color_scheme
+        # set defaults
+        background_color = color_scheme[1]
+        foreground_color = color_scheme[0]
+        brush = QBrush(background_color)
+        painter_fillRect(self.rect(), brush)
+        pen = QPen(foreground_color)
+        painter_setPen(pen)
+        y = 0
+        text = []
+        text_append = text.append
+        for row, line in enumerate(self._screen):
+            col = 0
+            text_line = ""
+            for item in line:
+                if isinstance(item, str):
+                    x = col * char_width
+                    length = len(item)
+                    rect = QRect(
+                        x, y, x + char_width * length, y + char_height)
+                    painter_fillRect(rect, brush)
+                    painter_drawText(rect, align, item)
+                    col += length
+                    text_line += item
+                else:
+                    invers_flag = item
+                    if invers_flag:
+                       background_color = color_scheme[1]
+                       foreground_color = color_scheme[0]
+                    else:
+                       background_color = color_scheme[0]
+                       foreground_color = color_scheme[1]
+                    pen = QPen(foreground_color)
+                    brush = QBrush(background_color)
+                    painter_setPen(pen)
+                    painter.setBrush(brush)
+            y += char_height
+            text_append(text_line)
+        self._text = text
+        self._paint_cursor(painter)
+
+
+#
+#   external interface
+#
+#   set cursor type (insert, replace, off)
+#
+    def setCursorType(self,t):
+        self._cursortype=t
+
+#
+#   Update screen from terminal memory
+#    
+    def update_term(self,dump):
+        (self._cursor_col, self._cursor_row), self._screen = dump()
+        self._update_cursor_rect()
+        self._dirty = True
+        self.update()
+
 
 
 class HPTerminal:
