@@ -105,6 +105,8 @@
 #   the generic terminal: terminal size, color scheme, character size
 # 05.03.2016 jsi:
 # - improved HP-IL device status window
+# 12.03.2016 jsi:
+# - set terminal output queue poll timer to 25ms
 #
 import os
 import glob
@@ -128,7 +130,7 @@ from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cl
 #
 # Constants
 #
-UPDATE_TIMER=100      # Refresh timer (ms) for terminal window content
+UPDATE_TIMER=25       # Poll timer (ms) for terminal output queue
 REFRESH_RATE=1000     # refresh rate for lif directory
 NOT_TALKER_SPAN=3     # time span for no talker acitvity of drives
 
@@ -1586,7 +1588,7 @@ class cls_DevStatusWindow(QtGui.QDialog):
    def __init__(self,parent):
       super().__init__()
       self.parent=parent
-      self.setWindowTitle('HP-IL device status')
+      self.setWindowTitle('Virtual HP-IL device status')
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.__timer__=QtCore.QTimer()
@@ -1733,8 +1735,8 @@ class cls_ui(QtGui.QMainWindow):
       self.menuHelp= self.menubar.addMenu('Help')
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
-      self.actionDevConfig=self.menuFile.addAction("HP-IL device configuration")
-      self.actionDevStatus=self.menuFile.addAction("HP-IL device status")
+      self.actionDevConfig=self.menuFile.addAction("Virtual HP-IL device configuration")
+      self.actionDevStatus=self.menuFile.addAction("Virtual HP-IL device status")
       self.actionReconnect=self.menuFile.addAction("Reconnect")
       self.actionExit=self.menuFile.addAction("Quit")
 

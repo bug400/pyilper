@@ -57,6 +57,8 @@
 # - introduced shortcut ALT-I to toggle insert mode
 # 10.03.2016 jsi:
 # - introduced transparent cursor
+# 12.03.2016 jsi:
+# - removed keyboard delay
 
 import array
 import queue
@@ -273,8 +275,8 @@ class QTerminalWidget(QWidget):
                  pass
                 
         event.accept()
-        if self._kbd_delay:
-          time.sleep(KEYBOARD_DELAY)
+#       if self._kbd_delay:
+#         time.sleep(KEYBOARD_DELAY)
 #
 #   internal methods
 #
