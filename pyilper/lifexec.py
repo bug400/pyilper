@@ -55,6 +55,8 @@
 # - added configurable character set encoding to cls_lifview
 # 05.03.2016 jsi
 # - removed unneeded variables
+# 12.03.2016 jsi
+# - open view outputfile as unicode
 #
 import os
 import subprocess
@@ -894,7 +896,7 @@ class cls_lifview(QtGui.QDialog):
          if reply== QtGui.QMessageBox.Cancel:
             return
       try:
-         with open(self.outputfile,"w") as outfile:
+         with open(self.outputfile,"w",encoding="UTF-8-SIG") as outfile:
             outfile.write(str(self.viewer.toPlainText()))
       except OSError as e:
          reply=QtGui.QMessageBox.critical(self,'Error',"Cannot write to file: "+ e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
