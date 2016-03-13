@@ -57,6 +57,8 @@
 # - removed unneeded variables
 # 12.03.2016 jsi
 # - open view outputfile as unicode
+# 13.03.2016 jsi
+# - modified exit of modal dialogs
 #
 import os
 import subprocess
@@ -300,13 +302,13 @@ class cls_lifrename (QtGui.QDialog):
       newfilename=self.leditFileName.text()
       if newfilename != "":
          exec_single(self,["lifrename",self.lifimagefile,self.oldfilename,newfilename])
-      self.close()
+      super().accept()
 
 #
 #  cancel do nothing
 #
    def do_cancel(self):
-      self.close()
+      super().reject()
 
    @staticmethod
    def exec(lifimagefile,liffile):
@@ -447,12 +449,12 @@ class cls_lifexport (QtGui.QDialog):
             exec_single(self,["lifget","-r",self.lifimagefile,self.liffilename,self.outputfile])
          elif self.radio5.isChecked():
             exec_single(self,["lifget",self.lifimagefile,self.liffilename,self.outputfile])
-      self.close()
+      super().accept()
 #
 #  cancel: do nothing
 #
    def do_cancel(self):
-      self.close()
+      super().reject()
 
    @staticmethod
    def exec(lifimagefile,liffilename,liffiletype,workdir):
@@ -493,10 +495,10 @@ class cls_liflabel (QtGui.QDialog):
          exec_single(self,["liflabel",self.lifimagefile, newlabel])
       else:
          exec_single(self,["liflabel","-c",self.lifimagefile])
-      self.close()
+      super().accept()
 
    def do_cancel(self):
-      self.close()
+      super().reject()
 
    @staticmethod
    def exec(lifimagefile,oldlabel):
@@ -638,13 +640,13 @@ class cls_lifimport (QtGui.QDialog):
          else:
             if  cls_chk_import.exec(None, self.inputfile):
                exec_single(self,["lifput",self.lifimagefile,self.inputfile])
-      self.close()
+      super().accept()
 
 #
 #  cancel
 #
    def do_cancel(self):
-      self.close()
+      super().reject()
 
    @staticmethod
    def exec(lifimagefile,workdir):
@@ -734,10 +736,10 @@ class cls_chk_import(QtGui.QDialog):
 
    def do_ok(self):
       self.retval=True
-      self.close()
+      super().accept()
 
    def do_cancel(self):
-      self.close()
+      super().reject()
 
    def get_retval(self):
       return self.retval
@@ -819,7 +821,7 @@ class cls_chkxrom(QtGui.QDialog):
       if self.devil.isChecked():
          self.call.append("-x")
          self.call.append("devil")
-      self.close()
+      super().accept()
 
    def get_call(self):
       return self.call
@@ -906,7 +908,7 @@ class cls_lifview(QtGui.QDialog):
 # exit, do nothing
 #
    def do_exit(self):
-      self.close()
+      super().accept()
 
 #
 # get file and pipe it to filter program, show output in editor window
@@ -1101,13 +1103,13 @@ class cls_lifinit (QtGui.QDialog):
          exec_single(self,["lifinit","-m",self.mt,self.lifimagefile,self.leditDirSize.text()])
          if self.leditLabel.text() != "":
             exec_single(self,["liflabel",self.lifimagefile,self.leditLabel.text()])
-      self.close()
+      super().accept()
 
 #
 #  cancel
 #
    def do_cancel(self):
-      self.close()
+      super().reject()
 
    @staticmethod
    def exec(workdir):
@@ -1241,12 +1243,12 @@ class cls_liffix (QtGui.QDialog):
    def do_ok(self):
       if self.lifimagefile != "":
          exec_single(self,["liffix","-m",self.mt,self.lifimagefile])
-      self.close()
+      super().accept()
 #
 #  cancel
 #
    def do_cancel(self):
-      self.close()
+      super().reject()
 
    @staticmethod
    def exec(workdir):
@@ -1287,7 +1289,7 @@ class cls_installcheck(QtGui.QDialog):
       self.view.setText(text)
 
    def do_exit(self):
-      self.close()
+      super().accept()
 
    @staticmethod
    def exec():

@@ -107,6 +107,8 @@
 # - improved HP-IL device status window
 # 12.03.2016 jsi:
 # - set terminal output queue poll timer to 25ms
+# 13.03.2016 jsi:
+# - modified exit of modal dialogs
 #
 import os
 import glob
@@ -1218,11 +1220,11 @@ class cls_TtyWindow(QtGui.QDialog):
          self.__device__= self.__ComboBox__.currentText()
          if self.__device__=="":
             return
-      self.close()
+      super().accept()
 
    def do_cancel(self):
       self.__device__==""
-      self.close()
+      super().reject()
 
 
    def combobox_textchanged(self, device):
@@ -1239,8 +1241,10 @@ class cls_TtyWindow(QtGui.QDialog):
       dialog= cls_TtyWindow(parent)
       dialog.resize(200,100)
       result= dialog.exec_()
-      device= dialog.getDevice()
-      return device
+      if result== QtGui.QDialog.Accepted:
+         return dialog.getDevice()
+      else:
+         return ""
 
 class cls_PilConfigWindow(QtGui.QDialog):
 
@@ -1483,11 +1487,11 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__charsize__= self.spinCharsize.value()
       self.__config__=[self.__mode__, self.__tty__,self.__baudrate__,self.__idyframe__, 
          self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__, self.__termsize__,self.__colorscheme__,self.__charsize__]
-      self.close()
+      super().accept()
 
    def do_cancel(self):
       self.__config__= None
-      self.close()
+      super().reject()
 
    def getConfig(self):
       return self.__config__
@@ -1497,8 +1501,10 @@ class cls_PilConfigWindow(QtGui.QDialog):
       dialog= cls_PilConfigWindow(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize)
       dialog.resize(200,100)
       result= dialog.exec_()
-      config= dialog.getConfig()
-      return config
+      if result== QtGui.QDialog.Accepted:
+         return dialog.getConfig()
+      else:
+         return None
 #
 # Get Tab Config Dialog class ------------------------------------------------
 #
@@ -1562,11 +1568,13 @@ class cls_TabConfigWindow(QtGui.QDialog):
    def do_ok(self):
       self.__config__= [self.spinScope.value(), self.spinDrive.value(),
        self.spinPrinter.value(),self.spinTerminal.value() ]
-      self.close()
+      super().accept()
+      
 
    def do_cancel(self):
       self.__config__= None
-      self.close()
+      super().reject()
+      
 
    def getConfig(self):
       return self.__config__
@@ -1576,8 +1584,10 @@ class cls_TabConfigWindow(QtGui.QDialog):
       dialog= cls_TabConfigWindow(config)
       dialog.resize(200,100)
       result= dialog.exec_()
-      config= dialog.getConfig()
-      return config
+      if result== QtGui.QDialog.Accepted:
+         return dialog.getConfig()
+      else:
+         return None
 
 #
 # HP-IL device Status Dialog class ---------------------------------------------
@@ -1659,7 +1669,7 @@ class cls_DevStatusWindow(QtGui.QDialog):
       self.__timer__.start(500)
       
    def do_exit(self):
-      self.close()
+      super().accept()
 
    def do_refresh(self):
       i=1
