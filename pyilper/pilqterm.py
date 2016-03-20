@@ -59,6 +59,8 @@
 # - introduced transparent cursor
 # 12.03.2016 jsi:
 # - removed keyboard delay
+# 20.03.2016 jsi:
+# - improved insert cursor, use transform for cursor positioning
 
 import array
 import queue
@@ -68,7 +70,7 @@ import time
 from PyQt4.QtCore import QRect, Qt, pyqtSignal, QTimer, QSize, QPoint
 from PyQt4.QtGui import (
     QApplication, QClipboard, QWidget, QPainter, QFont, QBrush, QColor, QPolygon,
-    QPen, QPixmap, QImage, QContextMenuEvent)
+    QPen, QPixmap, QImage, QContextMenuEvent, QTransform)
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 
 
@@ -84,9 +86,9 @@ class QTerminalWidget(QWidget):
     color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
 
     color_schemes= [
-       [ QColor("#000"),QColor("#fff"), QColor(0xaa,0xaa, 0xaa,0xb0) ],
-       [ QColor("#000"), QColor("#ffbe00"), QColor(0xaa, 0x7d, 0x00,0xb0) ],
-       [ QColor("#000"), QColor("#18f018"), QColor(0x00,0xaa,0x00,0xb0) ],
+       [ QColor("#000"),QColor("#fff"), QColor(0xff,0xff, 0xff,0xa0) ],
+       [ QColor("#000"), QColor("#ffbe00"), QColor(0xff, 0xbe, 0x00,0xa0) ],
+       [ QColor("#000"), QColor("#18f018"), QColor(0x00,0xff,0x00,0xa0) ],
     ]
 
     keymap = {
@@ -129,8 +131,9 @@ class QTerminalWidget(QWidget):
         self.setFont(font)
         self._screen = []
         self._text = []
-        self._cursor_rect = None
-        self._cursor_poygon= None
+        self._cursor_rect = QRect(0, 0, self._char_width, self._char_height)
+        self._cursor_polygon=QPolygon([QPoint(0,0+(self._char_height/2)), QPoint(0+(self._char_width*0.8),0+self._char_height), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0), QPoint(0,0+(self._char_height/2))])
+        self._transform= QTransform()
         self._cursor_col = 0
         self._cursor_row = 0
         self._dirty = False
@@ -141,8 +144,9 @@ class QTerminalWidget(QWidget):
         self._alt_seq_length=0
         self._alt_seq_value=0
         self._kbd_delay= kbd_delay
-        self._cursortype= CURSOR_OVERWRITE
+        self._cursortype= CURSOR_OFF
         self._color_scheme=self.color_schemes[self.color_scheme_names[colorscheme]]
+        self._cursor_color=self._color_scheme[2]
 #
 #  overwrite standard methods
 #
@@ -286,9 +290,11 @@ class QTerminalWidget(QWidget):
         self._char_width = fm.width("W")
 
     def _update_cursor_rect(self):
+        if self._cursortype== CURSOR_OFF:
+           return
         cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
-        self._cursor_rect = QRect(cx, cy, self._char_width, self._char_height)
-        self._cursor_polygon=QPolygon([QPoint(cx,cy+(self._char_height/2)),QPoint(cx+self._char_width,cy+self._char_height),QPoint(cx+self._char_width,cy),QPoint(cx,cy+(self._char_height/2))])
+        self._transform.reset()
+        self._transform.translate(cx,cy)
 
     def _pos2pixel(self, col, row):
         x = (col * self._char_width)
@@ -296,11 +302,12 @@ class QTerminalWidget(QWidget):
         return x, y
 
     def _paint_cursor(self, painter):
-        if self._cursortype== CURSOR_OFF or self._cursor_rect== None:
+        if self._cursortype== CURSOR_OFF:
            return
-        brush = QBrush(self._color_scheme[2])
-        painter.setPen(QPen(self._color_scheme[2]))
+        brush = QBrush(self._cursor_color)
+        painter.setPen(QPen(self._cursor_color))
         painter.setBrush(brush)
+        painter.setTransform(self._transform)
         if self._cursortype== CURSOR_OVERWRITE:
            painter.drawRect(self._cursor_rect)
         else:
