@@ -61,6 +61,9 @@
 # - removed keyboard delay
 # 20.03.2016 jsi:
 # - improved insert cursor, use transform for cursor positioning
+# 21.03.2016 jsi:
+# - blinking cursor
+# - refactoring
 
 import array
 import queue
@@ -74,10 +77,11 @@ from PyQt4.QtGui import (
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 
 
-KEYBOARD_DELAY=0.2
 CURSOR_OFF=0
 CURSOR_INSERT=1
 CURSOR_OVERWRITE=2
+UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
+CURSOR_BLINK=500 / UPDATE_TIMER # 500 ms cursor blink rate
 
 class QTerminalWidget(QWidget):
 
@@ -86,9 +90,9 @@ class QTerminalWidget(QWidget):
     color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
 
     color_schemes= [
-       [ QColor("#000"),QColor("#fff"), QColor(0xff,0xff, 0xff,0xa0) ],
-       [ QColor("#000"), QColor("#ffbe00"), QColor(0xff, 0xbe, 0x00,0xa0) ],
-       [ QColor("#000"), QColor("#18f018"), QColor(0x00,0xff,0x00,0xa0) ],
+       [ QColor("#000"),QColor("#fff"), QColor(0xff,0xff, 0xff,0xc0) ],
+       [ QColor("#000"), QColor("#ffbe00"), QColor(0xff, 0xbe, 0x00,0xc0) ],
+       [ QColor("#000"), QColor("#18f018"), QColor(0x00,0xff,0x00,0xc0) ],
     ]
 
     keymap = {
@@ -120,7 +124,7 @@ class QTerminalWidget(QWidget):
     }
 
 
-    def __init__(self,parent, font_name, font_size, w,h, colorscheme,kbd_delay):
+    def __init__(self,parent, font_name, font_size, w,h, colorscheme):
         super().__init__(parent)
         self.setFocusPolicy(Qt.WheelFocus)
         self.setAutoFillBackground(False)
@@ -143,10 +147,14 @@ class QTerminalWidget(QWidget):
         self._alt_sequence= False
         self._alt_seq_length=0
         self._alt_seq_value=0
-        self._kbd_delay= kbd_delay
         self._cursortype= CURSOR_OFF
         self._color_scheme=self.color_schemes[self.color_scheme_names[colorscheme]]
         self._cursor_color=self._color_scheme[2]
+        self._cursor_char= 0x20
+        self._cursor_attr=-1
+        self._cursor_update=True
+        self._blink= True
+        self._blink_counter=0
 #
 #  overwrite standard methods
 #
@@ -169,14 +177,27 @@ class QTerminalWidget(QWidget):
 #
 #   overwrite standard events
 #
+#
+#   Paint event, this event repaints the screen if the screen memory was changed or
+#   paints the cursor
+#   This event is fired if
+#   - the terminal window becomes visible again
+#   - after processing a new key in the termianl output queue 
+#
     def paintEvent(self, event):
         painter = QPainter(self)
         if self._dirty:
             self._dirty = False
             self._paint_screen(painter)
         else:
-            self._paint_cursor(painter)
-
+            self._blink_counter+=1
+            if self._blink_counter > CURSOR_BLINK:
+               self._blink_counter=0
+               self._paint_cursor(painter)
+        event.accept()
+#
+#   keyboard pressed event, process keys and put them into the keyboard input buffer
+#
     def keyPressEvent(self, event):
         text = event.text()
         key = event.key()
@@ -279,8 +300,6 @@ class QTerminalWidget(QWidget):
                  pass
                 
         event.accept()
-#       if self._kbd_delay:
-#         time.sleep(KEYBOARD_DELAY)
 #
 #   internal methods
 #
@@ -288,31 +307,71 @@ class QTerminalWidget(QWidget):
         fm = self.fontMetrics()
         self._char_height = fm.height()
         self._char_width = fm.width("W")
-
+#
+#  update cursor position
+#
     def _update_cursor_rect(self):
         if self._cursortype== CURSOR_OFF:
            return
         cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
         self._transform.reset()
         self._transform.translate(cx,cy)
-
+        self._cursor_update=True
+#
+#   determine pixel position from rowl, column
+#
     def _pos2pixel(self, col, row):
         x = (col * self._char_width)
         y = row * self._char_height
         return x, y
-
+#
+#   paint cursor
+#
     def _paint_cursor(self, painter):
         if self._cursortype== CURSOR_OFF:
            return
-        brush = QBrush(self._cursor_color)
-        painter.setPen(QPen(self._cursor_color))
-        painter.setBrush(brush)
-        painter.setTransform(self._transform)
-        if self._cursortype== CURSOR_OVERWRITE:
-           painter.drawRect(self._cursor_rect)
+#
+#       cursor position was updated initialize some variables
+#
+        if self._cursor_update:
+           self._cursor_update= False
+           self._blink_brush=QBrush(self._cursor_color)
+           self._blink_pen=QPen(self._cursor_color)
+           self._blink_pen.setStyle(0)
+           if self._cursor_attr:
+              self._noblink_background_color = self._color_scheme[1]
+              self._noblink_foreground_color = self._color_scheme[0]
+           else:
+              self._noblink_background_color = self._color_scheme[0]
+              self._noblink_foreground_color = self._color_scheme[1]
+           self._noblink_brush = QBrush(self._noblink_background_color)
+#
+#       blink on: draw cursor
+#
+        if self._blink:
+           painter.setPen(self._blink_pen)
+           painter.setBrush(self._blink_brush)
+           painter.setTransform(self._transform)
+           if self._cursortype== CURSOR_OVERWRITE:
+              painter.drawRect(self._cursor_rect)
+           else:
+              painter.drawPolygon(self._cursor_polygon)
+           self._blink= not self._blink
+#
+#       blink off: draw character
+#
         else:
-           painter.drawPolygon(self._cursor_polygon)
-
+           painter.setBrush(self._noblink_brush)
+           painter.setTransform(self._transform)
+           painter.setPen(QPen(self._noblink_background_color))
+           painter.drawRect(self._cursor_rect)
+           painter.fillRect(self._cursor_rect, self._noblink_brush)
+           painter.setPen(QPen(self._noblink_foreground_color))
+           painter.drawText(self._cursor_rect,Qt.AlignTop | Qt.AlignLeft,chr(self._cursor_char))
+           self._blink= not self._blink
+#
+#   paint screen from screen memory 
+#
     def _paint_screen(self, painter):
         # Speed hacks: local name lookups are faster
         vars().update(QColor=QColor, QBrush=QBrush, QPen=QPen, QRect=QRect)
@@ -361,9 +420,6 @@ class QTerminalWidget(QWidget):
             y += char_height
             text_append(text_line)
         self._text = text
-        self._paint_cursor(painter)
-
-
 #
 #   external interface
 #
@@ -373,14 +429,12 @@ class QTerminalWidget(QWidget):
         self._cursortype=t
 
 #
-#   Update screen from terminal memory
+#   get terminal memory and cursor information
 #    
     def update_term(self,dump):
-        (self._cursor_col, self._cursor_row), self._screen = dump()
+        (self._cursor_col, self._cursor_row, self._cursor_char, self._cursor_attr), self._screen = dump()
         self._update_cursor_rect()
         self._dirty = True
-        self.update()
-
 
 
 class HPTerminal:
@@ -394,11 +448,12 @@ class HPTerminal:
         self.movecursor= 0
         self.movecol=0
         self.UpdateTimer= QTimer()
-        self.UpdateTimer.timeout.connect(self.update)
+        self.UpdateTimer.timeout.connect(self.process_queue)
         self.win=win
         self.charset=CHARSET_HP71
         self.update_win= False
         self.reset_hard()
+        self.UpdateTimer.start(UPDATE_TIMER)
 #
 #   Reset functions
 #
@@ -598,6 +653,8 @@ class HPTerminal:
     def dump(self):
         screen = []
         attr_ = -1
+        cursor_char=0x20
+        cursor_attr= -1
         cx, cy = min(self.cx, self.w - 1), self.cy
         for y in range(0, self.h):
             wx = 0
@@ -606,6 +663,9 @@ class HPTerminal:
                 d = self.screen[y * self.w + x]
                 char = d & 0xffff
                 attr = d >> 16
+                if x== cx and y== cy:
+                   cursor_char=char
+                   cursor_attr=attr
                 # Attributes (inverse only)
                 if attr != attr_:
                     if attr_ != -1:
@@ -620,11 +680,11 @@ class HPTerminal:
                     line[-1] += chr(char)
             screen.append(line)
 
-        return (cx, cy), screen
+        return (cx, cy, cursor_char, cursor_attr), screen
 #
-#   process terminal output queue
+#   process terminal output queue and refresh display
 #        
-    def update(self):
+    def process_queue(self):
        items=[]
        self.termqueue_lock.acquire()
        while True:
@@ -640,6 +700,8 @@ class HPTerminal:
              self.process(c)
           if self.update_win:
              self.win.update_term(self.dump)
+       if self.update_win:
+          self.win.update() # fire the paintEvent always to update cursor blink
        return
 #
 #   process keyboard input
@@ -759,16 +821,6 @@ class HPTerminal:
     def set_kbdfunc(self,func):
        self.win.setkbdfunc(func)
 #
-#   start processing the terminal output buffer
-# 
-    def start_update(self,ms):
-       self.UpdateTimer.start(ms)
-#
-#   stop processing the terminal output buffer
-#
-    def stop_update(self):
-       self.UpdateTimer.stop()
-#
 #   put character into terminal output buffer
 # 
     def putchar (self,c):
@@ -784,7 +836,13 @@ class HPTerminal:
        self.termqueue.put("e")
        self.termqueue_lock.release()
 #
-#   refresh terminal
-# 
-    def refresh(self):
-        self.win.update_term(self.dump)
+#    becomes visible
+#
+    def becomes_visible(self):
+       self.update_win=True
+       self.win.update_term(self.dump)
+#
+#    becomes_invisible(self):
+#
+    def becomes_invisible(self):
+       self.update_win=False

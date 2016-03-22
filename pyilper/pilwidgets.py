@@ -109,6 +109,9 @@
 # - set terminal output queue poll timer to 25ms
 # 13.03.2016 jsi:
 # - modified exit of modal dialogs
+# 21.03.2016 jsi:
+# - refactored interface to HPTerm
+# - modified parameters of cls_ui
 #
 import os
 import glob
@@ -132,7 +135,6 @@ from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cl
 #
 # Constants
 #
-UPDATE_TIMER=25       # Poll timer (ms) for terminal output queue
 REFRESH_RATE=1000     # refresh rate for lif directory
 NOT_TALKER_SPAN=3     # time span for no talker acitvity of drives
 
@@ -259,15 +261,10 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.charset= parent.config.get(self.name,"charset",CHARSET_HP71)
 
 #
-#     Keyboard input delay if we are connected to the PIL-Box
-#
-      if parent.config.get("pyilper","mode") == 0:
-         self.kbd_delay=True
-#
 #     Build GUI 
 #
       super().__set_termconfig__(self.rows,self.cols)
-      self.qterminal=QTerminalWidget(None,self.font_name, self.font_size, self.width, self.height,self.colorscheme,self.kbd_delay)
+      self.qterminal=QTerminalWidget(None,self.font_name, self.font_size, self.width, self.height,self.colorscheme)
       self.hbox1= QtGui.QHBoxLayout()
       self.hbox1.addWidget(self.qterminal)
       self.hbox1.setAlignment(self.qterminal,QtCore.Qt.AlignHCenter)
@@ -292,7 +289,6 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.vbox.addLayout(self.hbox2)
       self.setLayout(self.vbox)
       self.hpterm=HPTerminal(self.cols,self.rows,self.qterminal)
-      self.hpterm.start_update(UPDATE_TIMER)
 #
 #     initialize logging checkbox
 #
@@ -347,17 +343,16 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.comboCharset.setEnabled(False)
       self.pildevice= None
 #
-#  becomes visible, activate update timer
+#  becomes visible, refresh content, activate update and blink
 #
    def becomes_visible(self):
-      self.hpterm.refresh()
-      self.hpterm.update_win=True
+      self.hpterm.becomes_visible()
       return
 #
-#  becomes invisible, deactivate update timer
+#  becomes invisible, deactivate update and blink
 #
    def becomes_invisible(self):
-      self.hpterm.update_win=False
+      self.hpterm.becomes_invisible()
       return
 #
 # tabscope widget ----------------------------------------------------
@@ -1721,7 +1716,7 @@ class cls_PilMessageBox(QtGui.QMessageBox):
 #
 class cls_ui(QtGui.QMainWindow):
 
-   def __init__(self,parent,version,width,height):
+   def __init__(self,parent,version):
       super().__init__()
       self.setWindowTitle("pyILPER "+version)
 #

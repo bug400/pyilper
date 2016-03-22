@@ -65,6 +65,8 @@
 # - added generic terminal configuration
 # 05.03.2016 jsi
 # - renmoved dead code
+# 22.02.2016 jsi
+# - modified call of cls_ui
 #
 import os
 import sys
@@ -119,8 +121,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     Initialize Main Window, connect callbacks
 #
-#     self.ui= cls_ui(self,VERSION,850,650)
-      self.ui= cls_ui(self,VERSION,0,0)
+      self.ui= cls_ui(self,VERSION)
       self.ui.actionConfig.triggered.connect(self.do_pyilperConfig)
       self.ui.actionDevConfig.triggered.connect(self.do_DevConfig)
       self.ui.actionDevStatus.triggered.connect(self.do_DevStatus)
