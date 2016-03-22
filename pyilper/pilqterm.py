@@ -64,6 +64,8 @@
 # 21.03.2016 jsi:
 # - blinking cursor
 # - refactoring
+# 22.03.2016 jsi:
+# - set blink on after updating cursor_rect
 
 import array
 import queue
@@ -317,6 +319,7 @@ class QTerminalWidget(QWidget):
         self._transform.reset()
         self._transform.translate(cx,cy)
         self._cursor_update=True
+        self._blink=True
 #
 #   determine pixel position from rowl, column
 #
