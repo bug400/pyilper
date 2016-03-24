@@ -66,6 +66,7 @@
 # - refactoring
 # 22.03.2016 jsi:
 # - set blink on after updating cursor_rect
+# - use single shot timer for processing the terminal output queue
 
 import array
 import queue
@@ -96,7 +97,9 @@ class QTerminalWidget(QWidget):
        [ QColor("#000"), QColor("#ffbe00"), QColor(0xff, 0xbe, 0x00,0xc0) ],
        [ QColor("#000"), QColor("#18f018"), QColor(0x00,0xff,0x00,0xc0) ],
     ]
-
+#
+#   Keymap keycodes
+#
     keymap = {
         Qt.Key_Backspace: chr(127),
         Qt.Key_Escape: chr(27),
@@ -137,8 +140,6 @@ class QTerminalWidget(QWidget):
         self.setFont(font)
         self._screen = []
         self._text = []
-        self._cursor_rect = QRect(0, 0, self._char_width, self._char_height)
-        self._cursor_polygon=QPolygon([QPoint(0,0+(self._char_height/2)), QPoint(0+(self._char_width*0.8),0+self._char_height), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0), QPoint(0,0+(self._char_height/2))])
         self._transform= QTransform()
         self._cursor_col = 0
         self._cursor_row = 0
@@ -157,6 +158,8 @@ class QTerminalWidget(QWidget):
         self._cursor_update=True
         self._blink= True
         self._blink_counter=0
+        self._cursor_rect = QRect(0, 0, self._char_width, self._char_height)
+        self._cursor_polygon=QPolygon([QPoint(0,0+(self._char_height/2)), QPoint(0+(self._char_width*0.8),0+self._char_height), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0), QPoint(0,0+(self._char_height/2))])
 #
 #  overwrite standard methods
 #
@@ -451,6 +454,7 @@ class HPTerminal:
         self.movecursor= 0
         self.movecol=0
         self.UpdateTimer= QTimer()
+        self.UpdateTimer.setSingleShot(True)
         self.UpdateTimer.timeout.connect(self.process_queue)
         self.win=win
         self.charset=CHARSET_HP71
@@ -705,6 +709,7 @@ class HPTerminal:
              self.win.update_term(self.dump)
        if self.update_win:
           self.win.update() # fire the paintEvent always to update cursor blink
+       self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
 #   process keyboard input

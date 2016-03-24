@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+﻿#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # pyILPER 1.2.1 for Linux
 #
@@ -31,7 +31,7 @@
 # 09.02.2014 improvements and changes of ILPER 1.45
 # - send RFC to virtual devices after each cmd frame
 # - high byte detection
-# 
+#
 # 07.06.2014 jsi
 # - introduce configurable baudrate support
 # 06.10.2015 jsi:
@@ -49,6 +49,8 @@
 # - set pilbox call removed
 # 22.02.2016 cg
 # - send the cmd and not the RFC frame back to the PIL-Box
+# 22.03.2016 cg
+# - send acknowledge for high byte only at a 9600 baud connection
 
 #
 # PIL-Box Commands
@@ -104,7 +106,7 @@ class cls_pilbox:
    def open(self):
 #
 #     open serial device
-# 
+#
       try:
          self.__tty__.open(self.__ttydevice__, self.__baudrate__)
       except Rs232Error as e:
@@ -122,7 +124,7 @@ class cls_pilbox:
          self.__sendCmd__(TDIS,TMOUTCMD)
          self.__running__ = False
       finally:
-         self.__tty__.close()    
+         self.__tty__.close()
 
 #
 #  Read HP-IL frame from PIL-Box
@@ -150,7 +152,7 @@ class cls_pilbox:
 #
          hbyt = ((frame >> 6) & 0x1E) | 0x20
          lbyt = (frame & 0x7F) | 0x80
-  
+
       if  hbyt != self.__lasth__:
 #
 #        send high part if different from last one
@@ -175,20 +177,22 @@ class cls_pilbox:
 #
    def process(self,byt):
 
-      if (byt & 0xE0) == 0x20 :
+      if (byt & 0xE0) == 0x20:
 #
 #        high byte, save it
 #
          self.__lasth__ = byt & 0xFF
+
 #
-#        send acknowledge
+#        send acknowledge only at 9600 baud connection
 #
-         b=bytearray(1)
-         b[0]= 0x0d
-         try:
-            self.__tty__.snd(b)
-         except Rs232Error as e:
-            raise PilBoxError("PIL-Box send frame error", e.value)
+         if self.__baudrate__ == 9600:
+            b=bytearray(1)
+            b[0]= 0x0d
+            try:
+               self.__tty__.snd(b)
+            except Rs232Error as e:
+               raise PilBoxError("PIL-Box send frame error", e.value)
       else:
 #
 #        low byte, build frame according to format
@@ -232,4 +236,4 @@ class cls_pilbox:
 #     get-/set-
 #
    def isRunning(self):
-      return(self.__running__) 
+      return(self.__running__)
