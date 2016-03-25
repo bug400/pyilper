@@ -48,6 +48,7 @@ Features
 * Support for the PIL-Box via serial-over-usb interface
 * Support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
 
+![pyilper](https://cdn.rawgit.com/bug400/pyilper/b5544a2/img/pyilper_terminal.png)
 
 Compatibility
 -------------
