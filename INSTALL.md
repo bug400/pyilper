@@ -83,7 +83,7 @@ the dialout group to access the device.
 
 On Windows the device is COMn. If you are uncertain, check the COM ports
 in the device manager. You have to install the FTDI driver first. See
-the [FTDI website][http://www.ftdichip.com/Drivers/VCP.htm] for details.
+the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
 MAC OS X 10.9 and above provide a FTDI driver by default. By experience you
 get better results if you use the original FTDI driver. See the installation
