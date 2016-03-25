@@ -81,7 +81,7 @@ Acknowledgements
 ----------------
 
 Much code was taken from ILPER 1.4.5 for Windows (Copyright (c) 2008-2013 
-J-F Garnier, Visual C++ version by Christoph Gießelink 2013. 
+J-F Garnier, Visual C++ version by Christoph Gießelink 2016. 
 The Terminal emulator widget was taken from pyqterm console widget 
-by Henning Schroeder. The virtual TCP/IP support of pyILPER was significant
+by Henning Schroeder. The virtual TCP/IP support of pyILPER was significantly
 improved by Christoph Gießelink.
