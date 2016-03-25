@@ -38,13 +38,13 @@ Features
 --------
 
 * Entirely written in Python3 using the QT GUI-Framework
-* Up to 5 virtual mass storage drives with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize).
-* Up to 3 virtual printers emulating the HP-71B and HP-41C character set
+* Up to 5 virtual mass storage drives with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize)
+* Up to 3 virtual printers emulating the HP-71B, HP-41C and ROMAN-8 character sets
 * Terminal emulator with keyboard support (HP-71B only)
 * HP-IL scope
-* Number of virtual devices is configurable
-* Log of scope or virtual printer output to file(s)
-* HP-IL device status
+* The number of virtual devices is configurable
+* The output of the scope or the virtual printer(s) is logged to file(s)
+* Monitoring the status of the virtual HP-IL devices
 * Support for the PIL-Box via serial-over-usb interface
 * Support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
 
@@ -80,8 +80,8 @@ pyILPER is published under the GNU General Public License v2.0 License
 Acknowledgements
 ----------------
 
-Much code was taken from ILPER 1.4.5 for Windows (Copyright (c) 2008-2013 
+Much code was taken from ILPER for Windows (Copyright (c) 2008-2013 
 J-F Garnier, Visual C++ version by Christoph Gießelink 2016. 
-The Terminal emulator widget was taken from pyqterm console widget 
+The terminal emulator code was taken from the pyqterm console widget 
 by Henning Schroeder. The virtual TCP/IP support of pyILPER was significantly
-improved by Christoph Gießelink.
+improved by Christoph Gießelink who also provided many other improvements.
