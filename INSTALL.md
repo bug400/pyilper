@@ -82,7 +82,12 @@ write access to the device. Some Linux distributions require membership of
 the dialout group to access the device.
 
 On Windows the device is COMn. If you are uncertain, check the COM ports
-in the device manager.
+in the device manager. You have to install the FTDI driver first. See
+the [FTDI website][http://www.ftdichip.com/Drivers/VCP.htm] for details.
+
+MAC OS X 10.9 and above provide a FTDI driver by default. By experience you
+get better results if you use the original FTDI driver. See the installation
+istructions for that driver how to install and how to disable the Apple driver.
 
 On Mac OS X the device name is usually /dev/tty.usbserial-FTDBIRU.
 
