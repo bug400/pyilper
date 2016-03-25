@@ -40,7 +40,7 @@ Features
 * Entirely written in Python3 using the QT GUI-Framework
 * Up to 5 virtual mass storage drives with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize)
 * Up to 3 virtual printers emulating the HP-71B, HP-41C and ROMAN-8 character sets
-* Terminal emulator with keyboard support (HP-71B only)
+* Terminal emulator with keyboard support (HP-71B only). Requires at least version 1.6 of the PIL-Box firmware
 * HP-IL scope
 * The number of virtual devices is configurable
 * The output of the scope or the virtual printer(s) is logged to file(s)
