@@ -112,6 +112,8 @@
 # 21.03.2016 jsi:
 # - refactored interface to HPTerm
 # - modified parameters of cls_ui
+# 27.03.2016 jsi:
+# - moved virtual HP-IL device status to utilities menu
 #
 import os
 import glob
@@ -1741,12 +1743,12 @@ class cls_ui(QtGui.QMainWindow):
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
       self.actionDevConfig=self.menuFile.addAction("Virtual HP-IL device configuration")
-      self.actionDevStatus=self.menuFile.addAction("Virtual HP-IL device status")
       self.actionReconnect=self.menuFile.addAction("Reconnect")
       self.actionExit=self.menuFile.addAction("Quit")
 
       self.actionInit=self.menuUtil.addAction("Initialize LIF image file")
       self.actionFix=self.menuUtil.addAction("Fix Header of LIF image file")
+      self.actionDevStatus=self.menuUtil.addAction("Virtual HP-IL device status")
       self.actionInstallCheck=self.menuUtil.addAction("Check LIFUTILS installation")
       if not self.lifutils_installed:
          self.actionInit.setEnabled(False)
