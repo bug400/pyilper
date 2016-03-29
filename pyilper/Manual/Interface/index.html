@@ -49,37 +49,37 @@
         <h2><a name="File Menu Entries">File Menu Entries</a></h2>
 
         <blockquote>
-          <h3><a name="pyILPER configuration">pyILPER configuration</a></h3>
-
-          <p>PIL-Box: check this button if pyILPER is connected to a
+          <h3><a name="pyILPER configuration">pyILPER configuration</a></h3> 
+          <p><b>PIL-Box checkbox</b></p>
+          <p>Check this box if pyILPER is connected to a
           PIL-Box via a serial device. The name and baud rate of the 
-          serial device are configured here. The default
-          device name is /dev/ttyUSB0 on LINUX and COM1 on Windows.
-          Note: the baud rate must match the hardware configuration of
+          serial device are configured here. See the setup section
+          of the <a href="https://github.com/bug400/pyilper/blob/master/INSTALL.md">installation guide</a> for details.</p>
+
+          </p><b>Note:</b> the baud rate must match the hardware configuration of
           the PIL-Box. See the PIL-Box documentation for details.</p>
 
-          <p>In order to use the virtual keyboard you have to check the
-          "Enable IDY frames" option. This option is only supported
-          with version 1.6 of the PIL-Box firmware. The option enables
-          the PIL-Box to transmit the IDY frames to pyILPER. This causes
-          an increase of traffic on the serial USB device. Use this 
-          option only if needed!.</p>
+          <p>The "Enable IDY frames" option enables the PIL-Box to transmit 
+          the IDY frames to pyILPER. This causes an increase of traffic on 
+          the serial USB device. Use this option only if you use the
+          virtual keyboard of the terminal emulator with the HP-71B.</p>
 
-          <p>TCP/IP: check this box to use 
-          virtual HP-IL over TCP/IP. The configuration parameters
-          are:</p>
+
+          <p><b>TCP/IP checkbox</b></p>
+          <p>Check this box to use virtual HP-IL over TCP/IP. The configuration 
+          parameters are:</p>
           <ul>
           <li>Port: the port to which the previous HP-IL device must connect</li>
           <li>Remote Host, remote Port: the host and the port of the next
           virtual HP-IL device in the loop.
           </ul>
 
-          <p>Configuration of the working directory: This is the location
-          of the log files for scope and the printer output (q.v.).
-          Default is the $HOME directory of the current user.</p>
+          <p><b>Configuration of the working directory</b></p>
+          <p>This is the location of the log files for scope and the printer output 
+          (q.v.). Default is the $HOME directory of the current user.</p>
 
-          <p>Configuration of the terminal, scope and printer display. You can
-          set the geometry (80x24, 80x40, 132x24) charactersxlines, the color
+          <p><b>Configuration of the terminal, scope and printer display</b></p>
+          <p>You can set the size (80x24, 80x40, 132x24), the color
           scheme (white, amber, green) and the font size. You have to restart
           the appication for take the changes to effect.</p>
 
@@ -91,7 +91,7 @@
           <li>0 to 3 virtual printers</li>
           <li>0 to 1 virtual terminal</li>
           </ul>
-          <p>Note: the scope tab can not be removed from the application. If
+          <p><b>Note:</b> the scope tab can not be removed from the application. If
           the number of devices was changed you have to restart the
           application for take the changes to effect.</p>
 
@@ -108,9 +108,6 @@
 
         <h2><a name="Utilities Menu Entries">Utilities Menu Entries</a></h2>
 
-        <p>Note: these menu entries are only accessible if the latest version
-        of the <a href="https://github.com/bug400/lifutils/releases">LIFUTILS</a>
-        are installed.</b>
 
         <blockquote>
           <h3><a name="Initialize LIF image file">Initialize LIF image file</a></h3>
@@ -120,8 +117,12 @@
           allows the initialization of media types which can not be created
           from the HP-71 by default.</p>
 
-          <p>Warning:</p>
-          <p>Do not initialize a LIF image file that is mounted to a virtual drive.</p>
+          <p><b>Warning:</b> do not initialize a LIF image file that is mounted 
+          to a virtual drive.</p>
+
+          <p><b>Note:</b> this menu entry is only accessible if the latest version
+          of the <a href="https://github.com/bug400/lifutils/releases">LIFUTILS</a>
+          are installed.</b>
 
           <h3><a name="Fix header of LIF image file">Fix header of LIF image file</a></h3>
 
@@ -130,9 +131,12 @@
           not contain valid medium size information. This menu entry fixes this
           information. Be careful to specify the proper medium type.</p>
 
-          <p>Warning:</p>
-          <p>Do not fix the header of a LIF image file that is mounted to a 
-          virtual drive.</p>
+          <p><b>Warning:</b> do not initialize a LIF image file that is mounted 
+          to a virtual drive.</p>
+
+          <p><b>Note:</b> this menu entry is only accessible if the latest version
+          of the <a href="https://github.com/bug400/lifutils/releases">LIFUTILS</a>
+          are installed.</b>
 
           <h3><a name="Virtual HP-IL device ststus">HP-IL device status</a></h3>
 
@@ -146,12 +150,12 @@
 
           <h3><a name="Check LIFUTILS installation">Check LIFUTILS installation</a></h3>
 
-          <p>Display diagnostic information about the verification if a valid
-          LIFUTILS version was found on the system.</p>
+          <p>Display diagnostic information if a valid LIFUTILS version was found 
+          on the system.</p>
 
         </blockquote>
 
-        <h2><a name="Help Menu Entries">Utilities Menu Entries</a></h2>
+        <h2><a name="Help Menu Entries">Help Menu Entries</a></h2>
 
         <blockquote>
           <h3><a name="About">About</a></h3>
