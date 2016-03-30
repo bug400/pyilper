@@ -74,17 +74,17 @@
 
     <tr>
       <td valign="middle" align="left" width="99%">
-        <h2>Controls</h2>
+        <h2>Device Controls</h2>
        <p>The drive tab has the following controls:</p>
         <blockquote>
         <ul>
-        <li>LIF image file button: Selects a disk file that contains the image
+        <li>LIF image file button: mount a disk file that contains the image
         of a LIF file. If a non existing file was specified the medium
         must be initialized by the controller. Note: the file is only
         opened by pyILPER during HP-IL read or write operations. </li>
 
         <li>Drive type combo box: Choose the proper drive type that shall be
-        emulated (see above). The LIF image file must be reopened, after the 
+        emulated (see above). The LIF image file must be reopened after the 
         drive type was changed.</li>
 
         <li>Device enabled check box: If checked, the virtual HP-IL drive is
@@ -99,18 +99,19 @@
     </tr>
     <tr>
       <td valign="middle" align="left" width="99%">
-        <h2>LIF image file management</h2>
-        <p>The <a href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
-        must be installed. At least version 1.7.5 is reqired. Otherwise the
-        file management controls are disabled.</p>
-        <p>If pyILPER detects a compatible version of LIFUTILS at launch the 
-        drive tab provides the following controls to perform
-        file management tasks on the LIF image file:</p>
+        <h2>File management controls</h2>
+
+        <p>If pyILPER detects a compatible version of  the
+        <a href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
+        (at least Version 1.7.5 is required) at launch the the drive tab enables 
+        the following controls:</p>
+
         <p>Tools drop down menu at the bottom of the tab:</p>
         <ul>
-        <li>Pack the LIF image file (very fast!)</li>
-        <li>Import a file from the local file system into the LIF image file</li>
-        <li>Label the LIF image file</li>
+        <li>Pack the mounted LIF image file (very fast!)</li>
+        <li>Import a file from the local file system into the mounted LIF 
+        image file</li>
+        <li>Label the mounted LIF image file</li>
         </ul>
         <p>File context menu (right mouse button click on selected file in the directory listing):</p>
         <ul>
@@ -123,13 +124,12 @@
         </ul>
         <p>Limitations:</p>
         <ul>
-        <li>The drive must be deactivated (Device enabled check box unchecked) in order
-        to use LIF image file management functions</li>
+        <li>To avoid data corruption The virtual drive must be deactivated (Device 
+        enabled check box unchecked) in order to use the file management functions</li>
         <li>The LIF image file management functions only support file names which 
-        contain
-        letters and digits. Unfortunately, the HP-41 IL-Module is less strict and 
-        file names may contain other characters. You should rename these files to 
-        proper LIF file names.</li>
+        contain letters and digits. Unfortunately, the HP-41 IL-Module is less strict 
+        and file names may contain other characters. You can rename these files 
+        to proper LIF file names.</li>
       </td>
     </tr>
 
