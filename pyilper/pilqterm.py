@@ -67,6 +67,10 @@
 # 22.03.2016 jsi:
 # - set blink on after updating cursor_rect
 # - use single shot timer for processing the terminal output queue
+# 29.03.2016 jsi:
+# - enable ALT keycodes 200-255
+# 31.03.2016 jsi:
+# - revert last change, keys > 128 are mapped to characters < 128
 
 import array
 import queue
@@ -238,7 +242,7 @@ class QTerminalWidget(QWidget):
               elif key== Qt.Key_I:
                  self._kbdfunc(72,True)
                  self._alt_sequence=False
-              elif key== Qt.Key_1 or key == Qt.Key_0:
+              elif key== Qt.Key_1 or key == Qt.Key_0 :
                  self._alt_seq_value+= key - Qt.Key_0
                  self._alt_seq_length+=1
               else:
@@ -249,7 +253,8 @@ class QTerminalWidget(QWidget):
                  self._alt_seq_value+= key - Qt.Key_0
                  self._alt_seq_length+=1
                  if self._alt_seq_length == 3:
-                    self._kbdfunc(self._alt_seq_value,False)
+                    if self._alt_seq_value <= 127:
+                       self._kbdfunc(self._alt_seq_value,False)
                     self._alt_sequence= False
               else:
                  self._alt_sequence= False
