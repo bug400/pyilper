@@ -67,6 +67,8 @@
 # - renmoved dead code
 # 22.02.2016 jsi
 # - modified call of cls_ui
+# 01.04.2016 jsi
+# - added copy function of PILIMAGE.DAT to the utility menu
 #
 import os
 import sys
@@ -74,6 +76,9 @@ import platform
 import signal
 import threading
 import traceback
+import shutil
+import pyilper
+import re
 from PyQt4 import QtCore, QtGui
 from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfig, PilConfigError, cls_ui,cls_tabscope, cls_PilBoxThread, cls_PilTcpIpThread, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, cls_tabprinter, cls_tabterminal, cls_tabdrive, cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_lifinit, cls_liffix, cls_installcheck
 
@@ -129,6 +134,7 @@ class cls_pyilper(QtCore.QObject):
       self.ui.actionExit.triggered.connect(self.do_Exit)
       self.ui.actionInit.triggered.connect(self.do_Init)
       self.ui.actionFix.triggered.connect(self.do_Fix)
+      self.ui.actionCopyPilimage.triggered.connect(self.do_CopyPilimage)
       self.ui.actionInstallCheck.triggered.connect(self.do_InstallCheck)
       self.ui.actionAbout.triggered.connect(self.do_About)
       self.ui.actionHelp.triggered.connect(self.do_Help)
@@ -445,6 +451,24 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_InstallCheck(self):
       cls_installcheck.exec()
+
+#
+#  callback copy PILIMAGE.DAT to working directory
+#
+   def do_CopyPilimage(self):
+
+      srcfile=os.path.join(os.path.dirname(pyilper.__file__),"lifimage","PILIMAGE.DAT")
+      srcfile= re.sub("//","/",srcfile,1)
+      dstpath=self.config.get(self.name,"workdir")
+      if os.access(os.path.join(dstpath,"PILIMAGE.DAT"),os.W_OK):
+         reply=QtGui.QMessageBox.warning(self.ui,'Warning',"File PILIMAGE.DAT already exists. Do you really want to overwrite that file?",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
+         if reply== QtGui.QMessageBox.Cancel:
+            return
+      try:
+         shutil.copy(srcfile,dstpath)
+      except OSError as e:
+         reply=QtGui.QMessageBox.critical(self.ui,'Error',"Cannot copy file: "+e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         return
 
 #
 #  callback show about window

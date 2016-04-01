@@ -42,31 +42,37 @@
         <p>The display supports all escape sequences which are
         specified on page 328 of the HP-71B reference manual.</p>
 
-        <h2>Requirements</h2>
+        <h2>Requirements and setup</h2>
+
+        <p>The <i>Enable IDY frames</i> option in the pyILPER configuration must 
+        be enabled. You need at least the firmware version 1.6 installed on the 
+        PIL-Box as well!</p>
 
         <p>To use the keyboard emulator you have to install the
         <i>keyboard</i> lex and the <i>pilterm</i> basic program first.
         Both files are provided in the LIF disk image file
         <i>PILIMAGE.DAT</i> which is part of the pyILPER package.<p>
 
-        <p><b>You need the firmware version 1.6 installed on the 
-        PIL-Box as well!</b></p>
 
-        <p>You must enable the <i>Enable IDY frames</i> option in the
-        pyILPER configuration.</p>
-
-        <p>Copy the disk image file to a local directory and select it as LIF
-        image file for a virtual drive. Copy both files to the HP-71B. 
-        Then run pyILPER. After the display has been reset
-        click into terminal window. Now you can enter characters that
-        are sent to the HP-71B as keyboard input.</p>
+        <p>The function <i>Copy PILIMAGE.DAT to workdir</i> in the
+        Utilities menu copies the file <i>PILIMAGE.DAT</i> from the pyILPER
+        software directory to the current pyILPER workking directory.
+        Mount <i>PILIMAGE.DAT</i> to a virtual drive and copy the 
+        <i>KEYBOARD</i> lexfile and the <i>PILTERM</i> basic program to the HP-71B.
 
        
         <h2>Use</h2>
 
+        <p>Enter <i>RUN PILTERM</i> from the HP-71B keyboard and make
+        the terminal tab of pyILPER visible. You should now see a blinking
+        cursor.  Click into terminal window. Now you can enter characters that
+        are sent to the HP-71B as keyboard input.</p>
+
         <p>If the keyboard hangs press the <i>ATTN</i> key twice at the HP-71 and
-        rerun <i>pilterm</i>. If you need to reconfigure the loop simply run
-        <i>pilterm</i> from the terminal window again.</p>
+        rerun the <i>PILTERM</i> program from the HP-71 keyboard.</p>
+
+        <p>If you need to reconfigure the loop simply run the <i>PILTERM</i> 
+        program from the terminal window again..</p>
 
         <p>The keyboard emulator uses the following function key mapping:</p>
 

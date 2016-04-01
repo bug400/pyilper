@@ -114,6 +114,8 @@
 # - modified parameters of cls_ui
 # 27.03.2016 jsi:
 # - moved virtual HP-IL device status to utilities menu
+# 01.04..2016 jsi:
+# - added copy function for PILIMAGE.DAT to the utlity menu
 #
 import os
 import glob
@@ -1749,6 +1751,7 @@ class cls_ui(QtGui.QMainWindow):
       self.actionInit=self.menuUtil.addAction("Initialize LIF image file")
       self.actionFix=self.menuUtil.addAction("Fix Header of LIF image file")
       self.actionDevStatus=self.menuUtil.addAction("Virtual HP-IL device status")
+      self.actionCopyPilimage=self.menuUtil.addAction("Copy PILIMAGE.DAT to workdir")
       self.actionInstallCheck=self.menuUtil.addAction("Check LIFUTILS installation")
       if not self.lifutils_installed:
          self.actionInit.setEnabled(False)
