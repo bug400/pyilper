@@ -1137,7 +1137,7 @@ class cls_AboutWindow(QtGui.QDialog):
       self.view = QtGui.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
-      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015 Joachim Siebold\n\nGNU General Public License Version 2\n")
+      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2016 Joachim Siebold\n\nGNU General Public License Version 2\n")
 
       self.button = QtGui.QPushButton('OK')
       self.button.setFixedWidth(60)

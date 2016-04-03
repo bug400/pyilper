@@ -69,6 +69,8 @@
 # - modified call of cls_ui
 # 01.04.2016 jsi
 # - added copy function of PILIMAGE.DAT to the utility menu
+# 03.04.2016 jsi
+# - 1.3.3 productio
 #
 import os
 import sys
@@ -85,7 +87,7 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.3.3 (Development)"       # pyILPR version number
+VERSION="1.3.3"       # pyILPR version number
 CONFIG_VERSION="1"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
