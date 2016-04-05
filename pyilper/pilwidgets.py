@@ -116,6 +116,8 @@
 # - moved virtual HP-IL device status to utilities menu
 # 01.04..2016 jsi:
 # - added copy function for PILIMAGE.DAT to the utlity menu
+# 05.04.2016 jsi:
+# - issue warinings about invalid LIF headers only when mounting those files, hint by cg
 #
 import os
 import glob
@@ -636,7 +638,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.pildevice.setactive(self.parent.config.get(self.name,"active"))
       did,aid= self.deviceinfo[self.drivetype]
       self.pildevice.setdevice(did,aid)
-      status, tracks, surfaces, blocks= self.lifMediumCheck(self.filename)
+      status, tracks, surfaces, blocks= self.lifMediumCheck(self.filename,True)
       if not status:
          self.filename=""
          self.parent.config.put(self.name,'filename',self.filename)
@@ -708,7 +710,7 @@ class cls_tabdrive(cls_tabgeneric):
       flist= self.get_lifFilename()
       if flist == None:
          return
-      status, tracks, surfaces, blocks= self.lifMediumCheck(flist[0])
+      status, tracks, surfaces, blocks= self.lifMediumCheck(flist[0],False)
       if status:
          self.filename=flist[0]
       else:
@@ -815,7 +817,7 @@ class cls_tabdrive(cls_tabgeneric):
 #  else:
 #     return False and default layout of device
 #
-   def lifMediumCheck(self,filename):
+   def lifMediumCheck(self,filename,quiet):
       defaultmedium= self.getDefaultMedium(self.drivetype)
       def_name, def_tracks, def_surfaces, def_blocks= self.mediainfo[defaultmedium]
       status, tracks, surfaces, blocks= self.getMediumInfo(filename)
@@ -824,10 +826,12 @@ class cls_tabdrive(cls_tabgeneric):
       elif status==1: # file dos not exist or cannot be opened
             return [True, def_tracks, def_surfaces, def_blocks]
       elif status==2:
-         reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"File does not contain a LIF type 1 medium.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         if not quiet:
+            reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"File does not contain a LIF type 1 medium.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return [False, def_tracks, def_surfaces, def_blocks]
       elif status==3:
-         reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout of current drive type.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         if not quiet:
+            reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout of current drive type.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return [True, def_tracks, def_surfaces, def_blocks]
 #
 # get media info from lif header
