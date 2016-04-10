@@ -41,6 +41,8 @@
 # - introduced device lock
 # 07.02.2016 jsi
 # - refactored and merged new Ildev base class of Christoph Giesselink
+# 09.02.2016 jsi
+# - clear device implemented
 #
 import threading
 from .pildevbase import cls_pildevbase
@@ -85,3 +87,11 @@ class cls_printer(cls_pildevbase):
       else:
          self.__fesc__= False
 
+#
+#  clear device: reset terminal via callback
+#
+   def __clear_device__(self):
+      super().__clear_device__()
+      if self.__callback__clear__ != None:
+         self.__callback__clear__()
+      return
