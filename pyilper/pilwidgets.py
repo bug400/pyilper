@@ -122,8 +122,10 @@
 # added 230400 baud to baudrate combo box
 # 12.04.2016 cg
 # get available Windows COM ports from registry
-# 14.03.2016 jsi
+# 14.04.2016 jsi
 # - corrected all files filter to * in the file dialog
+# 17.04.2016 jsi
+# - catch winreg access error if no COM port is available
 #
 import os
 import glob
@@ -1186,10 +1188,13 @@ class cls_TtyWindow(QtGui.QDialog):
 #
 #        Windows COM ports from registry
 #
-         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r"Hardware\DeviceMap\SerialComm",0,winreg.KEY_QUERY_VALUE|winreg.KEY_ENUMERATE_SUB_KEYS) as key:
-            for i in range (0, winreg.QueryInfoKey(key)[1]):
-               port = winreg.EnumValue(key, i)[1]
-               self.__ComboBox__.addItem( port, port )
+         try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r"Hardware\DeviceMap\SerialComm",0,winreg.KEY_QUERY_VALUE|winreg.KEY_ENUMERATE_SUB_KEYS) as key:
+               for i in range (0, winreg.QueryInfoKey(key)[1]):
+                  port = winreg.EnumValue(key, i)[1]
+                  self.__ComboBox__.addItem( port, port )
+         except FileNotFoundError:
+            pass
       elif platform.system()=="Linux":
 #
 #        Linux /dev/ttyUSB?
