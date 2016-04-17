@@ -25,8 +25,11 @@
 # - class statement syntax update
 # 08.02.2016 jsi:
 # - changed os detection to platform.system()
+# 14.04.2016 jsi
+# - use APPDATA environment variable for config directory on Windows
+# - use json to serialize program configuration
 
-import pickle
+import json
 import os
 import platform
 
@@ -60,7 +63,7 @@ class cls_userconfig:
 #
 #        Windows
 #
-         self.__configpath__=os.path.join(self.__userhome__,"Appdata","Roaming",progname)
+         self.__configpath__=os.path.join(os.environ['APPDATA'],progname)
       elif platform.system()=="Darwin":
 #
 #        Mac OS X
@@ -92,8 +95,10 @@ class cls_userconfig:
          return default
       try:
          f=None
-         f= open(self.__configfile__,"rb")
-         config= pickle.load(f)
+         f= open(self.__configfile__,"r")
+         config= json.load(f)
+      except json.JSONDecodeError as e:
+         raise ConfigError("Cannot encode configuration data")
       except OSError as e:
          raise ConfigError("Cannot read configuration file", e.strerror)
       finally:
@@ -107,8 +112,10 @@ class cls_userconfig:
    def write(self,config): 
       try:
          f= None
-         f= open(self.__configfile__,"wb")
-         pickle.dump(config,f,pickle.HIGHEST_PROTOCOL)
+         f= open(self.__configfile__,"w")
+         json.dump(config,f,sort_keys=True)
+      except json.JSONDecodeError as e:
+         raise ConfigError("Cannot decode configuration data")
       except OSError as e:
          raise ConfigError("Cannot write to configuration file", e.strerror)
       finally:
