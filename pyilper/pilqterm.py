@@ -71,6 +71,9 @@
 # - enable ALT keycodes 200-255
 # 31.03.2016 jsi:
 # - revert last change, keys > 128 are mapped to characters < 128
+# 17.04.2016 jsi:
+# - reduce keyboard rate for autorepeated function keys to prevent hang up:
+#   type: vers$[Return] and then press left arrow for three seconds
 
 import array
 import queue
@@ -309,6 +312,8 @@ class QTerminalWidget(QWidget):
               else:
                  pass
                 
+        if (event.isAutoRepeat() and not text) :
+           time.sleep(0.05)
         event.accept()
 #
 #   internal methods
