@@ -118,6 +118,12 @@
 # - added copy function for PILIMAGE.DAT to the utlity menu
 # 05.04.2016 jsi:
 # - issue warinings about invalid LIF headers only when mounting those files, hint by cg
+# 07.04.2016 cg
+# added 230400 baud to baudrate combo box
+# 12.04.2016 cg
+# get available Windows COM ports from registry
+# 14.03.2016 jsi
+# - corrected all files filter to * in the file dialog
 #
 import os
 import glob
@@ -125,6 +131,8 @@ import datetime
 import time
 import platform
 import re
+if platform.system()=="Windows":
+   import winreg
 import pyilper
 from PyQt4 import QtCore, QtGui, QtWebKit
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
@@ -805,7 +813,7 @@ class cls_tabdrive(cls_tabgeneric):
       dialog.setWindowTitle("Select LIF Image File")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-      dialog.setNameFilters( ["LIF Image File (*.dat *.DAT *.lif *.LIF)", "All Files (*.*)"] )
+      dialog.setNameFilters( ["LIF Image File (*.dat *.DAT *.lif *.LIF)", "All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       dialog.setDirectory(self.parent.config.get('pyilper','workdir'))
       if dialog.exec():
@@ -1176,11 +1184,12 @@ class cls_TtyWindow(QtGui.QDialog):
 
       if platform.system()=="Windows":
 #
-#        Windows COM1 .. COM4
+#        Windows COM ports from registry
 #
-         for i in range (1,5):
-            port="COM"+str(i)
-            self.__ComboBox__.addItem( port, port )
+         with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r"Hardware\DeviceMap\SerialComm",0,winreg.KEY_QUERY_VALUE|winreg.KEY_ENUMERATE_SUB_KEYS) as key:
+            for i in range (0, winreg.QueryInfoKey(key)[1]):
+               port = winreg.EnumValue(key, i)[1]
+               self.__ComboBox__.addItem( port, port )
       elif platform.system()=="Linux":
 #
 #        Linux /dev/ttyUSB?
@@ -1315,6 +1324,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.comboBaud=QtGui.QComboBox()
       self.comboBaud.addItem("9600")
       self.comboBaud.addItem("115200")
+      self.comboBaud.addItem("230400")
       self.comboBaud.setCurrentIndex(self.__baudrate__)
       self.hboxbaud.addWidget(self.comboBaud)
       self.hboxbaud.addStretch(1)

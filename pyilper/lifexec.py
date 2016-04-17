@@ -59,6 +59,8 @@
 # - open view outputfile as unicode
 # 13.03.2016 jsi
 # - modified exit of modal dialogs
+# 14.04.2016 jsi
+# - modified filter for all files to * in file dialog
 #
 import os
 import subprocess
@@ -410,7 +412,7 @@ class cls_lifexport (QtGui.QDialog):
       dialog.setWindowTitle("Select Output File")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-      dialog.setNameFilters( ["All Files (*.*)"] )
+      dialog.setNameFilters( ["All Files (*)"] )
       dialog.selectFile(self.liffilename.lower()+self.outputextension)
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       dialog.setDirectory(self.workdir)
@@ -582,7 +584,7 @@ class cls_lifimport (QtGui.QDialog):
       dialog.setWindowTitle("Select Input File")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
-      dialog.setNameFilters( ["All Files (*.*)"] )
+      dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       dialog.setDirectory(self.workdir)
       if dialog.exec():
@@ -880,7 +882,7 @@ class cls_lifview(QtGui.QDialog):
       dialog.setWindowTitle("Select Output File")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-      dialog.setNameFilters( ["All Files (*.*)"] )
+      dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       dialog.setDirectory(self.workdir)
       if dialog.exec():
@@ -1035,7 +1037,7 @@ class cls_lifinit (QtGui.QDialog):
       dialog.setWindowTitle("Select LIF Image File")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-      dialog.setNameFilters( ["All Files (*.*)"] )
+      dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       dialog.setDirectory(self.workdir)
       if dialog.exec():
@@ -1188,7 +1190,7 @@ class cls_liffix (QtGui.QDialog):
       dialog.setWindowTitle("Select LIF Image File")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
-      dialog.setNameFilters( ["All Files (*.*)"] )
+      dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       dialog.setDirectory(self.workdir)
       if dialog.exec():

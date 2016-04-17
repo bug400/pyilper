@@ -73,6 +73,10 @@
 # - 1.3.3 productio
 # 05.04.2016 jsi
 # - bump version number to 1.3.4 (Development)
+# 07.04.2016 cg
+# - added 230400 baud to supported baudrates
+# 14.04.2016 jsi
+# - store coordinate list of position in config instead of QPoint Object
 #
 import os
 import sys
@@ -90,7 +94,7 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 # Program constants --------------------------------------------------
 #
 VERSION="1.3.4 (Development)"       # pyILPR version number
-CONFIG_VERSION="1"    # Version number of pyILPER config file, must be string
+CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
@@ -98,8 +102,9 @@ MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
 USE8BITS= True        # use 8 bit data transfer to PIL-Box
 BAUD_9600=0
 BAUD_115200=1
+BAUD_230400=2
 
-BAUDRATES=[ 9600, 115200] # supported baud rates
+BAUDRATES=[ 9600, 115200, 230400] # supported baud rates
 
 #
 # Main application ------------------------------------------------------ 
@@ -221,7 +226,7 @@ class cls_pyilper(QtCore.QObject):
 #
       position=self.config.get(self.name,"position")
       if position !="":
-         self.ui.move(position)
+         self.ui.move(QtCore.QPoint(position[0],position[1]))
 #
 #  show and raise gui
 #
@@ -430,7 +435,7 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_Exit(self):
       self.disable()
-      position=self.ui.pos()
+      position=[self.ui.pos().x(),self.ui.pos().y()]
       try:
          self.config.put(self.name,"position",position)
          self.config.save()
