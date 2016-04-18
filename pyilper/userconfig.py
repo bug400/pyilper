@@ -28,6 +28,8 @@
 # 14.04.2016 jsi
 # - use APPDATA environment variable for config directory on Windows
 # - use json to serialize program configuration
+# 18.04.2016 jsi
+# - use pretty print json
 
 import json
 import os
@@ -113,7 +115,7 @@ class cls_userconfig:
       try:
          f= None
          f= open(self.__configfile__,"w")
-         json.dump(config,f,sort_keys=True)
+         json.dump(config,f,sort_keys=True,indent=3)
       except json.JSONDecodeError as e:
          raise ConfigError("Cannot decode configuration data")
       except OSError as e:
