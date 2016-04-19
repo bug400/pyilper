@@ -126,6 +126,8 @@
 # - corrected all files filter to * in the file dialog
 # 17.04.2016 jsi
 # - catch winreg access error if no COM port is available
+# 19.04.2016 jsi
+# - modified serial device filtering for MAC OS X
 #
 import os
 import glob
@@ -1203,10 +1205,10 @@ class cls_TtyWindow(QtGui.QDialog):
          for port in devlist:
             self.__ComboBox__.addItem( port, port )
 #
-#        Mac OS X /dev/*serial*
+#        Mac OS X /dev/tty.usbserial-*
 #
       elif platform.system()=="Darwin":
-         devlist=glob.glob("/dev/*FTD*")
+         devlist=glob.glob("/dev/tty.usbserial-*")
          for port in devlist:
             self.__ComboBox__.addItem( port, port )
 
