@@ -77,6 +77,10 @@
 # - added 230400 baud to supported baudrates
 # 14.04.2016 jsi
 # - store coordinate list of position in config instead of QPoint Object
+# - set config file version to 2
+# 21.04.2016 jsi
+# - development version uses other config file than the production version. This is
+#   controlled by the PRODUCTION constant
 #
 import os
 import sys
@@ -93,7 +97,8 @@ from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfi
 #
 # Program constants --------------------------------------------------
 #
-VERSION="1.3.4 (Development)"       # pyILPR version number
+PRODUCION= False      # Production/Development Version
+VERSION="1.3.4"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
@@ -105,6 +110,12 @@ BAUD_115200=1
 BAUD_230400=2
 
 BAUDRATES=[ 9600, 115200, 230400] # supported baud rates
+#
+# if Development Version append string to VERSION and "d" to config file name
+#
+if not PRODUCION:
+   VERSION=VERSION+" (Development)"
+   CONFIG_VERSION= CONFIG_VERSION+"d"
 
 #
 # Main application ------------------------------------------------------ 
