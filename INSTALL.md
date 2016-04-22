@@ -9,6 +9,7 @@ Index
 * [Setup](#setup)
 * [Operation](#operation)
 * [Installation without the ANACONDA platform](#installation-without-the-anaconda-platform)
+* [Installation of development versions](#installation-of-development-versions)
 
 General
 -------
@@ -128,3 +129,20 @@ directory and type:
      python3 setup.py install
 
 in a terminal window.
+
+Installation of development versions
+------------------------------------
+
+Download the pyilper-master.zip file from GitHub front page of pyILPER ("Download ZIP" button). Unzip this file to an arbitrary location of your file system.
+
+Now you can start the development version with:
+
+      python <Path to the pyilper-master directory>/start.py
+
+If you get the error message "This script requires Python 3.4 or newer!" use python3 instead.
+
+Note:
+* Development versions are work in progress and are only coarse tested. They may crash and may ruin your data at worst.
+* The development version does not affect the configuration of your production version because a different naming convention is used.
+
+To obtain more recent development versions of pyILPER download the pyilper-master.zip file again. If you are familiar with a git client you can synchronize a local pyilper-master directory with the remove GitHub repository.
