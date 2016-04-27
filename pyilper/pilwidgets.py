@@ -128,6 +128,10 @@
 # - catch winreg access error if no COM port is available
 # 19.04.2016 jsi
 # - modified serial device filtering for MAC OS X
+# 25.04.2016 jsi
+# - remove baudrate configuration
+# 27.04.2016 jsi
+# - do not set path for QFileDialog, it remembers the last directory automatically
 #
 import os
 import glob
@@ -819,7 +823,7 @@ class cls_tabdrive(cls_tabgeneric):
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
       dialog.setNameFilters( ["LIF Image File (*.dat *.DAT *.lif *.LIF)", "All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(self.parent.config.get('pyilper','workdir'))
+#     dialog.setDirectory(self.parent.config.get('pyilper','workdir'))
       if dialog.exec():
          return dialog.selectedFiles() 
 #
@@ -1267,11 +1271,10 @@ class cls_TtyWindow(QtGui.QDialog):
 
 class cls_PilConfigWindow(QtGui.QDialog):
 
-   def __init__(self, mode,tty, baudrate,idyframe, port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
+   def __init__(self, mode,tty, idyframe, port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
       super().__init__()
       self.__mode__= mode
       self.__tty__= tty
-      self.__baudrate__=baudrate
       self.__idyframe__= idyframe
       self.__port__= port
       self.__remotehost__= remotehost
@@ -1322,21 +1325,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.hboxtty.setAlignment(self.butTty,QtCore.Qt.AlignRight)
       self.vboxgbox.addLayout(self.hboxtty)
 #
-#     baud rate combo box
+#     idy frames
 #
-      self.hboxbaud= QtGui.QHBoxLayout()
-      self.lbltxt2=QtGui.QLabel("Baud rate ")
-      self.hboxbaud.addWidget(self.lbltxt2)
-      self.hboxbaud.setAlignment(self.lbltxt2,QtCore.Qt.AlignLeft)
-      self.comboBaud=QtGui.QComboBox()
-      self.comboBaud.addItem("9600")
-      self.comboBaud.addItem("115200")
-      self.comboBaud.addItem("230400")
-      self.comboBaud.setCurrentIndex(self.__baudrate__)
-      self.hboxbaud.addWidget(self.comboBaud)
-      self.hboxbaud.addStretch(1)
-      self.vboxgbox.addLayout(self.hboxbaud)
-
       self.cbIdyFrame= QtGui.QCheckBox('Enable IDY frames')
       self.cbIdyFrame.setChecked(self.__idyframe__)
       self.cbIdyFrame.setEnabled(True)
@@ -1453,7 +1443,6 @@ class cls_PilConfigWindow(QtGui.QDialog):
    def setCheckBoxes(self):
       if self.radbutPIL.isChecked():
          self.__mode__=0
-         self.comboBaud.setEnabled(True)
          self.butTty.setEnabled(True)
          self.edtPort.setEnabled(False)
          self.edtRemoteHost.setEnabled(False)
@@ -1461,7 +1450,6 @@ class cls_PilConfigWindow(QtGui.QDialog):
          self.cbIdyFrame.setEnabled(True)
       else:
          self.__mode__=1
-         self.comboBaud.setEnabled(False)
          self.butTty.setEnabled(False)
          self.edtPort.setEnabled(True)
          self.edtRemoteHost.setEnabled(True)
@@ -1480,7 +1468,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       dialog.setWindowTitle("Select pyILPER working directory")
       dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtGui.QFileDialog.DirectoryOnly)
-      dialog.setDirectory(os.path.expanduser('~'))
+#     dialog.setDirectory(os.path.expanduser('~'))
       if dialog.exec():
          return dialog.selectedFiles() 
 
@@ -1496,7 +1484,6 @@ class cls_PilConfigWindow(QtGui.QDialog):
 
 
    def do_ok(self):
-      self.__baudrate__= self.comboBaud.currentIndex()
       self.__port__= int(self.edtPort.text())
       self.__remotehost__= self.edtRemoteHost.text()
       self.__remoteport__= int(self.edtRemotePort.text())
@@ -1505,7 +1492,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__termsize__= self.comboRes.currentText()
       self.__colorscheme__= self.comboCol.currentText()
       self.__charsize__= self.spinCharsize.value()
-      self.__config__=[self.__mode__, self.__tty__,self.__baudrate__,self.__idyframe__, 
+      self.__config__=[self.__mode__, self.__tty__,self.__idyframe__, 
          self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__, self.__termsize__,self.__colorscheme__,self.__charsize__]
       super().accept()
 
@@ -1517,8 +1504,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
       return self.__config__
 
    @staticmethod
-   def getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
-      dialog= cls_PilConfigWindow(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize)
+   def getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
+      dialog= cls_PilConfigWindow(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize)
       dialog.resize(200,100)
       result= dialog.exec_()
       if result== QtGui.QDialog.Accepted:

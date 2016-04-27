@@ -49,6 +49,7 @@ class cls_PilBoxThread(QtCore.QThread):
       self.stop=QtCore.QMutex()
       self.pauseCond=QtCore.QWaitCondition()
       self.stoppedCond=QtCore.QWaitCondition()
+      self.baudrate= pilbox.getBaudRate()
       self.parent.emit_message("not connected to PIL-Box")
 
    def isRunning(self):
@@ -76,7 +77,7 @@ class cls_PilBoxThread(QtCore.QThread):
       self.pause= False
       self.cond.unlock()
       self.pauseCond.wakeAll()
-      self.parent.emit_message("connected to PIL-Box")
+      self.parent.emit_message("connected to PIL-Box at {:d} baud".format(self.baudrate))
 #
 #  finish thread
 #
@@ -100,7 +101,7 @@ class cls_PilBoxThread(QtCore.QThread):
    def run(self):
 #
       try:
-         self.parent.emit_message("connected to PIL-Box")
+         self.parent.emit_message("connected to PIL-Box at {:d} baud".format(self.baudrate))
 #
 #        Thread main loop    
 #

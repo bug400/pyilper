@@ -71,10 +71,12 @@
         <ul>
         <li>Support for 230400 baud. Requires PIL-Box firmware &gt 2.0.</li>
         <li>Change the configuration file format from binary to JSON. It is not compatible to the previous format. Please configure pyILPER again.</li>
-        <li>The device configuration dialog now detects the available COM ports on windows (contributed by Christoph Giesselink).</li>
+        <li>The device configuration dialog now detects the available COM ports on windows (contributed by Christoph Giesselink). The device detection on MAC OS X was impreoved.</li>
         <li>Device clear now resets the printer display.</li>
-        <li>The open file dialog now can list files without extension (bug).</li>
+        <li>The open file dialog now lists files without extension (bugfix) and remembers the last directory.</li>
         <li>On Windows the %APPDATA% path is used to store the pyILPER configuration.</li>
+        <li>The baud rate of the PIL-Box device is now auto detected (contributed by Christoph Giesselink)</li>
+        <li>The IDY frame processing option is now enabled by default.</li>
         </ul>
       </td>
     </tr>

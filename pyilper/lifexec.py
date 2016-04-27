@@ -61,6 +61,8 @@
 # - modified exit of modal dialogs
 # 14.04.2016 jsi
 # - modified filter for all files to * in file dialog
+# 27.04.2016 jsi
+# - do not set path for QFileDialog, it remembers the last dir automatically
 #
 import os
 import subprocess
@@ -415,7 +417,7 @@ class cls_lifexport (QtGui.QDialog):
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.selectFile(self.liffilename.lower()+self.outputextension)
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(self.workdir)
+#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #
@@ -586,7 +588,7 @@ class cls_lifimport (QtGui.QDialog):
       dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(self.workdir)
+#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 
@@ -884,7 +886,7 @@ class cls_lifview(QtGui.QDialog):
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(self.workdir)
+#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #
@@ -1039,7 +1041,7 @@ class cls_lifinit (QtGui.QDialog):
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(self.workdir)
+#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #
@@ -1192,7 +1194,7 @@ class cls_liffix (QtGui.QDialog):
       dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-      dialog.setDirectory(self.workdir)
+#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #

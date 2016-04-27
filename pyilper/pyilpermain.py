@@ -81,6 +81,11 @@
 # 21.04.2016 jsi
 # - development version uses other config file than the production version. This is
 #   controlled by the PRODUCTION constant
+# 26.04.2016 jsi
+# - IDY frame processing now enabled by default
+# - remove baudrate config parameter
+# - TypeError in open tty device now handled in pilbox.py
+# - show error if no serial device was configured.
 #
 import os
 import sys
@@ -105,11 +110,7 @@ STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
 MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
 USE8BITS= True        # use 8 bit data transfer to PIL-Box
-BAUD_9600=0
-BAUD_115200=1
-BAUD_230400=2
 
-BAUDRATES=[ 9600, 115200, 230400] # supported baud rates
 #
 # if Development Version append string to VERSION and "d" to config file name
 #
@@ -176,9 +177,8 @@ class cls_pyilper(QtCore.QObject):
          self.config.get(self.name,"active_tab",0)
          self.config.get(self.name,"tabconfig",[1,2,1,1])
          self.config.get(self.name,"tabconfigchanged",False)
-         self.config.get(self.name,"tty","/dev/ttyUSB0")
-         self.config.get(self.name,"baudrate",BAUD_115200)
-         self.config.get(self.name,"idyframe",False)
+         self.config.get(self.name,"tty","")
+         self.config.get(self.name,"idyframe",True)
          self.config.get(self.name,"port",60001)
          self.config.get(self.name,"remotehost","localhost")
          self.config.get(self.name,"remoteport",60000)
@@ -263,25 +263,24 @@ class cls_pyilper(QtCore.QObject):
       except OSError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',"Cannot change to working directory: "+e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return
-      except TypeError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',"Cannot change to working directory",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-         return
 #
 #     connect to HP-IL
 #
+
       if self.config.get(self.name,"mode")== MODE_PILBOX:
 #
-#        create PIL-Box object, connect to PIL-Box
+#        create PIL-Box object, connect to PIL-Box. Return if not configured
 #
+         if self.config.get(self.name,'tty') =="":
+            reply=QtGui.QMessageBox.critical(self.ui,'Error','Serial device not configured. Run pyILPER configuration from the file menu.',QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            return
+
          try:
-            self.commobject= cls_pilbox(self.config.get(self.name,'tty'),BAUDRATES[self.config.get(self.name,'baudrate')],self.config.get(self.name,'idyframe'),USE8BITS)
+            self.commobject= cls_pilbox(self.config.get(self.name,'tty'),self.config.get(self.name,'idyframe'),USE8BITS)
             self.commobject.open()
             self.commthread= cls_PilBoxThread(self.ui,self.commobject)
          except PilBoxError as e:
             reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-            return
-         except TypeError as e:
-            reply=QtGui.QMessageBox.critical(self.ui,'Error',"Cannot connect to PIL-Box: communication error",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
             return
       else:
 #
@@ -380,7 +379,6 @@ class cls_pyilper(QtCore.QObject):
    def do_pyilperConfig(self):
       mode=  self.config.get(self.name,"mode")
       tty= self.config.get(self.name,"tty")
-      baudrate= self.config.get(self.name,"baudrate")
       port= self.config.get(self.name,"port")
       idyframe= self.config.get(self.name,"idyframe")
       remotehost= self.config.get(self.name,"remotehost")
@@ -390,20 +388,19 @@ class cls_pyilper(QtCore.QObject):
       colorscheme= self.config.get(self.name,"colorscheme")
       terminalcharsize=self.config.get(self.name,"terminalcharsize")
       
-      config=cls_PilConfigWindow.getPilConfig(mode,tty,baudrate,idyframe,port,remotehost,remoteport,workdir,terminalsize,colorscheme,terminalcharsize)
+      config=cls_PilConfigWindow.getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,terminalsize,colorscheme,terminalcharsize)
       if config is None: 
          return
       self.config.put(self.name,"mode",config[0])
       self.config.put(self.name,"tty",config[1])
-      self.config.put(self.name,"baudrate",config[2])
-      self.config.put(self.name,"idyframe",config[3])
-      self.config.put(self.name,"port",config[4])
-      self.config.put(self.name,"remotehost",config[5])
-      self.config.put(self.name,"remoteport",config[6])
-      self.config.put(self.name,"workdir",config[7])
-      self.config.put(self.name,"terminalsize",config[8])
-      self.config.put(self.name,"colorscheme",config[9])
-      self.config.put(self.name,"terminalcharsize",config[10])
+      self.config.put(self.name,"idyframe",config[2])
+      self.config.put(self.name,"port",config[3])
+      self.config.put(self.name,"remotehost",config[4])
+      self.config.put(self.name,"remoteport",config[5])
+      self.config.put(self.name,"workdir",config[6])
+      self.config.put(self.name,"terminalsize",config[7])
+      self.config.put(self.name,"colorscheme",config[8])
+      self.config.put(self.name,"terminalcharsize",config[9])
       self.disable()
       try:
          self.config.save()
