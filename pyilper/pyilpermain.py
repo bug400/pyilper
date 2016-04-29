@@ -86,6 +86,8 @@
 # - remove baudrate config parameter
 # - TypeError in open tty device now handled in pilbox.py
 # - show error if no serial device was configured.
+# 28.04.2016 jsi
+# - call post_enable to register outbound scope device
 #
 import os
 import sys
@@ -300,6 +302,10 @@ class cls_pyilper(QtCore.QObject):
 #
       for obj in self.tabobjects:
          obj.enable()
+#
+#     register outbound scope
+#
+      self.tabobjects[0].post_enable()
 #
 #     start emulator thread
 #

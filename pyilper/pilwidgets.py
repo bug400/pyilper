@@ -132,6 +132,10 @@
 # - remove baudrate configuration
 # 27.04.2016 jsi
 # - do not set path for QFileDialog, it remembers the last directory automatically
+# 28.04.2016 jsi
+# - enable tabscope to log inbound, outbound and both traffic
+# 29.04.2016 jsi
+# - log scope unbuffered
 #
 import os
 import glob
@@ -159,6 +163,7 @@ from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cl
 #
 REFRESH_RATE=1000     # refresh rate for lif directory
 NOT_TALKER_SPAN=3     # time span for no talker acitvity of drives
+
 
 #
 # Logging check box
@@ -200,6 +205,20 @@ class LogCheckboxWidget(QtGui.QCheckBox):
          except OSError:
             pass
          self.log = None
+
+   def logFlush(self):
+      if self.log is None:
+         return
+      try:
+         self.log.flush()
+      except OSError as e:
+         reply=QtGui.QMessageBox.critical(self,'Error',"Cannot write to log file: "+ e.strerror+". Logging disabled",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         try:
+            self.log.close()
+         except OSError:
+            pass
+         self.log = None
+
 #
 # abstract class
 #
@@ -379,6 +398,11 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
 # tabscope widget ----------------------------------------------------
 #
+LOG_INBOUND=0
+LOG_OUTBOUND=1
+LOG_BOTH=2
+log_mode= ["Inbound", "Outbound", "Both"]
+
 class cls_tabscope(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
@@ -390,28 +414,73 @@ class cls_tabscope(cls_tabtermgeneric):
       self.cbShowIdy.stateChanged.connect(self.do_show_idy)
       self.hbox2.addWidget(self.cbShowIdy)
       self.hbox2.setAlignment(self.cbShowIdy,QtCore.Qt.AlignLeft)
+
+      self.logMode= parent.config.get(self.name,"logmode",LOG_INBOUND)
+      self.lbltxtc=QtGui.QLabel("Log mode ")
+      self.comboLogMode=QtGui.QComboBox()
+      for txt in log_mode:
+         self.comboLogMode.addItem(txt)
+         self.hbox2.addWidget(self.lbltxtc)
+         self.hbox2.addWidget(self.comboLogMode)
+      self.comboLogMode.activated[str].connect(self.do_changeLogMode)
+      self.comboLogMode.setCurrentIndex(self.logMode)
+      self.comboLogMode.setEnabled(True)
       self.hbox2.addStretch(1)
       self.scope_charpos=0
+      self.pildevice2= None
 
    def enable(self):
       super().enable()
-      self.pildevice= cls_scope()
+      self.pildevice= cls_scope(True)
       self.parent.commobject.register(self.pildevice)
-      self.pildevice.setactive(self.parent.config.get(self.name,"active"))
+      self.pildevice.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.pildevice.register_callback_output(self.out_scope)
       self.cbShowIdy.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
+
+   def post_enable(self):
+      self.pildevice2= cls_scope(False)
+      self.parent.commobject.register(self.pildevice2)
+      self.pildevice2.setactive(self.parent.config.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
+      self.pildevice2.register_callback_output(self.out_scope)
+      self.pildevice2.set_show_idy(self.showIdy)
 
    def disable(self):
       super().disable()
       self.cbShowIdy.setEnabled(False)
 
+   def do_changeLogMode(self,text):
+      self.logMode=self.comboLogMode.findText(text)
+      self.parent.config.put(self.name,'logmode',self.logMode)
+      self.pildevice.setlocked(True)
+      self.pildevice.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.setlocked(False)
+      self.pildevice2.setlocked(True)
+      self.pildevice2.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
+      self.pildevice2.setlocked(False)
+
+   def do_cbActive(self):
+      self.active= self.cbActive.isChecked()
+      self.parent.config.put(self.name,"active",self.active)
+      self.pildevice.setlocked(True)
+      self.pildevice.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.setlocked(False)
+      self.pildevice2.setlocked(True)
+      self.pildevice2.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
+      self.pildevice2.setlocked(False)
+
+      try:
+         self.toggle_active()
+      except AttributeError:
+         pass
+      return
 
    def do_show_idy(self):
       self.cbShowIdy.setEnabled(False)
       self.showIdy= self.cbShowIdy.isChecked()
       self.parent.config.put(self.name,"showidy",self.showIdy)
       self.pildevice.set_show_idy(self.showIdy)
+      self.pildevice2.set_show_idy(self.showIdy)
       self.cbShowIdy.setEnabled(True)
 #
 #  callback output char to console
@@ -424,10 +493,12 @@ class cls_tabscope(cls_tabtermgeneric):
          self.hpterm.putchar("\x0D")
          self.hpterm.putchar("\x0A")
          self.cbLogging.logWrite("\n")
+         self.cbLogging.logFlush()
          self.scope_charpos=0
       for i in range(0,len(s)-1):
          self.hpterm.putchar(s[i])
       self.cbLogging.logWrite(s)
+      self.cbLogging.logFlush()
 #
 # tabprinter widget ------------------------------------------------------
 #

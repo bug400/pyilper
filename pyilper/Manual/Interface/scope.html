@@ -48,9 +48,14 @@
         "scope.txt" in the pyILPR working directory. Output is always appended to
         that file. A time stamp in the file marks the start and the
         end of each logging. The log file is closed automatically on
-        program termination.</li>
+        program termination. The scope log file is written unbuffered.</li>
         <li>Show IDY frames: Activates the output of IDY frames. This option is only
         useful, if firmware version 1.6 is installed on the PIL-Box.</li>
+        <li>Log mode combobox: selects if inbound traffic (uppercase letters), 
+        outbound traffic (lowercase letters) or inbound/outbound traffic is logged. 
+        Inbound traffic shows the HP-IL frames before they are processed by the 
+        pyILPER virtual devices.  Outbound traffic shows the frames after being 
+        processed by the pyILPER virtual devices.</li>
         </ul>
         </blockquote>
       </td>

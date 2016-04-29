@@ -34,14 +34,17 @@
 # - introduced device lock
 # 07.02.2016 jsi
 # - refactored and merged new Ildev base class of Christoph Giesselink
+# 28.04.2016 jsi:
+# - introduced inbound parameter, if True use uppercase letters if False use loweercase
 
 from .pildevbase import cls_pildevbase
 
 
 class cls_scope(cls_pildevbase):
 
-   def __init__ (self):
+   def __init__ (self, inbound):
       super().__init__()
+      self.__inbound__= inbound
       self.__mnemo__= ["DAB", "DSR", "END", "ESR", "CMD", "RDY", "IDY", "ISR"]
       self.__scmd0__= ["NUL", "GTL", "???", "???", "SDC", "PPD", "???", "???",
                     "GET", "???", "???", "???", "???", "???", "???", "ELN",
@@ -145,6 +148,8 @@ class cls_scope(cls_pildevbase):
                   s = "RDY {:2X}".format(n)
 
       s= s.ljust(8)
+      if not self.__inbound__:
+         s= s.lower()
       if self.__callback_output__ != None:
          self.__access_lock__.acquire()
          locked= self.__islocked__
