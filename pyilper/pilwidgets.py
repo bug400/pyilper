@@ -148,7 +148,7 @@ if platform.system()=="Windows":
 import pyilper
 from PyQt4 import QtCore, QtGui, QtWebKit
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
-from .pilqterm import QTerminalWidget,HPTerminal
+from .pilqterm import QScrolledTerminalWidget,HPTerminal
 from .pilscope import cls_scope
 from .pilprinter import cls_printer
 from .pilterminal import cls_terminal
@@ -261,19 +261,6 @@ class cls_tabgeneric(QtGui.QWidget):
          pass
       return
 
-   def __set_termconfig__(self,rows,cols):
-      if platform.system()=="Linux":
-         self.font_name="Monospace"
-      else:
-         self.font_name="Courier New"
-
-      font = QtGui.QFont(self.font_name)
-      font.setPixelSize(self.font_size)
-      metrics= QtGui.QFontMetrics(font)
-      self.font_width=metrics.width("A")
-      self.font_height=metrics.height()
-      self.width= self.font_width*cols
-      self.height= int(self.font_height* rows)
 
 #
 # generic terminal widget ----------------------------------------------------
@@ -304,8 +291,14 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
 #     Build GUI 
 #
-      super().__set_termconfig__(self.rows,self.cols)
-      self.qterminal=QTerminalWidget(None,self.font_name, self.font_size, self.width, self.height,self.colorscheme)
+      if platform.system()=="Linux":
+         self.font_name="Monospace"
+      else:
+         self.font_name="Courier New"
+      self.factor=10
+
+      self.qterminal=QScrolledTerminalWidget(self,self.font_name, self.font_size, self.cols, self.rows,self.colorscheme)
+
       self.hbox1= QtGui.QHBoxLayout()
       self.hbox1.addWidget(self.qterminal)
       self.hbox1.setAlignment(self.qterminal,QtCore.Qt.AlignHCenter)
@@ -329,7 +322,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.vbox.addLayout(self.hbox1)
       self.vbox.addLayout(self.hbox2)
       self.setLayout(self.vbox)
-      self.hpterm=HPTerminal(self.cols,self.rows,self.qterminal)
+      self.hpterm=HPTerminal(self.cols,self.rows,self.factor,self.qterminal)
 #
 #     initialize logging checkbox
 #

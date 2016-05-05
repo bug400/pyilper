@@ -74,6 +74,8 @@
 # 17.04.2016 jsi:
 # - reduce keyboard rate for autorepeated function keys to prevent hang up:
 #   type: vers$[Return] and then press left arrow for three seconds
+# 05.05.2016 jsi:
+# - introduced new Object class for scrollable terminal widget
 
 import array
 import queue
@@ -83,7 +85,8 @@ import time
 from PyQt4.QtCore import QRect, Qt, pyqtSignal, QTimer, QSize, QPoint
 from PyQt4.QtGui import (
     QApplication, QClipboard, QWidget, QPainter, QFont, QBrush, QColor, QPolygon,
-    QPen, QPixmap, QImage, QContextMenuEvent, QTransform)
+    QPen, QPixmap, QImage, QContextMenuEvent, QTransform, QHBoxLayout, QScrollBar,
+    QFontMetrics)
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 
 
@@ -92,6 +95,49 @@ CURSOR_INSERT=1
 CURSOR_OVERWRITE=2
 UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
 CURSOR_BLINK=500 / UPDATE_TIMER # 500 ms cursor blink rate
+
+class QScrolledTerminalWidget(QWidget):
+
+    def __init__(self,parent, font_name, font_size, cols, rows, colorscheme):
+        super().__init__(parent)
+        self.callback_scrollbar= None
+#
+#       determine font metrics and terminal window size in pixel
+#
+        font= QFont(font_name)
+        font.setPixelSize(font_size)
+        metrics= QFontMetrics(font)
+        font_width=metrics.width("A")
+        font_height=metrics.height()
+        width= font_width*cols
+        height= int(font_height* rows)
+#
+#       create terminal window and scrollbar
+#
+        self.hbox= QHBoxLayout()
+        self.terminalwidget= QTerminalWidget(self,font_name,font_size,font_height, width,height, colorscheme)
+        self.hbox.addWidget(self.terminalwidget)
+        self.hbox.setAlignment(self.terminalwidget,Qt.AlignLeft)
+        self.scrollbar= QScrollBar()
+        self.hbox.addWidget(self.scrollbar)
+        self.hbox.setAlignment(self.scrollbar,Qt.AlignLeft)
+        self.setLayout(self.hbox)
+#
+#       initialize scrollbar
+#
+        self.scrollbar.valueChanged.connect(self.do_scrollbar)
+        self.scrollbar.setEnabled(False)
+#
+#   scrollbar value changed action
+#
+    def do_scrollbar(self):
+       self.callback_scrollbar(self.scrollbar.value())
+#
+#   register callback for scrolling
+#
+    def register_callback_scrollbar(self,func):
+        self.callback_scrollbar=func
+        self.scrollbar.setEnabled(True)
 
 class QTerminalWidget(QWidget):
 
@@ -136,7 +182,7 @@ class QTerminalWidget(QWidget):
     }
 
 
-    def __init__(self,parent, font_name, font_size, w,h, colorscheme):
+    def __init__(self,parent, font_name, font_size, font_height, w,h, colorscheme):
         super().__init__(parent)
         self.setFocusPolicy(Qt.WheelFocus)
         self.setAutoFillBackground(False)
@@ -326,7 +372,7 @@ class QTerminalWidget(QWidget):
 #  update cursor position
 #
     def _update_cursor_rect(self):
-        if self._cursortype== CURSOR_OFF:
+        if self._cursortype== CURSOR_OFF or (self._cursor_col== -1 and self._cursor_row==-1):
            return
         cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
         self._transform.reset()
@@ -344,7 +390,7 @@ class QTerminalWidget(QWidget):
 #   paint cursor
 #
     def _paint_cursor(self, painter):
-        if self._cursortype== CURSOR_OFF:
+        if self._cursortype== CURSOR_OFF or (self._cursor_col== -1 and self._cursor_row==-1):
            return
 #
 #       cursor position was updated initialize some variables
@@ -444,7 +490,7 @@ class QTerminalWidget(QWidget):
     def setCursorType(self,t):
         self._cursortype=t
 
-#
+#:
 #   get terminal memory and cursor information
 #    
     def update_term(self,dump):
@@ -452,12 +498,16 @@ class QTerminalWidget(QWidget):
         self._update_cursor_rect()
         self._dirty = True
 
+    def setDirty(self):
+        self._dirty= True
+
 
 class HPTerminal:
 
-    def __init__(self, w, h, win):
+    def __init__(self, w, h, factor,win):
         self.w = w
-        self.h = h
+        self.h = h * factor
+        self.actual_h=0
         self.termqueue= queue.Queue()
         self.termqueue_lock= threading.Lock()
         self.fesc= False
@@ -467,9 +517,13 @@ class HPTerminal:
         self.UpdateTimer.setSingleShot(True)
         self.UpdateTimer.timeout.connect(self.process_queue)
         self.win=win
+        self.view_h= h
+        self.view_y0=0
+        self.view_y1=self.view_h-1
         self.charset=CHARSET_HP71
         self.update_win= False
         self.reset_hard()
+        self.win.register_callback_scrollbar(self.scroll_to)
         self.UpdateTimer.start(UPDATE_TIMER)
 #
 #   Reset functions
@@ -487,8 +541,6 @@ class HPTerminal:
     def reset_soft(self):
         self.attr = 0x00000000
         # Scroll parameters
-        self.scroll_area_y0 = 0
-        self.scroll_area_y1 = self.h
         # Modes
         self.insert = False
         self.movecursor=0
@@ -498,12 +550,20 @@ class HPTerminal:
         self.screen = array.array('i', [self.attr | 0x20] * self.w * self.h)
         self.linelength= array.array('i', [0] * self.h)
         # Scroll parameters
-        self.scroll_area_y0 = 0
-        self.scroll_area_y1 = self.h
+        self.view_y0=0
+        self.view_y1= self.view_h-1
+
         # Cursor position
         self.cx = 0
         self.cy = 0
         self.movecursor=0
+
+        # Number of lines and scroll bar
+        self.actual_h=0
+        self.win.scrollbar.setMinimum(0)
+        self.win.scrollbar.setMaximum(0)
+        self.win.scrollbar.setSingleStep(1)
+        self.win.scrollbar.setPageStep(self.view_h)
 #
 #   Low-level terminal functions
 #
@@ -534,7 +594,7 @@ class HPTerminal:
         if x < self.w:
             # scroll up needed?
             if self.linelength[y] > self.w and y== self.h-1:
-               self.scroll_area_up(self.scroll_area_y0, self.scroll_area_y1)
+               self.scroll_area_up(0, self.h)
                y=y-1
                self.cy=self.cy-1
                self.linelength[y+1]=-1
@@ -543,6 +603,9 @@ class HPTerminal:
             if self.linelength[y] > self.w:
                self.poke(y+1,1,self.peek(y+1, 0, y + 2, self.w))
                self.poke(y+1,0,self.peek(y,self.w-1,y+1,self.w))
+               if self.linelength[y] == self.w+1:
+                  self.scroll_view_down()
+                  self.update_size(1)
             self.poke(y, x + 1, self.peek(y, x, y + 1, self.w - 1))
             self.clear(y, x, y + 1, x + 1)
 
@@ -556,7 +619,40 @@ class HPTerminal:
                self.poke(y+1, 0, self.peek(y+1, 1, y + 2, self.w))
                if self.linelength[y]== self.w+1:
                   self.linelength[y+1]=0
+                  self.scroll_view_up()
+                  self.update_size(-1)
             self.linelength[y]-=1
+#
+#   View functions, scroll up and down
+#
+    def scroll_view_down(self):
+       if self.view_y1< self.cy:
+          self.view_y0+=1
+          self.view_y1+=1
+
+    def scroll_view_up(self):
+       if self.view_y0 >0:
+          self.view_y0-=1
+          self.view_y1-=1
+
+    def update_size(self,n):
+        if n > 0:
+           if self.actual_h < self.h:
+              self.actual_h=self.actual_h+1
+        else:
+           if self.actual_h > 0:
+              self.actual_h=self.actual_h-1
+        if self.actual_h < self.view_h:
+           self.win.scrollbar.setMaximum(0)
+        else:
+           self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
+           self.win.scrollbar.setValue(self.actual_h)
+
+
+    def scroll_view_to_bottom(self):
+       self.win.scrollbar.setValue(self.win.scrollbar.maximum())
+       return
+       
 #
 #   Cursor functions
 #
@@ -578,11 +674,11 @@ class HPTerminal:
             lx += 1
         return wx, lx
 
-    def cursor_up(self, n=1):
-        self.cy = max(self.scroll_area_y0, self.cy - n)
+    def cursor_up(self):
+        self.cy = max(0, self.cy - 1)
 
-    def cursor_down(self, n=1):
-        self.cy = min(self.scroll_area_y1 - 1, self.cy + n)
+    def cursor_down(self):
+        self.cy = min(self.h - 1, self.cy + 1)
 
     def cursor_left(self):
         self.cx= self.cx -1
@@ -598,8 +694,10 @@ class HPTerminal:
         if self.cx == self.w:
            self.cx=0
            self.cy= self.cy+1
+           if self.cy- self.view_y0 >= self.view_h:
+              self.scroll_view_down()
            if self.cy == self.h:
-              self.scroll_area_up(self.scroll_area_y0, self.scroll_area_y1)
+              self.scroll_area_up(0, self.h)
               self.cy=self.cy-1
               self.linelength[self.cy]=-1
 
@@ -640,10 +738,14 @@ class HPTerminal:
         self.cursor_set(cy, cx)
 
     def ctrl_LF(self):
-        if self.cy == self.scroll_area_y1 - 1:
-            self.scroll_area_up(self.scroll_area_y0, self.scroll_area_y1)
+        if self.cy == self.h - 1:
+            self.scroll_area_up(0, self.h)
         else:
-            self.cursor_down()
+            self.cy+=1
+            if self.cy >= self.actual_h:
+               self.update_size(1)
+            if self.cy - self.view_y0 >= self.view_h:
+               self.scroll_view_down()
 
     def ctrl_CR(self):
         self.cursor_set_x(0)
@@ -673,7 +775,7 @@ class HPTerminal:
         cursor_char=0x20
         cursor_attr= -1
         cx, cy = min(self.cx, self.w - 1), self.cy
-        for y in range(0, self.h):
+        for y in range(self.view_y0, self.view_y1+1):
             wx = 0
             line = [""]
             for x in range(0, self.w):
@@ -697,6 +799,12 @@ class HPTerminal:
                     line[-1] += chr(char)
             screen.append(line)
 
+        if cy >= self.view_y0 and cy <= self.view_y1:
+           cy= cy- self.view_y0
+        else:
+           cy= -1
+           cx= -1
+
         return (cx, cy, cursor_char, cursor_attr), screen
 #
 #   process terminal output queue and refresh display
@@ -716,9 +824,9 @@ class HPTerminal:
           for c in items:
              self.process(c)
           if self.update_win:
-             self.win.update_term(self.dump)
+             self.win.terminalwidget.update_term(self.dump)
        if self.update_win:
-          self.win.update() # fire the paintEvent always to update cursor blink
+          self.win.terminalwidget.update() # fire the paintEvent always to update cursor blink
        self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
@@ -743,9 +851,9 @@ class HPTerminal:
           elif t== 68: # cursor left (ESC D)
              self.cursor_left()
           elif t== 65: # cursor up (ESC A)
-             self.cursor_up(1)
+             self.cursor_up()
           elif t== 66: # cursor down (ESC B)
-             self.cursor_down(1)
+             self.cursor_down()
           elif t== 72: # move cursor to home position (ESC H)
              self.cursor_set(0,0)
           elif t== 74: # erase from cursor to end of screen (ESC J)
@@ -754,11 +862,11 @@ class HPTerminal:
              self.clear(self.cy,self.cx,self.cy+1,self.w)
           elif t== 62: # Cursor on (ESC >)
              if self.insert:
-                self.win.setCursorType(CURSOR_INSERT)
+                self.win.terminalwidget.setCursorType(CURSOR_INSERT)
              else:
-                self.win.setCursorType(CURSOR_OVERWRITE)
+                self.win.terminalwidget.setCursorType(CURSOR_OVERWRITE)
           elif t== 60: # Cursor off (ESC <)
-             self.win.setCursorType(CURSOR_OFF)
+             self.win.terminalwidget.setCursorType(CURSOR_OFF)
           elif t== 69: # Reset (ESC E)
              self.reset_soft()
              self.reset_screen()
@@ -767,14 +875,18 @@ class HPTerminal:
           elif t== 79: # Clear Character with wrap back (ESC O)
              self.scroll_line_left(self.cy, self.cx)
           elif t== 81: # switch to insert cursor (ESC Q)
-             self.win.setCursorType(CURSOR_INSERT)
+             self.win.terminalwidget.setCursorType(CURSOR_INSERT)
              self.insert = True
           elif t== 78: # swicht to insert cursor and insert mode (ESC N)
              self.insert = True
-             self.win.setCursorType(CURSOR_INSERT)
+             self.win.terminalwidget.setCursorType(CURSOR_INSERT)
           elif t== 82: # switch to replace cursor and replace mode (ESC R)
              self.insert = False
-             self.win.setCursorType(CURSOR_OVERWRITE)
+             self.win.terminalwidget.setCursorType(CURSOR_OVERWRITE)
+          elif t== 83: # roll up (ESC S)
+             self.scroll_view_up()
+          elif t== 84: # roll down (ESC T)
+             self.scroll_view_down()
           elif t== 101: # reset hard (ESC e)
              self.reset_hard()
           elif t== 3:  # move cursor far right (ESC Ctrl c)
@@ -808,6 +920,7 @@ class HPTerminal:
 #     single character processing
 # 
           else:
+             self.scroll_view_to_bottom()
              if t == 0xD:      # CR
                 self.ctrl_CR()
              elif t == 0xA:    # LF
@@ -837,7 +950,7 @@ class HPTerminal:
 #   register keyboard function
 #
     def set_kbdfunc(self,func):
-       self.win.setkbdfunc(func)
+       self.win.terminalwidget.setkbdfunc(func)
 #
 #   put character into terminal output buffer
 # 
@@ -858,9 +971,16 @@ class HPTerminal:
 #
     def becomes_visible(self):
        self.update_win=True
-       self.win.update_term(self.dump)
+       self.win.terminalwidget.update_term(self.dump)
 #
 #    becomes_invisible(self):
 #
     def becomes_invisible(self):
        self.update_win=False
+#
+#    callback for scrollbar
+#
+    def scroll_to(self,value):
+       self.view_y0= value
+       self.view_y1= value + self.view_h-1
+       self.win.terminalwidget.update_term(self.dump)
