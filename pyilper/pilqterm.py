@@ -504,9 +504,9 @@ class QTerminalWidget(QWidget):
 
 class HPTerminal:
 
-    def __init__(self, w, h, factor,win):
+    def __init__(self, w, h, scrollupbuffersize,win):
         self.w = w
-        self.h = h * factor
+        self.h = scrollupbuffersize
         self.actual_h=0
         self.termqueue= queue.Queue()
         self.termqueue_lock= threading.Lock()

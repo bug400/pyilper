@@ -190,6 +190,7 @@ class cls_pyilper(QtCore.QObject):
          self.config.get(self.name,"terminalsize","80x24")
          self.config.get(self.name,"colorscheme","white")
          self.config.get(self.name,"terminalcharsize",15)
+         self.config.get(self.name,"scrollupbuffersize",1000)
          self.config.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
@@ -391,10 +392,11 @@ class cls_pyilper(QtCore.QObject):
       remoteport= self.config.get(self.name,"remoteport")
       workdir=  self.config.get(self.name,"workdir")
       terminalsize= self.config.get(self.name,"terminalsize")
+      scrollupbuffersize= self.config.get(self.name,"scrollupbuffersize")
       colorscheme= self.config.get(self.name,"colorscheme")
       terminalcharsize=self.config.get(self.name,"terminalcharsize")
       
-      config=cls_PilConfigWindow.getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,terminalsize,colorscheme,terminalcharsize)
+      config=cls_PilConfigWindow.getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,terminalsize,scrollupbuffersize,colorscheme,terminalcharsize)
       if config is None: 
          return
       self.config.put(self.name,"mode",config[0])
@@ -405,8 +407,9 @@ class cls_pyilper(QtCore.QObject):
       self.config.put(self.name,"remoteport",config[5])
       self.config.put(self.name,"workdir",config[6])
       self.config.put(self.name,"terminalsize",config[7])
-      self.config.put(self.name,"colorscheme",config[8])
-      self.config.put(self.name,"terminalcharsize",config[9])
+      self.config.put(self.name,"scrollupbuffersize",config[8])
+      self.config.put(self.name,"colorscheme",config[9])
+      self.config.put(self.name,"terminalcharsize",config[10])
       self.disable()
       try:
          self.config.save()

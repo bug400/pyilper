@@ -295,7 +295,9 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.font_name="Monospace"
       else:
          self.font_name="Courier New"
-      self.factor=10
+      self.scrollupbuffersize=parent.config.get("pyilper","scrollupbuffersize")
+      if self.scrollupbuffersize < self.rows:
+         self.scrollupbuffersize= self.rows
 
       self.qterminal=QScrolledTerminalWidget(self,self.font_name, self.font_size, self.cols, self.rows,self.colorscheme)
 
@@ -322,7 +324,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.vbox.addLayout(self.hbox1)
       self.vbox.addLayout(self.hbox2)
       self.setLayout(self.vbox)
-      self.hpterm=HPTerminal(self.cols,self.rows,self.factor,self.qterminal)
+      self.hpterm=HPTerminal(self.cols,self.rows,self.scrollupbuffersize,self.qterminal)
 #
 #     initialize logging checkbox
 #
@@ -1335,7 +1337,7 @@ class cls_TtyWindow(QtGui.QDialog):
 
 class cls_PilConfigWindow(QtGui.QDialog):
 
-   def __init__(self, mode,tty, idyframe, port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
+   def __init__(self, mode,tty, idyframe, port,remotehost,remoteport,workdir,termsize,scrollupbuffersize,colorscheme,charsize):
       super().__init__()
       self.__mode__= mode
       self.__tty__= tty
@@ -1345,6 +1347,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__remoteport__= remoteport
       self.__workdir__= workdir
       self.__termsize__= termsize
+      self.__scrollupbuffersize__= scrollupbuffersize
       self.__colorscheme__= colorscheme
       self.__charsize__= charsize
       self.__config__= None
@@ -1465,8 +1468,9 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.gridt= QtGui.QGridLayout()
       self.gridt.setSpacing(3)
       self.gridt.addWidget(QtGui.QLabel("Termial size"),1,0)
-      self.gridt.addWidget(QtGui.QLabel("Color Scheme"),2,0)
-      self.gridt.addWidget(QtGui.QLabel("Font Size"),3,0)
+      self.gridt.addWidget(QtGui.QLabel("Scroll up buffer size"),2,0)
+      self.gridt.addWidget(QtGui.QLabel("Color Scheme"),3,0)
+      self.gridt.addWidget(QtGui.QLabel("Font Size"),4,0)
 
       self.comboRes=QtGui.QComboBox()
       self.comboRes.addItem("80x24")
@@ -1475,18 +1479,24 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.gridt.addWidget(self.comboRes,1,1)
       self.comboRes.setCurrentIndex(self.comboRes.findText(self.__termsize__))
 
+      self.spinScrollBufferSize=QtGui.QSpinBox()
+      self.spinScrollBufferSize.setMinimum(0)
+      self.spinScrollBufferSize.setMaximum(9999)
+      self.spinScrollBufferSize.setValue(self.__scrollupbuffersize__)
+      self.gridt.addWidget(self.spinScrollBufferSize,2,1)
+
       self.comboCol=QtGui.QComboBox()
       self.comboCol.addItem("white")
       self.comboCol.addItem("amber")
       self.comboCol.addItem("green") 
-      self.gridt.addWidget(self.comboCol,2,1)
+      self.gridt.addWidget(self.comboCol,3,1)
       self.comboCol.setCurrentIndex(self.comboCol.findText(self.__colorscheme__))
 
       self.spinCharsize=QtGui.QSpinBox()
       self.spinCharsize.setMinimum(15)
       self.spinCharsize.setMaximum(20)
       self.spinCharsize.setValue(self.__charsize__)
-      self.gridt.addWidget(self.spinCharsize,3,1)
+      self.gridt.addWidget(self.spinCharsize,4,1)
 
       self.gboxt.setLayout(self.gridt)
       self.vbox0.addWidget(self.gboxt)
@@ -1554,10 +1564,11 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__tty__= self.lblTty.text()
       self.__workdir__= self.lblwdir.text()
       self.__termsize__= self.comboRes.currentText()
+      self.__scrollupbuffersize__= self.spinScrollBufferSize.value()
       self.__colorscheme__= self.comboCol.currentText()
       self.__charsize__= self.spinCharsize.value()
       self.__config__=[self.__mode__, self.__tty__,self.__idyframe__, 
-         self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__, self.__termsize__,self.__colorscheme__,self.__charsize__]
+         self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__, self.__termsize__,self.__scrollupbuffersize__,self.__colorscheme__,self.__charsize__]
       super().accept()
 
    def do_cancel(self):
@@ -1568,8 +1579,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
       return self.__config__
 
    @staticmethod
-   def getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize):
-      dialog= cls_PilConfigWindow(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,colorscheme,charsize)
+   def getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,scrollupbuffersize,colorscheme,charsize):
+      dialog= cls_PilConfigWindow(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,scrollupbuffersize,colorscheme,charsize)
       dialog.resize(200,100)
       result= dialog.exec_()
       if result== QtGui.QDialog.Accepted:
