@@ -76,6 +76,8 @@
 #   type: vers$[Return] and then press left arrow for three seconds
 # 05.05.2016 jsi:
 # - introduced new Object class for scrollable terminal widget
+# 07.05.2016 jsi:
+# - introduce parameter for scroll up buffersize
 
 import array
 import queue

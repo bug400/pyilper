@@ -88,6 +88,10 @@
 # - show error if no serial device was configured.
 # 28.04.2016 jsi
 # - call post_enable to register outbound scope device
+# 07.05.2016 jsi
+# - introduce parameter for scroll up buffer size
+# 08.05.2016 jsi
+# - refactoring, make autobaud/baud rate setting configurable again (ttyspeed parameter)
 #
 import os
 import sys
@@ -180,6 +184,7 @@ class cls_pyilper(QtCore.QObject):
          self.config.get(self.name,"tabconfig",[1,2,1,1])
          self.config.get(self.name,"tabconfigchanged",False)
          self.config.get(self.name,"tty","")
+         self.config.get(self.name,"ttyspeed",0)
          self.config.get(self.name,"idyframe",True)
          self.config.get(self.name,"port",60001)
          self.config.get(self.name,"remotehost","localhost")
@@ -200,7 +205,6 @@ class cls_pyilper(QtCore.QObject):
 #
       self.tabconfig=self.config.get(self.name,"tabconfig")
       self.registerTab(cls_tabscope,"Scope")
-#     self.registerTab(cls_tabscope,"Scope1")
       for i in range (self.tabconfig[1]):
          devname="Drive"+str(int(i+1))
          self.registerTab(cls_tabdrive,devname)
@@ -209,7 +213,6 @@ class cls_pyilper(QtCore.QObject):
          self.registerTab(cls_tabprinter,devname)
       if self.tabconfig[3] ==1:
          self.registerTab(cls_tabterminal,"Terminal")
-#     self.registerTab(cls_tabscope,"Scope2")
 #
 #     remove config of non existing tabs
 #
@@ -279,7 +282,7 @@ class cls_pyilper(QtCore.QObject):
             return
 
          try:
-            self.commobject= cls_pilbox(self.config.get(self.name,'tty'),self.config.get(self.name,'idyframe'),USE8BITS)
+            self.commobject= cls_pilbox(self.config.get(self.name,'tty'),self.config.get(self.name,'ttyspeed'),self.config.get(self.name,'idyframe'),USE8BITS)
             self.commobject.open()
             self.commthread= cls_PilBoxThread(self.ui,self.commobject)
          except PilBoxError as e:
@@ -384,39 +387,15 @@ class cls_pyilper(QtCore.QObject):
 #  callback pyilper configuration
 #
    def do_pyilperConfig(self):
-      mode=  self.config.get(self.name,"mode")
-      tty= self.config.get(self.name,"tty")
-      port= self.config.get(self.name,"port")
-      idyframe= self.config.get(self.name,"idyframe")
-      remotehost= self.config.get(self.name,"remotehost")
-      remoteport= self.config.get(self.name,"remoteport")
-      workdir=  self.config.get(self.name,"workdir")
-      terminalsize= self.config.get(self.name,"terminalsize")
-      scrollupbuffersize= self.config.get(self.name,"scrollupbuffersize")
-      colorscheme= self.config.get(self.name,"colorscheme")
-      terminalcharsize=self.config.get(self.name,"terminalcharsize")
       
-      config=cls_PilConfigWindow.getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,terminalsize,scrollupbuffersize,colorscheme,terminalcharsize)
-      if config is None: 
-         return
-      self.config.put(self.name,"mode",config[0])
-      self.config.put(self.name,"tty",config[1])
-      self.config.put(self.name,"idyframe",config[2])
-      self.config.put(self.name,"port",config[3])
-      self.config.put(self.name,"remotehost",config[4])
-      self.config.put(self.name,"remoteport",config[5])
-      self.config.put(self.name,"workdir",config[6])
-      self.config.put(self.name,"terminalsize",config[7])
-      self.config.put(self.name,"scrollupbuffersize",config[8])
-      self.config.put(self.name,"colorscheme",config[9])
-      self.config.put(self.name,"terminalcharsize",config[10])
-      self.disable()
-      try:
-         self.config.save()
-      except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-         return
-      self.enable()
+      if cls_PilConfigWindow.getPilConfig(self):
+         self.disable()
+         try:
+            self.config.save()
+         except PilConfigError as e:
+            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            return
+         self.enable()
 #
 #  callback HP-IL device config
 #

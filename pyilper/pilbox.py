@@ -53,6 +53,8 @@
 # - send acknowledge for high byte only at a 9600 baud connection
 # 26.04.2016 jsi
 # - auto baudrate support, code taken from cgi
+# 09.05.2016 jsi
+# - reenable baud rate setting in addition to auto baud support
 
 #
 # PIL-Box Commands
@@ -76,15 +78,15 @@ class PilBoxError(Exception):
 
 class cls_pilbox:
 
-   def __init__(self,ttydevice,idyframe,use8bits):
+   def __init__(self,ttydevice,baudrate,idyframe,use8bits):
       self.__running__ = False     # Connected to PIL-Box
       self.__use8bits__= use8bits  # Use 8 bits for transfer
+      self.__baudrate__= baudrate  # baudrate of connection or 0 for autodetect
       self.__idyframe__= idyframe  # switch box to send idy frames
       self.__lasth__ = 0           # Copy of last byte sent
       self.__devices__ = []        # list of virtual devices
       self.__tty__= cls_rs232()    # serial device object
       self.__ttydevice__=ttydevice # serial port name
-      self.__baudrate__=0          # baudrate of connection
 
 #
 #  get connection speed
@@ -116,34 +118,46 @@ class cls_pilbox:
 #
    def open(self):
 #
-#     open serial device, detect baud rate
+#     open serial device, no autobaud mode
 #
-      success= False
-      for baudrate in BAUDRATES:
-#
-#        open device, if error throw exception and exit
-#
+      if self.__baudrate__ > 0:
          try:
-            self.__tty__.open(self.__ttydevice__, baudrate)
+            self.__tty__.open(self.__ttydevice__, self.__baudrate__)
          except Rs232Error as e:
             raise PilBoxError("Cannot connect to PIL-Box", e.value)
+         self.__sendCmd__(COFF,TMOUTCMD)
+
+      else:
 #
-#        initialize PIL-Box with different baud rates
+#     open serial device, detect baud rate
 #
-         try:
-            self.__sendCmd__(COFF,TMOUTCMD)
-            success= True
-            self.__baudrate__=baudrate
-            break
-         except PilBoxError as e:
-            errmsg=e.msg
+         success= False
+         for baudrate in BAUDRATES:
+#
+#           open device, if error throw exception and exit
+#
+            try:
+               self.__tty__.open(self.__ttydevice__, baudrate)
+            except Rs232Error as e:
+               raise PilBoxError("Cannot connect to PIL-Box", e.value)
+#
+#           initialize PIL-Box with different baud rates
+#
+            try:
+               self.__sendCmd__(COFF,TMOUTCMD)
+               success= True
+               self.__baudrate__=baudrate
+               break
+            except PilBoxError as e:
+               errmsg=e.msg
+               self.__tty__.close()
+#
+#        no success with any baud rate, throw exception and exit
+#
+         if not success:
             self.__tty__.close()
-#
-#     no success with any baud rate, throw exception and exit
-#
-      if not success:
-         self.__tty__.close()
-         raise PilBoxError("Cannot connect to PIL-Box", errmsg)
+            raise PilBoxError("Cannot connect to PIL-Box", errmsg)
+
       if self.__idyframe__:
          self.__sendCmd__(COFI,TMOUTCMD)
       self.__running__ = True

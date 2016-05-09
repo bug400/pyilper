@@ -52,11 +52,13 @@
           <h3><a name="pyILPER configuration">pyILPER configuration</a></h3> 
           <p><b>PIL-Box checkbox</b></p>
           <p>Check this box if pyILPER is connected to a
-          PIL-Box via a serial device. The name of the 
+          PIL-Box via a serial device. The name and the baud rate of the 
           serial device is configured here. See the setup section
           of the <a href="https://github.com/bug400/pyilper/blob/master/INSTALL.md">installation guide</a> for details.</p>
 
-          </p><b>Note:</b> the baud rate of the device is auto detected</p>
+          </p><b>Note:</b> the baud rate must match the hardware configuration of
+          the PIL-Box. See the PIL-Box documentation for details. If the baud rate is
+          set to "Auto" pyILPER tries to determine the baud rate automatically.</p>
 
           <p>The "Enable IDY frames" option enables the PIL-Box to transmit 
           the IDY frames to pyILPER. This causes an increase of traffic on 

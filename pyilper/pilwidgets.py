@@ -136,6 +136,10 @@
 # - enable tabscope to log inbound, outbound and both traffic
 # 29.04.2016 jsi
 # - log scope unbuffered
+# 07.05.2016 jsi
+# - make scroll up buffer size configurable
+# 08.05.2016 jsi
+# - refactoring of PilConfigWindow, make autobaud/baudrate setting configurable again
 #
 import os
 import glob
@@ -163,6 +167,7 @@ from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cl
 #
 REFRESH_RATE=1000     # refresh rate for lif directory
 NOT_TALKER_SPAN=3     # time span for no talker acitvity of drives
+BAUDRATES= [ ["Auto", 0], ["9600", 9600 ] , [ "115200", 115200 ], ["230400", 230400]]
 
 
 #
@@ -1337,21 +1342,23 @@ class cls_TtyWindow(QtGui.QDialog):
 
 class cls_PilConfigWindow(QtGui.QDialog):
 
-   def __init__(self, mode,tty, idyframe, port,remotehost,remoteport,workdir,termsize,scrollupbuffersize,colorscheme,charsize):
+   def __init__(self,parent): 
       super().__init__()
-      self.__mode__= mode
-      self.__tty__= tty
-      self.__idyframe__= idyframe
-      self.__port__= port
-      self.__remotehost__= remotehost
-      self.__remoteport__= remoteport
-      self.__workdir__= workdir
-      self.__termsize__= termsize
-      self.__scrollupbuffersize__= scrollupbuffersize
-      self.__colorscheme__= colorscheme
-      self.__charsize__= charsize
-      self.__config__= None
-      
+      self.__name__=parent.name
+      self.__parent__= parent
+      self.__mode__=  self.__parent__.config.get(self.__name__,"mode")
+      self.__tty__= self.__parent__.config.get(self.__name__,"tty")
+      self.__ttyspeed__= self.__parent__.config.get(self.__name__,"ttyspeed")
+      self.__port__= self.__parent__.config.get(self.__name__,"port")
+      self.__idyframe__= self.__parent__.config.get(self.__name__,"idyframe")
+      self.__remotehost__= self.__parent__.config.get(self.__name__,"remotehost")
+      self.__remoteport__= self.__parent__.config.get(self.__name__,"remoteport")
+      self.__workdir__=  self.__parent__.config.get(self.__name__,"workdir")
+      self.__termsize__= self.__parent__.config.get(self.__name__,"terminalsize")
+      self.__scrollupbuffersize__= self.__parent__.config.get(self.__name__,"scrollupbuffersize")
+      self.__colorscheme__= self.__parent__.config.get(self.__name__,"colorscheme")
+      self.__charsize__=self.__parent__.config.get(self.__name__,"terminalcharsize")
+ 
 
       self.setWindowTitle("pyILPER configuration")
       self.vbox0= QtGui.QVBoxLayout()
@@ -1392,6 +1399,25 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.hboxtty.setAlignment(self.butTty,QtCore.Qt.AlignRight)
       self.vboxgbox.addLayout(self.hboxtty)
 #
+#     tty speed combo box
+#
+      self.hboxbaud= QtGui.QHBoxLayout()
+      self.lbltxt2=QtGui.QLabel("Baud rate ")
+      self.hboxbaud.addWidget(self.lbltxt2)
+      self.hboxbaud.setAlignment(self.lbltxt2,QtCore.Qt.AlignLeft)
+      self.comboBaud=QtGui.QComboBox()
+      i=0
+      for baud in BAUDRATES:
+         self.comboBaud.addItem(baud[0])
+         if self.__ttyspeed__== baud[1]:
+            self.comboBaud.setCurrentIndex(i)
+         i+=1
+ 
+      self.hboxbaud.addWidget(self.comboBaud)
+      self.hboxbaud.addStretch(1)
+      self.vboxgbox.addLayout(self.hboxbaud)
+
+#
 #     idy frames
 #
       self.cbIdyFrame= QtGui.QCheckBox('Enable IDY frames')
@@ -1407,7 +1433,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.radbutTCPIP.clicked.connect(self.setCheckBoxes)
       self.vboxgbox.addWidget(self.radbutTCPIP)
 #
-#     Parameter input
+#     TCP/IP Parameter input (port, remote host, remote port)
 #
       self.intvalidator= QtGui.QIntValidator()
       self.glayout=QtGui.QGridLayout()
@@ -1460,7 +1486,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.vboxgboxw.addLayout(self.hboxwdir)
       self.vbox0.addWidget(self.gboxw)
 #
-#     Section Terminal configuration
+#     Section Terminal configuration: size, scroll up buffer, color scheme, font size
 #
       self.gboxt= QtGui.QGroupBox()
       self.gboxt.setFlat(True)
@@ -1558,35 +1584,33 @@ class cls_PilConfigWindow(QtGui.QDialog):
 
 
    def do_ok(self):
-      self.__port__= int(self.edtPort.text())
-      self.__remotehost__= self.edtRemoteHost.text()
-      self.__remoteport__= int(self.edtRemotePort.text())
-      self.__tty__= self.lblTty.text()
-      self.__workdir__= self.lblwdir.text()
-      self.__termsize__= self.comboRes.currentText()
-      self.__scrollupbuffersize__= self.spinScrollBufferSize.value()
-      self.__colorscheme__= self.comboCol.currentText()
-      self.__charsize__= self.spinCharsize.value()
-      self.__config__=[self.__mode__, self.__tty__,self.__idyframe__, 
-         self.__port__, self.__remotehost__, self.__remoteport__, self.__workdir__, self.__termsize__,self.__scrollupbuffersize__,self.__colorscheme__,self.__charsize__]
+      self.__parent__.config.put(self.__name__,"mode",self.__mode__)
+      self.__parent__.config.put(self.__name__,"tty", self.lblTty.text())
+      self.__parent__.config.put(self.__name__,"ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
+      self.__parent__.config.put(self.__name__,"idyframe",self.__idyframe__)
+      self.__parent__.config.put(self.__name__,"port", int(self.edtPort.text()))
+      self.__parent__.config.put(self.__name__,"remotehost", self.edtRemoteHost.text())
+      self.__parent__.config.put(self.__name__,"remoteport", int(self.edtRemotePort.text()))
+      self.__parent__.config.put(self.__name__,"workdir", self.lblwdir.text())
+      self.__parent__.config.put(self.__name__,"terminalsize", self.comboRes.currentText())
+      self.__parent__.config.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
+      self.__parent__.config.put(self.__name__,"colorscheme", self.comboCol.currentText())
+      self.__parent__.config.put(self.__name__,"terminalcharsize",self.spinCharsize.value())
       super().accept()
 
    def do_cancel(self):
-      self.__config__= None
       super().reject()
 
-   def getConfig(self):
-      return self.__config__
 
    @staticmethod
-   def getPilConfig(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,scrollupbuffersize,colorscheme,charsize):
-      dialog= cls_PilConfigWindow(mode,tty,idyframe,port,remotehost,remoteport,workdir,termsize,scrollupbuffersize,colorscheme,charsize)
-      dialog.resize(200,100)
+   def getPilConfig(parent):
+      dialog= cls_PilConfigWindow(parent)
+#     dialog.resize(200,100)
       result= dialog.exec_()
       if result== QtGui.QDialog.Accepted:
-         return dialog.getConfig()
+         return True
       else:
-         return None
+         return False
 #
 # Get Tab Config Dialog class ------------------------------------------------
 #
