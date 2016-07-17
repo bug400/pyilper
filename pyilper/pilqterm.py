@@ -78,6 +78,9 @@
 # - introduced new Object class for scrollable terminal widget
 # 07.05.2016 jsi:
 # - introduce parameter for scroll up buffersize
+# 11.07.2016 jsi:
+# - refactoring: move some constants to pilcore.py
+
 
 import array
 import queue
@@ -90,13 +93,11 @@ from PyQt4.QtGui import (
     QPen, QPixmap, QImage, QContextMenuEvent, QTransform, QHBoxLayout, QScrollBar,
     QFontMetrics)
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
 CURSOR_OVERWRITE=2
-UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
-CURSOR_BLINK=500 / UPDATE_TIMER # 500 ms cursor blink rate
 
 class QScrolledTerminalWidget(QWidget):
 

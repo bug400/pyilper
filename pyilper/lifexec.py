@@ -63,14 +63,16 @@
 # - modified filter for all files to * in file dialog
 # 27.04.2016 jsi
 # - do not set path for QFileDialog, it remembers the last dir automatically
+# 11.07.2016 jsi
+# - use functions from pilcore.py for platform detection
 #
 import os
 import subprocess
-import platform
 import tempfile
 from PyQt4 import QtCore, QtGui
 from .lifcore import *
 from .pilcharconv import charconv, stringconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
+from .pilcore import isWINDOWS, FONT
 
 
 #
@@ -116,7 +118,7 @@ def exec_single(parent,cmd):
 def exec_double_import(parent,cmd1,cmd2,inputfile):
 
    try:
-      if platform.system()== "Windows":
+      if isWINDOWS():
          fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
       else:
          fd= os.open(inputfile, os.O_RDONLY)
@@ -171,7 +173,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
             reply=QtGui.QMessageBox.warning(parent,'Warning',"Do you really want to overwrite file "+outputfile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
             if reply== QtGui.QMessageBox.Cancel:
                return
-         if platform.system()== "Windows":
+         if isWINDOWS():
             fd= os.open(outputfile, os.O_WRONLY | os.O_BINARY |  os.O_TRUNC | os.O_CREAT, 0o644)
          else:
             fd= os.open(outputfile, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0o644)
@@ -696,7 +698,7 @@ class cls_chk_import(QtGui.QDialog):
 #
       try:
          if inputfile is not None:
-            if platform.system()== "Windows":
+            if isWINDOWS():
                fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
             else:
                fd= os.open(inputfile, os.O_RDONLY)
@@ -853,11 +855,7 @@ class cls_lifview(QtGui.QDialog):
       self.viewer.setMinimumWidth(600)
       self.viewer.setMinimumHeight(600)
       self.viewer.setReadOnly(True)
-      if platform.system()== "Linux":
-         fontname="Monospace"
-      else:
-         fontname="Courier New"
-      self.font=QtGui.QFont(fontname)
+      self.font=QtGui.QFont(FONT)
       self.font.setPixelSize(12)
       self.viewer.setFont(self.font)
 

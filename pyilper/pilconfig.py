@@ -25,6 +25,8 @@
 # - class statement syntax update
 #
 from .userconfig import cls_userconfig, ConfigError
+from .pilcore import CONFIG_VERSION
+
 
 class PilConfigError(Exception):
    def __init__(self,msg,add_msg= None):
@@ -87,3 +89,5 @@ class cls_pilconfig:
          del(self.__config__[key])
       except KeyError:
          pass
+
+PILCONFIG=  cls_pilconfig(CONFIG_VERSION)

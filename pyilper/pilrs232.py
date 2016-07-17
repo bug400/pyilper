@@ -30,8 +30,15 @@
 # - baudrate support
 # 06.10.2015 jsi:
 # - class statement syntax update
+# 16.05.2016 jsi
+# - use Windows device naming syntax for serial device (hint by cg)
+# 03.07.2016 jsi
+# - introduced setBaudrate and flushInput methods
+# 11.07.2016 jsi
+# - use platform function from pilcore.py
 #
 import serial,time
+from .pilcore import isWINDOWS
 
 #
 class Rs232Error(Exception):
@@ -66,6 +73,14 @@ class cls_rs232:
 
 
    def open(self,device,baudrate):
+#
+#     use Windows device naming (hint by cg)
+#
+      if isWINDOWS():
+         self.__device__="\\\\.\\"+device
+      else:
+         self.__device__= device
+
       self.__device__= device
       try:
          self.__ser__= serial.Serial(port=device,baudrate=baudrate,timeout=0.10)
@@ -95,3 +110,15 @@ class cls_rs232:
       except:
          raise Rs232Error('cannot read from serial device')
       return c
+
+   def flushInput(self):
+      try:
+         self.__ser__.flushInput()
+      except:
+         raise Rs232Error('cannot reset serial device')
+
+   def setBaudrate(self,baudrate):
+      try:
+         self.__ser__.baudrate= baudrate
+      except:
+         raise Rs232Error('cannot set baudrate')

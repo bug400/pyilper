@@ -55,20 +55,19 @@
 # - auto baudrate support, code taken from cgi
 # 09.05.2016 jsi
 # - reenable baud rate setting in addition to auto baud support
-
+# 11.07.2016 jsi
+# - autobaud detection rewritten, hint by cg
+# - move constants to pilcore.py
 #
 # PIL-Box Commands
 #
 COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
-TMOUTCMD=1    # time out for PIL-Box commands
-TMOUTFRM=0.05 # time out for HP-IL frames
-#TMOUTFRM=None # time out for HP-IL frames
-BAUDRATES=[ 230400, 115200, 9600] # supported baud rates
 
 import threading
 from .pilrs232 import Rs232Error, cls_rs232
+from .pilcore import *
 
 class PilBoxError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -129,19 +128,31 @@ class cls_pilbox:
 
       else:
 #
-#     open serial device, detect baud rate
+#     open serial device, detect baud rate, use predefined baudrates in
+#     BAUDRATES list in reverse order
 #
          success= False
-         for baudrate in BAUDRATES:
+         for i in range(len(BAUDRATES)-1,0,-1):
 #
-#           open device, if error throw exception and exit
+#           open device at the beginning of the loop, if error throw exception and exit
 #
-            try:
-               self.__tty__.open(self.__ttydevice__, baudrate)
-            except Rs232Error as e:
-               raise PilBoxError("Cannot connect to PIL-Box", e.value)
+            baudrate= BAUDRATES[i][1]
+            if i== len(BAUDRATES)-1:
+               try:
+                  self.__tty__.open(self.__ttydevice__, baudrate)
+               except Rs232Error as e:
+                  raise PilBoxError("Cannot connect to PIL-Box", e.value)
 #
-#           initialize PIL-Box with different baud rates
+#           otherwise reset device and use next baudrate
+#
+            else:
+               try:
+                  self.__tty__.flushInput()
+                  self.__tty__.setBaudrate(baudrate)
+               except Rs232Error as e:
+                  raise PilBoxError("Cannot connect to PIL-Box", e.value)
+#
+#           initialize PIL-Box with current baud rates
 #
             try:
                self.__sendCmd__(COFF,TMOUTCMD)
@@ -150,7 +161,6 @@ class cls_pilbox:
                break
             except PilBoxError as e:
                errmsg=e.msg
-               self.__tty__.close()
 #
 #        no success with any baud rate, throw exception and exit
 #

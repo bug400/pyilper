@@ -39,10 +39,12 @@
 # - added filetypes
 # 08.02.2016 jsi:
 # - changed os detection to platform.system()
+# 11.07.2016 jsi:
+# - use functions from pilcore.py for platform detection
 #
-import platform
 import os
 from .lifcore import *
+from .pilcore import isWINDOWS
 
 class LifError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -254,7 +256,7 @@ class cls_LifFile:
       self.no_tracks=0
       self.no_surfaces=0
       self.no_blocks=0
-      if platform.system()=="Windows":
+      if isWINDOWS():
          self.isWindows= True
 
    def set_filename(self,name):

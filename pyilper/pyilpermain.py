@@ -92,10 +92,15 @@
 # - introduce parameter for scroll up buffer size
 # 08.05.2016 jsi
 # - refactoring, make autobaud/baud rate setting configurable again (ttyspeed parameter)
+# 03.07.2016 jsi
+# - refactoring import reorganized
+# 08.07.2016 jsi
+# - refactoring, use constant for configuration
+# - refactoring, move constants to pilcore.py
+# - refactoring, use platform functions from pilcore.py
 #
 import os
 import sys
-import platform
 import signal
 import threading
 import traceback
@@ -103,26 +108,20 @@ import shutil
 import pyilper
 import re
 from PyQt4 import QtCore, QtGui
-from pyilper import cls_pilbox,PilBoxError,cls_piltcpip, TcpIpError,cls_pilconfig, PilConfigError, cls_ui,cls_tabscope, cls_PilBoxThread, cls_PilTcpIpThread, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, cls_tabprinter, cls_tabterminal, cls_tabdrive, cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_lifinit, cls_liffix, cls_installcheck
+from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow,cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
+from .pilcore import *
+from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
+from .pilbox import cls_pilbox, PilBoxError
+from .pilboxthread import cls_PilBoxThread
+from .piltcpip import cls_piltcpip, TcpIpError
+from .piltcpipthread import cls_PilTcpIpThread
+from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
 
-#
-# Program constants --------------------------------------------------
-#
-PRODUCION= False      # Production/Development Version
-VERSION="1.3.4"       # pyILPR version number
-CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
 MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
-USE8BITS= True        # use 8 bit data transfer to PIL-Box
 
-#
-# if Development Version append string to VERSION and "d" to config file name
-#
-if not PRODUCION:
-   VERSION=VERSION+" (Development)"
-   CONFIG_VERSION= CONFIG_VERSION+"d"
 
 #
 # Main application ------------------------------------------------------ 
@@ -179,31 +178,30 @@ class cls_pyilper(QtCore.QObject):
 #     Set up configuration subsystem
 #
       try:
-         self.config=cls_pilconfig(CONFIG_VERSION)
-         self.config.get(self.name,"active_tab",0)
-         self.config.get(self.name,"tabconfig",[1,2,1,1])
-         self.config.get(self.name,"tabconfigchanged",False)
-         self.config.get(self.name,"tty","")
-         self.config.get(self.name,"ttyspeed",0)
-         self.config.get(self.name,"idyframe",True)
-         self.config.get(self.name,"port",60001)
-         self.config.get(self.name,"remotehost","localhost")
-         self.config.get(self.name,"remoteport",60000)
-         self.config.get(self.name,"mode",MODE_PILBOX)
-         self.config.get(self.name,"workdir",os.path.expanduser('~'))
-         self.config.get(self.name,"position","")
-         self.config.get(self.name,"terminalsize","80x24")
-         self.config.get(self.name,"colorscheme","white")
-         self.config.get(self.name,"terminalcharsize",15)
-         self.config.get(self.name,"scrollupbuffersize",1000)
-         self.config.save()
+         PILCONFIG.get(self.name,"active_tab",0)
+         PILCONFIG.get(self.name,"tabconfig",[1,2,1,1])
+         PILCONFIG.get(self.name,"tabconfigchanged",False)
+         PILCONFIG.get(self.name,"tty","")
+         PILCONFIG.get(self.name,"ttyspeed",0)
+         PILCONFIG.get(self.name,"idyframe",True)
+         PILCONFIG.get(self.name,"port",60001)
+         PILCONFIG.get(self.name,"remotehost","localhost")
+         PILCONFIG.get(self.name,"remoteport",60000)
+         PILCONFIG.get(self.name,"mode",MODE_PILBOX)
+         PILCONFIG.get(self.name,"workdir",os.path.expanduser('~'))
+         PILCONFIG.get(self.name,"position","")
+         PILCONFIG.get(self.name,"terminalsize","80x24")
+         PILCONFIG.get(self.name,"colorscheme","white")
+         PILCONFIG.get(self.name,"terminalcharsize",15)
+         PILCONFIG.get(self.name,"scrollupbuffersize",1000)
+         PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          QtGui.qApp.quit()
 #
 #     create tab objects
 #
-      self.tabconfig=self.config.get(self.name,"tabconfig")
+      self.tabconfig=PILCONFIG.get(self.name,"tabconfig")
       self.registerTab(cls_tabscope,"Scope")
       for i in range (self.tabconfig[1]):
          devname="Drive"+str(int(i+1))
@@ -216,24 +214,24 @@ class cls_pyilper(QtCore.QObject):
 #
 #     remove config of non existing tabs
 #
-      if self.config.get(self.name,"tabconfigchanged"):
-         self.config.put(self.name,"tabconfigchanged",False)
-         self.config.put(self.name,"active_tab",0)
+      if PILCONFIG.get(self.name,"tabconfigchanged"):
+         PILCONFIG.put(self.name,"tabconfigchanged",False)
+         PILCONFIG.put(self.name,"active_tab",0)
          names= [self.name]
          for obj in self.tabobjects:
             names.append(obj.name)
          removekeys=[]
-         for key in self.config.getkeys():
+         for key in PILCONFIG.getkeys():
             prefix=key.split(sep="_")[0]
             if not prefix in names:
                removekeys.append(key)
          for key in removekeys:
-            self.config.remove(key)
+            PILCONFIG.remove(key)
       else:
 #
 #     go to last active tab (if tabconfig did not change)
 #
-         self.ui.tabs.setCurrentIndex(self.config.get(self.name,"active_tab"))
+         self.ui.tabs.setCurrentIndex(PILCONFIG.get(self.name,"active_tab"))
 #
 #     connect callback for tab change to update only the visible tab
 #  
@@ -241,7 +239,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #  move window to last position
 #
-      position=self.config.get(self.name,"position")
+      position=PILCONFIG.get(self.name,"position")
       if position !="":
          self.ui.move(QtCore.QPoint(position[0],position[1]))
 #
@@ -265,7 +263,7 @@ class cls_pyilper(QtCore.QObject):
 #     set working directory
 #
       try:
-         os.chdir(self.config.get(self.name,'workdir'))
+         os.chdir(PILCONFIG.get(self.name,'workdir'))
       except OSError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',"Cannot change to working directory: "+e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return
@@ -273,16 +271,16 @@ class cls_pyilper(QtCore.QObject):
 #     connect to HP-IL
 #
 
-      if self.config.get(self.name,"mode")== MODE_PILBOX:
+      if PILCONFIG.get(self.name,"mode")== MODE_PILBOX:
 #
 #        create PIL-Box object, connect to PIL-Box. Return if not configured
 #
-         if self.config.get(self.name,'tty') =="":
+         if PILCONFIG.get(self.name,'tty') =="":
             reply=QtGui.QMessageBox.critical(self.ui,'Error','Serial device not configured. Run pyILPER configuration from the file menu.',QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
             return
 
          try:
-            self.commobject= cls_pilbox(self.config.get(self.name,'tty'),self.config.get(self.name,'ttyspeed'),self.config.get(self.name,'idyframe'),USE8BITS)
+            self.commobject= cls_pilbox(PILCONFIG.get(self.name,'tty'),PILCONFIG.get(self.name,'ttyspeed'),PILCONFIG.get(self.name,'idyframe'),USE8BITS)
             self.commobject.open()
             self.commthread= cls_PilBoxThread(self.ui,self.commobject)
          except PilBoxError as e:
@@ -293,7 +291,7 @@ class cls_pyilper(QtCore.QObject):
 #        create TCP-IP-object, connect to network
 #
          try:
-            self.commobject= cls_piltcpip(self.config.get(self.name,"port"),self.config.get(self.name,"remotehost"),self.config.get(self.name,"remoteport"))
+            self.commobject= cls_piltcpip(PILCONFIG.get(self.name,"port"),PILCONFIG.get(self.name,"remotehost"),PILCONFIG.get(self.name,"remoteport"))
             self.commobject.open()
             self.commthread= cls_PilTcpIpThread(self.ui,self.commobject)
          except TcpIpError as e:
@@ -318,7 +316,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     trigger visible tab to enable refreshs
 #
-      tab= self.ui.tabs.widget(self.config.get(self.name,"active_tab"))
+      tab= self.ui.tabs.widget(PILCONFIG.get(self.name,"active_tab"))
       tab.becomes_visible()
 
 #
@@ -377,11 +375,11 @@ class cls_pyilper(QtCore.QObject):
 #  callback tab changed
 #
    def tab_current_changed(self,idx):
-      oldtab= self.config.get(self.name,"active_tab")
+      oldtab= PILCONFIG.get(self.name,"active_tab")
       if oldtab != idx:
          self.ui.tabs.widget(oldtab).becomes_invisible()
          self.ui.tabs.widget(idx).becomes_visible()
-         self.config.put(self.name,"active_tab",idx)
+         PILCONFIG.put(self.name,"active_tab",idx)
 
 #
 #  callback pyilper configuration
@@ -391,7 +389,7 @@ class cls_pyilper(QtCore.QObject):
       if cls_PilConfigWindow.getPilConfig(self):
          self.disable()
          try:
-            self.config.save()
+            PILCONFIG.save()
          except PilConfigError as e:
             reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
             return
@@ -403,10 +401,10 @@ class cls_pyilper(QtCore.QObject):
       config=cls_TabConfigWindow.getTabConfig(self.tabconfig)
       if config is None:
          return
-      self.config.put(self.name,"tabconfig",config)
-      self.config.put(self.name,"tabconfigchanged",True)
+      PILCONFIG.put(self.name,"tabconfig",config)
+      PILCONFIG.put(self.name,"tabconfigchanged",True)
       try:
-         self.config.save()
+         PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return
@@ -433,8 +431,8 @@ class cls_pyilper(QtCore.QObject):
       self.disable()
       position=[self.ui.pos().x(),self.ui.pos().y()]
       try:
-         self.config.put(self.name,"position",position)
-         self.config.save()
+         PILCONFIG.put(self.name,"position",position)
+         PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       QtGui.qApp.quit()
@@ -442,14 +440,14 @@ class cls_pyilper(QtCore.QObject):
 #  callback initialize LIF medium
 #
    def do_Init(self):
-      workdir=  self.config.get(self.name,"workdir")
+      workdir=  PILCONFIG.get(self.name,"workdir")
       cls_lifinit.exec(workdir)
 
 #
 #  callback fix LIF Medium
 #
    def do_Fix(self):
-      workdir=  self.config.get(self.name,"workdir")
+      workdir=  PILCONFIG.get(self.name,"workdir")
       cls_liffix.exec(workdir)
 #
 #  callback check LIFUTILS installation
@@ -464,7 +462,7 @@ class cls_pyilper(QtCore.QObject):
 
       srcfile=os.path.join(os.path.dirname(pyilper.__file__),"lifimage","PILIMAGE.DAT")
       srcfile= re.sub("//","/",srcfile,1)
-      dstpath=self.config.get(self.name,"workdir")
+      dstpath=PILCONFIG.get(self.name,"workdir")
       if os.access(os.path.join(dstpath,"PILIMAGE.DAT"),os.W_OK):
          reply=QtGui.QMessageBox.warning(self.ui,'Warning',"File PILIMAGE.DAT already exists. Do you really want to overwrite that file?",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
          if reply== QtGui.QMessageBox.Cancel:
@@ -498,7 +496,7 @@ def dumpstacks(signal, frame):
     traceback.print_stack(f=stack)
 
 def main():
-   if platform.system() != "Windows":
+   if not isWINDOWS():
       signal.signal(signal.SIGQUIT, dumpstacks)
    app = QtGui.QApplication(sys.argv)
    pyilper= cls_pyilper()

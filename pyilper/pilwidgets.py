@@ -140,15 +140,16 @@
 # - make scroll up buffer size configurable
 # 08.05.2016 jsi
 # - refactoring of PilConfigWindow, make autobaud/baudrate setting configurable again
+# 17.06.2016 jsi
+# - refactoring, use constant to access configuration
+# - refactoring, move constants to pilcore.py
+# - refactoring, use platform functions from pilcore.py
 #
 import os
 import glob
 import datetime
 import time
-import platform
 import re
-if platform.system()=="Windows":
-   import winreg
 import pyilper
 from PyQt4 import QtCore, QtGui, QtWebKit
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
@@ -158,16 +159,12 @@ from .pilprinter import cls_printer
 from .pilterminal import cls_terminal
 from .pildrive import cls_drive
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
-from .pilconfig import PilConfigError
+from .pilconfig import PilConfigError, PILCONFIG
+from .pilcore import *
+if isWINDOWS():
+   import winreg
 from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils
-
-#
-# Constants
-#
-REFRESH_RATE=1000     # refresh rate for lif directory
-NOT_TALKER_SPAN=3     # time span for no talker acitvity of drives
-BAUDRATES= [ ["Auto", 0], ["9600", 9600 ] , [ "115200", 115200 ], ["230400", 230400]]
 
 
 #
@@ -233,9 +230,9 @@ class cls_tabgeneric(QtGui.QWidget):
 
       super().__init__()
       self.name= name
-      self.active= parent.config.get(self.name,"active",False)
+      self.active= PILCONFIG.get(self.name,"active",False)
       self.parent=parent
-      self.font_name=""
+      self.font_name=FONT
       self.font_size=0
       self.font_width=0
       self.font_height=0
@@ -258,7 +255,7 @@ class cls_tabgeneric(QtGui.QWidget):
 
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
-      self.parent.config.put(self.name,"active",self.active)
+      PILCONFIG.put(self.name,"active",self.active)
       self.pildevice.setactive(self.active)
       try:
          self.toggle_active()
@@ -280,27 +277,23 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
 #     Set default values
 #
-      self.termsize=parent.config.get("pyilper","terminalsize")
+      self.termsize=PILCONFIG.get("pyilper","terminalsize")
       self.cols=int(self.termsize.split(sep="x")[0])
       self.rows=int(self.termsize.split(sep="x")[1])
 #
-      self.colorscheme=parent.config.get("pyilper","colorscheme")
+      self.colorscheme=PILCONFIG.get("pyilper","colorscheme")
 #
-      self.font_size=parent.config.get("pyilper","terminalcharsize")
+      self.font_size=PILCONFIG.get("pyilper","terminalcharsize")
 #
       if self.cblog:
-         self.logging= parent.config.get(self.name,"logging",False)
+         self.logging= PILCONFIG.get(self.name,"logging",False)
       if self.cbcharset:
-         self.charset= parent.config.get(self.name,"charset",CHARSET_HP71)
+         self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
 
 #
 #     Build GUI 
 #
-      if platform.system()=="Linux":
-         self.font_name="Monospace"
-      else:
-         self.font_name="Courier New"
-      self.scrollupbuffersize=parent.config.get("pyilper","scrollupbuffersize")
+      self.scrollupbuffersize=PILCONFIG.get("pyilper","scrollupbuffersize")
       if self.scrollupbuffersize < self.rows:
          self.scrollupbuffersize= self.rows
 
@@ -354,13 +347,13 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.cbLogging.logOpen()
       else:
          self.cbLogging.logClose()
-      self.parent.config.put(self.name,"logging",self.logging)
+      PILCONFIG.put(self.name,"logging",self.logging)
       self.pildevice.setlocked(False)
       self.cbLogging.setEnabled(True)
 
    def do_changeCharset(self,text):
       self.charset=self.comboCharset.findText(text)
-      self.parent.config.put(self.name,'charset',self.charset)
+      PILCONFIG.put(self.name,'charset',self.charset)
       self.pildevice.setlocked(True)
       self.hpterm.set_charset(self.charset)
       self.pildevice.setlocked(False)
@@ -407,7 +400,7 @@ class cls_tabscope(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
       super().__init__(parent,name,True,False)
-      self.showIdy= parent.config.get(self.name,"showidy",False)
+      self.showIdy= PILCONFIG.get(self.name,"showidy",False)
       self.cbShowIdy= QtGui.QCheckBox("Show IDY frames")
       self.cbShowIdy.setChecked(self.showIdy)
       self.cbShowIdy.setEnabled(False)
@@ -415,7 +408,7 @@ class cls_tabscope(cls_tabtermgeneric):
       self.hbox2.addWidget(self.cbShowIdy)
       self.hbox2.setAlignment(self.cbShowIdy,QtCore.Qt.AlignLeft)
 
-      self.logMode= parent.config.get(self.name,"logmode",LOG_INBOUND)
+      self.logMode= PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
       self.lbltxtc=QtGui.QLabel("Log mode ")
       self.comboLogMode=QtGui.QComboBox()
       for txt in log_mode:
@@ -433,7 +426,7 @@ class cls_tabscope(cls_tabtermgeneric):
       super().enable()
       self.pildevice= cls_scope(True)
       self.parent.commobject.register(self.pildevice)
-      self.pildevice.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.pildevice.register_callback_output(self.out_scope)
       self.cbShowIdy.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
@@ -441,7 +434,7 @@ class cls_tabscope(cls_tabtermgeneric):
    def post_enable(self):
       self.pildevice2= cls_scope(False)
       self.parent.commobject.register(self.pildevice2)
-      self.pildevice2.setactive(self.parent.config.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
+      self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
       self.pildevice2.register_callback_output(self.out_scope)
       self.pildevice2.set_show_idy(self.showIdy)
 
@@ -451,22 +444,22 @@ class cls_tabscope(cls_tabtermgeneric):
 
    def do_changeLogMode(self,text):
       self.logMode=self.comboLogMode.findText(text)
-      self.parent.config.put(self.name,'logmode',self.logMode)
+      PILCONFIG.put(self.name,'logmode',self.logMode)
       self.pildevice.setlocked(True)
-      self.pildevice.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.pildevice.setlocked(False)
       self.pildevice2.setlocked(True)
-      self.pildevice2.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
+      self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
       self.pildevice2.setlocked(False)
 
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
-      self.parent.config.put(self.name,"active",self.active)
+      PILCONFIG.put(self.name,"active",self.active)
       self.pildevice.setlocked(True)
-      self.pildevice.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.pildevice.setlocked(False)
       self.pildevice2.setlocked(True)
-      self.pildevice2.setactive(self.parent.config.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
+      self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
       self.pildevice2.setlocked(False)
 
       try:
@@ -478,7 +471,7 @@ class cls_tabscope(cls_tabtermgeneric):
    def do_show_idy(self):
       self.cbShowIdy.setEnabled(False)
       self.showIdy= self.cbShowIdy.isChecked()
-      self.parent.config.put(self.name,"showidy",self.showIdy)
+      PILCONFIG.put(self.name,"showidy",self.showIdy)
       self.pildevice.set_show_idy(self.showIdy)
       self.pildevice2.set_show_idy(self.showIdy)
       self.cbShowIdy.setEnabled(True)
@@ -512,7 +505,7 @@ class cls_tabprinter(cls_tabtermgeneric):
       super().enable()
       self.pildevice= cls_printer()
       self.parent.commobject.register(self.pildevice)
-      self.pildevice.setactive(self.parent.config.get(self.name,"active"))
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       self.pildevice.register_callback_output(self.out_printer)
       self.pildevice.register_callback_clear(self.hpterm.reset)
 
@@ -539,7 +532,7 @@ class cls_tabterminal(cls_tabtermgeneric):
       super().enable()
       self.pildevice= cls_terminal()
       self.parent.commobject.register(self.pildevice)
-      self.pildevice.setactive(self.parent.config.get(self.name,"active"))
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       self.pildevice.register_callback_output(self.out_terminal)
       self.pildevice.register_callback_clear(self.hpterm.reset)
       self.hpterm.set_kbdfunc(self.pildevice.queueOutput)
@@ -589,9 +582,9 @@ class cls_tabdrive(cls_tabgeneric):
 #
 #     Set default values
 #
-      self.filename= parent.config.get(self.name,"filename","")
-      self.drivetype= parent.config.get(self.name,"drivetype",self.DEV_HDRIVE1)
-      self.charset= parent.config.get(self.name,"charset",CHARSET_HP71)
+      self.filename= PILCONFIG.get(self.name,"filename","")
+      self.drivetype= PILCONFIG.get(self.name,"drivetype",self.DEV_HDRIVE1)
+      self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
 
 #
 #     Build GUI 
@@ -720,17 +713,17 @@ class cls_tabdrive(cls_tabgeneric):
 #
    def enable(self):
       super().enable()
-      self.pildevice= cls_drive()
+      self.pildevice= cls_drive(isWINDOWS())
       self.parent.commobject.register(self.pildevice)
-      self.pildevice.setactive(self.parent.config.get(self.name,"active"))
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       did,aid= self.deviceinfo[self.drivetype]
       self.pildevice.setdevice(did,aid)
       status, tracks, surfaces, blocks= self.lifMediumCheck(self.filename,True)
       if not status:
          self.filename=""
-         self.parent.config.put(self.name,'filename',self.filename)
+         PILCONFIG.put(self.name,'filename',self.filename)
          try:
-            self.parent.config.save()
+            PILCONFIG.save()
          except PilConfigError as e:
             reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
@@ -791,7 +784,7 @@ class cls_tabdrive(cls_tabgeneric):
 #
    def do_changeCharset(self,text):
       self.charset=self.comboCharset.findText(text)
-      self.parent.config.put(self.name,'charset',self.charset)
+      PILCONFIG.put(self.name,'charset',self.charset)
 
    def do_filenameChanged(self):
       flist= self.get_lifFilename()
@@ -802,9 +795,9 @@ class cls_tabdrive(cls_tabgeneric):
          self.filename=flist[0]
       else:
          self.filename=""
-      self.parent.config.put(self.name,'filename',self.filename)
+      PILCONFIG.put(self.name,'filename',self.filename)
       try:
-         self.parent.config.save()
+         PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
 
@@ -827,19 +820,19 @@ class cls_tabdrive(cls_tabgeneric):
             self.drivetype=i
             break
          i+=1
-      self.parent.config.put(self.name,'drivetype', self.drivetype)
+      PILCONFIG.put(self.name,'drivetype', self.drivetype)
 #
 #     remove filename
 #
       if self.filename != "":
          self.filename=""
-         self.parent.config.put(self.name,'filename',self.filename)
+         PILCONFIG.put(self.name,'filename',self.filename)
          self.lblFilename.setText(self.filename)
          self.lifdir.clear()
          reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       did,aid= self.deviceinfo[self.drivetype]
       try:
-         self.parent.config.save()
+         PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       if self.pildevice is not None:
@@ -853,7 +846,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.lifdir.refresh()
 
    def do_import(self):
-      workdir=self.parent.config.get('pyilper','workdir')
+      workdir=PILCONFIG.get('pyilper','workdir')
       cls_lifimport.exec(self.filename, workdir)
       self.lifdir.refresh()
 
@@ -894,7 +887,7 @@ class cls_tabdrive(cls_tabgeneric):
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
       dialog.setNameFilters( ["LIF Image File (*.dat *.DAT *.lif *.LIF)", "All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
-#     dialog.setDirectory(self.parent.config.get('pyilper','workdir'))
+#     dialog.setDirectory(PILCONFIG.get('pyilper','workdir'))
       if dialog.exec():
          return dialog.selectedFiles() 
 #
@@ -929,7 +922,7 @@ class cls_tabdrive(cls_tabgeneric):
 #     read lif file header
 #
       try:
-         if platform.system()=="Windows":
+         if isWINDOWS():
             fd= os.open(filename,os.O_RDONLY | os.O_BINARY)
          else:
             fd= os.open(filename,os.O_RDONLY)
@@ -1012,7 +1005,7 @@ class DirTableView(QtGui.QTableView):
             if action== None:
                event.accept()
                return
-            workdir=self.parent.parent.parent.config.get('pyilper','workdir')
+            workdir=PILCONFIG.get('pyilper','workdir')
             charset=self.parent.parent.charset
             if action ==exportAction:
                 cls_lifexport.exec(imagefile,liffilename,liffiletype,workdir)
@@ -1261,7 +1254,7 @@ class cls_TtyWindow(QtGui.QDialog):
       self.__ComboBox__ = QtGui.QComboBox() 
       self.__ComboBox__.setEditable(True)
 
-      if platform.system()=="Windows":
+      if isWINDOWS():
 #
 #        Windows COM ports from registry
 #
@@ -1272,7 +1265,7 @@ class cls_TtyWindow(QtGui.QDialog):
                   self.__ComboBox__.addItem( port, port )
          except FileNotFoundError:
             pass
-      elif platform.system()=="Linux":
+      elif isLINUX():
 #
 #        Linux /dev/ttyUSB?
 #
@@ -1282,7 +1275,7 @@ class cls_TtyWindow(QtGui.QDialog):
 #
 #        Mac OS X /dev/tty.usbserial-*
 #
-      elif platform.system()=="Darwin":
+      elif isMACOS():
          devlist=glob.glob("/dev/tty.usbserial-*")
          for port in devlist:
             self.__ComboBox__.addItem( port, port )
@@ -1346,18 +1339,18 @@ class cls_PilConfigWindow(QtGui.QDialog):
       super().__init__()
       self.__name__=parent.name
       self.__parent__= parent
-      self.__mode__=  self.__parent__.config.get(self.__name__,"mode")
-      self.__tty__= self.__parent__.config.get(self.__name__,"tty")
-      self.__ttyspeed__= self.__parent__.config.get(self.__name__,"ttyspeed")
-      self.__port__= self.__parent__.config.get(self.__name__,"port")
-      self.__idyframe__= self.__parent__.config.get(self.__name__,"idyframe")
-      self.__remotehost__= self.__parent__.config.get(self.__name__,"remotehost")
-      self.__remoteport__= self.__parent__.config.get(self.__name__,"remoteport")
-      self.__workdir__=  self.__parent__.config.get(self.__name__,"workdir")
-      self.__termsize__= self.__parent__.config.get(self.__name__,"terminalsize")
-      self.__scrollupbuffersize__= self.__parent__.config.get(self.__name__,"scrollupbuffersize")
-      self.__colorscheme__= self.__parent__.config.get(self.__name__,"colorscheme")
-      self.__charsize__=self.__parent__.config.get(self.__name__,"terminalcharsize")
+      self.__mode__=  PILCONFIG.get(self.__name__,"mode")
+      self.__tty__= PILCONFIG.get(self.__name__,"tty")
+      self.__ttyspeed__= PILCONFIG.get(self.__name__,"ttyspeed")
+      self.__port__= PILCONFIG.get(self.__name__,"port")
+      self.__idyframe__= PILCONFIG.get(self.__name__,"idyframe")
+      self.__remotehost__= PILCONFIG.get(self.__name__,"remotehost")
+      self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
+      self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
+      self.__termsize__= PILCONFIG.get(self.__name__,"terminalsize")
+      self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
+      self.__colorscheme__= PILCONFIG.get(self.__name__,"colorscheme")
+      self.__charsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
  
 
       self.setWindowTitle("pyILPER configuration")
@@ -1584,18 +1577,18 @@ class cls_PilConfigWindow(QtGui.QDialog):
 
 
    def do_ok(self):
-      self.__parent__.config.put(self.__name__,"mode",self.__mode__)
-      self.__parent__.config.put(self.__name__,"tty", self.lblTty.text())
-      self.__parent__.config.put(self.__name__,"ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
-      self.__parent__.config.put(self.__name__,"idyframe",self.__idyframe__)
-      self.__parent__.config.put(self.__name__,"port", int(self.edtPort.text()))
-      self.__parent__.config.put(self.__name__,"remotehost", self.edtRemoteHost.text())
-      self.__parent__.config.put(self.__name__,"remoteport", int(self.edtRemotePort.text()))
-      self.__parent__.config.put(self.__name__,"workdir", self.lblwdir.text())
-      self.__parent__.config.put(self.__name__,"terminalsize", self.comboRes.currentText())
-      self.__parent__.config.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
-      self.__parent__.config.put(self.__name__,"colorscheme", self.comboCol.currentText())
-      self.__parent__.config.put(self.__name__,"terminalcharsize",self.spinCharsize.value())
+      PILCONFIG.put(self.__name__,"mode",self.__mode__)
+      PILCONFIG.put(self.__name__,"tty", self.lblTty.text())
+      PILCONFIG.put(self.__name__,"ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
+      PILCONFIG.put(self.__name__,"idyframe",self.__idyframe__)
+      PILCONFIG.put(self.__name__,"port", int(self.edtPort.text()))
+      PILCONFIG.put(self.__name__,"remotehost", self.edtRemoteHost.text())
+      PILCONFIG.put(self.__name__,"remoteport", int(self.edtRemotePort.text()))
+      PILCONFIG.put(self.__name__,"workdir", self.lblwdir.text())
+      PILCONFIG.put(self.__name__,"terminalsize", self.comboRes.currentText())
+      PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
+      PILCONFIG.put(self.__name__,"colorscheme", self.comboCol.currentText())
+      PILCONFIG.put(self.__name__,"terminalcharsize",self.spinCharsize.value())
       super().accept()
 
    def do_cancel(self):

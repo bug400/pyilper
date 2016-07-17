@@ -60,9 +60,10 @@
 # 19.02.2016 jsi
 # - refactored and merged new Ildev base class of Christoph Giesselink
 # - improved os detection
+# 08.07.2016 jsi
+# - refactoring: windows platform flag is constructor parameter now
 
 import os
-import platform
 import time
 import threading
 from .pildevbase import cls_pildevbase
@@ -86,7 +87,7 @@ def getLifInt(data,offset,length):
 
 class cls_drive(cls_pildevbase):
 
-   def __init__(self):
+   def __init__(self, isWindows):
       super().__init__()
 
 #
@@ -121,9 +122,7 @@ class cls_drive(cls_pildevbase):
       self.__access_lock__= threading.Lock() 
       self.__timestamp__= time.time() # last time of beeing talker
 
-      self.__isWindows__=False    # platform idicator for i/o
-      if platform.system()== "Windows":
-         self.__isWindows__= True
+      self.__isWindows__= isWindows # true, if Windows platform
 
 #
 # public ------------
