@@ -10,8 +10,7 @@ override_dh_auto_build:
 #       echo xx
 
 override_dh_auto_install:
-	python3 setup.py install --skip-build --root debian/pyilper \
-	     --install-layout deb; 
+	python3 setup.py install --skip-build --root debian/pyilper 
 
 override_dh_auto_clean:
 	dh_auto_clean
