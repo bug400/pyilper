@@ -65,6 +65,8 @@
 # - do not set path for QFileDialog, it remembers the last dir automatically
 # 11.07.2016 jsi
 # - use functions from pilcore.py for platform detection
+# 27.08.2016 jsi
+# - removed duplicate dialog warning for overwriting existing file in  cls_lifexport
 #
 import os
 import subprocess
