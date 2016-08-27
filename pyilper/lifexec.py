@@ -440,10 +440,6 @@ class cls_lifexport (QtGui.QDialog):
 #
    def do_ok(self):
       if self.outputfile != "":
-         if os.access(self.outputfile,os.W_OK):
-            reply=QtGui.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.outputfile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
-            if reply== QtGui.QMessageBox.Cancel:
-               return
 
          if self.radio1.isChecked():
             exec_double_export(self,["lifget","-r",self.lifimagefile,self.liffilename],"liftext",self.outputfile)
