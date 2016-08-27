@@ -98,6 +98,8 @@
 # - refactoring, use constant for configuration
 # - refactoring, move constants to pilcore.py
 # - refactoring, use platform functions from pilcore.py
+# 27.08.2016 jsi
+# - tab configuration rewritten
 #
 import os
 import sys
@@ -179,7 +181,10 @@ class cls_pyilper(QtCore.QObject):
 #
       try:
          PILCONFIG.get(self.name,"active_tab",0)
-         PILCONFIG.get(self.name,"tabconfig",[1,2,1,1])
+         PILCONFIG.get(self.name,"tabconfig_scope",1)
+         PILCONFIG.get(self.name,"tabconfig_drive",2)
+         PILCONFIG.get(self.name,"tabconfig_printer",1)
+         PILCONFIG.get(self.name,"tabconfig_terminal",1)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
          PILCONFIG.get(self.name,"tty","")
          PILCONFIG.get(self.name,"ttyspeed",0)
@@ -201,15 +206,14 @@ class cls_pyilper(QtCore.QObject):
 #
 #     create tab objects
 #
-      self.tabconfig=PILCONFIG.get(self.name,"tabconfig")
       self.registerTab(cls_tabscope,"Scope")
-      for i in range (self.tabconfig[1]):
+      for i in range (PILCONFIG.get(self.name,"tabconfig_drive")):
          devname="Drive"+str(int(i+1))
          self.registerTab(cls_tabdrive,devname)
-      for i in range (self.tabconfig[2]):
+      for i in range (PILCONFIG.get(self.name,"tabconfig_printer")):
          devname="Printer"+str(int(i+1))
          self.registerTab(cls_tabprinter,devname)
-      if self.tabconfig[3] ==1:
+      if PILCONFIG.get(self.name,"tabconfig_terminal")==1:
          self.registerTab(cls_tabterminal,"Terminal")
 #
 #     remove config of non existing tabs
@@ -398,10 +402,8 @@ class cls_pyilper(QtCore.QObject):
 #  callback HP-IL device config
 #
    def do_DevConfig(self):
-      config=cls_TabConfigWindow.getTabConfig(self.tabconfig)
-      if config is None:
+      if not cls_TabConfigWindow.getTabConfig():
          return
-      PILCONFIG.put(self.name,"tabconfig",config)
       PILCONFIG.put(self.name,"tabconfigchanged",True)
       try:
          PILCONFIG.save()

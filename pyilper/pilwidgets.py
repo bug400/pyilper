@@ -144,6 +144,8 @@
 # - refactoring, use constant to access configuration
 # - refactoring, move constants to pilcore.py
 # - refactoring, use platform functions from pilcore.py
+# 27.08.2016 jsi
+# - tab configuration rewritten
 #
 import os
 import glob
@@ -262,8 +264,6 @@ class cls_tabgeneric(QtGui.QWidget):
       except AttributeError:
          pass
       return
-
-
 #
 # generic terminal widget ----------------------------------------------------
 #
@@ -1598,7 +1598,6 @@ class cls_PilConfigWindow(QtGui.QDialog):
    @staticmethod
    def getPilConfig(parent):
       dialog= cls_PilConfigWindow(parent)
-#     dialog.resize(200,100)
       result= dialog.exec_()
       if result== QtGui.QDialog.Accepted:
          return True
@@ -1610,9 +1609,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
 
 class cls_TabConfigWindow(QtGui.QDialog):
 
-   def __init__(self, config):
+   def __init__(self):
       super().__init__()
-      self.__config__= config
 
       self.setWindowTitle("Configure virtual HP-IL devices")
       self.vlayout= QtGui.QVBoxLayout()
@@ -1623,6 +1621,7 @@ class cls_TabConfigWindow(QtGui.QDialog):
       self.label.setAlignment(QtCore.Qt.AlignCenter)
       self.vlayout.addWidget(self.label)
       self.glayout=QtGui.QGridLayout()
+
       self.spinScope=QtGui.QSpinBox()
       self.spinScope.setMinimum(1)
       self.spinScope.setMaximum(1)
@@ -1630,24 +1629,35 @@ class cls_TabConfigWindow(QtGui.QDialog):
       self.spinScope.setEnabled(False)
       self.glayout.addWidget(self.spinScope,0,0)
       self.glayout.addWidget(QtGui.QLabel("Scopes"),0,2)
+
       self.spinDrive=QtGui.QSpinBox()
       self.spinDrive.setMinimum(0)
       self.spinDrive.setMaximum(5)
       self.spinDrive.setFixedWidth(35)
       self.glayout.addWidget(self.spinDrive,1,0)
       self.glayout.addWidget(QtGui.QLabel("Drives"),1,2)
+
       self.spinPrinter=QtGui.QSpinBox()
       self.spinPrinter.setMinimum(0)
       self.spinPrinter.setMaximum(3)
       self.spinPrinter.setFixedWidth(35)
       self.glayout.addWidget(self.spinPrinter,2,0)
       self.glayout.addWidget(QtGui.QLabel("Printers"),2,2)
+
+      self.spinPlotter=QtGui.QSpinBox()
+      self.spinPlotter.setMinimum(0)
+      self.spinPlotter.setMaximum(3)
+      self.spinPlotter.setFixedWidth(35)
+      self.glayout.addWidget(self.spinPlotter,3,0)
+      self.glayout.addWidget(QtGui.QLabel("Plotters"),3,2)
+
       self.spinTerminal=QtGui.QSpinBox()
       self.spinTerminal.setMinimum(0)
       self.spinTerminal.setMaximum(1)
       self.spinTerminal.setFixedWidth(35)
-      self.glayout.addWidget(self.spinTerminal,3,0)
-      self.glayout.addWidget(QtGui.QLabel("Terminals"),3,2)
+      self.glayout.addWidget(self.spinTerminal,4,0)
+      self.glayout.addWidget(QtGui.QLabel("Terminals"),4,2)
+
       self.glayout.setColumnMinimumWidth(1,10)
       self.vlayout.addLayout(self.glayout)
       self.buttonBox = QtGui.QDialogButtonBox()
@@ -1659,34 +1669,32 @@ class cls_TabConfigWindow(QtGui.QDialog):
       self.hlayout.addWidget(self.buttonBox)
       self.vlayout.addWidget(self.buttonBox)
 
-      self.spinScope.setValue(self.__config__[0])
-      self.spinDrive.setValue(self.__config__[1])
-      self.spinPrinter.setValue(self.__config__[2])
-      self.spinTerminal.setValue(self.__config__[3])
+      self.spinScope.setValue(PILCONFIG.get("pyilper","tabconfig_scope"))
+      self.spinDrive.setValue(PILCONFIG.get("pyilper","tabconfig_drive"))
+      self.spinPrinter.setValue(PILCONFIG.get("pyilper","tabconfig_printer"))
+      self.spinTerminal.setValue( PILCONFIG.get("pyilper","tabconfig_terminal"))
 
    def do_ok(self):
-      self.__config__= [self.spinScope.value(), self.spinDrive.value(),
-       self.spinPrinter.value(),self.spinTerminal.value() ]
+      PILCONFIG.put("pyilper","tabconfig_scope",self.spinScope.value())
+      PILCONFIG.put("pyilper","tabconfig_drive",self.spinDrive.value())
+      PILCONFIG.put("pyilper","tabconfig_printer",self.spinPrinter.value())
+      PILCONFIG.put("pyilper","tabconfig_terminal",self.spinTerminal.value())
       super().accept()
       
 
    def do_cancel(self):
-      self.__config__= None
       super().reject()
       
 
-   def getConfig(self):
-      return self.__config__
-
    @staticmethod
-   def getTabConfig(config):
-      dialog= cls_TabConfigWindow(config)
+   def getTabConfig():
+      dialog= cls_TabConfigWindow()
       dialog.resize(200,100)
       result= dialog.exec_()
       if result== QtGui.QDialog.Accepted:
-         return dialog.getConfig()
+         return True
       else:
-         return None
+         return False
 
 #
 # HP-IL device Status Dialog class ---------------------------------------------
