@@ -1644,19 +1644,12 @@ class cls_TabConfigWindow(QtGui.QDialog):
       self.glayout.addWidget(self.spinPrinter,2,0)
       self.glayout.addWidget(QtGui.QLabel("Printers"),2,2)
 
-      self.spinPlotter=QtGui.QSpinBox()
-      self.spinPlotter.setMinimum(0)
-      self.spinPlotter.setMaximum(3)
-      self.spinPlotter.setFixedWidth(35)
-      self.glayout.addWidget(self.spinPlotter,3,0)
-      self.glayout.addWidget(QtGui.QLabel("Plotters"),3,2)
-
       self.spinTerminal=QtGui.QSpinBox()
       self.spinTerminal.setMinimum(0)
       self.spinTerminal.setMaximum(1)
       self.spinTerminal.setFixedWidth(35)
-      self.glayout.addWidget(self.spinTerminal,4,0)
-      self.glayout.addWidget(QtGui.QLabel("Terminals"),4,2)
+      self.glayout.addWidget(self.spinTerminal,3,0)
+      self.glayout.addWidget(QtGui.QLabel("Terminals"),3,2)
 
       self.glayout.setColumnMinimumWidth(1,10)
       self.vlayout.addLayout(self.glayout)
