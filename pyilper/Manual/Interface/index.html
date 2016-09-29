@@ -86,7 +86,7 @@
           lines to zero. You have to restart the application for take the changes 
           to effect.</p>
 
-          <h3><a name="Virtual HP-IL device config">HP-IL device config</a></h3>
+          <h3><a name="Virtual HP-IL device configuration">HP-IL device configuration</a></h3>
 
           <p>Configures the number of virtual HP-IL devices:</p>
           <ul>
@@ -97,6 +97,23 @@
           <p><b>Note:</b> the scope tab can not be removed from the application. If
           the number of devices was changed you have to restart the
           application for take the changes to effect.</p>
+
+          <h3><a name="Virtual HP-IL device sequence configuration">Virtual HP-IL device sequence configuration<a></h3>
+
+          <p>The default internal sequence of virtual HP-IL devices in pyILPER is:</p>
+          <ul>
+          <li>disk drive(s)</li>
+          <li>printer(s)</li>
+          <li>terminal</li>
+          </ul>
+          <p>You may move the position of devices in the list of the pyILPER HP-IL devices, 
+          e.g. to shift the printer as first device in the loop which is recommended for the
+          HP-41C. The custom device order is stored in the pyILPER configuration file.
+          You can watch the custom device order in the virtual HP-IL device status
+          window. Note: after changing the device sequence, the HP-IL loop must be
+          reconfigured again. A custom device sequence is cleared, if the number of
+          virtual HP-IL devices was changed. The scope which is not an active device in
+          the loop can not be moved.</p>
 
           <h3><a name="Reconnect">Reconnect</a></h3>
 
@@ -199,7 +216,7 @@
       <a href="scope.html">Scope</a> ::
       <a href="drive.html">Drive</a> ::
       <a href="printer.html">Printer</a> ::
-      <a href="terminal.html">Terminal</a>
+      <a href="terminal.html">Terminal</a> 
       </td>
     </tr>
   </table>

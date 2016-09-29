@@ -146,6 +146,9 @@
 # - refactoring, use platform functions from pilcore.py
 # 27.08.2016 jsi
 # - tab configuration rewritten
+# 18.09.2016 jsi
+# - configurable device sequence added
+
 #
 import os
 import glob
@@ -425,7 +428,7 @@ class cls_tabscope(cls_tabtermgeneric):
    def enable(self):
       super().enable()
       self.pildevice= cls_scope(True)
-      self.parent.commobject.register(self.pildevice)
+      self.parent.commobject.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.pildevice.register_callback_output(self.out_scope)
       self.cbShowIdy.setEnabled(True)
@@ -433,7 +436,7 @@ class cls_tabscope(cls_tabtermgeneric):
 
    def post_enable(self):
       self.pildevice2= cls_scope(False)
-      self.parent.commobject.register(self.pildevice2)
+      self.parent.commobject.register(self.pildevice2,self.name)
       self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
       self.pildevice2.register_callback_output(self.out_scope)
       self.pildevice2.set_show_idy(self.showIdy)
@@ -504,7 +507,7 @@ class cls_tabprinter(cls_tabtermgeneric):
    def enable(self):
       super().enable()
       self.pildevice= cls_printer()
-      self.parent.commobject.register(self.pildevice)
+      self.parent.commobject.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       self.pildevice.register_callback_output(self.out_printer)
       self.pildevice.register_callback_clear(self.hpterm.reset)
@@ -531,7 +534,7 @@ class cls_tabterminal(cls_tabtermgeneric):
    def enable(self):
       super().enable()
       self.pildevice= cls_terminal()
-      self.parent.commobject.register(self.pildevice)
+      self.parent.commobject.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       self.pildevice.register_callback_output(self.out_terminal)
       self.pildevice.register_callback_clear(self.hpterm.reset)
@@ -714,7 +717,7 @@ class cls_tabdrive(cls_tabgeneric):
    def enable(self):
       super().enable()
       self.pildevice= cls_drive(isWINDOWS())
-      self.parent.commobject.register(self.pildevice)
+      self.parent.commobject.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       did,aid= self.deviceinfo[self.drivetype]
       self.pildevice.setdevice(did,aid)
@@ -1648,8 +1651,8 @@ class cls_TabConfigWindow(QtGui.QDialog):
       self.spinTerminal.setMinimum(0)
       self.spinTerminal.setMaximum(1)
       self.spinTerminal.setFixedWidth(35)
-      self.glayout.addWidget(self.spinTerminal,3,0)
-      self.glayout.addWidget(QtGui.QLabel("Terminals"),3,2)
+      self.glayout.addWidget(self.spinTerminal,4,0)
+      self.glayout.addWidget(QtGui.QLabel("Terminals"),4,2)
 
       self.glayout.setColumnMinimumWidth(1,10)
       self.vlayout.addLayout(self.glayout)
@@ -1688,7 +1691,98 @@ class cls_TabConfigWindow(QtGui.QDialog):
          return True
       else:
          return False
+#
+# HP-IL device sequence configuration class -----------------------------------
 
+class cls_DevSequenceConfigWindow(QtGui.QDialog):
+
+   def __init__(self,parent):
+      super().__init__()
+      self.parent=parent
+      self.setWindowTitle('Virtual HP-IL device sequence')
+      self.vlayout = QtGui.QVBoxLayout()
+#
+#     item list and up/down buttons
+#
+      self.hlayout = QtGui.QHBoxLayout()
+      self.seqList = QtGui.QListWidget()
+      self.hlayout.addWidget(self.seqList)
+      self.vlayout2= QtGui.QVBoxLayout()
+      self.buttonUp= QtGui.QPushButton("^")
+      self.vlayout2.addWidget(self.buttonUp)
+      self.buttonDown= QtGui.QPushButton("v")
+      self.vlayout2.addWidget(self.buttonDown)
+      self.hlayout.addLayout(self.vlayout2)
+      self.vlayout.addLayout(self.hlayout)
+      self.buttonUp.clicked.connect(self.do_itemUp)
+      self.buttonDown.clicked.connect(self.do_itemDown)
+#
+#     ok/cancel button box
+#    
+      self.buttonBox = QtGui.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox.setCenterButtons(True)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.rejected.connect(self.do_cancel)
+      self.vlayout.addWidget(self.buttonBox)
+      self.setLayout(self.vlayout)
+#
+#     fill list widget
+#
+      itemlist=self.parent.commobject.getDevices()
+      for i in range (1, len(itemlist)-1):
+         self.seqList.addItem(itemlist[i][1])
+      self.seqList.setCurrentRow(0)
+
+   def do_ok(self):
+      itemList=self.parent.commobject.getDevices()
+      newList=[]
+      newList.append(itemList[0][1])
+      for i in range (1, len(itemList)-1):
+         newList.append(self.seqList.item(i-1).text())
+      newList.append(itemList[len(itemList)-1][1])
+      PILCONFIG.put(self.parent.name,"device_sequence",newList)
+      super().accept()
+
+   def do_cancel(self):
+      super().reject()
+
+   def do_itemUp(self):
+      num_rows=self.seqList.count()
+      if num_rows == 0:
+         return
+      row=self.seqList.currentRow()
+      if row == 0:
+          return
+      item= self.seqList.takeItem(row)
+      self.seqList.insertItem(row-1,item)
+      item= None
+      self.seqList.setCurrentRow(row-1)
+      return
+
+   def do_itemDown(self):
+      num_rows=self.seqList.count()
+      if num_rows == 0:
+         return
+      row=self.seqList.currentRow()
+      if row+1 == num_rows:
+         return
+      item= self.seqList.takeItem(row)
+      self.seqList.insertItem(row+1,item)
+      item= None
+      self.seqList.setCurrentRow(row+1)
+      return
+
+   @staticmethod
+   def getDeviceSequence(parent):
+      dialog= cls_DevSequenceConfigWindow(parent)
+      dialog.resize(350,100)
+      result= dialog.exec_()
+      if result== QtGui.QDialog.Accepted:
+         return True
+      else:
+         return False
 #
 # HP-IL device Status Dialog class ---------------------------------------------
 #
@@ -1772,17 +1866,18 @@ class cls_DevStatusWindow(QtGui.QDialog):
       super().accept()
 
    def do_refresh(self):
+      devices=self.parent.commobject.getDevices()
       i=1
       for row in range(self.rows):
-         tabobject=self.parent.tabobjects[i]
+         pildevice= devices[i][0]
+         name=devices[i][1]
          i+=1
-         name= tabobject.name
          self.__items__[row,0].setText(name)
          for col in range (1,self.cols):
             self.__items__[row,col].setText("")
-         if tabobject.pildevice== None:
+         if pildevice== None:
             continue
-         (active, did, aid, addr, addr2nd, hpilstatus)= tabobject.pildevice.getstatus()
+         (active, did, aid, addr, addr2nd, hpilstatus)= pildevice.getstatus()
          if not active:
             continue
          self.__items__[row,1].setText(did)
@@ -1821,9 +1916,12 @@ class cls_PilMessageBox(QtGui.QMessageBox):
 #
 class cls_ui(QtGui.QMainWindow):
 
-   def __init__(self,parent,version):
+   def __init__(self,parent,version,instance):
       super().__init__()
-      self.setWindowTitle("pyILPER "+version)
+      if instance == "":
+         self.setWindowTitle("pyILPER "+version)
+      else:
+         self.setWindowTitle("pyILPER "+version+" Instance: "+instance)
 #
 #     check if lifutils are installed
 #
@@ -1846,6 +1944,7 @@ class cls_ui(QtGui.QMainWindow):
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
       self.actionDevConfig=self.menuFile.addAction("Virtual HP-IL device configuration")
+      self.actionDevSequenceConfig=self.menuFile.addAction("Virtual HP-IL device sequence configuration")
       self.actionReconnect=self.menuFile.addAction("Reconnect")
       self.actionExit=self.menuFile.addAction("Quit")
 

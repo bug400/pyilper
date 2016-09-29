@@ -23,6 +23,8 @@
 # Changelog
 # 06.10.2015 jsi:
 # - class statement syntax update
+# 17.09.2016 jsi:
+# - open method introduced
 #
 from .userconfig import cls_userconfig, ConfigError
 from .pilcore import CONFIG_VERSION
@@ -39,9 +41,17 @@ class cls_pilconfig:
 #  initialize: read in the configuration file into the dictionary
 #  if the configuration file does not exist, an empty file is created
 #
-   def __init__(self,version):
+   def __init__(self):
       self.__config__= { } 
-      self.__userconfig__= cls_userconfig("pyilper",version)
+      self.__userconfig__ = None
+      return
+
+#
+#  open: read in the configuration file into the dictionary
+#  if the configuration file does not exist, an empty file is created
+#
+   def open(self,name,version,instance):
+      self.__userconfig__= cls_userconfig(name,version,instance)
       try:
          self.__config__= self.__userconfig__.read(self.__config__)
       except ConfigError as e:
@@ -90,4 +100,4 @@ class cls_pilconfig:
       except KeyError:
          pass
 
-PILCONFIG=  cls_pilconfig(CONFIG_VERSION)
+PILCONFIG=  cls_pilconfig()

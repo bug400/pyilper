@@ -100,6 +100,9 @@
 # - refactoring, use platform functions from pilcore.py
 # 27.08.2016 jsi
 # - tab configuration rewritten
+# 18.09.2016 jsi
+# - configurable device sequence added
+# - multiple instances capability added
 #
 import os
 import sys
@@ -109,8 +112,9 @@ import traceback
 import shutil
 import pyilper
 import re
+import argparse
 from PyQt4 import QtCore, QtGui
-from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow,cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
+from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow,cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_DevSequenceConfigWindow
 from .pilcore import *
 from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
 from .pilbox import cls_pilbox, PilBoxError
@@ -136,10 +140,14 @@ class cls_pyilper(QtCore.QObject):
    sig_quit=QtCore.pyqtSignal()
 
 
-   def __init__(self):
+   def __init__(self,args):
  
       super().__init__()
       self.name="pyilper"
+      self.instance=""
+      if args.instance:
+         if args.instance.isalnum():
+            self.instance=args.instance
       self.status= STAT_DISABLED
       self.tabobjects= [ ]
       self.commobject=None
@@ -154,10 +162,11 @@ class cls_pyilper(QtCore.QObject):
 #
 #     Initialize Main Window, connect callbacks
 #
-      self.ui= cls_ui(self,VERSION)
+      self.ui= cls_ui(self,VERSION,self.instance)
       self.ui.actionConfig.triggered.connect(self.do_pyilperConfig)
       self.ui.actionDevConfig.triggered.connect(self.do_DevConfig)
       self.ui.actionDevStatus.triggered.connect(self.do_DevStatus)
+      self.ui.actionDevSequenceConfig.triggered.connect(self.do_DevSequenceConfig)
       self.ui.actionReconnect.triggered.connect(self.do_Reconnect)
       self.ui.actionExit.triggered.connect(self.do_Exit)
       self.ui.actionInit.triggered.connect(self.do_Init)
@@ -180,6 +189,7 @@ class cls_pyilper(QtCore.QObject):
 #     Set up configuration subsystem
 #
       try:
+         PILCONFIG.open(self.name,CONFIG_VERSION,self.instance)
          PILCONFIG.get(self.name,"active_tab",0)
          PILCONFIG.get(self.name,"tabconfig_scope",1)
          PILCONFIG.get(self.name,"tabconfig_drive",2)
@@ -199,6 +209,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"colorscheme","white")
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
+         PILCONFIG.get(self.name,"device_sequence",[])
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
@@ -221,6 +232,7 @@ class cls_pyilper(QtCore.QObject):
       if PILCONFIG.get(self.name,"tabconfigchanged"):
          PILCONFIG.put(self.name,"tabconfigchanged",False)
          PILCONFIG.put(self.name,"active_tab",0)
+         PILCONFIG.put(self.name,"device_sequence",[])
          names= [self.name]
          for obj in self.tabobjects:
             names.append(obj.name)
@@ -312,6 +324,10 @@ class cls_pyilper(QtCore.QObject):
 #     register outbound scope
 #
       self.tabobjects[0].post_enable()
+#
+#     set device order
+#
+      self.commobject.reorderSequence(PILCONFIG.get(self.name,"device_sequence"))
 #
 #     start emulator thread
 #
@@ -413,6 +429,27 @@ class cls_pyilper(QtCore.QObject):
       reply=QtGui.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration changed. Restart Application.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       
 #
+#  callback HP-IL device order
+#
+   def do_DevSequenceConfig(self):
+      if not cls_DevSequenceConfigWindow.getDeviceSequence(self):
+         return
+      try:
+         PILCONFIG.save()
+      except PilConfigError as e:
+         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         return
+#
+#  now activate new device sequence
+#
+      if self.commthread.isRunning():
+         self.commthread.halt()
+         self.commobject.reorderSequence(PILCONFIG.get(self.name,"device_sequence"))
+         self.commthread.resume()
+      else:
+         self.commobject.reorderSequence(PILCONFIG.get(self.name,"device_sequence"))
+
+#
 #  callback show hp-il device status
 #
    def do_DevStatus(self):
@@ -498,10 +535,14 @@ def dumpstacks(signal, frame):
     traceback.print_stack(f=stack)
 
 def main():
+   parser=argparse.ArgumentParser(description='pyILPER startup script')
+   parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE")
+   args=parser.parse_args()
+
    if not isWINDOWS():
       signal.signal(signal.SIGQUIT, dumpstacks)
    app = QtGui.QApplication(sys.argv)
-   pyilper= cls_pyilper()
+   pyilper= cls_pyilper(args)
    sys.exit(app.exec_())
 
 

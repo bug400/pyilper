@@ -30,6 +30,8 @@
 # - use json to serialize program configuration
 # 18.04.2016 jsi
 # - use pretty print json
+# 18.09.2016 jsi
+# - add instance to configuration file name
 
 import json
 import os
@@ -43,11 +45,11 @@ class ConfigError(Exception):
 
 class cls_userconfig:
 
-   def __init__(self,progname,version):
+   def __init__(self,progname,version,instance):
 #
 #  determine config file name
 #
-      self.__configfilename__=progname
+      self.__configfilename__=progname+instance
       for i in range(0,len(version)):
          if version[i]!=".":
             self.__configfilename__+= version[i]

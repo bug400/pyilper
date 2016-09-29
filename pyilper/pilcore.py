@@ -25,8 +25,11 @@
 # Changelog
 # 08.07.16 - jsi:
 # - initial release
-# 25.08.16 - jsi
-# - production
+# 25.07.2016 - jsi
+# - set version to "production"
+# 21.08.2016 - jsi
+# - set version to 1.3.5 development
+# - set config version to 3
 #
 import platform
 #
@@ -44,8 +47,8 @@ def isMACOS():
 #
 # General constants:
 #
-PRODUCION= True       # Production/Development Version
-VERSION="1.3.4"       # pyILPR version number
+PRODUCION= False      # Production/Development Version
+VERSION="1.3.5"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # PIL-Box communication
