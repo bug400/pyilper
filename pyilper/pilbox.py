@@ -58,6 +58,8 @@
 # 11.07.2016 jsi
 # - autobaud detection rewritten, hint by cg
 # - move constants to pilcore.py
+# 17.09.2016 jsi
+# - configurable sequence of virtual devices added
 #
 # PIL-Box Commands
 #
@@ -262,14 +264,14 @@ class cls_pilbox:
 #     process virtual HP-IL devices
 #
          for i in self.__devices__:
-            frame=i.process(frame)
+            frame=i[0].process(frame)
 #
 #     If received a cmd frame from the PIL-Box send RFC frame to virtual
 #     HPIL-Devices
 #
          if (frame & 0x700) == 0x400:
             for i in self.__devices__:
-               i.process(0x500)
+               i[0].process(0x500)
 #
 #     send frame
 #
@@ -280,16 +282,40 @@ class cls_pilbox:
 #
 #     virtualeHP-IL device
 #
-   def register(self, obj):
-      self.__devices__.append(obj)
-#
-#     unregister virtual HP-IL device
-#
-
-   def unregister(self,n):
-      del self.__devices__[n]
+   def register(self, obj, name):
+      self.__devices__.append([obj,name])
 #
 #     get-/set-
 #
    def isRunning(self):
       return(self.__running__)
+#
+#  get device sequence list
+#
+   def getSequence(self):
+      seqList= []
+      for i in self.__devices__:
+         seqList.append(i[1])
+      return seqList
+#
+# reorder devices according to the list of names
+#
+   def reorderSequence(self,seqList):
+      if seqList==[]:
+         return
+      l= len(self.__devices__)
+      for i in range(l):
+         if seqList[i]=="Scope":
+            continue
+         for j in range(l):
+            if seqList[i]==self.__devices__[j][1]:
+               tmp=self.__devices__[i]
+               self.__devices__[i]= self.__devices__[j]
+               self.__devices__[j]=tmp
+               break
+      return
+#
+# get device list
+#
+   def getDevices(self):
+      return self.__devices__
