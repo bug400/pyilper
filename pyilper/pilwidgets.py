@@ -148,6 +148,8 @@
 # - tab configuration rewritten
 # 18.09.2016 jsi
 # - configurable device sequence added
+# 04.10.2016 jsi
+# - renamed sequence to position in the menu entry
 
 #
 import os
@@ -1944,7 +1946,7 @@ class cls_ui(QtGui.QMainWindow):
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
       self.actionDevConfig=self.menuFile.addAction("Virtual HP-IL device configuration")
-      self.actionDevSequenceConfig=self.menuFile.addAction("Virtual HP-IL device sequence configuration")
+      self.actionDevSequenceConfig=self.menuFile.addAction("Virtual HP-IL device position configuration")
       self.actionReconnect=self.menuFile.addAction("Reconnect")
       self.actionExit=self.menuFile.addAction("Quit")
 
