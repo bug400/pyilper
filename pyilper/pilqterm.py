@@ -80,6 +80,8 @@
 # - introduce parameter for scroll up buffersize
 # 11.07.2016 jsi:
 # - refactoring: move some constants to pilcore.py
+# 05.10.2016 jsi:
+# - implemented redraw method to refres terminal when parent widget was resized
 
 
 import array
@@ -119,6 +121,7 @@ class QScrolledTerminalWidget(QWidget):
 #
         self.hbox= QHBoxLayout()
         self.terminalwidget= QTerminalWidget(self,font_name,font_size,font_height, width,height, colorscheme)
+        self.terminalwidget.setFixedSize(width,height)
         self.hbox.addWidget(self.terminalwidget)
         self.hbox.setAlignment(self.terminalwidget,Qt.AlignLeft)
         self.scrollbar= QScrollBar()
@@ -141,6 +144,11 @@ class QScrolledTerminalWidget(QWidget):
     def register_callback_scrollbar(self,func):
         self.callback_scrollbar=func
         self.scrollbar.setEnabled(True)
+#
+#   redraw terminal window
+# 
+    def redraw(self):
+       self.terminalwidget.redraw()
 
 class QTerminalWidget(QWidget):
 
@@ -216,6 +224,14 @@ class QTerminalWidget(QWidget):
         self._blink_counter=0
         self._cursor_rect = QRect(0, 0, self._char_width, self._char_height)
         self._cursor_polygon=QPolygon([QPoint(0,0+(self._char_height/2)), QPoint(0+(self._char_width*0.8),0+self._char_height), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0), QPoint(0,0+(self._char_height/2))])
+        self._redrawTimer= QTimer()
+        self._redrawTimer.timeout.connect(self.delayed_redraw)
+        self._redraw=False
+
+    def delayed_redraw(self):
+        self._redrawTimer.stop()
+        self._redraw=True
+        self.update()
 #
 #  overwrite standard methods
 #
@@ -225,9 +241,14 @@ class QTerminalWidget(QWidget):
 
     def minimumSizeHint(self):
         return QSize(self._w,self._h)
-
+#
     def resizeEvent(self, event):
         self.resize(self._w, self._h)
+#
+#   repaint terminal after delay, issued by resize events of parent widgets
+#
+    def redraw(self):
+        self._redrawTimer.start(UPDATE_TIMER*4)
 
     def setkbdfunc(self,func):
         self._kbdfunc= func
@@ -249,6 +270,9 @@ class QTerminalWidget(QWidget):
         painter = QPainter(self)
         if self._dirty:
             self._dirty = False
+            self._paint_screen(painter)
+        elif self._redraw:
+            self._redraw=False
             self._paint_screen(painter)
         else:
             self._blink_counter+=1

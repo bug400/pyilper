@@ -150,7 +150,8 @@
 # - configurable device sequence added
 # 04.10.2016 jsi
 # - renamed sequence to position in the menu entry
-
+# 05.10.2016 jsi
+# - redraw terminal widgets if parent window was resized
 #
 import os
 import glob
@@ -158,6 +159,7 @@ import datetime
 import time
 import re
 import pyilper
+import sys
 from PyQt4 import QtCore, QtGui, QtWebKit
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
 from .pilqterm import QScrolledTerminalWidget,HPTerminal
@@ -305,9 +307,11 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.qterminal=QScrolledTerminalWidget(self,self.font_name, self.font_size, self.cols, self.rows,self.colorscheme)
 
       self.hbox1= QtGui.QHBoxLayout()
+      self.hbox1.addStretch(1)
       self.hbox1.addWidget(self.qterminal)
       self.hbox1.setAlignment(self.qterminal,QtCore.Qt.AlignHCenter)
       self.hbox1.setContentsMargins(20,20,20,20)
+      self.hbox1.addStretch(1)
       self.hbox2= QtGui.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
       self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
@@ -323,9 +327,12 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.hbox2.addWidget(self.lbltxtc)
          self.hbox2.addWidget(self.comboCharset)
       self.hbox2.setContentsMargins(10,3,10,3)
+      self.hbox2.addStretch(1)
       self.vbox= QtGui.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
+      self.vbox.setAlignment(self.hbox1,QtCore.Qt.AlignTop)
       self.vbox.addLayout(self.hbox2)
+      self.vbox.setAlignment(self.hbox2,QtCore.Qt.AlignTop)
       self.setLayout(self.vbox)
       self.hpterm=HPTerminal(self.cols,self.rows,self.scrollupbuffersize,self.qterminal)
 #
@@ -343,6 +350,12 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.comboCharset.setCurrentIndex(self.charset)
          self.comboCharset.setEnabled(False)
          self.hpterm.set_charset(self.charset)
+#
+#     catch resize event to redraw the terminal window
+#
+   def resizeEvent(self,event):
+      self.qterminal.redraw()
+
 
    def do_cbLogging(self):
       self.cbLogging.setEnabled(False)
@@ -1228,6 +1241,7 @@ class cls_AboutWindow(QtGui.QDialog):
       self.view.setWordWrap(True)
       self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2016 Joachim Siebold\n\nGNU General Public License Version 2\n")
 
+
       self.button = QtGui.QPushButton('OK')
       self.button.setFixedWidth(60)
       self.button.clicked.connect(self.do_exit)
@@ -1964,14 +1978,15 @@ class cls_ui(QtGui.QMainWindow):
 #
 #     Central widget (tabs only)
 #
-      self.centralwidget= QtGui.QWidget()
-      self.setCentralWidget(self.centralwidget)
-
+#     self.centralwidget= QtGui.QWidget()
+#     self.setCentralWidget(self.centralwidget)
       self.tabs=QtGui.QTabWidget()
+      self.setCentralWidget(self.tabs)
 
-      self.vbox= QtGui.QVBoxLayout()
-      self.vbox.addWidget(self.tabs,1)
-      self.centralwidget.setLayout(self.vbox)
+
+#     self.vbox= QtGui.QVBoxLayout()
+#     self.vbox.addWidget(self.tabs,1)
+#     self.centralwidget.setLayout(self.vbox)
 #
 #     Status bar
 #
