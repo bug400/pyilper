@@ -152,6 +152,13 @@
 # - renamed sequence to position in the menu entry
 # 05.10.2016 jsi
 # - redraw terminal widgets if parent window was resized
+# 13.10.2016 jsi
+# - device configuration rewritten, configure devices and their position in one dialogue
+#   now.
+# 19.10.2016 jsi
+# - plotter tab widget added (merged)
+# - pen definition dialog added (merged)
+# - webkit/webendine handling added (experimental)
 #
 import os
 import glob
@@ -160,15 +167,32 @@ import time
 import re
 import pyilper
 import sys
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt4 import QtCore, QtGui
+HAS_WEBKIT=False
+HAS_WEBENGINE=False
+try:
+   from PyQt4 import QtWebKit
+   HAS_WEBKIT= True
+except:
+   pass
+try:
+   from PyQt4 import QtWebEngineWidgets
+   HAS_WEBENGINE=True
+except:
+   pass
+if HAS_WEBKIT and HAS_WEBENGINE:
+   HAS_WEBENGINE=False
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
+from .pyplotter import cls_PlotterWidget, cls_HP7470
 from .pilqterm import QScrolledTerminalWidget,HPTerminal
 from .pilscope import cls_scope
 from .pilprinter import cls_printer
 from .pilterminal import cls_terminal
 from .pildrive import cls_drive
+from .pilplotter import cls_plotter
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .pilconfig import PilConfigError, PILCONFIG
+from .penconfig import PenConfigError, PENCONFIG
 from .pilcore import *
 if isWINDOWS():
    import winreg
@@ -270,6 +294,111 @@ class cls_tabgeneric(QtGui.QWidget):
          self.toggle_active()
       except AttributeError:
          pass
+      return
+#
+# plotter widget ----------------------------------------------------------
+#
+class cls_tabplotter(cls_tabgeneric):
+
+   LOGLEVEL=["HP-GL","HP-GL+Status","HP-GL+Status+Commands"]
+
+   def __init__(self,parent,name):
+      super().__init__(parent,name)
+      self.name=name
+      self.logging= PILCONFIG.get(self.name,"logging",False)
+      self.loglevel= PILCONFIG.get(self.name,"loglevel",0)
+#
+#     Build gui
+#
+      self.qplotter=cls_PlotterWidget(self,self.name)
+
+      self.hbox1= QtGui.QHBoxLayout()
+      self.hbox1.addWidget(self.qplotter)
+      self.hbox1.setAlignment(self.qplotter,QtCore.Qt.AlignHCenter)
+      self.hbox1.setContentsMargins(20,20,20,20)
+      self.hbox2= QtGui.QHBoxLayout()
+      self.hbox2.addWidget(self.cbActive)
+      self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
+
+      self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
+      self.hbox2.addWidget(self.cbLogging)
+      self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
+
+      self.lbltxtc=QtGui.QLabel("Log level ")
+      self.comboLoglevel=QtGui.QComboBox()
+      for txt in self.LOGLEVEL:
+          self.comboLoglevel.addItem(txt)
+      self.hbox2.addWidget(self.lbltxtc)
+      self.hbox2.addWidget(self.comboLoglevel)
+
+      self.hbox2.addStretch(1)
+
+      self.hbox2.setContentsMargins(10,3,10,3)
+      self.vbox= QtGui.QVBoxLayout()
+      self.vbox.addLayout(self.hbox1)
+      self.vbox.addLayout(self.hbox2)
+      self.setLayout(self.vbox)
+      self.plotter=cls_HP7470(self,self.name)
+
+      self.cbLogging.setChecked(self.logging)
+      self.cbLogging.setEnabled(False)
+      self.cbLogging.stateChanged.connect(self.do_cbLogging)
+
+      self.comboLoglevel.activated[str].connect(self.do_changeLoglevel)
+      self.comboLoglevel.setCurrentIndex(self.loglevel)
+      self.comboLoglevel.setEnabled(False)
+
+   def do_cbLogging(self):
+      self.cbLogging.setEnabled(False)
+      self.logging= self.cbLogging.isChecked()
+      self.pildevice.setlocked(True)
+      if self.logging:
+         self.cbLogging.logOpen()
+      else:
+         self.cbLogging.logClose()
+      PILCONFIG.put(self.name,"logging",self.logging)
+      self.pildevice.setlocked(False)
+      self.cbLogging.setEnabled(True)
+
+   def do_changeLoglevel(self,text):
+      self.loglevel=self.comboLoglevel.currentIndex()
+      PILCONFIG.put(self.name,'loglevel',self.loglevel)
+
+   def enable(self):
+      super().enable()
+      self.pildevice= cls_plotter()
+      self.parent.commobject.register(self.pildevice,self.name)
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
+      self.pildevice.register_callback_output(self.plotter.process_char)
+      self.pildevice.register_callback_clear(self.plotter.reset)
+      self.plotter.set_outfunc(self.pildevice.setOutput)
+      self.plotter.set_statfunc(self.pildevice.set_status)
+      self.cbLogging.setEnabled(True)
+      self.comboLoglevel.setEnabled(True)
+      if self.logging:
+         self.cbLogging.logOpen()
+      self.plotter.enable()
+      self.qplotter.enable()
+
+   def disable(self):
+      self.plotter.disable()
+      self.qplotter.disable()
+      if self.logging:
+         self.cbLogging.logClose()
+      self.cbLogging.setEnabled(False)
+      self.comboLoglevel.setEnabled(False)
+      super().disable()
+#
+#  becomes visible, refresh content, activate update and blink
+#
+   def becomes_visible(self):
+      self.qplotter.becomes_visible()
+      return
+#
+#  becomes invisible, deactivate update and blink
+#
+   def becomes_invisible(self):
+      self.qplotter.becomes_invisible()
       return
 #
 # generic terminal widget ----------------------------------------------------
@@ -1196,25 +1325,31 @@ class cls_HelpWindow(QtGui.QDialog):
  
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
-      self.view = QtWebKit.QWebView()
-      self.view.setMinimumWidth(600)
-      self.view.load(QtCore.QUrl.fromLocalFile(docpath))
-
+      if HAS_WEBKIT:
+         self.view = QtWebKit.QWebView()
+         self.view.setMinimumWidth(600)
+         self.view.load(QtCore.QUrl.fromLocalFile(docpath))
+         self.vlayout.addWidget(self.view)
+      if HAS_WEBENGINE:
+         self.view = QtWebEngineWidgets.QWebEngineView()
+         self.view.setMinimumWidth(600)
+         self.view.load(QtCore.QUrl.fromLocalFile(docpath))
+         self.vlayout.addWidget(self.view)
       self.buttonExit = QtGui.QPushButton('Exit')
       self.buttonExit.setFixedWidth(60)
       self.buttonExit.clicked.connect(self.do_exit)
       self.buttonBack = QtGui.QPushButton('<')
       self.buttonBack.setFixedWidth(60)
-      self.buttonBack.clicked.connect(self.do_back)
       self.buttonForward = QtGui.QPushButton('>')
       self.buttonForward.setFixedWidth(60)
-      self.buttonForward.clicked.connect(self.do_forward)
-      self.vlayout.addWidget(self.view)
       self.hlayout = QtGui.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBack)
       self.hlayout.addWidget(self.buttonExit)
       self.hlayout.addWidget(self.buttonForward)
       self.vlayout.addLayout(self.hlayout)
+      if HAS_WEBKIT or HAS_WEBENGINE:
+         self.buttonBack.clicked.connect(self.do_back)
+         self.buttonForward.clicked.connect(self.do_forward)
 
    def do_exit(self):
       self.hide()
@@ -1622,116 +1757,167 @@ class cls_PilConfigWindow(QtGui.QDialog):
          return True
       else:
          return False
-#
-# Get Tab Config Dialog class ------------------------------------------------
-#
 
-class cls_TabConfigWindow(QtGui.QDialog):
-
-   def __init__(self):
+#
+# Plotter pen table mode class --------------------------------------------
+#
+class PenTableModel(QtCore.QAbstractTableModel):
+   def __init__(self, datain, parent = None):
       super().__init__()
+      self.arraydata = datain
 
-      self.setWindowTitle("Configure virtual HP-IL devices")
-      self.vlayout= QtGui.QVBoxLayout()
-      self.setLayout(self.vlayout)
+   def rowCount(self, parent):
+      return len(self.arraydata)
 
-      self.label= QtGui.QLabel()
-      self.label.setText("Configure virtual devices")
-      self.label.setAlignment(QtCore.Qt.AlignCenter)
-      self.vlayout.addWidget(self.label)
-      self.glayout=QtGui.QGridLayout()
+   def columnCount(self, parent):
+      return len(self.arraydata[0])
 
-      self.spinScope=QtGui.QSpinBox()
-      self.spinScope.setMinimum(1)
-      self.spinScope.setMaximum(1)
-      self.spinScope.setFixedWidth(35)
-      self.spinScope.setEnabled(False)
-      self.glayout.addWidget(self.spinScope,0,0)
-      self.glayout.addWidget(QtGui.QLabel("Scopes"),0,2)
+   def data(self, index, role):
+      if not index.isValid():
+          return None
+      elif role != QtCore.Qt.DisplayRole:
+          return None
+      return (self.arraydata[index.row()][index.column()])
 
-      self.spinDrive=QtGui.QSpinBox()
-      self.spinDrive.setMinimum(0)
-      self.spinDrive.setMaximum(5)
-      self.spinDrive.setFixedWidth(35)
-      self.glayout.addWidget(self.spinDrive,1,0)
-      self.glayout.addWidget(QtGui.QLabel("Drives"),1,2)
+   def setData(self, index, value,role):
+      self.arraydata[index.row()][index.column()] = value
+      self.dataChanged.emit(index,index) # this updates the edited cell
+      return True
 
-      self.spinPrinter=QtGui.QSpinBox()
-      self.spinPrinter.setMinimum(0)
-      self.spinPrinter.setMaximum(3)
-      self.spinPrinter.setFixedWidth(35)
-      self.glayout.addWidget(self.spinPrinter,2,0)
-      self.glayout.addWidget(QtGui.QLabel("Printers"),2,2)
+   def flags(self, index):
+      return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
-      self.spinTerminal=QtGui.QSpinBox()
-      self.spinTerminal.setMinimum(0)
-      self.spinTerminal.setMaximum(1)
-      self.spinTerminal.setFixedWidth(35)
-      self.glayout.addWidget(self.spinTerminal,4,0)
-      self.glayout.addWidget(QtGui.QLabel("Terminals"),4,2)
+   def headerData(self,section,orientation,role):
+      if role != QtCore.Qt.DisplayRole:
+         return None
+      if (orientation == QtCore.Qt.Horizontal):
+         if section==0:
+            return("Description")
+         elif section==1:
+            return("R")
+         elif section==2:
+            return("G")
+         elif section==3:
+            return("B")
+         elif section==3:
+            return("A")
+         elif section==4:
+            return("Alpha")
+         elif section==5:
+            return("Width")
+         else:
+            return("")
 
-      self.glayout.setColumnMinimumWidth(1,10)
-      self.vlayout.addLayout(self.glayout)
+   def getTable(self):
+      return self.arraydata
+
+   def setAll(self,penconfig):
+      self.arraydata=penconfig
+      self.layoutChanged.emit() # this updates all cells
+         
+#
+# Custom class with input validators ---------------------------------------
+#
+class PenDelegate(QtGui.QItemDelegate):
+
+   def createEditor(self, parent, option, index):
+      editor= super(PenDelegate,self).createEditor(parent,option,index)
+      if index.column() > 0 and index.column()< 5:
+         editor.setValidator(QtGui.QIntValidator(0,255))
+      elif index.column() == 5:
+         editor.setValidator(QtGui.QDoubleValidator(0.0,5.0,1))
+      return(editor)
+
+   def setEditorData(self, editor, index):
+      # Gets display text if edit data hasn't been set.
+      text = index.data(QtCore.Qt.EditRole) or index.data(QtCore.Qt.DisplayRole)
+      editor.setText(str(text))         
+
+#
+# Plotter pen  configuration class -----------------------------------
+#
+class cls_PenConfigWindow(QtGui.QDialog):
+
+   def __init__(self): 
+      super().__init__()
+      self.setWindowTitle('Plotter pen config')
+      self.vlayout = QtGui.QVBoxLayout()
+#
+#     table widget
+#
+      self.tablemodel=PenTableModel(PENCONFIG.get_all())
+      self.tableview= QtGui.QTableView()
+      self.tableview.setModel(self.tablemodel)
+      self.tableview.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+      self.tableview.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+      self.delegate= PenDelegate()
+      self.tableview.setItemDelegate(self.delegate)
+      self.vlayout.addWidget(self.tableview)
+#
+#     ok/cancel button box
+#    
       self.buttonBox = QtGui.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Reset| QtGui.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.hlayout = QtGui.QHBoxLayout()
-      self.hlayout.addWidget(self.buttonBox)
+      self.buttonBox.button(QtGui.QDialogButtonBox.Reset).clicked.connect(self.do_reset)
       self.vlayout.addWidget(self.buttonBox)
-
-      self.spinScope.setValue(PILCONFIG.get("pyilper","tabconfig_scope"))
-      self.spinDrive.setValue(PILCONFIG.get("pyilper","tabconfig_drive"))
-      self.spinPrinter.setValue(PILCONFIG.get("pyilper","tabconfig_printer"))
-      self.spinTerminal.setValue( PILCONFIG.get("pyilper","tabconfig_terminal"))
+      self.setLayout(self.vlayout)
 
    def do_ok(self):
-      PILCONFIG.put("pyilper","tabconfig_scope",self.spinScope.value())
-      PILCONFIG.put("pyilper","tabconfig_drive",self.spinDrive.value())
-      PILCONFIG.put("pyilper","tabconfig_printer",self.spinPrinter.value())
-      PILCONFIG.put("pyilper","tabconfig_terminal",self.spinTerminal.value())
+      PENCONFIG.set_all(self.tablemodel.getTable())
       super().accept()
-      
 
    def do_cancel(self):
       super().reject()
-      
+#
+#     reset populates table with the default configuration
+#
+   def do_reset(self):
+      self.tablemodel.setAll(PENCONFIG.default_config())
 
    @staticmethod
-   def getTabConfig():
-      dialog= cls_TabConfigWindow()
-      dialog.resize(200,100)
+   def getPenConfig():
+      dialog= cls_PenConfigWindow()
+      dialog.resize(650,600)
       result= dialog.exec_()
       if result== QtGui.QDialog.Accepted:
          return True
       else:
          return False
 #
-# HP-IL device sequence configuration class -----------------------------------
+# HP-IL virtual device  configuration class -----------------------------------
+#
 
-class cls_DevSequenceConfigWindow(QtGui.QDialog):
+class cls_DeviceConfigWindow(QtGui.QDialog):
 
    def __init__(self,parent):
       super().__init__()
       self.parent=parent
-      self.setWindowTitle('Virtual HP-IL device sequence')
+      self.setWindowTitle('Virtual HP-IL device config')
       self.vlayout = QtGui.QVBoxLayout()
 #
 #     item list and up/down buttons
 #
       self.hlayout = QtGui.QHBoxLayout()
-      self.seqList = QtGui.QListWidget()
-      self.hlayout.addWidget(self.seqList)
+      self.devList = QtGui.QListWidget()
+      self.hlayout.addWidget(self.devList)
       self.vlayout2= QtGui.QVBoxLayout()
       self.buttonUp= QtGui.QPushButton("^")
       self.vlayout2.addWidget(self.buttonUp)
       self.buttonDown= QtGui.QPushButton("v")
       self.vlayout2.addWidget(self.buttonDown)
+      self.buttonAdd= QtGui.QPushButton("Add")
+      self.vlayout2.addWidget(self.buttonAdd)
+      self.buttonRemove= QtGui.QPushButton("Remove")
+      self.vlayout2.addWidget(self.buttonRemove)
       self.hlayout.addLayout(self.vlayout2)
       self.vlayout.addLayout(self.hlayout)
       self.buttonUp.clicked.connect(self.do_itemUp)
       self.buttonDown.clicked.connect(self.do_itemDown)
+      self.buttonAdd.clicked.connect(self.do_itemAdd)
+      self.buttonRemove.clicked.connect(self.do_itemRemove)
 #
 #     ok/cancel button box
 #    
@@ -1746,59 +1932,164 @@ class cls_DevSequenceConfigWindow(QtGui.QDialog):
 #
 #     fill list widget
 #
-      itemlist=self.parent.commobject.getDevices()
-      for i in range (1, len(itemlist)-1):
-         self.seqList.addItem(itemlist[i][1])
-      self.seqList.setCurrentRow(0)
+      self.tabList=PILCONFIG.get(self.parent.name,"tabconfig")
+      for tab in self.tabList:
+         typ= tab[0]
+         name=tab[1]
+         self.devList.addItem(name+" ("+ TAB_NAMES[typ]+ ")")
+      self.devList.setCurrentRow(0)
 
    def do_ok(self):
-      itemList=self.parent.commobject.getDevices()
-      newList=[]
-      newList.append(itemList[0][1])
-      for i in range (1, len(itemList)-1):
-         newList.append(self.seqList.item(i-1).text())
-      newList.append(itemList[len(itemList)-1][1])
-      PILCONFIG.put(self.parent.name,"device_sequence",newList)
+      PILCONFIG.put(self.parent.name,"tabconfig",self.tabList)
       super().accept()
 
    def do_cancel(self):
       super().reject()
 
    def do_itemUp(self):
-      num_rows=self.seqList.count()
+      num_rows=self.devList.count()
       if num_rows == 0:
          return
-      row=self.seqList.currentRow()
+      row=self.devList.currentRow()
       if row == 0:
           return
-      item= self.seqList.takeItem(row)
-      self.seqList.insertItem(row-1,item)
+      item= self.devList.takeItem(row)
+      self.devList.insertItem(row-1,item)
       item= None
-      self.seqList.setCurrentRow(row-1)
+      self.devList.setCurrentRow(row-1)
+      temp=self.tabList[row]
+      self.tabList[row]= self.tabList[row-1]
+      self.tabList[row-1]=temp
       return
+
 
    def do_itemDown(self):
-      num_rows=self.seqList.count()
+      num_rows=self.devList.count()
       if num_rows == 0:
          return
-      row=self.seqList.currentRow()
+      row=self.devList.currentRow()
       if row+1 == num_rows:
          return
-      item= self.seqList.takeItem(row)
-      self.seqList.insertItem(row+1,item)
+      item= self.devList.takeItem(row)
+      self.devList.insertItem(row+1,item)
       item= None
-      self.seqList.setCurrentRow(row+1)
+      self.devList.setCurrentRow(row+1)
+      temp=self.tabList[row]
+      self.tabList[row]= self.tabList[row+1]
+      self.tabList[row+1]=temp
       return
 
+   def do_itemRemove(self):
+      row=self.devList.currentRow()
+      del(self.tabList[row])
+      item=self.devList.takeItem(row)
+      item= None
+
+   def do_itemAdd(self):
+      retval=cls_AddDeviceWindow.getAddDevice(self)
+      if retval== "":
+         return
+      typ=retval[0]
+      name=retval[1]
+      self.devList.addItem(name+" ("+ TAB_NAMES[typ]+ ")")
+      self.tabList.append([typ,name])
+
    @staticmethod
-   def getDeviceSequence(parent):
-      dialog= cls_DevSequenceConfigWindow(parent)
+   def getDeviceConfig(parent):
+      dialog= cls_DeviceConfigWindow(parent)
       dialog.resize(350,100)
       result= dialog.exec_()
       if result== QtGui.QDialog.Accepted:
          return True
       else:
          return False
+#
+# validator checks for valid device name
+#
+class cls_Device_validator(QtGui.QValidator):
+
+   def validate(self,string,pos):
+      self.regexp = QtCore.QRegExp('[A-Za-z][A-Za-z0-9]*')
+      self.validator = QtGui.QRegExpValidator(self.regexp)
+      result=self.validator.validate(string,pos)
+      return result[0], result[1], result[2]
+#
+# Add virtual device dialog class ---------------------------------------------
+#
+class cls_AddDeviceWindow(QtGui.QDialog):
+
+   def __init__(self,parent):
+      super().__init__()
+      self.typ= None
+      self.name=None
+      self.tabList=parent.tabList
+      self.setWindowTitle('New Virtual HP-IL device')
+#
+#     Device name, allow only letter followed by letters or digits
+#
+      self.vlayout = QtGui.QVBoxLayout()
+      self.leditName= QtGui.QLineEdit(self)
+      self.leditName.setText("")
+      self.leditName.setMaxLength(10)
+      self.leditName.textChanged.connect(self.do_checkdup)
+      self.validator=cls_Device_validator()
+      self.leditName.setValidator(self.validator)
+      self.vlayout.addWidget(self.leditName)
+#
+#     Combobox, omit the scope!
+#
+      self.comboTyp=QtGui.QComboBox()
+      for i in range(1,len(TAB_NAMES)):
+         self.comboTyp.addItem(TAB_NAMES[i])
+      self.vlayout.addWidget(self.comboTyp)
+
+      self.buttonBox = QtGui.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox.setCenterButtons(True)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.rejected.connect(self.do_cancel)
+      self.vlayout.addWidget(self.buttonBox)
+      self.setLayout(self.vlayout)
+#
+#  validate if name is not empty and unique
+#
+   def do_checkdup(self):
+      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      tst=self.leditName.text()
+      if tst=="":
+         return
+      for tab in self.tabList:
+         if tst== tab[1]:
+            return
+      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+#
+#  return results
+#
+   def getResult(self):
+      return([self.typ,self.name])
+
+#
+#  only enabled if name is not empty and unique
+#
+   def do_ok(self):
+      self.name= self.leditName.text()
+      self.typ= self.comboTyp.currentIndex()+1
+      super().accept()
+
+   def do_cancel(self):
+      super().reject()
+
+   @staticmethod
+   def getAddDevice(parent):
+      dialog= cls_AddDeviceWindow(parent)
+      dialog.resize(250,100)
+      result= dialog.exec_()
+      if result== QtGui.QDialog.Accepted:
+         return dialog.getResult()
+      else:
+         return ""
 #
 # HP-IL device Status Dialog class ---------------------------------------------
 #
@@ -1960,7 +2251,7 @@ class cls_ui(QtGui.QMainWindow):
 
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
       self.actionDevConfig=self.menuFile.addAction("Virtual HP-IL device configuration")
-      self.actionDevSequenceConfig=self.menuFile.addAction("Virtual HP-IL device position configuration")
+      self.actionPenConfig=self.menuFile.addAction("Plotter pen configuration")
       self.actionReconnect=self.menuFile.addAction("Reconnect")
       self.actionExit=self.menuFile.addAction("Quit")
 
@@ -1978,15 +2269,13 @@ class cls_ui(QtGui.QMainWindow):
 #
 #     Central widget (tabs only)
 #
-#     self.centralwidget= QtGui.QWidget()
-#     self.setCentralWidget(self.centralwidget)
+      self.centralwidget= QtGui.QWidget()
+      self.setCentralWidget(self.centralwidget)
+
       self.tabs=QtGui.QTabWidget()
-      self.setCentralWidget(self.tabs)
-
-
-#     self.vbox= QtGui.QVBoxLayout()
-#     self.vbox.addWidget(self.tabs,1)
-#     self.centralwidget.setLayout(self.vbox)
+      self.vbox= QtGui.QVBoxLayout()
+      self.vbox.addWidget(self.tabs,1)
+      self.centralwidget.setLayout(self.vbox)
 #
 #     Status bar
 #

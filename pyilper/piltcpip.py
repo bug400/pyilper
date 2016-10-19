@@ -45,8 +45,10 @@
 # - removed activity timer
 # 07.02.2016 jsi
 # - setpilbox call removed
-# 17.09.2016 jsi
-# - configurable virtual device sequence added
+# 13.10.2016 jsi
+# - remove unregister function
+# - store tab name if device is registered
+
 
 import select
 import socket
@@ -216,33 +218,3 @@ class cls_piltcpip:
 #
    def isRunning(self):
       return self.__running__
-#
-#  get device sequence list
-#
-   def getSequence(self):
-      seqList= []
-      for i in self.__devices__:
-         seqList.append(i[1])
-      return seqList
-#
-# reorder devices according to the list of names
-#
-   def reorderSequence(self,seqList):
-      if seqList==[]:
-         return
-      l= len(self.__devices__)
-      for i in range(l):
-         if seqList[i]=="Scope":
-            continue
-         for j in range(l):
-            if seqList[i]==self.__devices__[j][1]:
-               tmp=self.__devices__[i]
-               self.__devices__[i]= self.__devices__[j]
-               self.__devices__[j]=tmp
-               break
-      return
-#
-# get device list
-#
-   def getDevices(self):
-      return self.__devices__

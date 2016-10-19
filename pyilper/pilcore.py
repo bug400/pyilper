@@ -29,7 +29,10 @@
 # - set version to "production"
 # 21.08.2016 - jsi
 # - set version to 1.3.5 development
-# - set config version to 3
+# 13.10.2016 - jsi
+# - device tab constants and dictionary added
+# 18.10.2016 - jsi
+# - set version number to 1.4.0 development
 #
 import platform
 #
@@ -48,7 +51,7 @@ def isMACOS():
 # General constants:
 #
 PRODUCION= False      # Production/Development Version
-VERSION="1.3.5"       # pyILPR version number
+VERSION="1.4.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # PIL-Box communication
@@ -89,4 +92,12 @@ if isLINUX():
    FONT="Monospace"
 else:
    FONT="Courier New"
-
+#
+# Tab types
+#
+TAB_SCOPE=0
+TAB_PRINTER=1
+TAB_DRIVE=2
+TAB_TERMINAL=3
+TAB_PLOTTER=4
+TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'Plotter'}

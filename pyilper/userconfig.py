@@ -32,6 +32,8 @@
 # - use pretty print json
 # 18.09.2016 jsi
 # - add instance to configuration file name
+# 14.10.2016 jsi
+# - added filename parameter to __init__
 
 import json
 import os
@@ -45,11 +47,11 @@ class ConfigError(Exception):
 
 class cls_userconfig:
 
-   def __init__(self,progname,version,instance):
+   def __init__(self,progname,filename,version,instance):
 #
 #  determine config file name
 #
-      self.__configfilename__=progname+instance
+      self.__configfilename__=filename+instance
       for i in range(0,len(version)):
          if version[i]!=".":
             self.__configfilename__+= version[i]

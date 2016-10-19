@@ -67,6 +67,8 @@
 # - use functions from pilcore.py for platform detection
 # 27.08.2016 jsi
 # - removed duplicate dialog warning for overwriting existing file in  cls_lifexport
+# 01.10.2016 jsi
+# - plotter rom added to xrom dialog
 #
 import os
 import subprocess
@@ -787,6 +789,8 @@ class cls_chkxrom(QtGui.QDialog):
       self.vlayout.addWidget(self.xio)
       self.devil= QtGui.QCheckBox("HP-IL Devel")
       self.vlayout.addWidget(self.devil)
+      self.plotter= QtGui.QCheckBox("Plotter")
+      self.vlayout.addWidget(self.plotter)
 
       self.exitButton= QtGui.QPushButton("Exit")
       self.exitButton.setFixedWidth(60)
@@ -825,6 +829,9 @@ class cls_chkxrom(QtGui.QDialog):
       if self.devil.isChecked():
          self.call.append("-x")
          self.call.append("devil")
+      if self.plotter.isChecked():
+         self.call.append("-x")
+         self.call.append("plotter")
       super().accept()
 
    def get_call(self):

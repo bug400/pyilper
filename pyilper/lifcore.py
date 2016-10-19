@@ -33,6 +33,8 @@
 # fixed getLifString to handle empty strings
 # 30.01.16 - jsi
 # added LIFUTILS_REQUIRED_VERSION constant
+# 17.10.2016 jsi
+# - set required version of lifutils to 1.7.6
 #
 import platform
 import os
@@ -48,7 +50,7 @@ dict_finfo_name={"TEXT":0x0001,"D-LEX":0x00FF,"WAXM41":0xE020,"XM41":0xE030,"ALL
 #
 # Minimum Version number of LIFUTILS
 #
-LIFUTILS_REQUIRED_VERSION=10705
+LIFUTILS_REQUIRED_VERSION=10706
 #
 # get numeric filetype for a file file type name
 #

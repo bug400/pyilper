@@ -58,8 +58,9 @@
 # 11.07.2016 jsi
 # - autobaud detection rewritten, hint by cg
 # - move constants to pilcore.py
-# 17.09.2016 jsi
-# - configurable sequence of virtual devices added
+# 13.10.2016 jsi
+# - remove unregister function
+# - store tab name if device is registered
 #
 # PIL-Box Commands
 #
@@ -289,33 +290,3 @@ class cls_pilbox:
 #
    def isRunning(self):
       return(self.__running__)
-#
-#  get device sequence list
-#
-   def getSequence(self):
-      seqList= []
-      for i in self.__devices__:
-         seqList.append(i[1])
-      return seqList
-#
-# reorder devices according to the list of names
-#
-   def reorderSequence(self,seqList):
-      if seqList==[]:
-         return
-      l= len(self.__devices__)
-      for i in range(l):
-         if seqList[i]=="Scope":
-            continue
-         for j in range(l):
-            if seqList[i]==self.__devices__[j][1]:
-               tmp=self.__devices__[i]
-               self.__devices__[i]= self.__devices__[j]
-               self.__devices__[j]=tmp
-               break
-      return
-#
-# get device list
-#
-   def getDevices(self):
-      return self.__devices__

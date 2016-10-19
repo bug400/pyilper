@@ -101,8 +101,11 @@
 # 27.08.2016 jsi
 # - tab configuration rewritten
 # 18.09.2016 jsi
-# - configurable device sequence added
 # - multiple instances capability added
+# 13.10.2016 jsi
+# - device configuration rewritten (add, remove and change position of devices)
+# 19.10.2016 jsi
+# - added pen config menu entry (merged)
 #
 import os
 import sys
@@ -114,9 +117,10 @@ import pyilper
 import re
 import argparse
 from PyQt4 import QtCore, QtGui
-from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow,cls_TabConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_DevSequenceConfigWindow
+from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow,cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_tabplotter, cls_PenConfigWindow
 from .pilcore import *
 from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
+from .penconfig import cls_penconfig, PenConfigError, PENCONFIG
 from .pilbox import cls_pilbox, PilBoxError
 from .pilboxthread import cls_PilBoxThread
 from .piltcpip import cls_piltcpip, TcpIpError
@@ -127,6 +131,8 @@ STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
 MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
+
+TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter}
 
 
 #
@@ -165,8 +171,8 @@ class cls_pyilper(QtCore.QObject):
       self.ui= cls_ui(self,VERSION,self.instance)
       self.ui.actionConfig.triggered.connect(self.do_pyilperConfig)
       self.ui.actionDevConfig.triggered.connect(self.do_DevConfig)
+      self.ui.actionPenConfig.triggered.connect(self.do_PenConfig)
       self.ui.actionDevStatus.triggered.connect(self.do_DevStatus)
-      self.ui.actionDevSequenceConfig.triggered.connect(self.do_DevSequenceConfig)
       self.ui.actionReconnect.triggered.connect(self.do_Reconnect)
       self.ui.actionExit.triggered.connect(self.do_Exit)
       self.ui.actionInit.triggered.connect(self.do_Init)
@@ -187,14 +193,11 @@ class cls_pyilper(QtCore.QObject):
 
 #
 #     Set up configuration subsystem
+#     1. pyILPER config
 #
       try:
          PILCONFIG.open(self.name,CONFIG_VERSION,self.instance)
          PILCONFIG.get(self.name,"active_tab",0)
-         PILCONFIG.get(self.name,"tabconfig_scope",1)
-         PILCONFIG.get(self.name,"tabconfig_drive",2)
-         PILCONFIG.get(self.name,"tabconfig_printer",1)
-         PILCONFIG.get(self.name,"tabconfig_terminal",1)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
          PILCONFIG.get(self.name,"tty","")
          PILCONFIG.get(self.name,"ttyspeed",0)
@@ -209,30 +212,30 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"colorscheme","white")
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
-         PILCONFIG.get(self.name,"device_sequence",[])
+         PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"]])
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          QtGui.qApp.quit()
 #
-#     create tab objects
+#     2. pen configuration
+      try:
+         PENCONFIG.open(self.name,CONFIG_VERSION,self.instance)
+      except PenConfigError as e:
+         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         QtGui.qApp.quit()
+#
+#     create tab objects, scope is fixed all others are configured by tabconfig
 #
       self.registerTab(cls_tabscope,"Scope")
-      for i in range (PILCONFIG.get(self.name,"tabconfig_drive")):
-         devname="Drive"+str(int(i+1))
-         self.registerTab(cls_tabdrive,devname)
-      for i in range (PILCONFIG.get(self.name,"tabconfig_printer")):
-         devname="Printer"+str(int(i+1))
-         self.registerTab(cls_tabprinter,devname)
-      if PILCONFIG.get(self.name,"tabconfig_terminal")==1:
-         self.registerTab(cls_tabterminal,"Terminal")
+      for t in PILCONFIG.get(self.name,"tabconfig"):
+         self.registerTab(TAB_CLASSES[t[0]],t[1])
 #
 #     remove config of non existing tabs
 #
       if PILCONFIG.get(self.name,"tabconfigchanged"):
          PILCONFIG.put(self.name,"tabconfigchanged",False)
          PILCONFIG.put(self.name,"active_tab",0)
-         PILCONFIG.put(self.name,"device_sequence",[])
          names= [self.name]
          for obj in self.tabobjects:
             names.append(obj.name)
@@ -325,10 +328,6 @@ class cls_pyilper(QtCore.QObject):
 #
       self.tabobjects[0].post_enable()
 #
-#     set device order
-#
-      self.commobject.reorderSequence(PILCONFIG.get(self.name,"device_sequence"))
-#
 #     start emulator thread
 #
       self.commthread.start()
@@ -418,7 +417,7 @@ class cls_pyilper(QtCore.QObject):
 #  callback HP-IL device config
 #
    def do_DevConfig(self):
-      if not cls_TabConfigWindow.getTabConfig():
+      if not cls_DeviceConfigWindow.getDeviceConfig(self):
          return
       PILCONFIG.put(self.name,"tabconfigchanged",True)
       try:
@@ -429,25 +428,16 @@ class cls_pyilper(QtCore.QObject):
       reply=QtGui.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration changed. Restart Application.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
       
 #
-#  callback HP-IL device order
+# callback plotter pen configuration
 #
-   def do_DevSequenceConfig(self):
-      if not cls_DevSequenceConfigWindow.getDeviceSequence(self):
+   def do_PenConfig(self):
+      if not cls_PenConfigWindow.getPenConfig():
          return
       try:
-         PILCONFIG.save()
-      except PilConfigError as e:
+         PENCONFIG.save()
+      except PenConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          return
-#
-#  now activate new device sequence
-#
-      if self.commthread.isRunning():
-         self.commthread.halt()
-         self.commobject.reorderSequence(PILCONFIG.get(self.name,"device_sequence"))
-         self.commthread.resume()
-      else:
-         self.commobject.reorderSequence(PILCONFIG.get(self.name,"device_sequence"))
 
 #
 #  callback show hp-il device status

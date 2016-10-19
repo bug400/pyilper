@@ -82,18 +82,15 @@
 # - refactoring: move some constants to pilcore.py
 # 05.10.2016 jsi:
 # - implemented redraw method to refres terminal when parent widget was resized
-
+# 14.10.2016 jsi:
+# - consistent use of namespaces, removed vars.update call in _paint screen
 
 import array
 import queue
 import threading
 import time
 
-from PyQt4.QtCore import QRect, Qt, pyqtSignal, QTimer, QSize, QPoint
-from PyQt4.QtGui import (
-    QApplication, QClipboard, QWidget, QPainter, QFont, QBrush, QColor, QPolygon,
-    QPen, QPixmap, QImage, QContextMenuEvent, QTransform, QHBoxLayout, QScrollBar,
-    QFontMetrics)
+from PyQt4 import QtCore, QtGui
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 from .pilcore import UPDATE_TIMER, CURSOR_BLINK
 
@@ -101,7 +98,7 @@ CURSOR_OFF=0
 CURSOR_INSERT=1
 CURSOR_OVERWRITE=2
 
-class QScrolledTerminalWidget(QWidget):
+class QScrolledTerminalWidget(QtGui.QWidget):
 
     def __init__(self,parent, font_name, font_size, cols, rows, colorscheme):
         super().__init__(parent)
@@ -109,9 +106,9 @@ class QScrolledTerminalWidget(QWidget):
 #
 #       determine font metrics and terminal window size in pixel
 #
-        font= QFont(font_name)
+        font= QtGui.QFont(font_name)
         font.setPixelSize(font_size)
-        metrics= QFontMetrics(font)
+        metrics= QtGui.QFontMetrics(font)
         font_width=metrics.width("A")
         font_height=metrics.height()
         width= font_width*cols
@@ -119,14 +116,14 @@ class QScrolledTerminalWidget(QWidget):
 #
 #       create terminal window and scrollbar
 #
-        self.hbox= QHBoxLayout()
+        self.hbox= QtGui.QHBoxLayout()
         self.terminalwidget= QTerminalWidget(self,font_name,font_size,font_height, width,height, colorscheme)
         self.terminalwidget.setFixedSize(width,height)
         self.hbox.addWidget(self.terminalwidget)
-        self.hbox.setAlignment(self.terminalwidget,Qt.AlignLeft)
-        self.scrollbar= QScrollBar()
+        self.hbox.setAlignment(self.terminalwidget,QtCore.Qt.AlignLeft)
+        self.scrollbar= QtGui.QScrollBar()
         self.hbox.addWidget(self.scrollbar)
-        self.hbox.setAlignment(self.scrollbar,Qt.AlignLeft)
+        self.hbox.setAlignment(self.scrollbar,QtCore.Qt.AlignLeft)
         self.setLayout(self.hbox)
 #
 #       initialize scrollbar
@@ -150,61 +147,61 @@ class QScrolledTerminalWidget(QWidget):
     def redraw(self):
        self.terminalwidget.redraw()
 
-class QTerminalWidget(QWidget):
+class QTerminalWidget(QtGui.QWidget):
 
 # color scheme: normal_foreground, normal_background, inverse_foreground, inverse_background, cursor_color
 
     color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
 
     color_schemes= [
-       [ QColor("#000"),QColor("#fff"), QColor(0xff,0xff, 0xff,0xc0) ],
-       [ QColor("#000"), QColor("#ffbe00"), QColor(0xff, 0xbe, 0x00,0xc0) ],
-       [ QColor("#000"), QColor("#18f018"), QColor(0x00,0xff,0x00,0xc0) ],
+       [ QtGui.QColor("#000"),QtGui.QColor("#fff"), QtGui.QColor(0xff,0xff, 0xff,0xc0) ],
+       [ QtGui.QColor("#000"), QtGui.QColor("#ffbe00"), QtGui.QColor(0xff, 0xbe, 0x00,0xc0) ],
+       [ QtGui.QColor("#000"), QtGui.QColor("#18f018"), QtGui.QColor(0x00,0xff,0x00,0xc0) ],
     ]
 #
 #   Keymap keycodes
 #
     keymap = {
-        Qt.Key_Backspace: chr(127),
-        Qt.Key_Escape: chr(27),
-        Qt.Key_AsciiTilde: "~~",
-        Qt.Key_Up: "~A",
-        Qt.Key_Down: "~B",
-        Qt.Key_Left: "~D",
-        Qt.Key_Right: "~C",
-        Qt.Key_PageUp: "~1",
-        Qt.Key_PageDown: "~2",
-        Qt.Key_Home: "~H",
-        Qt.Key_End: "~F",
-        Qt.Key_Insert: "~3",
-        Qt.Key_Delete: "~4",
-        Qt.Key_F1: "~a",
-        Qt.Key_F2: "~b",
-        Qt.Key_F3:  "~c",
-        Qt.Key_F4:  "~d",
-        Qt.Key_F5:  "~e",
-        Qt.Key_F6:  "~f",
-        Qt.Key_F7:  "~g",
-        Qt.Key_F8:  "~h",
-        Qt.Key_F9:  "~i",
-        Qt.Key_F10:  "~j",
-        Qt.Key_F11:  "~k",
-        Qt.Key_F12:  "~l",
+        QtCore.Qt.Key_Backspace: chr(127),
+        QtCore.Qt.Key_Escape: chr(27),
+        QtCore.Qt.Key_AsciiTilde: "~~",
+        QtCore.Qt.Key_Up: "~A",
+        QtCore.Qt.Key_Down: "~B",
+        QtCore.Qt.Key_Left: "~D",
+        QtCore.Qt.Key_Right: "~C",
+        QtCore.Qt.Key_PageUp: "~1",
+        QtCore.Qt.Key_PageDown: "~2",
+        QtCore.Qt.Key_Home: "~H",
+        QtCore.Qt.Key_End: "~F",
+        QtCore.Qt.Key_Insert: "~3",
+        QtCore.Qt.Key_Delete: "~4",
+        QtCore.Qt.Key_F1: "~a",
+        QtCore.Qt.Key_F2: "~b",
+        QtCore.Qt.Key_F3:  "~c",
+        QtCore.Qt.Key_F4:  "~d",
+        QtCore.Qt.Key_F5:  "~e",
+        QtCore.Qt.Key_F6:  "~f",
+        QtCore.Qt.Key_F7:  "~g",
+        QtCore.Qt.Key_F8:  "~h",
+        QtCore.Qt.Key_F9:  "~i",
+        QtCore.Qt.Key_F10:  "~j",
+        QtCore.Qt.Key_F11:  "~k",
+        QtCore.Qt.Key_F12:  "~l",
     }
 
 
     def __init__(self,parent, font_name, font_size, font_height, w,h, colorscheme):
         super().__init__(parent)
-        self.setFocusPolicy(Qt.WheelFocus)
+        self.setFocusPolicy(QtCore.Qt.WheelFocus)
         self.setAutoFillBackground(False)
-        self.setAttribute(Qt.WA_OpaquePaintEvent, True)
-        self.setCursor(Qt.IBeamCursor)
-        font = QFont(font_name)
+        self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, True)
+        self.setCursor(QtCore.Qt.IBeamCursor)
+        font = QtGui.QFont(font_name)
         font.setPixelSize(font_size)
         self.setFont(font)
         self._screen = []
         self._text = []
-        self._transform= QTransform()
+        self._transform= QtGui.QTransform()
         self._cursor_col = 0
         self._cursor_row = 0
         self._dirty = False
@@ -222,9 +219,9 @@ class QTerminalWidget(QWidget):
         self._cursor_update=True
         self._blink= True
         self._blink_counter=0
-        self._cursor_rect = QRect(0, 0, self._char_width, self._char_height)
-        self._cursor_polygon=QPolygon([QPoint(0,0+(self._char_height/2)), QPoint(0+(self._char_width*0.8),0+self._char_height), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.67)), QPoint(0+self._char_width,0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QPoint(0+(self._char_width*0.8),0), QPoint(0,0+(self._char_height/2))])
-        self._redrawTimer= QTimer()
+        self._cursor_rect = QtCore.QRect(0, 0, self._char_width, self._char_height)
+        self._cursor_polygon=QtGui.QPolygon([QtCore.QPoint(0,0+(self._char_height/2)), QtCore.QPoint(0+(self._char_width*0.8),0+self._char_height), QtCore.QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QtCore.QPoint(0+self._char_width,0+(self._char_height*0.67)), QtCore.QPoint(0+self._char_width,0+(self._char_height*0.33)), QtCore.QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QtCore.QPoint(0+(self._char_width*0.8),0), QtCore.QPoint(0,0+(self._char_height/2))])
+        self._redrawTimer= QtCore.QTimer()
         self._redrawTimer.timeout.connect(self.delayed_redraw)
         self._redraw=False
 
@@ -237,10 +234,10 @@ class QTerminalWidget(QWidget):
 #
 
     def sizeHint(self):
-        return QSize(self._w,self._h)
+        return QtCore.QSize(self._w,self._h)
 
     def minimumSizeHint(self):
-        return QSize(self._w,self._h)
+        return QtCore.QSize(self._w,self._h)
 #
     def resizeEvent(self, event):
         self.resize(self._w, self._h)
@@ -267,7 +264,7 @@ class QTerminalWidget(QWidget):
 #   - after processing a new key in the termianl output queue 
 #
     def paintEvent(self, event):
-        painter = QPainter(self)
+        painter = QtGui.QPainter(self)
         if self._dirty:
             self._dirty = False
             self._paint_screen(painter)
@@ -287,7 +284,7 @@ class QTerminalWidget(QWidget):
         text = event.text()
         key = event.key()
         modifiers = event.modifiers()
-        alt = modifiers == Qt.AltModifier 
+        alt = modifiers == QtCore.Qt.AltModifier 
         if (event.isAutoRepeat() and text) or self._kbdfunc == None:
            event.accept()
            return
@@ -297,36 +294,36 @@ class QTerminalWidget(QWidget):
               self._alt_seq_length=0
               self._alt_seq_value=0
            if self._alt_seq_length==0:
-              if key== Qt.Key_5:
+              if key== QtCore.Qt.Key_5:
                  self._kbdfunc(ord("["),False)
                  self._alt_sequence=False
-              elif key== Qt.Key_6:
+              elif key== QtCore.Qt.Key_6:
                  self._kbdfunc(ord("]"),False)
                  self._alt_sequence=False
-              elif key== Qt.Key_7:
+              elif key== QtCore.Qt.Key_7:
                  self._kbdfunc(124,False)
                  self._alt_sequence=False
-              elif key== Qt.Key_8:
+              elif key== QtCore.Qt.Key_8:
                  self._kbdfunc(ord("{"),False)
                  self._alt_sequence=False
-              elif key== Qt.Key_9:
+              elif key== QtCore.Qt.Key_9:
                  self._kbdfunc(ord("}"),False)
                  self._alt_sequence=False
-              elif key== Qt.Key_L:
+              elif key== QtCore.Qt.Key_L:
                  self._kbdfunc(ord("@"),False)
                  self._alt_sequence=False
-              elif key== Qt.Key_I:
+              elif key== QtCore.Qt.Key_I:
                  self._kbdfunc(72,True)
                  self._alt_sequence=False
-              elif key== Qt.Key_1 or key == Qt.Key_0 :
-                 self._alt_seq_value+= key - Qt.Key_0
+              elif key== QtCore.Qt.Key_1 or key == QtCore.Qt.Key_0 :
+                 self._alt_seq_value+= key - QtCore.Qt.Key_0
                  self._alt_seq_length+=1
               else:
                  self._alt_sequence=False
            else:
-              if key >= Qt.Key_0 and key <= Qt.Key_9:
+              if key >= QtCore.Qt.Key_0 and key <= QtCore.Qt.Key_9:
                  self._alt_seq_value*=10
-                 self._alt_seq_value+= key - Qt.Key_0
+                 self._alt_seq_value+= key - QtCore.Qt.Key_0
                  self._alt_seq_length+=1
                  if self._alt_seq_length == 3:
                     if self._alt_seq_value <= 127:
@@ -424,8 +421,8 @@ class QTerminalWidget(QWidget):
 #
         if self._cursor_update:
            self._cursor_update= False
-           self._blink_brush=QBrush(self._cursor_color)
-           self._blink_pen=QPen(self._cursor_color)
+           self._blink_brush=QtGui.QBrush(self._cursor_color)
+           self._blink_pen=QtGui.QPen(self._cursor_color)
            self._blink_pen.setStyle(0)
            if self._cursor_attr:
               self._noblink_background_color = self._color_scheme[1]
@@ -433,7 +430,7 @@ class QTerminalWidget(QWidget):
            else:
               self._noblink_background_color = self._color_scheme[0]
               self._noblink_foreground_color = self._color_scheme[1]
-           self._noblink_brush = QBrush(self._noblink_background_color)
+           self._noblink_brush = QtGui.QBrush(self._noblink_background_color)
 #
 #       blink on: draw cursor
 #
@@ -452,31 +449,30 @@ class QTerminalWidget(QWidget):
         else:
            painter.setBrush(self._noblink_brush)
            painter.setTransform(self._transform)
-           painter.setPen(QPen(self._noblink_background_color))
+           painter.setPen(QtGui.QPen(self._noblink_background_color))
            painter.drawRect(self._cursor_rect)
            painter.fillRect(self._cursor_rect, self._noblink_brush)
-           painter.setPen(QPen(self._noblink_foreground_color))
-           painter.drawText(self._cursor_rect,Qt.AlignTop | Qt.AlignLeft,chr(self._cursor_char))
+           painter.setPen(QtGui.QPen(self._noblink_foreground_color))
+           painter.drawText(self._cursor_rect,QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft,chr(self._cursor_char))
            self._blink= not self._blink
 #
 #   paint screen from screen memory 
 #
     def _paint_screen(self, painter):
         # Speed hacks: local name lookups are faster
-        vars().update(QColor=QColor, QBrush=QBrush, QPen=QPen, QRect=QRect)
         char_width = self._char_width
         char_height = self._char_height
         painter_drawText = painter.drawText
         painter_fillRect = painter.fillRect
         painter_setPen = painter.setPen
-        align = Qt.AlignTop | Qt.AlignLeft
+        align = QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft
         color_scheme= self._color_scheme
         # set defaults
         background_color = color_scheme[1]
         foreground_color = color_scheme[0]
-        brush = QBrush(background_color)
+        brush = QtGui.QBrush(background_color)
         painter_fillRect(self.rect(), brush)
-        pen = QPen(foreground_color)
+        pen = QtGui.QPen(foreground_color)
         painter_setPen(pen)
         y = 0
         text = []
@@ -488,7 +484,7 @@ class QTerminalWidget(QWidget):
                 if isinstance(item, str):
                     x = col * char_width
                     length = len(item)
-                    rect = QRect(
+                    rect = QtCore.QRect(
                         x, y, x + char_width * length, y + char_height)
                     painter_fillRect(rect, brush)
                     painter_drawText(rect, align, item)
@@ -502,8 +498,8 @@ class QTerminalWidget(QWidget):
                     else:
                        background_color = color_scheme[0]
                        foreground_color = color_scheme[1]
-                    pen = QPen(foreground_color)
-                    brush = QBrush(background_color)
+                    pen = QtGui.QPen(foreground_color)
+                    brush = QtGui.QBrush(background_color)
                     painter_setPen(pen)
                     painter.setBrush(brush)
             y += char_height
@@ -540,7 +536,7 @@ class HPTerminal:
         self.fesc= False
         self.movecursor= 0
         self.movecol=0
-        self.UpdateTimer= QTimer()
+        self.UpdateTimer= QtCore.QTimer()
         self.UpdateTimer.setSingleShot(True)
         self.UpdateTimer.timeout.connect(self.process_queue)
         self.win=win

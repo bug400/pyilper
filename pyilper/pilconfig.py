@@ -25,6 +25,8 @@
 # - class statement syntax update
 # 17.09.2016 jsi:
 # - open method introduced
+# 14.10.2016 jsi:
+# - added filename parameter to cls_userconfig
 #
 from .userconfig import cls_userconfig, ConfigError
 from .pilcore import CONFIG_VERSION
@@ -51,14 +53,14 @@ class cls_pilconfig:
 #  if the configuration file does not exist, an empty file is created
 #
    def open(self,name,version,instance):
-      self.__userconfig__= cls_userconfig(name,version,instance)
+      self.__userconfig__= cls_userconfig(name,name,version,instance)
       try:
          self.__config__= self.__userconfig__.read(self.__config__)
       except ConfigError as e:
          raise PilConfigError(e.msg,e.add_msg)
 #
 #  Get a key from the configuration dictionary. To initialize a key a default 
-#  valiue can be specified
+#  value can be specified
 #
    def get(self,name,param,default=None):
       pname= name+"_"+param
