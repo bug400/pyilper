@@ -41,7 +41,7 @@
         <li>The file menu to configure pyILPER</li>
         <li>The utilities menu</li>
         <li>The help menu</li>
-        <li>Tabbed virtual HP-IL devices: <a href="scope.html">scope</a>, <a href="printer.html">printer(s)</a>, <a href="drive.html">drive(s)</a>, <a href="terminal.html">terminal</a></li>
+        <li>Tabbed virtual HP-IL devices: <a href="scope.html">scope</a>, <a href="printer.html">printer(s)</a>, <a href="drive.html">drive(s)</a>, <a href="terminal.html">terminal</a>, <a href="plotter.html">HP7470A plotter</a></li>
         <li>Status information at the bottom of the main window</li>
         </ul>
         </blockquote>
@@ -88,32 +88,45 @@
 
           <h3><a name="Virtual HP-IL device configuration">HP-IL device configuration</a></h3>
 
-          <p>Configures the number of virtual HP-IL devices:</p>
+          <p>The initial configuration of virtual HP-IL devices in pyILPER is:</p>
           <ul>
-          <li>0 to 5 virtual disk drives</li>
-          <li>0 to 3 virtual printers</li>
-          <li>0 to 1 virtual terminal</li>
+          <li>Scope</li>
+          <li>Printer1</li>
+          <li>Drive1</li>
+          <li>Drive2</li>
+          <li>Terminal1</li>
           </ul>
-          <p><b>Note:</b> the scope tab can not be removed from the application. If
-          the number of devices was changed you have to restart the
+
+          <p>With the device configuration dialog you can add, delete and change the 
+          position of the virtual HP-IL devices in pyILPER. To create a new device
+          press the <em>Add</em> button, select the desired device type and assign
+          a device name. The device name must be unique and begin with a letter followed
+          by up to 9 letters or digits. For device types which have a logging
+          facility the device name defines the name of the log file in the current
+          working directory.</p>
+
+          <p>To remove or change the position of a virtual HP-IL device select
+          the device from the list and click the appropriate buttons.</p>
+
+          <p>The position of the device tabs is corresponding to the position of the 
+          device in the loop.</p>
+  
+          <p><b>Note: </b>The scope tab can not be removed. If the configuration of 
+          virtual HP-IL devices  was changed you have to restart the
           application for take the changes to effect.</p>
 
-          <h3><a name="Virtual HP-IL device position configuration">Virtual HP-IL device position configuration<a></h3>
+          <h3><a name="Plotter pen configuration">Plotter pen configuration</a></h3>
 
-          <p>The default internal sequence of virtual HP-IL devices in pyILPER is:</p>
+          <p>With this configuration dialog the 16 predefined pens for the HP7470A
+          plotter can be configured. For each pen the following properties can be
+          specified:</p>
+
           <ul>
-          <li>disk drive(s)</li>
-          <li>printer(s)</li>
-          <li>terminal</li>
+          <li>Description</li>
+          <li>R, G, B color values (0 .. 255)</li>
+          <li>Transparency: Alpha (0..255)</li>
+          <li>Pen width in pixel (1..5)</li>
           </ul>
-          <p>You may move the position of devices in the list of the pyILPER HP-IL devices, 
-          e.g. to shift the printer as first device in the loop which is recommended for the
-          HP-41C. The custom device order is stored in the pyILPER configuration file.
-          You can watch the custom device order in the virtual HP-IL device status
-          window. Note: after changing the device sequence, the HP-IL loop must be
-          reconfigured again. A custom device sequence is cleared, if the number of
-          virtual HP-IL devices was changed. The scope which is not an active device in
-          the loop can not be moved.</p>
 
           <h3><a name="Reconnect">Reconnect</a></h3>
 
@@ -204,6 +217,7 @@
           <li><a href="drive.html">Drive Tabs</a></li>
           <li><a href="printer.html">Printer Tab</a></li>
           <li><a href="terminal.html">Terminal Tab</a></li>
+          <li><a href="plotter.html">Plotter Tab</a></li>
         </ul>
         </blockquote>
       </td>
@@ -216,7 +230,8 @@
       <a href="scope.html">Scope</a> ::
       <a href="drive.html">Drive</a> ::
       <a href="printer.html">Printer</a> ::
-      <a href="terminal.html">Terminal</a> 
+      <a href="terminal.html">Terminal</a> ::
+      <a href="plotter.html">Plotter</a> 
       </td>
     </tr>
   </table>
