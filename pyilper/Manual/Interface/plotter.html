@@ -42,8 +42,12 @@
         supported. In addition the HP-GL commands AA, AR and CI are
         supported which were only available on the RS232C version of
         the HP7470A.</p>
-        <p><b>Note:</b> Version 1.7.6 or later of the <em>lifutils</em> must
-        be installed to make use of the plotter emulator.</p>
+
+        <p><b>Note:</b>The plotter tab requires the program <em>emu7470</em>
+        which is part of version 1.7.6 or later of the
+        <a href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>.
+        The default configuration of <em>pyILPER</em> does not contain a plotter tab. You
+        have to add this device in the <em>Virtual HP-IL device configuration</em>.</p>
 
       </td>
     </tr>
@@ -53,23 +57,23 @@
         <p>The plotter tab has the following controls:</p>
         <blockquote>
         <ul>
-        <li>Config button: allows to select the paper size of the device and the
-        color and thickness of the pens.
+        <li><em>Config</em> button: allows to select the paper size of the device and 
+        assign pen configurations to pen 1 and pen 2.
         </li>
-        <li><em>View</em> button: creates a larger, resizable window for the plotter 
+        <li><em>View</em> button: open an additional, resizable window for the plotter 
         view.</li>
         <li><em>Enter</em> button: register a digitized coordinate.</li>
         <li><em>P1/P2</em> button: display or alter the scaling points of the plotter.</li>
-        <li><em>Clear</em> button: clears the plotter view initializes plotter. If in
-        digitizing mode, the digitizing mode is cancelled.</li>
+        <li><em>Clear</em> button: clears the plotter view and initializes plotter. 
+        If the GUI is in digitizing mode, the digitizing mode is cancelled.</li>
         <li><em>PDF</em> button: Create a PDF file from the current plotter view.</li>
         <li><em>Status</em> button: Monitor the status byte and error information of the
         plotter</li>
-        <li>Device enabled checkbox: If checked, the virtual HP7470A is
+        <li><em>Device enabled</em> checkbox: If checked, the virtual HP7470A is
         available and can be used as HP-IL device. The HP-IL loop must
         always be reconfigured after activation or deactivation.
         </li>
-        <li>Log Plotter checkbox: Activates logging the HP-GL commands and
+        <li><em>Log Plotter</em> checkbox: Activates logging the HP-GL commands and
         the status and response of the device  to the file
         <em>Devicename.log</em> in the pyILPR working directory. 
         Output is always appended to
@@ -77,39 +81,39 @@
         end of each logging. The log file is closed automatically on
         program termination.
         </li>
-        <li>Log level combobox: the extent of logging can be configured here.
+        <li><em>Log level</em> combobox: the extent of logging can be configured here.
         </li>
         </ul>
 	<p>A yellow error led indicates a HPGL-Error. Use the status button to
         obtain information about the error code and additional diagnostics. If the
-        error led is red then the external plotter emulator process could not
-        be started or had crashed.</p>
+        error led is red then the external plotter emulator program <em>emu7470</em> 
+        could not be started or had crashed.</p>
         </blockquote>
       </td>
     </tr>
     <tr>
       <td valign="middle" align="left" width="99%">
        <h2>Digitizing</h2>
-       <p>Digitizing is initiated by a HP-GL DI command. This puts the graphics window
-       into digitizing mode. A cross-hair cursor appears and you can click locations.
-       The <em>Enter</em> button registers the last clicked location. The coordinates
-       of this location are now available for the HP-GL OD command.</p>
+       <p>Digitizing is initiated by a HP-GL DI command. This puts the GUI
+       into digitizing mode. A cross-hair cursor appears and you can digitize coordinates.
+       The <em>Enter</em> button registers the coordinates of the last clicked location. 
+       They are now available for the HP-GL OD command.</p>
        <p>The <em>Clear</em> button cancels digitizing mode. No coordinate is 
        registered.</p>
        <p>In digitizing mode the coordinates of the clicked locations are shown at
-       the right side of the tab. In addition to clicking coordinates numeric values
-       of the coordinates can be entered as well.</p>
+       the right side of the tab. In addition numeric values of the coordinates can be 
+       entered as well.</p>
       </td>
     </tr>
     <tr>
       <td valign="middle" align="left" width="99%">
        <h2>Display or alter locations of scaling points</h2>
-       <p>The location of both scaling points are displayed and the graphics window
-       enters digitizing mode (see above).  You may enter now
-       a new position for P1. Register the location of P1 with <em>ENTER</em> and
-       enter the location of P2. After registration of P2 the digitizing mode is
-       finished and both new scaling point locations are applied. The digitizing
-       mode can be cancelled with the <em>Button</em> at any time.</p>
+       <p>The location of both scaling points are displayed and the GUI
+       enters digitizing mode (see above).  You may digitize now a new position for P1. 
+       Register the location of P1 with the <em>ENTER</em> button and digitize
+       the location of P2. After registration of P2 the digitizing mode is
+       finished and the new positions of the scaling points are applied. The digitizing
+       mode can be cancelled with the <em>Clear</em> button at any time.</p>
       </td>
     </tr>
     <tr>

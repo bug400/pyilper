@@ -39,19 +39,19 @@
         <p>The scope tab has the following controls:</p>
         <blockquote>
         <ul>
-        <li>Device enabled checkbox: If checked the frames are logged to the display
-        and the log file (if activated). As the scope is no addressable
+        <li><em>Device enabled</em> checkbox: If checked the frames are logged to the 
+        display and the log file (if activated). As the scope is no addressable
         HP-IL device the HP-IL loop must not be reconfigured after the scope
         has been activated or deactivated.
         </li>
-        <li>Log Scope checkbox: Activates writing the output of the scope to the file
-        <em>Scope.log</em> in the pyILPR working directory. Output is always appended to
-        that file. A time stamp in the file marks the start and the
+        <li><em>Log Scope</em> checkbox: Activates writing the output of the scope to 
+        the file <em>Scope.log</em> in the pyILPR working directory. Output is always 
+        appended to that file. A time stamp in the file marks the start and the
         end of each logging. The log file is closed automatically on
         program termination. The scope log file is written unbuffered.</li>
-        <li>Show IDY frames: Activates the output of IDY frames. This option is only
-        useful, if firmware version 1.6 is installed on the PIL-Box.</li>
-        <li>Log mode combobox: selects if inbound traffic (uppercase letters), 
+        <li><em>Show IDY frames</em> checkbox: Activates the output of IDY frames. 
+        This option is only useful, if firmware version 1.6 is installed on the PIL-Box.</li>
+        <li><em>Log mode</em> combobox: selects if inbound traffic (uppercase letters), 
         outbound traffic (lowercase letters) or inbound/outbound traffic is logged. 
         Inbound traffic shows the HP-IL frames before they are processed by the 
         pyILPER virtual devices.  Outbound traffic shows the frames after being 

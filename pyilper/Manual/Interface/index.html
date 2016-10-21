@@ -89,27 +89,28 @@
           <h3><a name="Virtual HP-IL device configuration">HP-IL device configuration</a></h3>
 
           <p>The initial configuration of virtual HP-IL devices in pyILPER is:</p>
-          <ul>
-          <li>Scope</li>
-          <li>Printer1</li>
-          <li>Drive1</li>
-          <li>Drive2</li>
-          <li>Terminal1</li>
-          </ul>
+          <table border="1">
+          <tr><th>Device name</th><th>Device type</th></tr>
+          <tr><td>Scope</td><td>Scope</td></tr>
+          <tr><td>Printer1</td><td>Printer</td></tr>
+          <tr><td>Drive1</td><td>Drive</td></tr>
+          <tr><td>Drive2</td><td>Drive</td></tr>
+          <tr><td>Terminal1</td><td>Terminal</td></tr>
+          </table>
 
-          <p>With the device configuration dialog you can add, delete and change the 
-          position of the virtual HP-IL devices in pyILPER. To create a new device
-          press the <em>Add</em> button, select the desired device type and assign
-          a device name. The device name must be unique and begin with a letter followed
-          by up to 9 letters or digits. For device types which have a logging
-          facility the device name defines the name of the log file in the current
-          working directory.</p>
+          <p>With the device configuration dialog you can add or delete virtual
+          HP-IL devices and change the position of their tab. To create a new device 
+          press the <em>Add</em> button, select the desired device type 
+          and assign an <b>unique</b> name. The device must begin with a letter 
+          followed by up to 9 letters or digits. The device name is shown on the tab. 
+          For device types which have a logging facility the device name defines the 
+          name of the log file in the current working directory.</p>
 
           <p>To remove or change the position of a virtual HP-IL device select
           the device from the list and click the appropriate buttons.</p>
 
           <p>The position of the device tabs is corresponding to the position of the 
-          device in the loop.</p>
+          device in the loop inside of pyILPER.</p>
   
           <p><b>Note: </b>The scope tab can not be removed. If the configuration of 
           virtual HP-IL devices  was changed you have to restart the
@@ -127,6 +128,8 @@
           <li>Transparency: Alpha (0..255)</li>
           <li>Pen width in pixel (1..5)</li>
           </ul>
+
+          <p>The <em>Reset</em> button restores the default configuration of the pens.
 
           <h3><a name="Reconnect">Reconnect</a></h3>
 
