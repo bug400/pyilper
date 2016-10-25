@@ -33,6 +33,10 @@
 # - device tab constants and dictionary added
 # 18.10.2016 - jsi
 # - set version number to 1.4.0 development
+# 23.10.2016 - jsi
+# - EMU7470_VERSION added
+# 25.10.2016 - jsi
+# - decode_version moved from lifexec.py
 #
 import platform
 #
@@ -44,6 +48,15 @@ def isWINDOWS():
    return platform.system()=="Windows"
 def isMACOS():
    return platform.system()=="Darwin"
+#
+# decode version number of lifutils or emu7470
+#
+def decode_version(version_number):
+   version=str(version_number)
+   major=int(version[0])
+   minor=int(version[1:3])
+   subversion=int(version[3:5])
+   return "{:d}.{:d}.{:d}".format(major,minor,subversion)
 
 #
 # Program constants --------------------------------------------------
@@ -78,6 +91,11 @@ CURSOR_BLINK=500 / UPDATE_TIMER # 500 ms cursor blink rate
 # - the second list element is the baud rate, a value of 0 means auto baud detection
 # the baudrates must be defined in ascending order
 BAUDRATES= [ ["Auto", 0], ["9600", 9600 ] , [ "115200", 115200 ], ["230400", 230400]]
+
+#
+# plotter tab, required version of emu7470
+#
+EMU7470_VERSION=900
 
 #
 # if Development Version append string to VERSION and "d" to config file name

@@ -76,19 +76,8 @@ import tempfile
 from PyQt4 import QtCore, QtGui
 from .lifcore import *
 from .pilcharconv import charconv, stringconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
-from .pilcore import isWINDOWS, FONT
+from .pilcore import isWINDOWS, FONT, decode_version
 
-
-#
-# decode version number of lifutils to x.yy.zz
-#
-def decode_version(version_number):
-   version=str(version_number)
-   major=int(version[0])
-   minor=int(version[1:3])
-   subversion=int(version[3:5])
-   return "{:d}.{:d}.{:d}".format(major,minor,subversion)
-   
 #
 # check if lifutils are installed, return if required version found
 #

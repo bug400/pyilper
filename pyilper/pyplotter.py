@@ -27,6 +27,11 @@
 # Changelog
 # 17.10.2016 jsi:
 # - initial version
+# 23.10.2016 jsi:
+# - check required version of emu7470
+# - terminate subprocess on ipc input/output error
+# 24.10.2016 jsi:
+# - show emu7470 version in status window
 
 
 from __future__ import print_function
@@ -41,7 +46,7 @@ import base64
 import threading
 import pyilper
 from PyQt4 import QtCore, QtGui
-from .pilcore import UPDATE_TIMER, FONT
+from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version
 from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PenConfigError, PENCONFIG
 
@@ -61,6 +66,7 @@ CMD_EOF=11
 CMD_OFF_ERROR=12
 CMD_ON_ERROR_YELLOW=13
 CMD_ON_ERROR_RED=14
+CMD_EMU_VERSION=15
 
 MODE_DIGI=0
 MODE_P1=1
@@ -319,7 +325,10 @@ class cls_PlotterWidget(QtGui.QWidget):
       self.p1y=279
       self.p2x=10250
       self.p2y=7479
-      
+#
+#     emu7470 version
+#
+      self.emu_version=0
 #
 #     create user interface
 #
@@ -830,6 +839,11 @@ class cls_PlotterWidget(QtGui.QWidget):
          self.p2x=int(item[3])
          self.p2y=int(item[4])
 #
+#     Get version of emu7470
+#
+      elif cmd== CMD_EMU_VERSION:
+         self.emu_version=item[1]
+#
 # external lot view window class ------------------------------------------------------
 #
 class cls_plotViewWindow(QtGui.QDialog):
@@ -882,19 +896,23 @@ class cls_statusWindow(QtGui.QDialog):
       self.vbox=QtGui.QVBoxLayout()
       self.grid=QtGui.QGridLayout()
       self.grid.setSpacing(3)
-      self.grid.addWidget(QtGui.QLabel("Status:"),1,0)
-      self.grid.addWidget(QtGui.QLabel("Error code:"),2,0)
-      self.grid.addWidget(QtGui.QLabel("HP-GL command:"),3,0)
-      self.grid.addWidget(QtGui.QLabel("Error message:"),4,0)
+      self.grid.addWidget(QtGui.QLabel("emu7470 version:"),1,0)
+      self.grid.addWidget(QtGui.QLabel("Status:"),2,0)
+      self.grid.addWidget(QtGui.QLabel("Error code:"),3,0)
+      self.grid.addWidget(QtGui.QLabel("HP-GL command:"),4,0)
+      self.grid.addWidget(QtGui.QLabel("Error message:"),5,0)
+      self.lblVersion=QtGui.QLabel(decode_version(self.parent.emu_version))
       self.lblStatus=QtGui.QLabel("")
       self.lblError=QtGui.QLabel("")
       self.lblIllCmd=QtGui.QLabel("")
       self.lblErrMsg=QtGui.QLabel("")
-      self.grid.addWidget(self.lblStatus,1,1)
-      self.grid.addWidget(self.lblError,2,1)
-      self.grid.addWidget(self.lblIllCmd,3,1)
-      self.grid.addWidget(self.lblErrMsg,4,1)
+      self.grid.addWidget(self.lblVersion,1,1)
+      self.grid.addWidget(self.lblStatus,2,1)
+      self.grid.addWidget(self.lblError,3,1)
+      self.grid.addWidget(self.lblIllCmd,4,1)
+      self.grid.addWidget(self.lblErrMsg,5,1)
       self.vbox.addLayout(self.grid)
+      self.vbox.addStretch(1)
 
       self.hlayout=QtGui.QHBoxLayout()
       self.button = QtGui.QPushButton('OK')
@@ -903,6 +921,7 @@ class cls_statusWindow(QtGui.QDialog):
       self.hlayout.addWidget(self.button)
       self.vbox.addLayout(self.hlayout)
       self.setLayout(self.vbox)
+      self.resize(300,180)
       self.do_refresh()
 
    def hideEvent(self,event):
@@ -1052,12 +1071,11 @@ class cls_HP7470(QtCore.QObject):
 #
 #  handle emulator not found or crashed
 #
-   def setInvalid(self):
-#     self.UpdateTimer.stop()
+   def setInvalid(self, errno, errmsg):
       self.invalid=True
-      self.error=99
+      self.error=errno
       self.illcmd=""
-      self.errmsg="emu7470 subprocess not running"
+      self.errmsg=errmsg
       self.qplotter.setError(self.error,self.illcmd,self.errmsg)
 #
 #     send to GUI: switch LED to red
@@ -1068,8 +1086,8 @@ class cls_HP7470(QtCore.QObject):
 #
       self.parent.pildevice.disable()
 #
-#  start the subprocess of the plotter emulator, set papeersize according to
-#  config and send an "IN" command to the HP-GL command queue
+#  start the subprocess of the plotter emulator, check required version,
+#  set papeersize according to  config 
 #
    def enable(self):
 #     progpath=os.path.join(os.path.dirname(pyilper.__file__),"emu7470","emu7470")
@@ -1078,10 +1096,23 @@ class cls_HP7470(QtCore.QObject):
 
       try:
          self.proc= subprocess.Popen([progpath], bufsize=1, universal_newlines=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE)
+         line=self.proc.stdout.readline()
       except OSError as e:
-         self.setInvalid()
+         self.setInvalid(100,"emu7470 not found")
+         return
+#
+#     close if version does not match
+#
+      try:
+         version=int(line)
+      except ValueError:
+         version=0
+      if version < EMU7470_VERSION:
+         self.proc.stdin.close()
+         self.setInvalid(101,"incompatible version of emu7470")
          return
       self.cmdbuf.clear()
+      self.qplotter.put([CMD_EMU_VERSION,line])
       self.parse_state=0
       self.invalid=False
       papersize=PILCONFIG.get(self.name,"papersize")
@@ -1191,10 +1222,12 @@ class cls_HP7470(QtCore.QObject):
          self.parent.cbLogging.logWrite("\n")
          self.proc.stdin.write("\n")
       except OSError as e:
-         self.setInvalid()
+         self.proc.stdin.close()
+         self.setInvalid(102,"ipc input/output error")
          return
       except AttributeError as e:
-         self.setInvalid()
+         self.proc.stdin.close()
+         self.setInvalid(103,"ipc input/output error")
          return
 #
 #     read processed results from plotter
@@ -1203,10 +1236,13 @@ class cls_HP7470(QtCore.QObject):
          try:
             line=self.proc.stdout.readline()
          except OSError as e:
-            self.setInvalid()
+            self.proc.stdin.close()
+            self.setInvalid(104,"ipc input/output error")
             return
          if line =="":
-            self.setInvalid()
+            self.proc.stdin.close()
+            self.proc.stdin.close()
+            self.setInvalid("ipc input/output error")
             return
          ret=line.split()
          cmd= int(ret[0])
