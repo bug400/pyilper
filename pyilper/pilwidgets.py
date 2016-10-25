@@ -159,6 +159,8 @@
 # - plotter tab widget added (merged)
 # - pen definition dialog added (merged)
 # - webkit/webendine handling added (experimental)
+# 24.10.2016 jsi
+# - show python and qt version in the About window
 #
 import os
 import glob
@@ -1368,13 +1370,15 @@ class cls_AboutWindow(QtGui.QDialog):
 
    def __init__(self,version):
       super().__init__()
+      self.qtversion=QtCore.QT_VERSION_STR
+      self.pyversion=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
       self.setWindowTitle('pyILPER About ...')
       self.vlayout = QtGui.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtGui.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
-      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2016 Joachim Siebold\n\nGNU General Public License Version 2\n")
+      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2016 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+" and Qt "+self.qtversion+"\n")
 
 
       self.button = QtGui.QPushButton('OK')
