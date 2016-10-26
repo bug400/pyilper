@@ -37,6 +37,8 @@
 # - EMU7470_VERSION added
 # 25.10.2016 - jsi
 # - decode_version moved from lifexec.py
+# 26.10.2016 - jsi
+# - version 1.4.0 beta1
 #
 import platform
 #
@@ -64,7 +66,7 @@ def decode_version(version_number):
 # General constants:
 #
 PRODUCION= False      # Production/Development Version
-VERSION="1.4.0"       # pyILPR version number
+VERSION="1.4.0~beta1" # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # PIL-Box communication

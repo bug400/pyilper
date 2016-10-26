@@ -1,4 +1,4 @@
-pyilper (1.4-0ubuntu0) xenial; urgency=medium
+pyilper (1.4.0~beta1) xenial; urgency=medium
 
   * multiple instances support
   * add, remove and change position of virtual HP-IL devices
