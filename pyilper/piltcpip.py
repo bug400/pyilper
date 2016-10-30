@@ -48,7 +48,8 @@
 # 13.10.2016 jsi
 # - remove unregister function
 # - store tab name if device is registered
-
+# 30.10.2016 jsi
+# - getDevices added (removed by mistake)
 
 import select
 import socket
@@ -218,3 +219,9 @@ class cls_piltcpip:
 #
    def isRunning(self):
       return self.__running__
+#
+#  def Device list
+#
+   def getDevices(self):
+      return self.__devices__
+
