@@ -32,7 +32,12 @@
 # - terminate subprocess on ipc input/output error
 # 24.10.2016 jsi:
 # - show emu7470 version in status window
-
+# 03.11.2016 cg:
+# - bugfix in process HP-GL command, stdin flush was missing
+# - added workaround for creating a subprocess without console window under Windows
+# 04.11.2016 cg:
+# - changed pdf filename dialog to AcceptSave and added "pdf" as default suffix
+#
 
 from __future__ import print_function
 import os
@@ -46,10 +51,9 @@ import base64
 import threading
 import pyilper
 from PyQt4 import QtCore, QtGui
-from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version
+from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version, isWINDOWS
 from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PenConfigError, PENCONFIG
-
 
 CMD_CLEAR=0
 CMD_MOVE_TO=1
@@ -534,8 +538,9 @@ class cls_PlotterWidget(QtGui.QWidget):
    def get_pdfFilename(self):
       dialog=QtGui.QFileDialog()
       dialog.setWindowTitle("Enter PDF file name")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+      dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
       dialog.setFileMode(QtGui.QFileDialog.AnyFile)
+      dialog.setDefaultSuffix("pdf")
       dialog.setNameFilters( ["PDF (*.pdf )", "All Files (*)"] )
       dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
       if dialog.exec():
@@ -1095,7 +1100,11 @@ class cls_HP7470(QtCore.QObject):
       progpath="emu7470"
 
       try:
-         self.proc= subprocess.Popen([progpath], bufsize=1, universal_newlines=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE)
+         if isWINDOWS():
+            creationflags=0x08000000 # CREATE_NO_WINDOW
+         else:
+            creationflags=0
+         self.proc=subprocess.Popen([progpath], bufsize=1, universal_newlines=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, creationflags=creationflags)
          line=self.proc.stdout.readline()
       except OSError as e:
          self.setInvalid(100,"emu7470 not found")
@@ -1221,6 +1230,7 @@ class cls_HP7470(QtCore.QObject):
                self.parent.cbLogging.logWrite(c)
          self.parent.cbLogging.logWrite("\n")
          self.proc.stdin.write("\n")
+         self.proc.stdin.flush()
       except OSError as e:
          self.proc.stdin.close()
          self.setInvalid(102,"ipc input/output error")

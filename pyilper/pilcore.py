@@ -39,6 +39,8 @@
 # - decode_version moved from lifexec.py
 # 26.10.2016 - jsi
 # - version 1.4.0 beta1
+# 04.11.2016 - jsi
+# - version 1.4.0 beta2
 #
 import platform
 #
@@ -66,7 +68,7 @@ def decode_version(version_number):
 # General constants:
 #
 PRODUCION= False      # Production/Development Version
-VERSION="1.4.0b1"     # pyILPR version number
+VERSION="1.4.0b2"     # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # PIL-Box communication
