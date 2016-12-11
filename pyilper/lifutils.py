@@ -41,6 +41,8 @@
 # - changed os detection to platform.system()
 # 11.07.2016 jsi:
 # - use functions from pilcore.py for platform detection
+# 04.12.2016 jsi
+# - allow directory not starting at record 2
 #
 import os
 from .lifcore import *
@@ -312,7 +314,8 @@ class cls_LifFile:
       liftype= getLifInt(self.header,20,2)
       dirstart=getLifInt(self.header,8,4)
 #     if lifmagic == 0x8000 and liftype == 1 and dirstart == 2:
-      if lifmagic == 0x8000 and dirstart == 2:
+#     if lifmagic == 0x8000 and dirstart == 2:
+      if lifmagic == 0x8000:
          self.isLifFile= True
          self.dir_start= dirstart
          self.dir_length= getLifInt(self.header,16,4)
