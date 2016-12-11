@@ -161,6 +161,10 @@
 # - webkit/webendine handling added (experimental)
 # 24.10.2016 jsi
 # - show python and qt version in the About window
+# 04.12.2016 jsi
+# - allow LIF directories not starting at record 2
+# 11.12.2016 jsi
+# - extend configuration regarding pipes (Linux and Mac OS only)
 #
 import os
 import glob
@@ -1085,7 +1089,8 @@ class cls_tabdrive(cls_tabgeneric):
 #
       lifmagic= getLifInt(b,0,2)
       dirstart=getLifInt(b,8,4)
-      if not(lifmagic == 0x8000 and dirstart == 2):
+#     if not(lifmagic == 0x8000 and dirstart == 2):
+      if not(lifmagic == 0x8000):
          return [2,0,0,0] #  no lif type 1 file
 #
 #     get medium layout
@@ -1504,6 +1509,8 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.__idyframe__= PILCONFIG.get(self.__name__,"idyframe")
       self.__remotehost__= PILCONFIG.get(self.__name__,"remotehost")
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
+      self.__inpipename__= PILCONFIG.get(self.__name__,"inpipename")
+      self.__outpipename__= PILCONFIG.get(self.__name__,"outpipename")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
       self.__termsize__= PILCONFIG.get(self.__name__,"terminalsize")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
@@ -1606,12 +1613,37 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.edtRemotePort.setText(str(self.__remoteport__))
       self.edtRemotePort.setValidator(self.intvalidator)
       self.vboxgbox.addLayout(self.glayout)
+      self.vbox0.addWidget(self.gbox)
+#
+#     Section Pipes
+#
+      if isLINUX() or isMACOS():
+         self.radbutPipe = QtGui.QRadioButton(self.gbox)
+         self.radbutPipe.setText("Pipes")
+         self.radbutPipe.clicked.connect(self.setCheckBoxes)
+         self.vboxgbox.addWidget(self.radbutPipe)
+         self.playout=QtGui.QGridLayout()
+         self.playout.addWidget(QtGui.QLabel("Input pipe:"),0,0)
+         self.edtInpipe=QtGui.QLineEdit()
+         self.edtInpipe.setText(self.__inpipename__)
+         self.playout.addWidget(self.edtInpipe,0,1)
+         self.playout.addWidget(QtGui.QLabel("Output pipe:"),1,0)
+         self.playout.addWidget(self.edtInpipe,0,1)
+         self.edtOutpipe=QtGui.QLineEdit()
+         self.playout.addWidget(self.edtOutpipe,1,1)
+         self.edtOutpipe.setText(self.__outpipename__)
+         self.vboxgbox.addLayout(self.playout)
+
+#
+#     Init radio buttons
+#
       if self.__mode__==0:
          self.radbutPIL.setChecked(True)
-      else:
+      elif self.__mode__==1:
          self.radbutTCPIP.setChecked(True)
+      else:
+         self.radbutPipe.setChecked(True)
       self.setCheckBoxes()
-      self.vbox0.addWidget(self.gbox)
 #
 #     Section Working Directory
 #
@@ -1699,13 +1731,20 @@ class cls_PilConfigWindow(QtGui.QDialog):
          self.edtRemoteHost.setEnabled(False)
          self.edtRemotePort.setEnabled(False)
          self.cbIdyFrame.setEnabled(True)
-      else:
+      elif self.radbutTCPIP.isChecked():
          self.__mode__=1
          self.butTty.setEnabled(False)
          self.edtPort.setEnabled(True)
          self.edtRemoteHost.setEnabled(True)
          self.edtRemotePort.setEnabled(True)
          self.cbIdyFrame.setEnabled(True)
+      elif self.radbutPipe.isChecked():
+         self.__mode__=2
+         self.butTty.setEnabled(False)
+         self.edtPort.setEnabled(True)
+         self.edtRemoteHost.setEnabled(False)
+         self.edtRemotePort.setEnabled(False)
+         self.cbIdyFrame.setEnabled(False)
 
    def do_config_Interface(self):
       interface= cls_TtyWindow.getTtyDevice()
@@ -1747,6 +1786,9 @@ class cls_PilConfigWindow(QtGui.QDialog):
       PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
       PILCONFIG.put(self.__name__,"colorscheme", self.comboCol.currentText())
       PILCONFIG.put(self.__name__,"terminalcharsize",self.spinCharsize.value())
+      if isLINUX() or isMACOS():
+         PILCONFIG.put(self.__name__,"inpipename", self.edtInpipe.text())
+         PILCONFIG.put(self.__name__,"outpipename", self.edtOutpipe.text())
       super().accept()
 
    def do_cancel(self):

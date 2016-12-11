@@ -106,6 +106,10 @@
 # - device configuration rewritten (add, remove and change position of devices)
 # 19.10.2016 jsi
 # - added pen config menu entry (merged)
+# 19.11.2016 jsi
+# - pipes thread added
+# 11.12.2016 jsi
+# - default configuration now includes the plotter
 #
 import os
 import sys
@@ -125,12 +129,15 @@ from .pilbox import cls_pilbox, PilBoxError
 from .pilboxthread import cls_PilBoxThread
 from .piltcpip import cls_piltcpip, TcpIpError
 from .piltcpipthread import cls_PilTcpIpThread
+from .pilpipes import cls_pilpipes, PipesError
+from .pilpipesthread import cls_PilPipesThread
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
 
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
 MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
+MODE_PIPES=2          # conect via named pipes
 
 TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter}
 
@@ -212,7 +219,9 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"colorscheme","white")
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
-         PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"]])
+         PILCONFIG.get(self.name,"inpipename","/tmp/pilinpipe")
+         PILCONFIG.get(self.name,"outpipename","/tmp/piloutpipe")
+         PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
@@ -290,7 +299,8 @@ class cls_pyilper(QtCore.QObject):
 #     connect to HP-IL
 #
 
-      if PILCONFIG.get(self.name,"mode")== MODE_PILBOX:
+      mode=PILCONFIG.get(self.name,"mode")
+      if mode == MODE_PILBOX:
 #
 #        create PIL-Box object, connect to PIL-Box. Return if not configured
 #
@@ -305,7 +315,7 @@ class cls_pyilper(QtCore.QObject):
          except PilBoxError as e:
             reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
             return
-      else:
+      elif mode== MODE_TCPIP:
 #
 #        create TCP-IP-object, connect to network
 #
@@ -316,7 +326,17 @@ class cls_pyilper(QtCore.QObject):
          except TcpIpError as e:
             self.commobject.close()
             self.commobject=None
-            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            return
+      else:
+         self.commobject= cls_pilpipes(PILCONFIG.get(self.name,"inpipename"),PILCONFIG.get(self.name,"outpipename"))
+         try:
+            self.commobject.open()
+            self.commthread= cls_PilPipesThread(self.ui,self.commobject)
+         except PipesError as e:
+            self.commobject.close()
+            self.commobject=None
+            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
             return
 #
 #     enable all registered tab objects
