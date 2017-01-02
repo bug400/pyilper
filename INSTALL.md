@@ -5,6 +5,7 @@ Index
 -----
 
 * [General](#general)
+* [Installation of the LIFUTILS](#Installation-of-the-LIFUTILS)
 * [Installation with the ANACONDA platform](#installation-with-the-anaconda-platform)
 * [Setup](#setup)
 * [Operation](#operation)
@@ -20,6 +21,7 @@ pyILPER requires:
 * QT 4.8, 
 * PyQt 4.8 
 * pyserial  2.7 
+* [LIFUTILS] (https://github.com/bug400/lifutils/releases) (the most recent version)
 
 It is recommended to use the [ANACONDA platform](https://www.continuum.io) 
 to install pyILPER and the required Python software and keep them up to date.
@@ -36,6 +38,14 @@ See the installation istructions for that driver how to install and how to
 disable the Apple driver.
 
 LINUX does not require to install any driver software.
+
+
+Installation of the LIFUTILS
+----------------------------
+
+In order to use the file and disk management functions and the virtual HP7470A plotter
+an up to date version of the [LIFUTILS] (https://github.com/bug400/lifutils/releases)
+is. See the [Installation Instructions] (https://github.com/bug400/lifutils/blob/master/INSTALL.md) for further details.
 
 
 Installation with the ANACONDA platform
@@ -129,6 +139,7 @@ directory and type:
      python3 setup.py install
 
 in a terminal window.
+
 
 Installation of development versions
 ------------------------------------

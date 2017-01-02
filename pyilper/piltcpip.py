@@ -50,6 +50,8 @@
 # - store tab name if device is registered
 # 30.10.2016 jsi
 # - getDevices added (removed by mistake)
+# 22.12.2016 jsi
+# - raise TcpIpError missing second param added
 
 import select
 import socket
@@ -105,7 +107,7 @@ class cls_piltcpip:
             s.close()
             continue
       if len(self.__serverlist__) is 0:
-         raise TcpIpError("cannot bind to port")
+         raise TcpIpError("cannot bind to port","")
       self.__running__ = True
 
    def openclient(self):

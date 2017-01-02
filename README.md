@@ -38,9 +38,10 @@ Features
 --------
 
 * Entirely written in Python3 using the QT GUI-Framework
-* Up to 5 virtual mass storage drives with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize)
-* Up to 3 virtual printers emulating the HP-71B, HP-41C and ROMAN-8 character sets
+* Virtual mass storage drive with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize)
+* Virtual printer emulating the HP-71B, HP-41C and ROMAN-8 character sets
 * Terminal emulator with keyboard support (HP-71B only). Requires at least version 1.6 of the PIL-Box firmware
+* Virtual plotter emulating the HP 7470A HP-IL plotter
 * HP-IL scope
 * The number of virtual devices is configurable
 * The output of the scope or the virtual printer(s) is logged to file(s)
@@ -53,7 +54,7 @@ Features
 Compatibility
 -------------
 
-pyILPER has been successful tested with LINUX, Windows 7 and Mac OS X.
+pyILPER has been successful tested with LINUX, Windows 7 and Mac OS.
 
 
 Installation
@@ -66,8 +67,9 @@ Linux, Windows and Mac OS X.
 
 See the [Installation Instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md) for details.
 
-In order to use the file and disk management functions an up to date version of the
-[LIFUTILS] (https://github.com/bug400/lifutils/releases) are required as well.
+In order to use the file and disk management functions and the virtual HP7470A plotter 
+an up to date version of the [LIFUTILS] (https://github.com/bug400/lifutils/releases) 
+is required as well.
 
 
 License
@@ -84,4 +86,6 @@ Much code was taken from ILPER for Windows (Copyright (c) 2008-2013
 J-F Garnier, Visual C++ version by Christoph Gießelink 2016. 
 The terminal emulator code was taken from the pyqterm console widget 
 by Henning Schroeder. The virtual TCP/IP support of pyILPER was significantly
-improved by Christoph Gießelink who also provided many other improvements.
+improved by Christoph Gießelink who also provided many other improvements. The virtual
+HP7470A plotter engine was derived from the HP2XX software (Heinz W. Werntges, Martin 
+Kroeker).
