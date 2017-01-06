@@ -32,7 +32,7 @@ ANACONDA. See the last chapter of this manual.
 Windows requires the installation of the FTDI USB serial driver first.
 See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
-More recent Mac OS X versions already provide a USB serial driver for the
+More recent Mac OS versions already provide a USB serial driver for the
 PIL-Box.  By experience you get better results if you use the original FTDI driver. 
 See the installation istructions for that driver how to install and how to 
 disable the Apple driver.
@@ -45,7 +45,7 @@ Installation of the LIFUTILS
 
 In order to use the file and disk management functions and the virtual HP7470A plotter
 an up to date version of the [LIFUTILS] (https://github.com/bug400/lifutils/releases)
-is. See the [Installation Instructions] (https://github.com/bug400/lifutils/blob/master/INSTALL.md) for further details.
+must be installed. See the [Installation Instructions] (https://github.com/bug400/lifutils/blob/master/INSTALL.md) for further details.
 
 
 Installation with the ANACONDA platform
@@ -57,7 +57,7 @@ administrator privileges are needed.
 
 Note: for the ANACONDA platform pyILPER is only available for Python 3.5.
 
-The following instructions apply to Linux, Windows and Mac OS X:
+The following instructions apply to Linux, Windows and Mac OS:
 
 Follow the [Quick Install Guide](http://conda.pydata.org/docs/install/quick.html)
 and install Miniconda first. Note: If you install Miniconda the first time
@@ -107,7 +107,7 @@ the dialout group to access the device.
 On Windows the device is COMn. If you are uncertain, check the COM ports
 in the device manager. 
 
-On Mac OS X the device name is usually /dev/tty.usbserial-FTDBIRU.
+On Mac OS the device name is usually /dev/tty.usbserial-FTDBIRU.
 
 The baud rate must match the baud rate the PIL-Box is configured to. See
 the PIL-Box documentation for details.
