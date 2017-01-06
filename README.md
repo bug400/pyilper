@@ -54,7 +54,7 @@ Features
 Compatibility
 -------------
 
-pyILPER has been successful tested with LINUX, Windows 7 and Mac OS.
+pyILPER has been successful tested with LINUX, Windows 10 and Mac OS.
 
 
 Installation
