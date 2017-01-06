@@ -5,7 +5,7 @@ Index
 -----
 
 * [General](#general)
-* [Installation of the LIFUTILS](#Installation-of-the-LIFUTILS)
+* [Installation of the LIFUTILS](#installation-of-the-lifutils)
 * [Installation with the ANACONDA platform](#installation-with-the-anaconda-platform)
 * [Setup](#setup)
 * [Operation](#operation)
