@@ -111,7 +111,7 @@ On Mac OS the device name is usually /dev/tty.usbserial-FTDxxxx.
 
 pyILPER tries to determine the baud rate of the PIL-BOX serial device.
 If that does not work, set the baud rate manually to the baud rate the
-PIL-Box is configured to. See the PIL-Box documentation for furhter details.
+PIL-Box is configured to. See the PIL-Box documentation for further details.
 
 pyILPER stores all log files in a working directory. The default
 of that directory is the users home directory. Change the working directory
