@@ -41,8 +41,10 @@
 # - version 1.4.0 beta1
 # 04.11.2016 - jsi
 # - version 1.4.0 beta2
-# 01.01.2017 - jsi
-# - version 1.4.0 
+# 01.01.2016 - jsi
+# - version 1.4.0
+# 07.01.2016 - jsi
+# - add encode version function
 #
 import platform
 #
@@ -63,6 +65,13 @@ def decode_version(version_number):
    minor=int(version[1:3])
    subversion=int(version[3:5])
    return "{:d}.{:d}.{:d}".format(major,minor,subversion)
+
+def encode_version(version_string):
+   v=version_string.split(".")
+   major="".join(filter(lambda x: x.isdigit(),v[0]))
+   minor="".join(filter(lambda x: x.isdigit(),v[1]))
+   subversion="".join(filter(lambda x: x.isdigit(),v[2]))
+   return int(major)*10000+ int(minor)*100 + int(subversion)
 
 #
 # Program constants --------------------------------------------------

@@ -98,7 +98,7 @@ and the working directory must be configured.
 
 Open the pyILPER configuration dialog from the file menu. Change the
 name of the PIL-Box device to the USB serial device the box is
-connected to.
+connected to. pyILPER tries to make an appropriate proposal for the device name.
 
 On Linux the device name is usually /dev/ttyUSBn. Check if you have read and
 write access to the device. Some Linux distributions require membership of
@@ -107,17 +107,20 @@ the dialout group to access the device.
 On Windows the device is COMn. If you are uncertain, check the COM ports
 in the device manager. 
 
-On Mac OS the device name is usually /dev/tty.usbserial-FTDBIRU.
+On Mac OS the device name is usually /dev/tty.usbserial-FTDxxxx.
 
-The baud rate must match the baud rate the PIL-Box is configured to. See
-the PIL-Box documentation for details.
+pyILPER tries to determine the baud rate of the PIL-BOX serial device.
+If that does not work, set the baud rate manually to the baud rate the
+PIL-Box is configured to. See the PIL-Box documentation for furhter details.
 
-The working directory defaults to the users home directory. Change the working
-directory to an appropriate location. The pyILPER log files are stored in the
-working directory.
+pyILPER stores all log files in a working directory. The default
+of that directory is the users home directory. Change the working directory
+to an appropriate location.
 
-Now reconnect to the PIL-Box in the file menu. pyILPER is ready to use 
-if the message "connected to PIL-Box" is displayed in the status line. 
+If the message "connected to PIL-BOX at xxx baud" is displayed in the
+status bar, pyILPER is ready to run. Now you have to enable each
+virtual device (check box at the lower left corner of a device tab), because
+they are disabled by default.
 
 
 Usage

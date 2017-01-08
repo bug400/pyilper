@@ -110,6 +110,11 @@
 # - pipes thread added
 # 11.12.2016 jsi
 # - default configuration now includes the plotter
+# 07.01.2016 jsi
+# - store pyILPER version in config file
+# - show "first run" information, if started unconfigures
+# - show release information if a new pyILPER version was started the first time
+# - show tty device unconfigured message in status bar instead in pop up window
 #
 import os
 import sys
@@ -222,6 +227,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"inpipename","/tmp/pilinpipe")
          PILCONFIG.get(self.name,"outpipename","/tmp/piloutpipe")
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
+         PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
@@ -233,6 +239,12 @@ class cls_pyilper(QtCore.QObject):
       except PenConfigError as e:
          reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
          QtGui.qApp.quit()
+#
+#     determine if we run a new version of pyILPER (or for the first time)
+#
+      oldversion=encode_version(PILCONFIG.get(self.name,"version"))
+      thisversion=encode_version(VERSION)
+      PILCONFIG.put(self.name,"version",VERSION)
 #
 #     create tab objects, scope is fixed all others are configured by tabconfig
 #
@@ -280,7 +292,17 @@ class cls_pyilper(QtCore.QObject):
 #
       self.enable()
       self.msgTimer.start(500)
-
+#
+#     if we run pyILPER for the first time (oldversion =0.0.0), show startup info
+#
+      if PILCONFIG.get(self.name,"position")=="":
+         self.show_StartupInfo()
+      else:
+#
+#     if we run a new version for the first time, show release notes
+#
+         if thisversion > oldversion:
+            self.show_ReleaseInfo(VERSION)
 #
 #  start application into warm state
 #
@@ -305,7 +327,7 @@ class cls_pyilper(QtCore.QObject):
 #        create PIL-Box object, connect to PIL-Box. Return if not configured
 #
          if PILCONFIG.get(self.name,'tty') =="":
-            reply=QtGui.QMessageBox.critical(self.ui,'Error','Serial device not configured. Run pyILPER configuration from the file menu.',QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            self.ui.emit_message("Serial device not confgured. Run pyILPER configuration")
             return
 
          try:
@@ -537,6 +559,25 @@ class cls_pyilper(QtCore.QObject):
       if self.helpwin == None:
          self.helpwin= cls_HelpWindow()
       self.helpwin.show()
+      self.helpwin.loadDocument("","index.html")
+      self.helpwin.raise_()
+#
+#  show release information window
+#
+   def show_ReleaseInfo(self, version):
+      if self.helpwin == None:
+         self.helpwin= cls_HelpWindow()
+      self.helpwin.show()
+      self.helpwin.loadDocument("Misc","Releasenotes.html")
+      self.helpwin.raise_()
+#
+#  show startup info
+#
+   def show_StartupInfo(self):
+      if self.helpwin == None:
+         self.helpwin= cls_HelpWindow()
+      self.helpwin.show()
+      self.helpwin.loadDocument("Introduction","Startup.html")
       self.helpwin.raise_()
 
 def dumpstacks(signal, frame):

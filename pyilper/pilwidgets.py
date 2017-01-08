@@ -165,6 +165,8 @@
 # - allow LIF directories not starting at record 2
 # 11.12.2016 jsi
 # - extend configuration regarding pipes (Linux and Mac OS only)
+# 07.01.2016 jsi
+# - extended cls_HelpWindow to load arbitrary html files
 #
 import os
 import glob
@@ -1322,11 +1324,7 @@ class cls_LifDirWidget(QtGui.QWidget):
 class cls_HelpWindow(QtGui.QDialog):
 
    def __init__(self,parent=None):
-      docpath=os.path.join(os.path.dirname(pyilper.__file__),"Manual","index.html")
 #
-#     fix leading //  (OSX)
-#
-      docpath=re.sub("//","/",docpath,1)
       super().__init__()
       self.setWindowTitle('pyILPER Manual')
  
@@ -1334,14 +1332,10 @@ class cls_HelpWindow(QtGui.QDialog):
       self.setLayout(self.vlayout)
       if HAS_WEBKIT:
          self.view = QtWebKit.QWebView()
-         self.view.setMinimumWidth(600)
-         self.view.load(QtCore.QUrl.fromLocalFile(docpath))
-         self.vlayout.addWidget(self.view)
       if HAS_WEBENGINE:
          self.view = QtWebEngineWidgets.QWebEngineView()
-         self.view.setMinimumWidth(600)
-         self.view.load(QtCore.QUrl.fromLocalFile(docpath))
-         self.vlayout.addWidget(self.view)
+      self.view.setMinimumWidth(600)
+      self.vlayout.addWidget(self.view)
       self.buttonExit = QtGui.QPushButton('Exit')
       self.buttonExit.setFixedWidth(60)
       self.buttonExit.clicked.connect(self.do_exit)
@@ -1366,7 +1360,39 @@ class cls_HelpWindow(QtGui.QDialog):
 
    def do_forward(self):
       self.view.forward()
+
+   def loadDocument(self,subdir,document):
+      if subdir=="":
+         docpath=os.path.join(os.path.dirname(pyilper.__file__),"Manual",document)
+      else:
+         docpath=os.path.join(os.path.dirname(pyilper.__file__),"Manual",subdir,document)
+      docpath=re.sub("//","/",docpath,1)
+      self.view.load(QtCore.QUrl.fromLocalFile(docpath))
 #
+# Release Info Dialog class --------------------------------------------------------
+#
+class cls_ReleaseWindow(QtGui.QDialog):
+
+   def __init__(self,version):
+      super().__init__()
+      self.setWindowTitle('Release Information for pyILPER '+version)
+      self.vlayout = QtGui.QVBoxLayout()
+      self.setLayout(self.vlayout)
+      self.view = QtGui.QLabel()
+      self.view.setFixedWidth(500)
+      self.view.setWordWrap(True)
+      self.view.setText("Release Info Text")
+      self.button = QtGui.QPushButton('OK')
+      self.button.setFixedWidth(60)
+      self.button.clicked.connect(self.do_exit)
+      self.vlayout.addWidget(self.view)
+      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout.addWidget(self.button)
+      self.vlayout.addLayout(self.hlayout)
+
+   def do_exit(self):
+      self.hide()
+
 #
 #
 # About Dialog class --------------------------------------------------------
