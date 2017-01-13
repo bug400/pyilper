@@ -28,11 +28,12 @@
     <tr bgcolor="#FFF677">
       <td valign="middle" align="left" width="99%">
         <br>
-        <h2>Setup pyILPER with the PIL-Box</h2>
 
         <p>If you use pyILPER for the first time, please read this document
-        to get pyILPER up and running with the PIL-Box.
+        to get pyILPER up and running.
         </p>
+
+        <h2>Setup pyILPER with the PIL-Box</h2>
 
         <p>To use the file management capabilities of the virtual drives or 
         the HP7470A plotter the latest version of the 
@@ -53,7 +54,7 @@
         the <a href="https://github.com/bug400/pyilper/blob/master/INSTALL.md">Installation instructions</a>
         for further details.</ p>
 
-        <p>pyILPER tries to determine the baud rate of the PIL-BOX serial device.
+        <p>pyILPER tries to determine the baud rate of the PIL-Box serial device.
         If that does not work, set the baud rate manually to the baud rate the
         PIL-Box is configured to. See the PIL-Box documentation for further details.</p>
 
@@ -61,7 +62,7 @@
         of that directory is the users home directory. Change the working directory
         to an appropriate location.</p>
 
-        <p>If the message "connected to PIL-BOX at xxx baud" is displayed in the
+        <p>If the message "connected to PIL-Box at xxx baud" is displayed in the
         status bar, pyILPER is ready to run. Now you have to enable each
         virtual device (check box at the lower left corner of a device tab), because
         they are disabled by default.</p>
@@ -84,7 +85,7 @@
         <h2>Setup pyILPER with virtual HP-IL over TCP/IP</h2>
         <p>pyILPER supports
         <a href="http://hp.giesselink.com/hpil.htm">virtual HP-IL over TCP/IP</a>.
-        You may hook the
+        You may hook up the
         <a href="http://hp.giesselink.com/emu71.htm">HP-71B Emulator of
         Christoph Gie&szlig;elink</a> with pyILPER.</p>
 
@@ -93,8 +94,21 @@
         are configured properly. See the documentation of the virtual HP-IL over
         TCP/IP and the documentation of EMU71 for further details.<p>
 
-        <p>The most recent version of EMU71 includes remote keyboard support. Setup
+        <p>The most recent version of Emu71 includes remote keyboard support. Setup
         the terminal emulator as documented above.</p>
+        <p>The recommended procedure to connect Emu71 to pyILPER is:</p>
+        <ul>
+        <li>Start pyILPER configured in TCP/IP communication mode. The status line
+        shows: "not connected to virtual HP-IL devices."</li>
+        <li>Start Emu71 with the HP-IL module configured properly. Switch the calculator
+        on and press the ATTN key until the pyILPER status line shows "connected to
+        virtual HP-IL devices".
+        <li>Initialize to loop as specified above.</li>
+        </ul>
+        <p>The recommended procedure to disconnect Emu71 from pyILPER is:</p>
+        <ul>
+        <li>Switch Emu71 off and close the program.</li>
+        <li>Close pyILPER.</li>
       </td>
     </tr>
   </table><br>

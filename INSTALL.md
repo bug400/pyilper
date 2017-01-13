@@ -34,7 +34,7 @@ See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
 More recent Mac OS versions already provide a USB serial driver for the
 PIL-Box.  By experience you get better results if you use the original FTDI driver. 
-See the installation istructions for that driver how to install and how to 
+See the installation instructions for that driver how to install and how to 
 disable the Apple driver.
 
 LINUX does not require to install any driver software.
@@ -85,7 +85,7 @@ in a terminal window.
 
 You should issue occasionally:
 
-     conda clean --packages --tarballs
+     conda clean --all
 
 to clean the conda package cache and save disk space.
 
