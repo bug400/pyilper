@@ -2,7 +2,9 @@ pyilper (1.4.0~ubuntu1) xenial; urgency=medium
 
   * production release 
   * bugfix in piltcpip.py
-
+  * enabled python 3.6
+  * new experimental version of PILTERM
+  * updated release notes and startup doku
  -- trusty <achim@trillian>  Sun, 01 Jan 2017 21:07:36 +0100
 
 pyilper (1.4.0~beta2) xenial; urgency=medium
