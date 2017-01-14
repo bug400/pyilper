@@ -31,22 +31,23 @@
 
         <h2>Release Notes for pyILPER 1.4.0</h2>
         <ul>
-        <li>This version of pyILPER> requires an updated version of the 
-        LIFUTILS.
+        <li><b>This version of pyILPER requires an updated version of the 
+        LIFUTILS.</b>
         At least version 1.7.6 is required. If older versions of the LIFUTILS
         are installed the file management functions of the drive tab and the new
         virtual HP7470A plotter are <b>disabled</b>. See the
         <a href="https://github.com/bug400/lifutils/releases">download page</a> to obtain
         the latest version for your platform.</li>
-        <li>The <em>Virtual HP-IL device configuration</em> was completely
-        rewritten. No you can add or remove virtual HP-IL devices and change their
+        <li><b>The <em>Virtual HP-IL device configuration</em> was completely
+        rewritten.</b> No you can add or remove virtual HP-IL devices and change their
         tab position.  If a new device is added you must assign a unique name. 
         With the exception of the scope, the number of virtual devices is not limited.
-        Note: settings of the number of virtual devices of previous  
-        pyILPER versions are not migrated to version 1.4.0.</li>
+        <b>Note: settings of the virtual devices of previous pyILPER versions are not 
+        migrated completely to version 1.4.0. Please check them carefully.</b></li>
         <li>pyILPER starts with a default configuration of a scope, a printer, two 
-        drives and a terminal. The printer as the first
-        virtual device avoids avoid MANIO issues with the HP-41C.</li>
+        drives and a terminal. The printer as the first virtual device avoids avoid 
+        MANIO issues with the HP-41C. You may change that in the <em>Virtual HP-IL 
+        device configuration</em>. </li>
         <li>New virtual HP-IL device: the HP7470A plotter. </li>
         <li>See the <a href="Changelog.html">Change Log</a> for a full list of changes.</li>
         </ul>
