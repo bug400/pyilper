@@ -88,6 +88,8 @@
 # - do not issue paint events where nothing gets painted (this cleared the display
 #   on qt5 (MAC OS)
 # - catch index error in HPTerminal.dump()
+# 03.02.2015 jsi:
+# - do not fire cursor paint event, if cursor is off
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -510,6 +512,11 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
 #   External interface
 #
+#   get cursor type (insert, replace, off
+#
+    def getCursorType(self):
+       return(self._cursortype)
+#
 #   set cursor type (insert, replace, off)
 #
     def setCursorType(self,t):
@@ -897,9 +904,10 @@ class HPTerminal:
           self.win.terminalwidget.update() # fire the paintEvent, radraw display 
           self.blink_counter=0 
 #
-#      fire paint event if we need to update the cursor
+#      fire paint event if we need to update the cursor (if not off...)
 #
-       elif self.blink_counter> CURSOR_BLINK:
+       elif self.blink_counter> CURSOR_BLINK and \
+            self.win.terminalwidget.getCursorType() != CURSOR_OFF:
           self.win.terminalwidget.setCursorUpdateBlink()
           self.blink_counter=0 
           self.win.terminalwidget.update() # fire the paintEvent, cursor blink only 
