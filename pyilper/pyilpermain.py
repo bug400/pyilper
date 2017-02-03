@@ -125,7 +125,7 @@ import shutil
 import pyilper
 import re
 import argparse
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow,cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_tabplotter, cls_PenConfigWindow
 from .pilcore import *
 from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
@@ -230,15 +230,15 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.save()
       except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-         QtGui.qApp.quit()
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         QtWidgets.QApplication.quit()
 #
 #     2. pen configuration
       try:
          PENCONFIG.open(self.name,CONFIG_VERSION,self.instance)
       except PenConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-         QtGui.qApp.quit()
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         QtWidgets.QApplication.quit()
 #
 #     determine if we run a new version of pyILPER (or for the first time)
 #
@@ -315,7 +315,7 @@ class cls_pyilper(QtCore.QObject):
       try:
          os.chdir(PILCONFIG.get(self.name,'workdir'))
       except OSError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',"Cannot change to working directory: "+e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot change to working directory: "+e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
 #
 #     connect to HP-IL
@@ -335,7 +335,7 @@ class cls_pyilper(QtCore.QObject):
             self.commobject.open()
             self.commthread= cls_PilBoxThread(self.ui,self.commobject)
          except PilBoxError as e:
-            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
       elif mode== MODE_TCPIP:
 #
@@ -348,7 +348,7 @@ class cls_pyilper(QtCore.QObject):
          except TcpIpError as e:
             self.commobject.close()
             self.commobject=None
-            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
       else:
          self.commobject= cls_pilpipes(PILCONFIG.get(self.name,"inpipename"),PILCONFIG.get(self.name,"outpipename"))
@@ -358,7 +358,7 @@ class cls_pyilper(QtCore.QObject):
          except PipesError as e:
             self.commobject.close()
             self.commobject=None
-            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
 #
 #     enable all registered tab objects
@@ -452,7 +452,7 @@ class cls_pyilper(QtCore.QObject):
          try:
             PILCONFIG.save()
          except PilConfigError as e:
-            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
          self.enable()
 #
@@ -465,9 +465,9 @@ class cls_pyilper(QtCore.QObject):
       try:
          PILCONFIG.save()
       except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
-      reply=QtGui.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration changed. Restart Application.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.information(self.ui,"Restart required","HP-IL Device configuration changed. Restart Application.",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       
 #
 # callback plotter pen configuration
@@ -478,7 +478,7 @@ class cls_pyilper(QtCore.QObject):
       try:
          PENCONFIG.save()
       except PenConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
 
 #
@@ -505,8 +505,8 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.put(self.name,"position",position)
          PILCONFIG.save()
       except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
-      QtGui.qApp.quit()
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      QtWidgets.QApplication.quit()
 #
 #  callback initialize LIF medium
 #
@@ -535,13 +535,13 @@ class cls_pyilper(QtCore.QObject):
       srcfile= re.sub("//","/",srcfile,1)
       dstpath=PILCONFIG.get(self.name,"workdir")
       if os.access(os.path.join(dstpath,"PILIMAGE.DAT"),os.W_OK):
-         reply=QtGui.QMessageBox.warning(self.ui,'Warning',"File PILIMAGE.DAT already exists. Do you really want to overwrite that file?",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
-         if reply== QtGui.QMessageBox.Cancel:
+         reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"File PILIMAGE.DAT already exists. Do you really want to overwrite that file?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
+         if reply== QtWidgets.QMessageBox.Cancel:
             return
       try:
          shutil.copy(srcfile,dstpath)
       except OSError as e:
-         reply=QtGui.QMessageBox.critical(self.ui,'Error',"Cannot copy file: "+e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot copy file: "+e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
 
 #
@@ -592,7 +592,7 @@ def main():
 
    if not isWINDOWS():
       signal.signal(signal.SIGQUIT, dumpstacks)
-   app = QtGui.QApplication(sys.argv)
+   app = QtWidgets.QApplication(sys.argv)
    pyilper= cls_pyilper(args)
    sys.exit(app.exec_())
 

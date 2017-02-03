@@ -97,7 +97,7 @@ import queue
 import threading
 import time
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
 from .pilcore import UPDATE_TIMER, CURSOR_BLINK
 
@@ -105,7 +105,7 @@ CURSOR_OFF=0
 CURSOR_INSERT=1
 CURSOR_OVERWRITE=2
 
-class QScrolledTerminalWidget(QtGui.QWidget):
+class QScrolledTerminalWidget(QtWidgets.QWidget):
 
     def __init__(self,parent, font_name, font_size, cols, rows, colorscheme):
         super().__init__(parent)
@@ -123,12 +123,12 @@ class QScrolledTerminalWidget(QtGui.QWidget):
 #
 #       create terminal window and scrollbar
 #
-        self.hbox= QtGui.QHBoxLayout()
+        self.hbox= QtWidgets.QHBoxLayout()
         self.terminalwidget= QTerminalWidget(self,font_name,font_size,font_height, width,height, colorscheme)
         self.terminalwidget.setFixedSize(width,height)
         self.hbox.addWidget(self.terminalwidget)
         self.hbox.setAlignment(self.terminalwidget,QtCore.Qt.AlignLeft)
-        self.scrollbar= QtGui.QScrollBar()
+        self.scrollbar= QtWidgets.QScrollBar()
         self.hbox.addWidget(self.scrollbar)
         self.hbox.setAlignment(self.scrollbar,QtCore.Qt.AlignLeft)
         self.setLayout(self.hbox)
@@ -154,7 +154,7 @@ class QScrolledTerminalWidget(QtGui.QWidget):
     def redraw(self):
        self.terminalwidget.redraw()
 
-class QTerminalWidget(QtGui.QWidget):
+class QTerminalWidget(QtWidgets.QWidget):
 
 # color scheme: normal_foreground, normal_background, inverse_foreground, inverse_background, cursor_color
 

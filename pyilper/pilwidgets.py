@@ -175,16 +175,16 @@ import time
 import re
 import pyilper
 import sys
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 HAS_WEBKIT=False
 HAS_WEBENGINE=False
 try:
-   from PyQt4 import QtWebKit
+   from PyQt5 import QtWebKitWidgets
    HAS_WEBKIT= True
 except:
    pass
 try:
-   from PyQt4 import QtWebEngineWidgets
+   from PyQt5 import QtWebEngineWidgets
    HAS_WEBENGINE=True
 except:
    pass
@@ -211,7 +211,7 @@ from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cl
 #
 # Logging check box
 #
-class LogCheckboxWidget(QtGui.QCheckBox):
+class LogCheckboxWidget(QtWidgets.QCheckBox):
    def __init__(self,text,filename):
       super().__init__(text)
       self.filename=filename
@@ -224,7 +224,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
          self.log.write("\n")
       except OSError as e:
-         reply=QtGui.QMessageBox.critical(self,'Error',"Cannot open log file: "+ e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot open log file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
    def logClose(self):
       try:
@@ -234,7 +234,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
          self.log.close()
          self.log= None
       except OSError as e:
-         reply=QtGui.QMessageBox.critical(self,'Error',"Cannot close log file: "+ e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot close log file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
    def logWrite(self,line):
       if self.log is None:
@@ -242,7 +242,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
       try:
          self.log.write(line)
       except OSError as e:
-         reply=QtGui.QMessageBox.critical(self,'Error',"Cannot write to log file: "+ e.strerror+". Logging disabled",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to log file: "+ e.strerror+". Logging disabled",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          try:
             self.log.close()
          except OSError:
@@ -255,7 +255,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
       try:
          self.log.flush()
       except OSError as e:
-         reply=QtGui.QMessageBox.critical(self,'Error',"Cannot write to log file: "+ e.strerror+". Logging disabled",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to log file: "+ e.strerror+". Logging disabled",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          try:
             self.log.close()
          except OSError:
@@ -265,7 +265,7 @@ class LogCheckboxWidget(QtGui.QCheckBox):
 #
 # abstract class
 #
-class cls_tabgeneric(QtGui.QWidget):
+class cls_tabgeneric(QtWidgets.QWidget):
 
    def __init__(self,parent,name):
 
@@ -280,7 +280,7 @@ class cls_tabgeneric(QtGui.QWidget):
       self.width= 0
       self.height= 0
 
-      self.cbActive= QtGui.QCheckBox('Device enabled')
+      self.cbActive= QtWidgets.QCheckBox('Device enabled')
       self.cbActive.setChecked(self.active)
       self.cbActive.setEnabled(False)
       self.cbActive.stateChanged.connect(self.do_cbActive)
@@ -320,11 +320,11 @@ class cls_tabplotter(cls_tabgeneric):
 #
       self.qplotter=cls_PlotterWidget(self,self.name)
 
-      self.hbox1= QtGui.QHBoxLayout()
+      self.hbox1= QtWidgets.QHBoxLayout()
       self.hbox1.addWidget(self.qplotter)
       self.hbox1.setAlignment(self.qplotter,QtCore.Qt.AlignHCenter)
       self.hbox1.setContentsMargins(20,20,20,20)
-      self.hbox2= QtGui.QHBoxLayout()
+      self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
       self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
 
@@ -332,8 +332,8 @@ class cls_tabplotter(cls_tabgeneric):
       self.hbox2.addWidget(self.cbLogging)
       self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
 
-      self.lbltxtc=QtGui.QLabel("Log level ")
-      self.comboLoglevel=QtGui.QComboBox()
+      self.lbltxtc=QtWidgets.QLabel("Log level ")
+      self.comboLoglevel=QtWidgets.QComboBox()
       for txt in self.LOGLEVEL:
           self.comboLoglevel.addItem(txt)
       self.hbox2.addWidget(self.lbltxtc)
@@ -342,7 +342,7 @@ class cls_tabplotter(cls_tabgeneric):
       self.hbox2.addStretch(1)
 
       self.hbox2.setContentsMargins(10,3,10,3)
-      self.vbox= QtGui.QVBoxLayout()
+      self.vbox= QtWidgets.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
       self.vbox.addLayout(self.hbox2)
       self.setLayout(self.vbox)
@@ -443,13 +443,13 @@ class cls_tabtermgeneric(cls_tabgeneric):
 
       self.qterminal=QScrolledTerminalWidget(self,self.font_name, self.font_size, self.cols, self.rows,self.colorscheme)
 
-      self.hbox1= QtGui.QHBoxLayout()
+      self.hbox1= QtWidgets.QHBoxLayout()
       self.hbox1.addStretch(1)
       self.hbox1.addWidget(self.qterminal)
       self.hbox1.setAlignment(self.qterminal,QtCore.Qt.AlignHCenter)
       self.hbox1.setContentsMargins(20,20,20,20)
       self.hbox1.addStretch(1)
-      self.hbox2= QtGui.QHBoxLayout()
+      self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
       self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
       if self.cblog:
@@ -457,15 +457,15 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.hbox2.addWidget(self.cbLogging)
          self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
       if self.cbcharset:
-         self.lbltxtc=QtGui.QLabel("Charset ")
-         self.comboCharset=QtGui.QComboBox()
+         self.lbltxtc=QtWidgets.QLabel("Charset ")
+         self.comboCharset=QtWidgets.QComboBox()
          for txt in charsets:
             self.comboCharset.addItem(txt)
          self.hbox2.addWidget(self.lbltxtc)
          self.hbox2.addWidget(self.comboCharset)
       self.hbox2.setContentsMargins(10,3,10,3)
       self.hbox2.addStretch(1)
-      self.vbox= QtGui.QVBoxLayout()
+      self.vbox= QtWidgets.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
       self.vbox.setAlignment(self.hbox1,QtCore.Qt.AlignTop)
       self.vbox.addLayout(self.hbox2)
@@ -556,7 +556,7 @@ class cls_tabscope(cls_tabtermgeneric):
    def __init__(self,parent,name):
       super().__init__(parent,name,True,False)
       self.showIdy= PILCONFIG.get(self.name,"showidy",False)
-      self.cbShowIdy= QtGui.QCheckBox("Show IDY frames")
+      self.cbShowIdy= QtWidgets.QCheckBox("Show IDY frames")
       self.cbShowIdy.setChecked(self.showIdy)
       self.cbShowIdy.setEnabled(False)
       self.cbShowIdy.stateChanged.connect(self.do_show_idy)
@@ -564,8 +564,8 @@ class cls_tabscope(cls_tabtermgeneric):
       self.hbox2.setAlignment(self.cbShowIdy,QtCore.Qt.AlignLeft)
 
       self.logMode= PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
-      self.lbltxtc=QtGui.QLabel("Log mode ")
-      self.comboLogMode=QtGui.QComboBox()
+      self.lbltxtc=QtWidgets.QLabel("Log mode ")
+      self.comboLogMode=QtWidgets.QComboBox()
       for txt in log_mode:
          self.comboLogMode.addItem(txt)
          self.hbox2.addWidget(self.lbltxtc)
@@ -744,10 +744,10 @@ class cls_tabdrive(cls_tabgeneric):
 #
 #     Build GUI 
 #
-      self.hbox1= QtGui.QHBoxLayout()
-      self.lbltxt1=QtGui.QLabel("LIF Image File: ")
-      self.lblFilename=QtGui.QLabel()
-      self.butFilename=QtGui.QPushButton()
+      self.hbox1= QtWidgets.QHBoxLayout()
+      self.lbltxt1=QtWidgets.QLabel("LIF Image File: ")
+      self.lblFilename=QtWidgets.QLabel()
+      self.butFilename=QtWidgets.QPushButton()
       self.butFilename.setText("change")
       self.hbox1.addWidget(self.lbltxt1)
       self.hbox1.setAlignment(self.lbltxt1,QtCore.Qt.AlignLeft)
@@ -758,48 +758,48 @@ class cls_tabdrive(cls_tabgeneric):
       self.hbox1.setAlignment(self.butFilename,QtCore.Qt.AlignRight)
       self.hbox1.setContentsMargins(15,10,10,5)
 
-      self.gbox = QtGui.QGroupBox()
+      self.gbox = QtWidgets.QGroupBox()
       self.gbox.setFlat(True)
       self.gbox.setTitle("Drive Type")
-      self.vbox2= QtGui.QVBoxLayout()
-      self.radbutCass = QtGui.QRadioButton(self.gbox)
+      self.vbox2= QtWidgets.QVBoxLayout()
+      self.radbutCass = QtWidgets.QRadioButton(self.gbox)
       self.radbutCass.setText("HP82161A")
       self.vbox2.addWidget(self.radbutCass)
-      self.radbutDisk = QtGui.QRadioButton(self.gbox)
+      self.radbutDisk = QtWidgets.QRadioButton(self.gbox)
       self.radbutDisk.setText("HP9114A")
-      self.radbutHdrive1 = QtGui.QRadioButton(self.gbox)
+      self.radbutHdrive1 = QtWidgets.QRadioButton(self.gbox)
       self.vbox2.addWidget(self.radbutDisk)
       self.radbutHdrive1.setText("HDRIVE1")
       self.vbox2.addWidget(self.radbutHdrive1)
       self.gbox.setLayout(self.vbox2)
       self.gbox_buttonlist=[self.radbutCass, self.radbutDisk, self.radbutHdrive1]
-      self.vbox3= QtGui.QVBoxLayout()
+      self.vbox3= QtWidgets.QVBoxLayout()
       self.vbox3.addWidget(self.gbox)
       self.vbox3.setAlignment(self.gbox,QtCore.Qt.AlignTop)
       self.vbox3.addStretch(1)
 
-      self.vbox1= QtGui.QVBoxLayout()
+      self.vbox1= QtWidgets.QVBoxLayout()
       self.lifdir=cls_LifDirWidget(self,10)
       self.vbox1.addWidget(self.lifdir)
 
-      self.hbox2= QtGui.QHBoxLayout()
+      self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addLayout(self.vbox1)
       self.hbox2.addLayout(self.vbox3)
       self.hbox2.setAlignment(self.gbox,QtCore.Qt.AlignRight)
       self.hbox2.setContentsMargins(10,3,10,3)
 
-      self.hbox3= QtGui.QHBoxLayout()
+      self.hbox3= QtWidgets.QHBoxLayout()
       self.hbox3.addWidget(self.cbActive)
       self.hbox3.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
       self.hbox3.setContentsMargins(10,3,10,3)
 #
 #     Initialize file management tool bar
 #
-      self.tBar= QtGui.QToolBar()
-      self.tBut= QtGui.QToolButton(self.tBar)
-      self.menu= QtGui.QMenu(self.tBut)
+      self.tBar= QtWidgets.QToolBar()
+      self.tBut= QtWidgets.QToolButton(self.tBar)
+      self.menu= QtWidgets.QMenu(self.tBut)
       self.tBut.setMenu(self.menu)
-      self.tBut.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
+      self.tBut.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
       self.actPack= self.menu.addAction("Pack")
       self.actImport= self.menu.addAction("Import")
       self.actLabel=self.menu.addAction("Label")
@@ -809,8 +809,8 @@ class cls_tabdrive(cls_tabgeneric):
 #
 #     Initialize charset combo box
 #
-      self.lbltxtc=QtGui.QLabel("Charset ")
-      self.comboCharset=QtGui.QComboBox()
+      self.lbltxtc=QtWidgets.QLabel("Charset ")
+      self.comboCharset=QtWidgets.QComboBox()
       for txt in charsets:
          self.comboCharset.addItem(txt)
       self.hbox3.addWidget(self.lbltxtc)
@@ -820,7 +820,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.hbox3.setAlignment(self.tBar,QtCore.Qt.AlignLeft)
       self.hbox3.addStretch(1)
 
-      self.vbox= QtGui.QVBoxLayout()
+      self.vbox= QtWidgets.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
       self.vbox.setAlignment(self.hbox1,QtCore.Qt.AlignTop)
       self.vbox.addLayout(self.hbox2)
@@ -880,7 +880,7 @@ class cls_tabdrive(cls_tabgeneric):
          try:
             PILCONFIG.save()
          except PilConfigError as e:
-            reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
@@ -954,7 +954,7 @@ class cls_tabdrive(cls_tabgeneric):
       try:
          PILCONFIG.save()
       except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
       if self.pildevice is not None:
          self.pildevice.setlocked(True)
@@ -984,12 +984,12 @@ class cls_tabdrive(cls_tabgeneric):
          PILCONFIG.put(self.name,'filename',self.filename)
          self.lblFilename.setText(self.filename)
          self.lifdir.clear()
-         reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.warning(self.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       did,aid= self.deviceinfo[self.drivetype]
       try:
          PILCONFIG.save()
       except PilConfigError as e:
-         reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       if self.pildevice is not None:
          self.pildevice.setlocked(True)
          self.pildevice.setdevice(did,aid)
@@ -1036,12 +1036,12 @@ class cls_tabdrive(cls_tabgeneric):
 #  enter lif filename
 #
    def get_lifFilename(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select LIF Image File")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.AnyFile)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       dialog.setNameFilters( ["LIF Image File (*.dat *.DAT *.lif *.LIF)", "All Files (*)"] )
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
 #     dialog.setDirectory(PILCONFIG.get('pyilper','workdir'))
       if dialog.exec():
          return dialog.selectedFiles() 
@@ -1062,11 +1062,11 @@ class cls_tabdrive(cls_tabgeneric):
             return [True, def_tracks, def_surfaces, def_blocks]
       elif status==2:
          if not quiet:
-            reply=QtGui.QMessageBox.critical(self.parent.ui,'Error',"File does not contain a LIF type 1 medium.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',"File does not contain a LIF type 1 medium.",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return [False, def_tracks, def_surfaces, def_blocks]
       elif status==3:
          if not quiet:
-            reply=QtGui.QMessageBox.warning(self.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout of current drive type.",QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.warning(self.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout of current drive type.",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return [True, def_tracks, def_surfaces, def_blocks]
 #
 # get media info from lif header
@@ -1125,7 +1125,7 @@ class TableModel(QtGui.QStandardItemModel):
          self._sort_order = order
          super().sort(column, order)
 
-class DirTableView(QtGui.QTableView):
+class DirTableView(QtWidgets.QTableView):
 
     def __init__(self,parent):
         super().__init__(parent)
@@ -1147,7 +1147,7 @@ class DirTableView(QtGui.QTableView):
             imagefile= self.parent.getFilename()
             liffilename=model.item(row,0).text()
             liffiletype=model.item(row,1).text()
-            menu = QtGui.QMenu()
+            menu = QtWidgets.QMenu()
             exportAction = menu.addAction("Export")
             purgeAction = menu.addAction("Purge")
             renameAction = menu.addAction("Rename")
@@ -1175,18 +1175,18 @@ class DirTableView(QtGui.QTableView):
                 cls_lifview.exec(imagefile, liffilename, liffiletype,workdir, charset)
             event.accept()
 
-class cls_LifDirWidget(QtGui.QWidget):
+class cls_LifDirWidget(QtWidgets.QWidget):
 
     def __init__(self,parent,rows):
         super().__init__(parent)
         self.parent=parent
         self.__table__ = DirTableView(self)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
-        self.__table__.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 #
 #       switch off grid, no focus, no row selection
 #
-        self.__table__.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.__table__.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.__table__.setFocusPolicy(QtCore.Qt.NoFocus)
         self.__table__.setShowGrid(False)
         self.__columns__=6     # 5 rows for directory listing
@@ -1204,7 +1204,7 @@ class cls_LifDirWidget(QtGui.QWidget):
         self.__model__.setHeaderData(4,QtCore.Qt.Horizontal,"Date")
         self.__model__.setHeaderData(5,QtCore.Qt.Horizontal,"Time")
         self.__table__.setModel(self.__model__)
-        self.__table__.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.__table__.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 #
 #       handle click to header -> sorting
 #
@@ -1214,17 +1214,17 @@ class cls_LifDirWidget(QtGui.QWidget):
 #       no vertical header
 #
         self.__table__.verticalHeader().setVisible(False)
-        self.__table__.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.__table__.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         self.__table__.verticalHeader().setDefaultSectionSize(16)
 
 #
 #       add labels for text information (label, medium, directory)
 #
-        layout = QtGui.QVBoxLayout(self)
-        self.__labelMedium__= QtGui.QLabel()
+        layout = QtWidgets.QVBoxLayout(self)
+        self.__labelMedium__= QtWidgets.QLabel()
         self.__labelMedium__.setText("")
         layout.addWidget(self.__labelMedium__)
-        self.__labelDir__= QtGui.QLabel()
+        self.__labelDir__= QtWidgets.QLabel()
         self.__labelDir__.setText("")
         layout.addWidget(self.__labelDir__)
         layout.addWidget(self.__table__)
@@ -1321,29 +1321,29 @@ class cls_LifDirWidget(QtGui.QWidget):
 #
 # Help Dialog class ----------------------------------------------------------
 #
-class cls_HelpWindow(QtGui.QDialog):
+class cls_HelpWindow(QtWidgets.QDialog):
 
    def __init__(self,parent=None):
 #
       super().__init__()
       self.setWindowTitle('pyILPER Manual')
  
-      self.vlayout = QtGui.QVBoxLayout()
+      self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
       if HAS_WEBKIT:
-         self.view = QtWebKit.QWebView()
+         self.view = QtWebKitWidgets.QWebView()
       if HAS_WEBENGINE:
          self.view = QtWebEngineWidgets.QWebEngineView()
       self.view.setMinimumWidth(600)
       self.vlayout.addWidget(self.view)
-      self.buttonExit = QtGui.QPushButton('Exit')
+      self.buttonExit = QtWidgets.QPushButton('Exit')
       self.buttonExit.setFixedWidth(60)
       self.buttonExit.clicked.connect(self.do_exit)
-      self.buttonBack = QtGui.QPushButton('<')
+      self.buttonBack = QtWidgets.QPushButton('<')
       self.buttonBack.setFixedWidth(60)
-      self.buttonForward = QtGui.QPushButton('>')
+      self.buttonForward = QtWidgets.QPushButton('>')
       self.buttonForward.setFixedWidth(60)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBack)
       self.hlayout.addWidget(self.buttonExit)
       self.hlayout.addWidget(self.buttonForward)
@@ -1371,22 +1371,22 @@ class cls_HelpWindow(QtGui.QDialog):
 #
 # Release Info Dialog class --------------------------------------------------------
 #
-class cls_ReleaseWindow(QtGui.QDialog):
+class cls_ReleaseWindow(QtWidgets.QDialog):
 
    def __init__(self,version):
       super().__init__()
       self.setWindowTitle('Release Information for pyILPER '+version)
-      self.vlayout = QtGui.QVBoxLayout()
+      self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
-      self.view = QtGui.QLabel()
+      self.view = QtWidgets.QLabel()
       self.view.setFixedWidth(500)
       self.view.setWordWrap(True)
       self.view.setText("Release Info Text")
-      self.button = QtGui.QPushButton('OK')
+      self.button = QtWidgets.QPushButton('OK')
       self.button.setFixedWidth(60)
       self.button.clicked.connect(self.do_exit)
       self.vlayout.addWidget(self.view)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.button)
       self.vlayout.addLayout(self.hlayout)
 
@@ -1397,26 +1397,26 @@ class cls_ReleaseWindow(QtGui.QDialog):
 #
 # About Dialog class --------------------------------------------------------
 #
-class cls_AboutWindow(QtGui.QDialog):
+class cls_AboutWindow(QtWidgets.QDialog):
 
    def __init__(self,version):
       super().__init__()
       self.qtversion=QtCore.QT_VERSION_STR
       self.pyversion=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
       self.setWindowTitle('pyILPER About ...')
-      self.vlayout = QtGui.QVBoxLayout()
+      self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
-      self.view = QtGui.QLabel()
+      self.view = QtWidgets.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
       self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2015 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2016 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+" and Qt "+self.qtversion+"\n")
 
 
-      self.button = QtGui.QPushButton('OK')
+      self.button = QtWidgets.QPushButton('OK')
       self.button.setFixedWidth(60)
       self.button.clicked.connect(self.do_exit)
       self.vlayout.addWidget(self.view)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.button)
       self.vlayout.addLayout(self.hlayout)
 
@@ -1427,20 +1427,20 @@ class cls_AboutWindow(QtGui.QDialog):
 # Get TTy  Dialog class -------------------------------------------------------
 #
 
-class cls_TtyWindow(QtGui.QDialog):
+class cls_TtyWindow(QtWidgets.QDialog):
 
    def __init__(self, parent=None):
       super().__init__()
 
       self.setWindowTitle("Select serial device")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.label= QtGui.QLabel()
+      self.label= QtWidgets.QLabel()
       self.label.setText("Select or enter serial port")
       self.label.setAlignment(QtCore.Qt.AlignCenter)
 
-      self.__ComboBox__ = QtGui.QComboBox() 
+      self.__ComboBox__ = QtWidgets.QComboBox() 
       self.__ComboBox__.setEditable(True)
 
       if isWINDOWS():
@@ -1477,16 +1477,16 @@ class cls_TtyWindow(QtGui.QDialog):
          for port in devlist:
             self.__ComboBox__.addItem( port, port )
 
-      self.connect(self.__ComboBox__, QtCore.SIGNAL('activated(QString)'), self.combobox_choosen)
+      self.__ComboBox__.activated['QString'].connect(self.combobox_choosen)
       self.__ComboBox__.editTextChanged.connect(self.combobox_textchanged)
-      self.buttonBox = QtGui.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
       self.vlayout.addWidget(self.label)
       self.vlayout.addWidget(self.__ComboBox__)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBox)
       self.vlayout.addWidget(self.buttonBox)
       self.__device__= ""
@@ -1517,12 +1517,12 @@ class cls_TtyWindow(QtGui.QDialog):
       dialog= cls_TtyWindow(parent)
       dialog.resize(200,100)
       result= dialog.exec_()
-      if result== QtGui.QDialog.Accepted:
+      if result== QtWidgets.QDialog.Accepted:
          return dialog.getDevice()
       else:
          return ""
 
-class cls_PilConfigWindow(QtGui.QDialog):
+class cls_PilConfigWindow(QtWidgets.QDialog):
 
    def __init__(self,parent): 
       super().__init__()
@@ -1545,38 +1545,38 @@ class cls_PilConfigWindow(QtGui.QDialog):
  
 
       self.setWindowTitle("pyILPER configuration")
-      self.vbox0= QtGui.QVBoxLayout()
+      self.vbox0= QtWidgets.QVBoxLayout()
       self.setLayout(self.vbox0)
 
 #
 #     Group box with radio buttons for communication typ
 #
  
-      self.gbox = QtGui.QGroupBox()
+      self.gbox = QtWidgets.QGroupBox()
       self.gbox.setFlat(True)
       self.gbox.setTitle("Communication configuration")
-      self.vboxgbox= QtGui.QVBoxLayout()
+      self.vboxgbox= QtWidgets.QVBoxLayout()
       self.gbox.setLayout(self.vboxgbox)
 #
 #     Section PIL-Box
 #
-      self.radbutPIL = QtGui.QRadioButton(self.gbox)
+      self.radbutPIL = QtWidgets.QRadioButton(self.gbox)
       self.radbutPIL.setText("PIL-Box")
       self.radbutPIL.clicked.connect(self.setCheckBoxes)
       self.vboxgbox.addWidget(self.radbutPIL)
 #
 #     serial device
 #
-      self.hboxtty= QtGui.QHBoxLayout()
-      self.lbltxt1=QtGui.QLabel("Serial Device: ")
+      self.hboxtty= QtWidgets.QHBoxLayout()
+      self.lbltxt1=QtWidgets.QLabel("Serial Device: ")
       self.hboxtty.addWidget(self.lbltxt1)
       self.hboxtty.setAlignment(self.lbltxt1,QtCore.Qt.AlignLeft)
-      self.lblTty=QtGui.QLabel()
+      self.lblTty=QtWidgets.QLabel()
       self.lblTty.setText(self.__tty__)
       self.hboxtty.addWidget(self.lblTty)
       self.hboxtty.setAlignment(self.lblTty,QtCore.Qt.AlignLeft)
       self.hboxtty.addStretch(1)
-      self.butTty=QtGui.QPushButton()
+      self.butTty=QtWidgets.QPushButton()
       self.butTty.setText("change")
       self.butTty.pressed.connect(self.do_config_Interface)
       self.hboxtty.addWidget(self.butTty)
@@ -1585,11 +1585,11 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #
 #     tty speed combo box
 #
-      self.hboxbaud= QtGui.QHBoxLayout()
-      self.lbltxt2=QtGui.QLabel("Baud rate ")
+      self.hboxbaud= QtWidgets.QHBoxLayout()
+      self.lbltxt2=QtWidgets.QLabel("Baud rate ")
       self.hboxbaud.addWidget(self.lbltxt2)
       self.hboxbaud.setAlignment(self.lbltxt2,QtCore.Qt.AlignLeft)
-      self.comboBaud=QtGui.QComboBox()
+      self.comboBaud=QtWidgets.QComboBox()
       i=0
       for baud in BAUDRATES:
          self.comboBaud.addItem(baud[0])
@@ -1604,7 +1604,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #
 #     idy frames
 #
-      self.cbIdyFrame= QtGui.QCheckBox('Enable IDY frames')
+      self.cbIdyFrame= QtWidgets.QCheckBox('Enable IDY frames')
       self.cbIdyFrame.setChecked(self.__idyframe__)
       self.cbIdyFrame.setEnabled(True)
       self.cbIdyFrame.stateChanged.connect(self.do_cbIdyFrame)
@@ -1612,7 +1612,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #
 #     section TCP/IP communication
 #
-      self.radbutTCPIP = QtGui.QRadioButton(self.gbox)
+      self.radbutTCPIP = QtWidgets.QRadioButton(self.gbox)
       self.radbutTCPIP.setText("TCP/IP")
       self.radbutTCPIP.clicked.connect(self.setCheckBoxes)
       self.vboxgbox.addWidget(self.radbutTCPIP)
@@ -1620,21 +1620,21 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #     TCP/IP Parameter input (port, remote host, remote port)
 #
       self.intvalidator= QtGui.QIntValidator()
-      self.glayout=QtGui.QGridLayout()
-      self.lbltxt3=QtGui.QLabel("Port:")
+      self.glayout=QtWidgets.QGridLayout()
+      self.lbltxt3=QtWidgets.QLabel("Port:")
       self.glayout.addWidget(self.lbltxt3,0,0)
-      self.lbltxt4=QtGui.QLabel("Remote host:")
+      self.lbltxt4=QtWidgets.QLabel("Remote host:")
       self.glayout.addWidget(self.lbltxt4,1,0)
-      self.lbltxt5=QtGui.QLabel("Remote port:")
+      self.lbltxt5=QtWidgets.QLabel("Remote port:")
       self.glayout.addWidget(self.lbltxt5,2,0)
-      self.edtPort= QtGui.QLineEdit()
+      self.edtPort= QtWidgets.QLineEdit()
       self.glayout.addWidget(self.edtPort,0,1)
       self.edtPort.setText(str(self.__port__))
       self.edtPort.setValidator(self.intvalidator)
-      self.edtRemoteHost= QtGui.QLineEdit()
+      self.edtRemoteHost= QtWidgets.QLineEdit()
       self.glayout.addWidget(self.edtRemoteHost,1,1)
       self.edtRemoteHost.setText(self.__remotehost__)
-      self.edtRemotePort= QtGui.QLineEdit()
+      self.edtRemotePort= QtWidgets.QLineEdit()
       self.glayout.addWidget(self.edtRemotePort,2,1)
       self.edtRemotePort.setText(str(self.__remoteport__))
       self.edtRemotePort.setValidator(self.intvalidator)
@@ -1644,18 +1644,18 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #     Section Pipes
 #
       if isLINUX() or isMACOS():
-         self.radbutPipe = QtGui.QRadioButton(self.gbox)
+         self.radbutPipe = QtWidgets.QRadioButton(self.gbox)
          self.radbutPipe.setText("Pipes")
          self.radbutPipe.clicked.connect(self.setCheckBoxes)
          self.vboxgbox.addWidget(self.radbutPipe)
-         self.playout=QtGui.QGridLayout()
-         self.playout.addWidget(QtGui.QLabel("Input pipe:"),0,0)
-         self.edtInpipe=QtGui.QLineEdit()
+         self.playout=QtWidgets.QGridLayout()
+         self.playout.addWidget(QtWidgets.QLabel("Input pipe:"),0,0)
+         self.edtInpipe=QtWidgets.QLineEdit()
          self.edtInpipe.setText(self.__inpipename__)
          self.playout.addWidget(self.edtInpipe,0,1)
-         self.playout.addWidget(QtGui.QLabel("Output pipe:"),1,0)
+         self.playout.addWidget(QtWidgets.QLabel("Output pipe:"),1,0)
          self.playout.addWidget(self.edtInpipe,0,1)
-         self.edtOutpipe=QtGui.QLineEdit()
+         self.edtOutpipe=QtWidgets.QLineEdit()
          self.playout.addWidget(self.edtOutpipe,1,1)
          self.edtOutpipe.setText(self.__outpipename__)
          self.vboxgbox.addLayout(self.playout)
@@ -1673,21 +1673,21 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #
 #     Section Working Directory
 #
-      self.gboxw = QtGui.QGroupBox()
+      self.gboxw = QtWidgets.QGroupBox()
       self.gboxw.setFlat(True)
       self.gboxw.setTitle("Working directory")
-      self.vboxgboxw= QtGui.QVBoxLayout()
+      self.vboxgboxw= QtWidgets.QVBoxLayout()
       self.gboxw.setLayout(self.vboxgboxw)
-      self.hboxwdir= QtGui.QHBoxLayout()
-      self.lbltxt6=QtGui.QLabel("Directory: ")
+      self.hboxwdir= QtWidgets.QHBoxLayout()
+      self.lbltxt6=QtWidgets.QLabel("Directory: ")
       self.hboxwdir.addWidget(self.lbltxt6)
       self.hboxwdir.setAlignment(self.lbltxt6,QtCore.Qt.AlignLeft)
-      self.lblwdir=QtGui.QLabel()
+      self.lblwdir=QtWidgets.QLabel()
       self.lblwdir.setText(self.__workdir__)
       self.hboxwdir.addWidget(self.lblwdir)
       self.hboxwdir.setAlignment(self.lblwdir,QtCore.Qt.AlignLeft)
       self.hboxwdir.addStretch(1)
-      self.butwdir=QtGui.QPushButton()
+      self.butwdir=QtWidgets.QPushButton()
       self.butwdir.setText("change")
       self.butwdir.pressed.connect(self.do_config_Workdir)
       self.hboxwdir.addWidget(self.butwdir)
@@ -1697,37 +1697,37 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #
 #     Section Terminal configuration: size, scroll up buffer, color scheme, font size
 #
-      self.gboxt= QtGui.QGroupBox()
+      self.gboxt= QtWidgets.QGroupBox()
       self.gboxt.setFlat(True)
       self.gboxt.setTitle("Terminal Settings (restart required)")
-      self.gridt= QtGui.QGridLayout()
+      self.gridt= QtWidgets.QGridLayout()
       self.gridt.setSpacing(3)
-      self.gridt.addWidget(QtGui.QLabel("Termial size"),1,0)
-      self.gridt.addWidget(QtGui.QLabel("Scroll up buffer size"),2,0)
-      self.gridt.addWidget(QtGui.QLabel("Color Scheme"),3,0)
-      self.gridt.addWidget(QtGui.QLabel("Font Size"),4,0)
+      self.gridt.addWidget(QtWidgets.QLabel("Termial size"),1,0)
+      self.gridt.addWidget(QtWidgets.QLabel("Scroll up buffer size"),2,0)
+      self.gridt.addWidget(QtWidgets.QLabel("Color Scheme"),3,0)
+      self.gridt.addWidget(QtWidgets.QLabel("Font Size"),4,0)
 
-      self.comboRes=QtGui.QComboBox()
+      self.comboRes=QtWidgets.QComboBox()
       self.comboRes.addItem("80x24")
       self.comboRes.addItem("80x40")
       self.comboRes.addItem("120x25") 
       self.gridt.addWidget(self.comboRes,1,1)
       self.comboRes.setCurrentIndex(self.comboRes.findText(self.__termsize__))
 
-      self.spinScrollBufferSize=QtGui.QSpinBox()
+      self.spinScrollBufferSize=QtWidgets.QSpinBox()
       self.spinScrollBufferSize.setMinimum(0)
       self.spinScrollBufferSize.setMaximum(9999)
       self.spinScrollBufferSize.setValue(self.__scrollupbuffersize__)
       self.gridt.addWidget(self.spinScrollBufferSize,2,1)
 
-      self.comboCol=QtGui.QComboBox()
+      self.comboCol=QtWidgets.QComboBox()
       self.comboCol.addItem("white")
       self.comboCol.addItem("amber")
       self.comboCol.addItem("green") 
       self.gridt.addWidget(self.comboCol,3,1)
       self.comboCol.setCurrentIndex(self.comboCol.findText(self.__colorscheme__))
 
-      self.spinCharsize=QtGui.QSpinBox()
+      self.spinCharsize=QtWidgets.QSpinBox()
       self.spinCharsize.setMinimum(15)
       self.spinCharsize.setMaximum(20)
       self.spinCharsize.setValue(self.__charsize__)
@@ -1740,12 +1740,12 @@ class cls_PilConfigWindow(QtGui.QDialog):
 #
       self.gbox_buttonlist=[self.radbutPIL, self.radbutTCPIP]
 
-      self.buttonBox = QtGui.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBox)
       self.vbox0.addLayout(self.hlayout)
 
@@ -1780,10 +1780,10 @@ class cls_PilConfigWindow(QtGui.QDialog):
       self.lblTty.setText(self.__tty__)
 
    def getWorkDirName(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select pyILPER working directory")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.DirectoryOnly)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
 #     dialog.setDirectory(os.path.expanduser('~'))
       if dialog.exec():
          return dialog.selectedFiles() 
@@ -1825,7 +1825,7 @@ class cls_PilConfigWindow(QtGui.QDialog):
    def getPilConfig(parent):
       dialog= cls_PilConfigWindow(parent)
       result= dialog.exec_()
-      if result== QtGui.QDialog.Accepted:
+      if result== QtWidgets.QDialog.Accepted:
          return True
       else:
          return False
@@ -1890,7 +1890,7 @@ class PenTableModel(QtCore.QAbstractTableModel):
 #
 # Custom class with input validators ---------------------------------------
 #
-class PenDelegate(QtGui.QItemDelegate):
+class PenDelegate(QtWidgets.QItemDelegate):
 
    def createEditor(self, parent, option, index):
       editor= super(PenDelegate,self).createEditor(parent,option,index)
@@ -1908,32 +1908,32 @@ class PenDelegate(QtGui.QItemDelegate):
 #
 # Plotter pen  configuration class -----------------------------------
 #
-class cls_PenConfigWindow(QtGui.QDialog):
+class cls_PenConfigWindow(QtWidgets.QDialog):
 
    def __init__(self): 
       super().__init__()
       self.setWindowTitle('Plotter pen config')
-      self.vlayout = QtGui.QVBoxLayout()
+      self.vlayout = QtWidgets.QVBoxLayout()
 #
 #     table widget
 #
       self.tablemodel=PenTableModel(PENCONFIG.get_all())
-      self.tableview= QtGui.QTableView()
+      self.tableview= QtWidgets.QTableView()
       self.tableview.setModel(self.tablemodel)
-      self.tableview.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-      self.tableview.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+      self.tableview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+      self.tableview.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
       self.delegate= PenDelegate()
       self.tableview.setItemDelegate(self.delegate)
       self.vlayout.addWidget(self.tableview)
 #
 #     ok/cancel button box
 #    
-      self.buttonBox = QtGui.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Reset| QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Reset| QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.buttonBox.button(QtGui.QDialogButtonBox.Reset).clicked.connect(self.do_reset)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Reset).clicked.connect(self.do_reset)
       self.vlayout.addWidget(self.buttonBox)
       self.setLayout(self.vlayout)
 
@@ -1954,7 +1954,7 @@ class cls_PenConfigWindow(QtGui.QDialog):
       dialog= cls_PenConfigWindow()
       dialog.resize(650,600)
       result= dialog.exec_()
-      if result== QtGui.QDialog.Accepted:
+      if result== QtWidgets.QDialog.Accepted:
          return True
       else:
          return False
@@ -1962,27 +1962,27 @@ class cls_PenConfigWindow(QtGui.QDialog):
 # HP-IL virtual device  configuration class -----------------------------------
 #
 
-class cls_DeviceConfigWindow(QtGui.QDialog):
+class cls_DeviceConfigWindow(QtWidgets.QDialog):
 
    def __init__(self,parent):
       super().__init__()
       self.parent=parent
       self.setWindowTitle('Virtual HP-IL device config')
-      self.vlayout = QtGui.QVBoxLayout()
+      self.vlayout = QtWidgets.QVBoxLayout()
 #
 #     item list and up/down buttons
 #
-      self.hlayout = QtGui.QHBoxLayout()
-      self.devList = QtGui.QListWidget()
+      self.hlayout = QtWidgets.QHBoxLayout()
+      self.devList = QtWidgets.QListWidget()
       self.hlayout.addWidget(self.devList)
-      self.vlayout2= QtGui.QVBoxLayout()
-      self.buttonUp= QtGui.QPushButton("^")
+      self.vlayout2= QtWidgets.QVBoxLayout()
+      self.buttonUp= QtWidgets.QPushButton("^")
       self.vlayout2.addWidget(self.buttonUp)
-      self.buttonDown= QtGui.QPushButton("v")
+      self.buttonDown= QtWidgets.QPushButton("v")
       self.vlayout2.addWidget(self.buttonDown)
-      self.buttonAdd= QtGui.QPushButton("Add")
+      self.buttonAdd= QtWidgets.QPushButton("Add")
       self.vlayout2.addWidget(self.buttonAdd)
-      self.buttonRemove= QtGui.QPushButton("Remove")
+      self.buttonRemove= QtWidgets.QPushButton("Remove")
       self.vlayout2.addWidget(self.buttonRemove)
       self.hlayout.addLayout(self.vlayout2)
       self.vlayout.addLayout(self.hlayout)
@@ -1993,9 +1993,9 @@ class cls_DeviceConfigWindow(QtGui.QDialog):
 #
 #     ok/cancel button box
 #    
-      self.buttonBox = QtGui.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
@@ -2071,7 +2071,7 @@ class cls_DeviceConfigWindow(QtGui.QDialog):
       dialog= cls_DeviceConfigWindow(parent)
       dialog.resize(350,100)
       result= dialog.exec_()
-      if result== QtGui.QDialog.Accepted:
+      if result== QtWidgets.QDialog.Accepted:
          return True
       else:
          return False
@@ -2088,7 +2088,7 @@ class cls_Device_validator(QtGui.QValidator):
 #
 # Add virtual device dialog class ---------------------------------------------
 #
-class cls_AddDeviceWindow(QtGui.QDialog):
+class cls_AddDeviceWindow(QtWidgets.QDialog):
 
    def __init__(self,parent):
       super().__init__()
@@ -2099,8 +2099,8 @@ class cls_AddDeviceWindow(QtGui.QDialog):
 #
 #     Device name, allow only letter followed by letters or digits
 #
-      self.vlayout = QtGui.QVBoxLayout()
-      self.leditName= QtGui.QLineEdit(self)
+      self.vlayout = QtWidgets.QVBoxLayout()
+      self.leditName= QtWidgets.QLineEdit(self)
       self.leditName.setText("")
       self.leditName.setMaxLength(10)
       self.leditName.textChanged.connect(self.do_checkdup)
@@ -2110,17 +2110,17 @@ class cls_AddDeviceWindow(QtGui.QDialog):
 #
 #     Combobox, omit the scope!
 #
-      self.comboTyp=QtGui.QComboBox()
+      self.comboTyp=QtWidgets.QComboBox()
       for i in range(1,len(TAB_NAMES)):
          self.comboTyp.addItem(TAB_NAMES[i])
       self.vlayout.addWidget(self.comboTyp)
 
-      self.buttonBox = QtGui.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       self.buttonBox.rejected.connect(self.do_cancel)
       self.vlayout.addWidget(self.buttonBox)
       self.setLayout(self.vlayout)
@@ -2128,14 +2128,14 @@ class cls_AddDeviceWindow(QtGui.QDialog):
 #  validate if name is not empty and unique
 #
    def do_checkdup(self):
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       tst=self.leditName.text()
       if tst=="":
          return
       for tab in self.tabList:
          if tst== tab[1]:
             return
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
 #
 #  return results
 #
@@ -2158,7 +2158,7 @@ class cls_AddDeviceWindow(QtGui.QDialog):
       dialog= cls_AddDeviceWindow(parent)
       dialog.resize(250,100)
       result= dialog.exec_()
-      if result== QtGui.QDialog.Accepted:
+      if result== QtWidgets.QDialog.Accepted:
          return dialog.getResult()
       else:
          return ""
@@ -2166,51 +2166,51 @@ class cls_AddDeviceWindow(QtGui.QDialog):
 # HP-IL device Status Dialog class ---------------------------------------------
 #
 
-class cls_DevStatusWindow(QtGui.QDialog):
+class cls_DevStatusWindow(QtWidgets.QDialog):
 
    def __init__(self,parent):
       super().__init__()
       self.parent=parent
       self.setWindowTitle('Virtual HP-IL device status')
-      self.vlayout = QtGui.QVBoxLayout()
+      self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.__timer__=QtCore.QTimer()
       self.__timer__.timeout.connect(self.do_refresh)
       self.rows=len(parent.tabobjects)-1
       self.cols=6
-      self.__table__ = QtGui.QTableWidget(self.rows,self.cols)  # Table view for dir
+      self.__table__ = QtWidgets.QTableWidget(self.rows,self.cols)  # Table view for dir
       self.__table__.setSortingEnabled(False)  # no sorting
 #
 #     switch off grid, no focus, no row selection
 #
-      self.__table__.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+      self.__table__.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
       self.__table__.setFocusPolicy(QtCore.Qt.NoFocus)
       self.__table__.setShowGrid(False)
-      h1= QtGui.QTableWidgetItem()
+      h1= QtWidgets.QTableWidgetItem()
       h1.setText("Device")
       self.__table__.setHorizontalHeaderItem(0,h1)
-      h2= QtGui.QTableWidgetItem()
+      h2= QtWidgets.QTableWidgetItem()
       h2.setText("DID")
       self.__table__.setHorizontalHeaderItem(1,h2)
-      h3= QtGui.QTableWidgetItem()
+      h3= QtWidgets.QTableWidgetItem()
       h3.setText("AID")
       self.__table__.setHorizontalHeaderItem(2,h3)
-      h4= QtGui.QTableWidgetItem()
+      h4= QtWidgets.QTableWidgetItem()
       h4.setText("Addr.")
       self.__table__.setHorizontalHeaderItem(3,h4)
-      h5= QtGui.QTableWidgetItem()
+      h5= QtWidgets.QTableWidgetItem()
       h5.setText("2nd. Addr.")
       self.__table__.setHorizontalHeaderItem(4,h5)
-      h6= QtGui.QTableWidgetItem()
+      h6= QtWidgets.QTableWidgetItem()
       h6.setText("HP-IL Status")
       self.__table__.setHorizontalHeaderItem(5,h6)
-      self.__table__.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+      self.__table__.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
       self.__table__.resizeColumnsToContents()
 #
 #     no vertical header
 #
       self.__table__.verticalHeader().setVisible(False)
-      self.__table__.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+      self.__table__.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
       self.__table__.verticalHeader().setDefaultSectionSize(16)
 #
 #     populate
@@ -2218,7 +2218,7 @@ class cls_DevStatusWindow(QtGui.QDialog):
       self.__items__= { }
       for row in range(self.rows):
          for col in range(self.cols):
-            self.__items__[row,col]= QtGui.QTableWidgetItem()
+            self.__items__[row,col]= QtWidgets.QTableWidgetItem()
             if col > 1:
                self.__items__[row,col].setTextAlignment(QtCore.Qt.AlignHCenter)
             self.__items__[row,col].setText(" ")
@@ -2226,10 +2226,10 @@ class cls_DevStatusWindow(QtGui.QDialog):
 
       self.__table__.resizeRowsToContents()
       self.vlayout.addWidget(self.__table__)
-      self.button = QtGui.QPushButton('OK')
+      self.button = QtWidgets.QPushButton('OK')
       self.button.setFixedWidth(60)
       self.button.clicked.connect(self.do_exit)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.button)
       self.vlayout.addLayout(self.hlayout)
       self.resize(600,self.sizeHint().height())
@@ -2267,33 +2267,33 @@ class cls_DevStatusWindow(QtGui.QDialog):
 # 
 # Error message Dialog Class --------------------------------------------------
 #
-class cls_PilMessageBox(QtGui.QMessageBox):
+class cls_PilMessageBox(QtWidgets.QMessageBox):
    def __init__(self):
       super().__init__()
       self.setSizeGripEnabled(True)
 
    def event(self, e):
-      result = QtGui.QMessageBox.event(self, e)
+      result = QtWidgets.QMessageBox.event(self, e)
 
       self.setMinimumHeight(0)
       self.setMaximumHeight(16777215)
       self.setMinimumWidth(0)
       self.setMaximumWidth(16777215)
-      self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+      self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-      textEdit = self.findChild(QtGui.QTextEdit)
+      textEdit = self.findChild(QtWidgets.QTextEdit)
       if textEdit != None :
          textEdit.setMinimumHeight(0)
          textEdit.setMaximumHeight(16777215)
          textEdit.setMinimumWidth(0)
          textEdit.setMaximumWidth(16777215)
-         textEdit.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+         textEdit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
       return result
 
 #
 # Main Window user interface -----------------------------------------------
 #
-class cls_ui(QtGui.QMainWindow):
+class cls_ui(QtWidgets.QMainWindow):
 
    def __init__(self,parent,version,instance):
       super().__init__()
@@ -2341,11 +2341,11 @@ class cls_ui(QtGui.QMainWindow):
 #
 #     Central widget (tabs only)
 #
-      self.centralwidget= QtGui.QWidget()
+      self.centralwidget= QtWidgets.QWidget()
       self.setCentralWidget(self.centralwidget)
 
-      self.tabs=QtGui.QTabWidget()
-      self.vbox= QtGui.QVBoxLayout()
+      self.tabs=QtWidgets.QTabWidget()
+      self.vbox= QtWidgets.QVBoxLayout()
       self.vbox.addWidget(self.tabs,1)
       self.centralwidget.setLayout(self.vbox)
 #
@@ -2355,7 +2355,7 @@ class cls_ui(QtGui.QMainWindow):
 #
 #     Size policy
 #
-      self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+      self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
 #
 #  queued emit of the signal to update the message text
