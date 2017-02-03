@@ -29,28 +29,11 @@
     <tr bgcolor="#FFF677">
       <td valign="middle" align="left" width="99%">
 
-        <h2>Release Notes for pyILPER 1.4.0</h2>
+        <h2>Release Notes for pyILPER 1.5.0 beta1</h2>
         <ul>
-        <li><b>This version of pyILPER requires an updated version of the 
-        LIFUTILS.</b>
-        At least version 1.7.6 is required. If older versions of the LIFUTILS
-        are installed the file management functions of the drive tab and the new
-        virtual HP7470A plotter are <b>disabled</b>. See the
-        <a href="https://github.com/bug400/lifutils/releases">download page</a> to obtain
-        the latest version for your platform. <b>Note: on Windows (64bit) please deinstall 
-        a previous version of the <em>LIFUTILS</em> manually before running the 
-        installer.</b></li>
-        <li><b>The <em>Virtual HP-IL device configuration</em> was completely
-        rewritten.</b> No you can add or remove virtual HP-IL devices and change their
-        tab position.  If a new device is added you must assign a unique name. 
-        With the exception of the scope, the number of virtual devices is not limited.
-        <b>Note: settings of the virtual devices of previous pyILPER versions are not 
-        migrated completely to version 1.4.0. Please check them carefully.</b></li>
-        <li>pyILPER starts with a default configuration of a scope, a printer, two 
-        drives and a terminal. The printer as the first virtual device avoids avoid 
-        MANIO issues with the HP-41C. You may change that in the <em>Virtual HP-IL 
-        device configuration</em>. </li>
-        <li>New virtual HP-IL device: the HP7470A plotter. </li>
+        <li>The PILTERM utility was updated to version 2. You'll find the old version
+        as <em>PILTERM1</em> on the PILIMAGE.DAT image.</li>
+         <li>This version needs Qt5.</li>
         <li>See the <a href="Changelog.html">Change Log</a> for a full list of changes.</li>
         </ul>
       </td>
