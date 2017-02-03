@@ -99,7 +99,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -267,6 +267,8 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
         if self._cursor_update_blink:
            self._cursor_update_blink= False
+           if isMACOS():
+              self._paint_screen(painter)
            self._paint_cursor(painter)
 #
 #       redraw screen
