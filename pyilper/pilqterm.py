@@ -84,6 +84,13 @@
 # - implemented redraw method to refres terminal when parent widget was resized
 # 14.10.2016 jsi:
 # - consistent use of namespaces, removed vars.update call in _paint screen
+# 31.01.2016 jsi:
+# - do not issue paint events where nothing gets painted (this cleared the display
+#   on qt5 (MAC OS)
+# - catch index error in HPTerminal.dump()
+#
+# to do:
+# fix the reason for a possible index error in HPTerminal.dump()
 
 import array
 import queue
@@ -216,14 +223,14 @@ class QTerminalWidget(QtGui.QWidget):
         self._cursor_color=self._color_scheme[2]
         self._cursor_char= 0x20
         self._cursor_attr=-1
-        self._cursor_update=True
-        self._blink= True
-        self._blink_counter=0
         self._cursor_rect = QtCore.QRect(0, 0, self._char_width, self._char_height)
         self._cursor_polygon=QtGui.QPolygon([QtCore.QPoint(0,0+(self._char_height/2)), QtCore.QPoint(0+(self._char_width*0.8),0+self._char_height), QtCore.QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QtCore.QPoint(0+self._char_width,0+(self._char_height*0.67)), QtCore.QPoint(0+self._char_width,0+(self._char_height*0.33)), QtCore.QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QtCore.QPoint(0+(self._char_width*0.8),0), QtCore.QPoint(0,0+(self._char_height/2))])
         self._redrawTimer= QtCore.QTimer()
         self._redrawTimer.timeout.connect(self.delayed_redraw)
         self._redraw=False
+        self._cursor_update_rect=True      # true if cursor position was updated
+        self._cursor_update_blink=True     # true if cursor only needs redraw
+        self._blink= True                  # True: draw cursor, False: draw character
 
     def delayed_redraw(self):
         self._redrawTimer.stop()
@@ -238,21 +245,9 @@ class QTerminalWidget(QtGui.QWidget):
 
     def minimumSizeHint(self):
         return QtCore.QSize(self._w,self._h)
-#
+ 
     def resizeEvent(self, event):
         self.resize(self._w, self._h)
-#
-#   repaint terminal after delay, issued by resize events of parent widgets
-#
-    def redraw(self):
-        self._redrawTimer.start(UPDATE_TIMER*4)
-
-    def setkbdfunc(self,func):
-        self._kbdfunc= func
-
-    def setFont(self, font):
-        super().setFont(font)
-        self._update_metrics()
 #
 #   overwrite standard events
 #
@@ -260,22 +255,27 @@ class QTerminalWidget(QtGui.QWidget):
 #   Paint event, this event repaints the screen if the screen memory was changed or
 #   paints the cursor
 #   This event is fired if
-#   - the terminal window becomes visible again
-#   - after processing a new key in the termianl output queue 
+#   - the terminal window becomes visible again (self._redraw is True)
+#   - after processing a new key in the termianl output queue (self._dirty is True)
+#   - the time period exceeded to redraw the cursor only for cursor blink
+#     (self._cursor_update_blink is True)
 #
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
-        if self._dirty:
-            self._dirty = False
-            self._paint_screen(painter)
-        elif self._redraw:
-            self._redraw=False
-            self._paint_screen(painter)
+#
+#       repaint cursor only (blink)
+#
+        if self._cursor_update_blink:
+           self._cursor_update_blink= False
+           self._paint_cursor(painter)
+#
+#       redraw screen
+#
         else:
-            self._blink_counter+=1
-            if self._blink_counter > CURSOR_BLINK:
-               self._blink_counter=0
-               self._paint_cursor(painter)
+           self._dirty = False
+           self._redraw=False
+           self._paint_screen(painter)
+           self._paint_cursor(painter)
         event.accept()
 #
 #   keyboard pressed event, process keys and put them into the keyboard input buffer
@@ -401,7 +401,7 @@ class QTerminalWidget(QtGui.QWidget):
         cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
         self._transform.reset()
         self._transform.translate(cx,cy)
-        self._cursor_update=True
+        self._cursor_update_rect=True
         self._blink=True
 #
 #   determine pixel position from rowl, column
@@ -419,8 +419,8 @@ class QTerminalWidget(QtGui.QWidget):
 #
 #       cursor position was updated initialize some variables
 #
-        if self._cursor_update:
-           self._cursor_update= False
+        if self._cursor_update_rect:
+           self._cursor_update_rect= False
            self._blink_brush=QtGui.QBrush(self._cursor_color)
            self._blink_pen=QtGui.QPen(self._cursor_color)
            self._blink_pen.setStyle(0)
@@ -506,13 +506,38 @@ class QTerminalWidget(QtGui.QWidget):
             text_append(text_line)
         self._text = text
 #
-#   external interface
+#   External interface
 #
 #   set cursor type (insert, replace, off)
 #
     def setCursorType(self,t):
         self._cursortype=t
-
+#
+#   register external function to process keyboard requests
+#
+    def setkbdfunc(self,func):
+        self._kbdfunc= func
+#
+#   configure font of terminal window
+#
+    def setFont(self, font):
+        super().setFont(font)
+        self._update_metrics()
+#
+#   return needs redraw state
+#
+    def needsRedraw(self):
+       return(self._redraw)
+#
+#   returns is dirty state
+#
+    def isDirty(self):
+       return(self._dirty)
+#
+#   returns cursor update blink state
+#
+    def setCursorUpdateBlink(self):
+       self._cursor_update_blink=True
 #:
 #   get terminal memory and cursor information
 #    
@@ -520,9 +545,11 @@ class QTerminalWidget(QtGui.QWidget):
         (self._cursor_col, self._cursor_row, self._cursor_char, self._cursor_attr), self._screen = dump()
         self._update_cursor_rect()
         self._dirty = True
-
-    def setDirty(self):
-        self._dirty= True
+#
+#   repaint terminal after delay, issued by resize events of parent widgets
+#
+    def redraw(self):
+        self._redrawTimer.start(UPDATE_TIMER*4)
 
 
 class HPTerminal:
@@ -548,6 +575,7 @@ class HPTerminal:
         self.reset_hard()
         self.win.register_callback_scrollbar(self.scroll_to)
         self.UpdateTimer.start(UPDATE_TIMER)
+        self.blink_counter=0
 #
 #   Reset functions
 #
@@ -802,7 +830,10 @@ class HPTerminal:
             wx = 0
             line = [""]
             for x in range(0, self.w):
-                d = self.screen[y * self.w + x]
+                try:
+                   d = self.screen[y * self.w + x] # fix possible index out of range error
+                except IndexError:
+                   continue
                 char = d & 0xffff
                 attr = d >> 16
                 if x== cx and y== cy:
@@ -834,6 +865,9 @@ class HPTerminal:
 #        
     def process_queue(self):
        items=[]
+#
+#      get items from terminal input queue
+#
        self.termqueue_lock.acquire()
        while True:
           try:
@@ -843,13 +877,30 @@ class HPTerminal:
           except queue.Empty:
              break
        self.termqueue_lock.release()
+#
+#      process items and generate new terminal screen dump
+#
        if len(items):
           for c in items:
              self.process(c)
-          if self.update_win:
-             self.win.terminalwidget.update_term(self.dump)
-       if self.update_win:
-          self.win.terminalwidget.update() # fire the paintEvent always to update cursor blink
+          self.win.terminalwidget.update_term(self.dump)
+#
+#      increase counter for cursor blink
+#
+       self.blink_counter+=1
+#
+#      fire paint event if we need to redraw the screen
+#
+       if self.win.terminalwidget.isDirty() or self.win.terminalwidget.needsRedraw():
+          self.win.terminalwidget.update() # fire the paintEvent, radraw display 
+          self.blink_counter=0 
+#
+#      fire paint event if we need to update the cursor
+#
+       elif self.blink_counter> CURSOR_BLINK:
+          self.win.terminalwidget.setCursorUpdateBlink()
+          self.blink_counter=0 
+          self.win.terminalwidget.update() # fire the paintEvent, cursor blink only 
        self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
@@ -993,7 +1044,7 @@ class HPTerminal:
 #    becomes visible
 #
     def becomes_visible(self):
-       self.update_win=True
+#      self.update_win=True
        self.win.terminalwidget.update_term(self.dump)
 #
 #    becomes_invisible(self):
