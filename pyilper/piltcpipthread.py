@@ -33,6 +33,9 @@ from .piltcpip import TcpIpError
 # - adjust super statements to python3+ syntax
 # 23.11.2015 jsi:
 # - removed all of the SSRQ/CSRQ approach
+# 16.01.2017 jsi:
+# - change message to "not connected to .." if not connected
+# - close outsocket, if not connected any more
 #
 class cls_PilTcpIpThread(QtCore.QThread):
 
@@ -133,7 +136,8 @@ class cls_PilTcpIpThread(QtCore.QThread):
             else:
                if connected:
                   connected= False
-                  self.parent.emit_message('connecting to virtual HP-IL devices ...')
+                  self.tcpip.close_outsocket()
+                  self.parent.emit_message('not connected to virtual HP-IL devices')
                
             if frame== None:
                continue

@@ -52,6 +52,11 @@
 # - getDevices added (removed by mistake)
 # 22.12.2016 jsi
 # - raise TcpIpError missing second param added
+# 06.01.2017 jsi:
+# - check for ConnectionError exception when sendig frame to catch all exceptions
+# 16.01.2017 jsi:
+# - check for incoming connections to indicate isConnected
+# - close_outsocket method added
 
 import select
 import socket
@@ -76,9 +81,10 @@ class cls_piltcpip:
       self.__clientlist__= []
       self.__outsocket__= None
       self.__outconnected__= False
+      self.__inconnected__= False
 
    def isConnected(self):
-      return self.__outconnected__
+      return self.__outconnected__ and self.__inconnected__
 
 #
 #  Connect to Network
@@ -145,8 +151,18 @@ class cls_piltcpip:
          self.__outsocket__.shutdown(socket.SHUT_WR)
          self.__outsocket__.close()
          self.__outsocket__= None
+         self.__outconnected__= False
       self.__running__ = False
 
+#
+# Close output socket
+#
+   def close_outsocket(self):
+      if self.__outconnected__:
+         self.__outsocket__.shutdown(socket.SHUT_WR)
+         self.__outsocket__.close()
+         self.__outsocket__= None
+         self.__outconnected__= False
 #
 #  Read HP-IL frame from PIL-Box (2 byte), handle connect to server socket
 #
@@ -156,6 +172,7 @@ class cls_piltcpip:
          if self.__serverlist__.count(s) > 0:
             cs,addr = s.accept()
             self.__clientlist__.append(cs)
+            self.__inconnected__= True
          else:
             bytrx = s.recv(2)
             if bytrx:
@@ -163,6 +180,7 @@ class cls_piltcpip:
             else:
                self.__clientlist__.remove(s)
                s.close()
+               self.__inconnected__= False
       return None
 #
 #     send a IL frame to the virtual loop
@@ -178,9 +196,7 @@ class cls_piltcpip:
             try:
                self.__outsocket__.send(b)
                break
-            except BrokenPipeError:
-               raise TcpIpError ('remote program not available','')
-            except ConnectionResetError:
+            except ConnectionError:
                self.__outsocket__.shutdown(socket.SHUT_WR)
                self.__outsocket__.close()
                self.__outsocket__= None
@@ -210,6 +226,7 @@ class cls_piltcpip:
 #     send frame
 #
       self.sendFrame(frame)
+
 #
 #     virtual HP-IL device
 #
