@@ -37,6 +37,8 @@
 # - added workaround for creating a subprocess without console window under Windows
 # 04.11.2016 cg:
 # - changed pdf filename dialog to AcceptSave and added "pdf" as default suffix
+# 01.02.2017 jsi
+# - fixed crash in do_finishX, finishY if either of the lineEdits is already empty
 #
 
 from __future__ import print_function
@@ -696,20 +698,22 @@ class cls_PlotterWidget(QtGui.QWidget):
 #
    def do_finishX(self):
       if self.lineEditX.isModified():
-         x=int(self.lineEditX.text())
-         y=int(self.lineEditY.text())
-         x1=int(round(x)*self.factor)
-         y1=int(round(((self.height/self.factor) -y)*self.factor))
-         self.plotscene.setMark(x1,y1)
+         if(self.lineEditY.text()!=""):
+            x=int(self.lineEditX.text())
+            y=int(self.lineEditY.text())
+            x1=int(round(x)*self.factor)
+            y1=int(round(((self.height/self.factor) -y)*self.factor))
+            self.plotscene.setMark(x1,y1)
       self.lineEditX.setModified(False)
 
    def do_finishY(self):
       if self.lineEditY.isModified():
-         x=int(self.lineEditX.text())
-         y=int(self.lineEditY.text())
-         x1=int(round(x)*self.factor)
-         y1=int(round(((self.height/self.factor) -y)*self.factor))
-         self.plotscene.setMark(x1,y1)
+         if(self.lineEditX.text()!=""):
+            x=int(self.lineEditX.text())
+            y=int(self.lineEditY.text())
+            x1=int(round(x)*self.factor)
+            y1=int(round(((self.height/self.factor) -y)*self.factor))
+            self.plotscene.setMark(x1,y1)
       self.lineEditY.setModified(False)
 #
 #    put digitized coordinates into the line edits
