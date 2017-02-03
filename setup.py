@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.4.0',
+    version='1.5.0~beta1',
 
     description='Virtual HP-IL devices for the PIL-Box',
     long_description=long_description,
@@ -51,7 +51,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='pyqt4 HP-IL PIL-Box',
+    keywords='pyqt5 HP-IL PIL-Box',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().

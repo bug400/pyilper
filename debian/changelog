@@ -1,3 +1,9 @@
+pyilper (1.4.0~beta1) xenial; urgency=medium
+
+  * transition to qt5 
+
+ -- trusty <achim@trillian>  Fri, 03 Feb 2017 09:40:03 +0100
+
 pyilper (1.4.0~ubuntu1) xenial; urgency=medium
 
   * production release 
