@@ -11,8 +11,8 @@ Index
 General
 -------
 
-Starting with version 1.5.0 pyILPER moves to Qt5, the active developped version of the Qt 
-framework. Version 1.4.0 will be the last version that supports Qt4. This dokumentation
+Starting with version 1.5.0 pyILPER moves to Qt5, the active developed version of the Qt 
+framework. Version 1.4.0 will be the last version that supports Qt4. This document
 shows how to run beta versions of pyILPER under Qt5.
 
 
@@ -22,8 +22,8 @@ Installation with the ANACONDA platform
 The installation on the ANACONDA platform is fairly easy. You can create a
 separate conda environment that leaves your pyilper production installation untouched.
 
-First Create a conda test enviroment (In this example the name of the enviromnent is "qt5").
-Open a new terminal window and type:
+First Create a conda test environment (In this example the name of the environment 
+is "qt5"). Open a new terminal window and type:
 
      conda create --name qt5
 
@@ -36,7 +36,7 @@ Type "y" for "yes".
 Now change to the new "qt5" environment:
 
      source activate qt5 (Linux, MAC OS)
-     activate qt5
+     activate qt5 (Windows)
 
 Install the qt5 version of pyILPER:
 
@@ -46,7 +46,7 @@ Run pyILPER
 
      pyilper
 
-Note: if you open a terminal window the default conda environemnt is active so you have
+Note: if you open a terminal window the default conda enviroement is active so you have
 to change to the "qt5" environment as documented above.
 
 If you want to get rid of the "qt5" environment, type:
@@ -70,7 +70,7 @@ to clean the conda package cache and save disk space.
 Installation without the ANACONDA platform
 ------------------------------------------
 
-pyILPER 1.5.x needs at least QT5.6 and the correspondig python bindings.
+pyILPER 1.5.x needs at least QT5.6 and the corresponding python bindings.
 
 Go to the pyILPER page on GitHub and select the "qt5" branch. 
 
