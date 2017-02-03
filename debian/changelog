@@ -1,4 +1,4 @@
-pyilper (1.4.0~beta1) xenial; urgency=medium
+pyilper (1.5.0~beta1) xenial; urgency=medium
 
   * transition to qt5 
 
