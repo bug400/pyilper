@@ -167,6 +167,8 @@
 # - extend configuration regarding pipes (Linux and Mac OS only)
 # 07.01.2016 jsi
 # - extended cls_HelpWindow to load arbitrary html files
+# 04.02.2016 jsi
+# - added missing argument to sortbyColumn (QT5 fix)
 #
 import os
 import glob
@@ -1313,7 +1315,7 @@ class cls_LifDirWidget(QtGui.QWidget):
            return
         if not self.__table__.isSortingEnabled():
            self.__table__.setSortingEnabled(True)
-        self.__table__.sortByColumn(index)
+        self.__table__.sortByColumn(index,self.__model__.sortOrder())
         self.__table__.horizontalHeader().setSortIndicator(
                 index, self.__table__.model().sortOrder())
         self.__table__.verticalScrollBar().setValue(0)
