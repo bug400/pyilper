@@ -88,6 +88,8 @@
 # - do not issue paint events where nothing gets painted (this cleared the display
 #   on qt5 (MAC OS)
 # - catch index error in HPTerminal.dump()
+# 03.02.2015 jsi:
+# - do not fire cursor paint event, if cursor is off
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -99,7 +101,7 @@ import time
 
 from PyQt4 import QtCore, QtGui
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -267,6 +269,8 @@ class QTerminalWidget(QtGui.QWidget):
 #
         if self._cursor_update_blink:
            self._cursor_update_blink= False
+           if isMACOS():
+              self._paint_screen(painter)
            self._paint_cursor(painter)
 #
 #       redraw screen
@@ -507,6 +511,11 @@ class QTerminalWidget(QtGui.QWidget):
         self._text = text
 #
 #   External interface
+#
+#   get cursor type (insert, replace, off
+#
+    def getCursorType(self):
+       return(self._cursortype)
 #
 #   set cursor type (insert, replace, off)
 #
@@ -895,9 +904,10 @@ class HPTerminal:
           self.win.terminalwidget.update() # fire the paintEvent, radraw display 
           self.blink_counter=0 
 #
-#      fire paint event if we need to update the cursor
+#      fire paint event if we need to update the cursor (if not off...)
 #
-       elif self.blink_counter> CURSOR_BLINK:
+       elif self.blink_counter> CURSOR_BLINK and \
+            self.win.terminalwidget.getCursorType() != CURSOR_OFF:
           self.win.terminalwidget.setCursorUpdateBlink()
           self.blink_counter=0 
           self.win.terminalwidget.update() # fire the paintEvent, cursor blink only 
