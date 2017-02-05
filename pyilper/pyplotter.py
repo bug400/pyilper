@@ -563,7 +563,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       else:
          printer.setPageSize(QtPrintSupport.QPrinter.Letter)
 
-      printer.setOrientation(QtPrintSupport.QPrinter.Portrait)
+      printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
       printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
       printer.setOutputFileName(flist[0])
       p = QtGui.QPainter(printer)
