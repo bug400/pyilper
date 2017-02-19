@@ -25,7 +25,7 @@ separate conda environment that leaves your pyilper production installation unto
 First create a conda test environment (In this example the name of the environment 
 is "qt5"). Open a new terminal window and type:
 
-     conda create --name qt5
+     conda create --name qt5 python=3.6
 
 When conda asks you
 
