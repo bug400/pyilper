@@ -115,6 +115,8 @@
 # - show "first run" information, if started unconfigures
 # - show release information if a new pyILPER version was started the first time
 # - show tty device unconfigured message in status bar instead in pop up window
+# 19.02.2017 jsi:
+# - directorycharsize parameter introduced
 #
 import os
 import sys
@@ -223,6 +225,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"terminalsize","80x24")
          PILCONFIG.get(self.name,"colorscheme","white")
          PILCONFIG.get(self.name,"terminalcharsize",15)
+         PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
          PILCONFIG.get(self.name,"inpipename","/tmp/pilinpipe")
          PILCONFIG.get(self.name,"outpipename","/tmp/piloutpipe")

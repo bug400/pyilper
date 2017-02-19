@@ -169,6 +169,9 @@
 # - extended cls_HelpWindow to load arbitrary html files
 # 04.02.2016 jsi
 # - added missing argument to sortbyColumn (QT5 fix)
+# 19.02.2017 jsi
+# - font size of the directory listing of the LifDirWidget can now be configured. The
+#   row height is now properly adjusted to the font height
 #
 import os
 import glob
@@ -781,7 +784,8 @@ class cls_tabdrive(cls_tabgeneric):
       self.vbox3.addStretch(1)
 
       self.vbox1= QtWidgets.QVBoxLayout()
-      self.lifdir=cls_LifDirWidget(self,10)
+      font_size=PILCONFIG.get("pyilper","directorycharsize")
+      self.lifdir=cls_LifDirWidget(self,10,FONT,font_size)
       self.vbox1.addWidget(self.lifdir)
 
       self.hbox2= QtWidgets.QHBoxLayout()
@@ -1179,9 +1183,11 @@ class DirTableView(QtWidgets.QTableView):
 
 class cls_LifDirWidget(QtWidgets.QWidget):
 
-    def __init__(self,parent,rows):
+    def __init__(self,parent,rows,font_name, font_size):
         super().__init__(parent)
         self.parent=parent
+        self.__font_name__= font_name
+        self.__font_size__= font_size
         self.__table__ = DirTableView(self)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
         self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -1217,8 +1223,14 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 #
         self.__table__.verticalHeader().setVisible(False)
         self.__table__.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
-        self.__table__.verticalHeader().setDefaultSectionSize(16)
-
+#
+#       set font for directory listing, adjust row height
+#
+#       self.__font__= QtGui.QFont(self.__font_name__)
+        self.__font__= QtGui.QFont()
+        self.__font__.setPixelSize(self.__font_size__)
+        metrics= QtGui.QFontMetrics(self.__font__)
+        self.__table__.verticalHeader().setDefaultSectionSize(metrics.height()+1)
 #
 #       add labels for text information (label, medium, directory)
 #
@@ -1289,6 +1301,10 @@ class cls_LifDirWidget(QtWidgets.QWidget):
         else:
            self.__labelMedium__.setText("Medium Layout: ({}/{}/{}), Size: {} blocks ({} bytes). Label: {:6s}, formatted: {:s}".format(no_tracks,no_surfaces,no_blocks,totalblocks, totalbytes, label, initdatetime))
         self.__labelDir__.setText("Directory size: {} entries ({} used). Last block used: {}".format(dir_length*8, lifdir.num_entries, lifdir.lastblock))
+
+#
+#       populate directory listing
+#
         while True:
             r= lifdir.getNextEntry()
             if r == []:
@@ -1297,6 +1313,7 @@ class cls_LifDirWidget(QtWidgets.QWidget):
             x=[name,ftype ,"{:-8d}".format(length),"{:-8d}".format(alloc_blocks*256),datetime.split(sep=' ')[0],datetime.split(sep=' ')[1]]
             for column in range(self.__columns__):
                 item = QtGui.QStandardItem(x[column])
+                item.setFont(self.__font__)
                 item.setTextAlignment(QtCore.Qt.AlignLeft)
                 self.__model__.setItem(self.__rowcount__, column, item)
             self.__rowcount__+=1
@@ -1543,7 +1560,8 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__termsize__= PILCONFIG.get(self.__name__,"terminalsize")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
       self.__colorscheme__= PILCONFIG.get(self.__name__,"colorscheme")
-      self.__charsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
+      self.__termcharsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
+      self.__dircharsize__=PILCONFIG.get(self.__name__,"directorycharsize")
  
 
       self.setWindowTitle("pyILPER configuration")
@@ -1729,14 +1747,31 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridt.addWidget(self.comboCol,3,1)
       self.comboCol.setCurrentIndex(self.comboCol.findText(self.__colorscheme__))
 
-      self.spinCharsize=QtWidgets.QSpinBox()
-      self.spinCharsize.setMinimum(15)
-      self.spinCharsize.setMaximum(20)
-      self.spinCharsize.setValue(self.__charsize__)
-      self.gridt.addWidget(self.spinCharsize,4,1)
+      self.spinTermCharsize=QtWidgets.QSpinBox()
+      self.spinTermCharsize.setMinimum(15)
+      self.spinTermCharsize.setMaximum(20)
+      self.spinTermCharsize.setValue(self.__termcharsize__)
+      self.gridt.addWidget(self.spinTermCharsize,4,1)
 
       self.gboxt.setLayout(self.gridt)
       self.vbox0.addWidget(self.gboxt)
+#
+#     Section Directory listing configuration: font size
+#
+      self.gboxd= QtWidgets.QGroupBox()
+      self.gboxd.setFlat(True)
+      self.gboxd.setTitle("Directory Listing Settings (restart required)")
+      self.gridd= QtWidgets.QGridLayout()
+      self.gridd.setSpacing(3)
+      self.gridd.addWidget(QtWidgets.QLabel("Font Size"),0,0)
+      self.spinDirCharsize=QtWidgets.QSpinBox()
+      self.spinDirCharsize.setMinimum(13)
+      self.spinDirCharsize.setMaximum(18)
+      self.spinDirCharsize.setValue(self.__dircharsize__)
+      self.gridd.addWidget(self.spinDirCharsize,0,1)
+
+      self.gboxd.setLayout(self.gridd)
+      self.vbox0.addWidget(self.gboxd)
 #
 #     add ok/cancel buttons
 #
@@ -1813,7 +1848,8 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"terminalsize", self.comboRes.currentText())
       PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
       PILCONFIG.put(self.__name__,"colorscheme", self.comboCol.currentText())
-      PILCONFIG.put(self.__name__,"terminalcharsize",self.spinCharsize.value())
+      PILCONFIG.put(self.__name__,"terminalcharsize",self.spinTermCharsize.value())
+      PILCONFIG.put(self.__name__,"directorycharsize",self.spinDirCharsize.value())
       if isLINUX() or isMACOS():
          PILCONFIG.put(self.__name__,"inpipename", self.edtInpipe.text())
          PILCONFIG.put(self.__name__,"outpipename", self.edtOutpipe.text())
