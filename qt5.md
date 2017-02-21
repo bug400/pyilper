@@ -40,7 +40,7 @@ Now change to the new "qt5" environment:
 
 Install the qt5 version of pyILPER:
 
-     conda install pyilper5
+     conda install pyilper
 
 Run pyILPER
 
