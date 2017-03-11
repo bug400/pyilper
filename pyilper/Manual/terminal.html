@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/w3.css">
+<link rel="stylesheet" href="css/w3-theme-black.css">
+<link rel="stylesheet" href="css/font-awesome.css">
+<script src="js/w3data.js"></script>
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+.w3-sidenav a,.w3-sidenav h4 {padding: 12px;}
+.w3-bar a {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+</style>
+</head><body>
+<div w3-include-html="nav.html"></div>
+
+<!-- Overlay effect when opening sidenav on small screens -->
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<!-- Main: shift it to the right by 250 pixels when the sidenav is visible -->
+<div class="w3-main" style="margin-left:250px">
+<div class="w3-row w3-padding-64">
+<div class="w3-col w3-container">
+
+<!-- Begin content -->
+
+<h2 class="w3-text-teal">Terminal Tab</h2>
+
+<h3 class="w3-text-teal">Description</h3>
+
+<p>This virtual HP-IL device emulates a terminal (display and
+keyboard).<p>
+
+<p>HP-IL configuration:</p>
+
+<table class="w3-table-all">
+<tr><td>Accessory ID</td><td>0x3E</td></tr>
+<tr><td>Default Address</td><td>8</td></tr>
+<tr><td>Device ID</td><td>PILTERM</td></tr>
+</table>
+
+<p>The display supports all escape sequences which are
+specified on page 328 of the HP-71B reference manual.</p>
+
+<h3 class="w3-text-teal">Requirements and setup</h3>
+
+<p>The <em>Enable IDY frames</em> option in the pyILPER configuration must 
+be enabled if pyILPER is connected to the PIL-BOX. You need at least the 
+firmware version 1.6 installed on the PIL-Box as well.</p>
+
+<p>To use the keyboard emulator you have to install the
+<em>keyboard</em> lex and the <em>pilterm</em> basic program first.
+Both files are provided in the LIF disk image file
+<em>PILIMAGE.DAT</em> which is part of the pyILPER package.<p>
+
+<p>The function <em>Copy PILIMAGE.DAT to workdir</em> in the
+Utilities menu copies the file <em>PILIMAGE.DAT</em> from the pyILPER
+software directory to the current pyILPER working directory.
+Mount <em>PILIMAGE.DAT</em> to a virtual drive and copy the 
+<em>KEYBOARD</em> lexfile and the <em>PILTERM</em> basic program to the HP-71B.
+
+<h3 class="w3-text-teal">Use</h3>
+
+<p>Enter <code>RUN PILTERM</code> from the HP-71B keyboard and make
+the terminal tab of pyILPER visible. You should now see a blinking
+cursor.  Click into terminal window. Now you can enter characters that
+are sent to the HP-71B as keyboard input.</p>
+
+<p>If the keyboard hangs press the <em>ATTN</em> key twice at the HP-71 and
+rerun the <em>PILTERM</em> program from the HP-71 keyboard.</p>
+
+<p>If you need to reconfigure the loop simply run the <em>PILTERM</em> 
+program from the terminal window again.</p>
+
+<p>The keyboard emulator uses the following function key mapping:</p>
+
+<table class="w3-table-all">
+<tr><th>PC keyboard</th><th>HP-71 key</th></tr>
+<tr><td>Up</td><td>Up</td></tr>
+<tr><td>Down</td><td>Down</td></tr>
+<tr><td>Left</td><td>Left</td></tr>
+<tr><td>Right</td><td>Right</td></tr>
+<tr><td>Back</td><td>BACK</td></tr>
+<tr><td>Page Up</td><td>Jump Begin</td></tr>
+<tr><td>Page Down</td><td>Jump End</td></tr>
+<tr><td>Home</td><td>Cursor to begin of line</td></tr>
+<tr><td>End</td><td>Cursor to end of line</td></tr>
+<tr><td>Insert</td><td>I/R</td></tr>
+<tr><td>Delete</td><td>-CHAR</td></tr>
+<tr><td>F1</td><td>ATTN</td></tr>
+<tr><td>F2</td><td>RUN</td></tr>
+<tr><td>F3</td><td>CMDS</td></tr>
+<tr><td>F4</td><td>SST</td></tr>
+<tr><td>F5</td><td>-LINE</td></tr>
+<tr><td>F6</td><td>LC</td></tr>
+</table>
+
+<P>To enter a numeric character value hold down the <em>ALT</em>
+key and enter a 3 digit numeric value (000 - 127).</p>
+
+<p>For MAC Users the following shortcuts are available:</p>
+<table class="w3-table-all">
+<tr><th>Shortcut</th><th>Character or function</th></tr>
+<tr><td>ALT-5</td><td>[</td></tr>
+<tr><td>ALT-6</td><td>]</td></tr>
+<tr><td>ALT-8</td><td>{</td></tr>
+<tr><td>ALT-9</td><td>}</td></tr>
+<tr><td>ALT-L</td><td>@</td></tr>
+<tr><td>ALT-I</td><td>toggle insert/replace</td></tr>
+</table>
+
+<h3 class="w3-text-teal">Device controls</h3>
+
+<p>The terminal tab provides the following controls:</b>
+
+<ul>
+<li><em>Device enabled</em> checkbox: If checked then the virtual HP-IL terminal
+device is available on the loop. Please mind to reconfigure
+the loop each time this box has been checked or unchecked.</li>
+
+<li><em>Charset</em> combobox: select the character set that is emulated.
+You may choose between HP-41 character set (alternate character set
+of the HP82162 thermal printer), HP-71 character set and the
+Roman-8 character set. The characters are converted to unicode
+and displayed in the terminal window. Note: the character with code 002
+is displayed without overbar.  </li>
+</ul>
+
+<h3 class="w3-text-teal">PILTERM Basic Program for the HP-71B</h3>
+
+<code>
+10 REM PILTERM V 2.0 - set up printer, keyboard and display for pyILPER<br>
+20 RESET HPIL @ RESTORE IO @ CLEAR<br>
+30 D=DEVADDR("PILTERM")<br>
+40 P=DEVADDR("PRINTER")<br>
+50 DISPLAY IS * @ PRINTER IS * @ DELAY .5,.125<br>
+60 IF POS(VER$,"KBD") THEN RESET ESCAPE @ KEYBOARD IS *<br>
+70 IF D&gt;0 THEN DISPLAY IS :D @ DELAY 0,INF<br>
+80 DISP "Assigning: ";<br>
+90 IF D&gt;0 THEN DISP "display.. ";<br>
+100 IF P&gt;0 THEN PRINTER IS :P @ DISP "printer.. ";<br>
+110 IF D<0 OR POS(VER$,"KBD")=0 THEN GOTO 180<br>
+120 CFLAG -23<br>
+130 ESCAPE 'A',50 @ ESCAPE 'B',47 @ ESCAPE 'C',48 @ ESCAPE 'D',51<br>
+140 ESCAPE 'E',159 @ ESCAPE 'F',160 @ ESCAPE 'G',104 @ ESCAPE 'H',105 @ ESCAPE 'I',107<br>
+150 ESCAPE 'J',162 @ ESCAPE 'K',163 @ ESCAPE 'L',43 @ ESCAPE 'M',46 @ ESCAPE 'N',150<br>
+160 ESCAPE 'O',106 @ ESCAPE 'P',102 @ ESCAPE 'Q',103 @ ESCAPE 'R',38<br>
+170 KEYBOARD IS :D @ DISP "keyboard.. ";<br>
+180 DISP "done" @ END
+</code>
+<!-- End content -->
+</div>
+</div>
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l1">
+      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+    </div>
+  </footer>
+
+
+<!-- END MAIN -->
+</div>
+<script>
+w3IncludeHTML();
+</script>
+
+</body></html>

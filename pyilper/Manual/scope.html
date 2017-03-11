@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/w3.css">
+<link rel="stylesheet" href="css/w3-theme-black.css">
+<link rel="stylesheet" href="css/font-awesome.css">
+<script src="js/w3data.js"></script>
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+.w3-sidenav a,.w3-sidenav h4 {padding: 12px;}
+.w3-bar a {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+</style>
+</head><body>
+<div w3-include-html="nav.html"></div>
+
+<!-- Overlay effect when opening sidenav on small screens -->
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<!-- Main: shift it to the right by 250 pixels when the sidenav is visible -->
+<div class="w3-main" style="margin-left:250px">
+<div class="w3-row w3-padding-64">
+<div class="w3-col w3-container">
+
+<!-- Begin content -->
+
+<h2 class="w3-text-teal">Scope Tab</h2>
+
+<h3 class="w3-text-teal">Description</h3>
+<p>The scope displays the HP-IL frames read from the PIL-Box
+before they are processed by the virtual HP-IL devices of pyILPER. 
+The output of the scope can be logged to a file.</p>
+
+<h3 class="w3-text-teal">Device controls</h3>
+<p>The scope tab has the following controls:</p>
+<ul class="w3-ul">
+<li><em>Device enabled</em> checkbox: If checked the frames are logged to the 
+display and the log file (if activated). As the scope is no addressable
+HP-IL device the HP-IL loop must not be reconfigured after the scope
+has been activated or deactivated.
+</li>
+<li><em>Log Scope</em> checkbox: Activates writing the output of the scope to 
+the file <em>Scope.log</em> in the pyILPR working directory. Output is always 
+appended to that file. A time stamp in the file marks the start and the
+end of each logging. The log file is closed automatically on
+program termination. The scope log file is written unbuffered.</li>
+
+<li><em>Show IDY frames</em> checkbox: Activates the output of IDY frames. 
+This option is only useful, if firmware version 1.6 is installed on the PIL-Box.</li>
+
+<li><em>Log mode</em> combobox: selects if inbound traffic (uppercase letters), 
+outbound traffic (lowercase letters) or inbound/outbound traffic is logged. 
+Inbound traffic shows the HP-IL frames before they are processed by the 
+pyILPER virtual devices.  Outbound traffic shows the frames after being 
+processed by the pyILPER virtual devices.</li>
+</ul>
+<!-- End content -->
+
+</div>
+</div>
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l1">
+      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+    </div>
+  </footer>
+
+
+<!-- END MAIN -->
+</div>
+<script>
+w3IncludeHTML();
+</script>
+
+</body></html>

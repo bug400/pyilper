@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/w3.css">
+<link rel="stylesheet" href="css/w3-theme-black.css">
+<link rel="stylesheet" href="css/font-awesome.css">
+<script src="js/w3data.js"></script>
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+.w3-sidenav a,.w3-sidenav h4 {padding: 12px;}
+.w3-bar a {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+</style>
+</head><body>
+<div w3-include-html="nav.html"></div>
+
+<!-- Overlay effect when opening sidenav on small screens -->
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<!-- Main: shift it to the right by 250 pixels when the sidenav is visible -->
+<div class="w3-main" style="margin-left:250px">
+<div class="w3-row w3-padding-64">
+<div class="w3-col w3-container">
+
+<!-- Begin content -->
+
+<h2 class="w3-text-teal">File Menu Entries</h2>
+
+<h3 class="w3-text-teal">pyILPER configuration</h3> 
+<h4 class="w3-text-teal">PIL-Box checkbox</h4>
+<p>Check this box if pyILPER is connected to a
+PIL-Box via a serial device. The name and the baud rate of the 
+serial device is configured here. See the setup section
+of the 
+<a class="w3-hover-black" href="https://github.com/bug400/pyilper/blob/master/INSTALL.md">installation guide</a> 
+for details.</p>
+
+<p><em>Note:</em> the baud rate must match the hardware configuration of
+the PIL-Box. See the PIL-Box documentation for details. If the baud rate is
+set to "Auto" pyILPER tries to determine the baud rate automatically.</p>
+
+<p>The "Enable IDY frames" option enables the PIL-Box to transmit 
+the IDY frames to pyILPER. This causes an increase of traffic on 
+the serial USB device. Use this option only if you use the
+virtual keyboard of the terminal emulator with the HP-71B.</p>
+
+
+<h4 class="w3-text-teal">TCP/IP checkbox</h4>
+<p>Check this box to use virtual HP-IL over TCP/IP. The configuration 
+parameters are:</p>
+<ul class="w3-ul">
+<li>Port: the port to which the previous HP-IL device must connect</li>
+<li>Remote Host, remote Port: the host and the port of the next
+virtual HP-IL device in the loop.
+</ul>
+
+<h4 class="w3-text-teal">Configuration of the working directory</h4>
+<p>This is the location of the log files for scope and the printer output 
+(q.v.). Default is the $HOME directory of the current user.</p>
+
+<h4 class="w3-text-teal">Configuration of the terminal, scope and printer display</h4>
+<p>You can set the size (80x24, 80x40, 132x24), the color
+scheme (white, amber, green), the maximum number of lines in the scroll up buffer
+and the font size. Display scrolling can be disabled if you set the number of 
+lines to zero. You have to restart the application for take the changes 
+to effect.</p>
+
+<h4 class="w3-text-teal">Configuration of the drive directory listing</h4>
+<p>You can set the font size of the directory listing.
+A restart is required for take the changes to effect.</p>
+
+<h3 class="w3-text-teal">HP-IL device configuration</h3>
+
+<p>The initial configuration of virtual HP-IL devices in pyILPER is:</p>
+<table class="w3-table-all">
+<tr><th>Device name</th><th>Device type</th></tr>
+<tr><td>Scope</td><td>Scope</td></tr>
+<tr><td>Printer1</td><td>Printer</td></tr>
+<tr><td>Drive1</td><td>Drive</td></tr>
+<tr><td>Drive2</td><td>Drive</td></tr>
+<tr><td>Terminal1</td><td>Terminal</td></tr>
+</table>
+
+<p>With the device configuration dialog you can add or delete virtual
+HP-IL devices and change the position of their tab. To create a new device 
+press the <em>Add</em> button, select the desired device type 
+and assign an <b>unique</b> name. The device name must begin with a letter 
+followed by up to 9 letters or digits. The device name is shown on the tab. 
+For device types which have a logging facility the device name defines the 
+name of the log file in the current working directory.</p>
+
+<p>To remove or change the position of a virtual HP-IL device select
+the device from the list and click the appropriate buttons.</p>
+
+<p>The position of the device tabs is corresponding to the position of the 
+device in the loop inside of pyILPER.</p>
+
+<p><b>Note: </b>The scope tab can not be removed. If the configuration of 
+virtual HP-IL devices  was changed you have to restart the
+application for take the changes to effect.</p>
+
+<h3 class="w3-text-teal">Plotter pen configuration</a></h3>
+
+<p>With this configuration dialog the 16 predefined pens for the HP7470A
+plotter can be configured. For each pen the following properties can be
+specified:</p>
+
+<ul class="w3-ul">
+<li>Description</li>
+<li>R, G, B color values (0 .. 255)</li>
+<li>Transparency: Alpha (0..255)</li>
+<li>Pen width in pixel (1..5)</li>
+</ul>
+
+<p>The <em>Reset</em> button restores the default configuration of the pens.
+
+<h3 class="w3-text-teal">Reconnect</h3>
+
+<p>Restarts the application, if e.g. you forgot to plug in
+the PIL-Box when launching the application.</p>
+
+<h3 class="w3-text-teal">Quit</h3>
+
+<p>Terminates the application.</p>
+
+<!-- End content -->
+
+</div>
+</div>
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l1">
+      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+    </div>
+  </footer>
+
+
+<!-- END MAIN -->
+</div>
+<script>
+w3IncludeHTML();
+</script>
+
+</body></html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/w3.css">
+<link rel="stylesheet" href="css/w3-theme-black.css">
+<link rel="stylesheet" href="css/font-awesome.css">
+<script src="js/w3data.js"></script>
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+.w3-sidenav a,.w3-sidenav h4 {padding: 12px;}
+.w3-bar a {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+</style>
+</head><body>
+<div w3-include-html="nav.html"></div>
+
+<!-- Overlay effect when opening sidenav on small screens -->
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<!-- Main: shift it to the right by 250 pixels when the sidenav is visible -->
+<div class="w3-main" style="margin-left:250px">
+<div class="w3-row w3-padding-64">
+<div class="w3-col w3-container">
+
+<!-- Begin content -->
+
+<h2 class="w3-text-teal">Drive Tab</h2>
+
+<h3 class="w3-text-teal">Description</h3>
+
+<p>This virtual device emulates either a HP82161A cassette drive, a
+HP9114B disk drive or a virtual HDRIVE1 device to access
+files on a LIF image file.</p>
+
+<p>The directory listing of the current LIF image file is displayed on the
+tab. The listing is updated if the drive has been idle for 3 seconds. 
+The column headers can be checked to get a sorted list of the directory.</p>
+
+<p>The virtual devices have the following HP-IL configuration:</p>
+
+<table class="w3-table-all">
+<tr><th>Device Type</td><th>Accessory ID</th><th>Default Address</th><th>Device ID</th><th>Standard Capacity</th></tr>
+<tr><td>HP82161A</td><td>0x10</td><td>0x02</td><td>&nbsp;</td><td>131.072 Bytes</td></tr>
+<tr><td>HP9114B</td><td>0x10</td><td>0x02</td><td>HP9114B</td><td>630.784 Bytes</td></tr>
+<tr><td>HDRIVE1</td><td>0x10</td><td>0x02</td><td>HDRIVE1</td><td>655.360 Bytes</td></tr>
+</table>
+
+<p>If a non existing file is mounted to the virtual drive it must be
+initialized by the HP-IL controller first. The resulting LIF image file
+is initialized with the standard capacity of the current device type</p>
+
+<p>In most cases you should apply the HDRIVE1 drive type.
+Apply the HP9114B drive type if you use software that requires compatibility 
+with that device. Use the HP82161A drive type if the controller is a HP-41.</p>
+
+<p>Note: the HP-41 can only access the first 130 bytes of
+larger disk media.</p>
+
+<p>Note: pyILPER requires a valid LIF header when mounting existing LIF 
+image files including:</p>
+
+<ul class="w3-ul">
+<li>The LIF identifier 0x800 at offset 0</li>
+<li>The media size information (number of tracks per surface,
+number of surfaces, number of blocks per track) starting at offset 24</li>
+</ul>
+<p>
+<p>If you mount a LIF image file with incorrect header information you
+get a warning and the default medium size of the current drive type is
+used. Warning: in this case you must select the proper drive type.
+Otherwise the image file may become corrupted. </p>
+
+<p>If a LIF image medium is initialized by a HP-41 HP-IL module or an early
+HP-71B HP-IL module pyILPER fixes wrong or missing header information.</p>
+
+<h3 class="w3-text-teal">Device Controls</h3>
+
+<p>The drive tab has the following controls:</p>
+
+<ul class="w3-ul">
+<li>LIF image file <em>Change</em> button: mount a disk file that contains the 
+image of a LIF file. If a non existing file was specified the medium
+must be initialized by the controller. Note: the file is only
+opened by pyILPER during HP-IL read or write operations. </li>
+
+<li><em>Drive type</em> combo box: Choose the proper drive type that shall be
+emulated (see above). The LIF image file must be reopened after the 
+drive type was changed.</li>
+
+<li><em>Device enabled</em> check box: If checked, the virtual HP-IL drive is
+available and can be used as HP-IL device. The HP-IL loop must
+always be reconfigured after this box has been checked or unchecked. </li>
+</ul>
+
+<h3 class="w3-text-teal">File management controls</h3>
+
+<p>If pyILPER detects a compatible version of  the
+<a class="w3-hover-black" href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
+(at least Version 1.7.6 is required) at launch the drive tab enables 
+the following controls:</p>
+
+<p><em>Tools</em> drop down menu at the bottom of the tab:</p>
+
+<ul class="w3-ul">
+<li><em>Pack</em> the mounted LIF image file (very fast!)</li>
+<li><em>Import</em> a file from the local file system into the mounted LIF 
+image file</li>
+<li><em>Label</em> the mounted LIF image file</li>
+</ul>
+
+<p>File context menu (right mouse button click on selected file in the directory listing):</p>
+
+<ul class="w3-ul">
+<li><em>Purge</em> the selected file</li>
+<li><em>Rename</em> the selected file</li>
+<li><em>Export</em> the selected file to the local file system</li>
+<li><em>View</em> the contents or summary information of the selected file. 
+Note: this entry is only available for certain file types. To view text files 
+the proper character set can be selected with the combo box at the bottom of 
+the tab.</li>
+</ul>
+
+<p>To avoid data corruption The virtual drive must be deactivated (Device 
+enabled check box unchecked) in order to use the file management functions.</p>
+
+<p>The LIF image file management functions only support file names which 
+contain letters and digits. Unfortunately, the HP-41 IL-Module is less strict 
+and file names may contain other characters. You can rename these files 
+to proper LIF file names.</p>
+<!-- End content -->
+
+</div>
+</div>
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l1">
+      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+    </div>
+  </footer>
+
+
+<!-- END MAIN -->
+</div>
+<script>
+w3IncludeHTML();
+</script>
+
+</body></html>
