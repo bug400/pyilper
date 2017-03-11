@@ -117,6 +117,8 @@
 # - show tty device unconfigured message in status bar instead in pop up window
 # 19.02.2017 jsi:
 # - directorycharsize parameter introduced
+# 11.03.2017 jsi:
+# - change document names of release notes and change log
 #
 import os
 import sys
@@ -231,6 +233,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"outpipename","/tmp/piloutpipe")
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
          PILCONFIG.get(self.name,"version","0.0.0")
+         PILCONFIG.get(self.name,"helpposition","")
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
@@ -504,8 +507,11 @@ class cls_pyilper(QtCore.QObject):
    def do_Exit(self):
       self.disable()
       position=[self.ui.pos().x(),self.ui.pos().y()]
+      PILCONFIG.put(self.name,"position",position)
+      if self.helpwin!= None:
+         helpposition=[self.helpwin.pos().x(),self.helpwin.pos().y(),self.helpwin.width(),self.helpwin.height()]
+         PILCONFIG.put(self.name,"helpposition",helpposition)
       try:
-         PILCONFIG.put(self.name,"position",position)
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
@@ -559,30 +565,35 @@ class cls_pyilper(QtCore.QObject):
 #  callback show help window
 #
    def do_Help(self):
-      if self.helpwin == None:
-         self.helpwin= cls_HelpWindow()
-      self.helpwin.show()
-      self.helpwin.loadDocument("","index.html")
-      self.helpwin.raise_()
+      self.show_Help("","index.html")
 #
 #  show release information window
 #
    def show_ReleaseInfo(self, version):
-      if self.helpwin == None:
-         self.helpwin= cls_HelpWindow()
-      self.helpwin.show()
-      self.helpwin.loadDocument("Misc","Releasenotes.html")
-      self.helpwin.raise_()
+      self.show_Help("","releasenotes.html")
 #
 #  show startup info
 #
    def show_StartupInfo(self):
+      self.show_Help("","startup.html")
+#
+#  show help windows for a certain document
+#
+   def show_Help(self,path,document):
       if self.helpwin == None:
          self.helpwin= cls_HelpWindow()
+         helpposition=PILCONFIG.get(self.name,"helpposition")
+         if helpposition!= "":
+            self.helpwin.move(QtCore.QPoint(helpposition[0],helpposition[1]))
+            self.helpwin.resize(helpposition[2],helpposition[3])
+         else:
+            self.helpwin.resize(720,700)
       self.helpwin.show()
-      self.helpwin.loadDocument("Introduction","Startup.html")
+      self.helpwin.loadDocument(path,document)
       self.helpwin.raise_()
-
+#
+# dump stack if signalled externally (for debugging)
+#
 def dumpstacks(signal, frame):
   for threadId, stack in sys._current_frames().items():
     print("Thread ID %x" % threadId)
