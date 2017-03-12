@@ -57,7 +57,7 @@ setup(
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['misc', 'debian', 'tests*']),
     package_data = {
-       'pyilper' : ['Manual/*.html', 'Manual/Introduction/*.html', 'Manual/Interface/*.html','Manual/Misc/*.html','Manual/Images/*.png','lifimage/*.DAT'],
+       'pyilper' : ['Manual/*.html', 'Manual/js/*.js', 'Manual/css/*.css','lifimage/*.DAT'],
     },
     entry_points={
        'gui_scripts': [ 'pyilper= pyilper:main', ] ,
