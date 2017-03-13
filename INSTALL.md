@@ -17,9 +17,9 @@ General
 
 pyILPER requires:
 
-* Python 3.4, 3.5
-* QT 4.8, 
-* PyQt 4.8 
+* Python 3.5 or higher
+* QT 5.6 or higher
+* PyQt compatible to the Python and Qt version
 * pyserial  2.7 
 * [LIFUTILS] (https://github.com/bug400/lifutils/releases) (the most recent version)
 
@@ -88,6 +88,14 @@ You should issue occasionally:
      conda clean --all
 
 to clean the conda package cache and save disk space.
+
+Note: pyILPER requires Python 3.6. Check the Python version with:
+
+     conda list
+
+If the Python version is still 3.5.x upgrade to 3.6 with:
+
+     conda install python=3.6
 
 
 Setup
