@@ -20,6 +20,7 @@ pyILPER requires:
 * Python 3.5 or higher
 * QT 5.6 or higher
 * PyQt compatible to the Python and Qt version
+* the Python bindings for either Qt Webkit or Qt Webengine
 * pyserial  2.7 
 * [LIFUTILS] (https://github.com/bug400/lifutils/releases) (the most recent version)
 
