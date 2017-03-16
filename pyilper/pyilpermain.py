@@ -119,6 +119,8 @@
 # - directorycharsize parameter introduced
 # 11.03.2017 jsi:
 # - change document names of release notes and change log
+# 16.03.2017 jsi:
+# - catch exception if neither QtWebKitWidgets or QtWebEngineWidgets are found
 #
 import os
 import sys
@@ -130,7 +132,7 @@ import pyilper
 import re
 import argparse
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow,cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_tabplotter, cls_PenConfigWindow
+from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_tabplotter, cls_PenConfigWindow
 from .pilcore import *
 from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
 from .penconfig import cls_penconfig, PenConfigError, PENCONFIG
@@ -581,7 +583,11 @@ class cls_pyilper(QtCore.QObject):
 #
    def show_Help(self,path,document):
       if self.helpwin == None:
-         self.helpwin= cls_HelpWindow()
+         try:
+            self.helpwin= cls_HelpWindow()
+         except HelpError as e:
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.value,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+            return
          helpposition=PILCONFIG.get(self.name,"helpposition")
          if helpposition!= "":
             self.helpwin.move(QtCore.QPoint(helpposition[0],helpposition[1]))

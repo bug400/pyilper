@@ -172,6 +172,8 @@
 # 19.02.2017 jsi
 # - font size of the directory listing of the LifDirWidget can now be configured. The
 #   row height is now properly adjusted to the font height
+# 16.03.2017 jsi
+# - catch exception if neither QtWebKitWidgets or QtWebEngineWidgets are found
 #
 import os
 import glob
@@ -1340,6 +1342,13 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 #
 # Help Dialog class ----------------------------------------------------------
 #
+class HelpError(Exception):
+   def __init__(self,value):
+      self.value=value
+   def __str__(self):
+      return repr(self.value)
+
+
 class cls_HelpWindow(QtWidgets.QDialog):
 
    def __init__(self,parent=None):
@@ -1353,6 +1362,8 @@ class cls_HelpWindow(QtWidgets.QDialog):
          self.view = QtWebKitWidgets.QWebView()
       if HAS_WEBENGINE:
          self.view = QtWebEngineWidgets.QWebEngineView()
+      if not HAS_WEBENGINE and not HAS_WEBKIT:
+         raise HelpError("The Python bindings for QtWebKit and QtWebEngine are missing. Can not display manual")
       self.view.setMinimumWidth(600)
       self.vlayout.addWidget(self.view)
       self.buttonExit = QtWidgets.QPushButton('Exit')
