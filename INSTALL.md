@@ -56,7 +56,7 @@ You need approximately 700MB free disk space for pyILPER and the Python
 runtime environment. Everything is installed as a local user and thus no 
 administrator privileges are needed. 
 
-Note: for the ANACONDA platform pyILPER is only available for Python 3.5.
+Note: for the ANACONDA platform pyILPER is only available for Python 3.6.
 
 The following instructions apply to Linux, Windows and Mac OS:
 
