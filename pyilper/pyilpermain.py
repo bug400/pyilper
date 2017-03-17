@@ -121,6 +121,8 @@
 # - change document names of release notes and change log
 # 16.03.2017 jsi:
 # - catch exception if neither QtWebKitWidgets or QtWebEngineWidgets are found
+# 17.03.2017 jsi:
+# - do not load initial document, if online manual is re-opened
 #
 import os
 import sys
@@ -585,6 +587,7 @@ class cls_pyilper(QtCore.QObject):
       if self.helpwin == None:
          try:
             self.helpwin= cls_HelpWindow()
+            self.helpwin.loadDocument(path,document)
          except HelpError as e:
             reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.value,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
@@ -595,7 +598,6 @@ class cls_pyilper(QtCore.QObject):
          else:
             self.helpwin.resize(720,700)
       self.helpwin.show()
-      self.helpwin.loadDocument(path,document)
       self.helpwin.raise_()
 #
 # dump stack if signalled externally (for debugging)
