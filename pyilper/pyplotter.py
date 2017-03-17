@@ -54,7 +54,7 @@ import queue
 import base64
 import threading
 import pyilper
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version, isWINDOWS
 from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PenConfigError, PENCONFIG
@@ -87,7 +87,7 @@ def eprint(*args, **kwargs):
 #
 # Custom class LED widget -------------------------------------------------
 #
-class cls_LedWidget(QtGui.QWidget):
+class cls_LedWidget(QtWidgets.QWidget):
 
    def __init__(self):
       super().__init__()
@@ -114,7 +114,7 @@ class cls_LedWidget(QtGui.QWidget):
 # custom class mark for digitized points -------------------------------------------
 #
 
-class cls_DigitizedMark(QtGui.QGraphicsItem):
+class cls_DigitizedMark(QtWidgets.QGraphicsItem):
 
     def __init__(self):
         super().__init__()
@@ -137,7 +137,7 @@ class cls_DigitizedMark(QtGui.QGraphicsItem):
 #
 # custom class mark for Scaling points --------------------------------------------
 #
-class cls_P1P2Mark(QtGui.QGraphicsTextItem):
+class cls_P1P2Mark(QtWidgets.QGraphicsTextItem):
 
     def __init__(self,string):
         super().__init__(string)
@@ -159,7 +159,7 @@ class cls_P1P2Mark(QtGui.QGraphicsTextItem):
 #
 # custom class graphics scene with digitizing capabilities ----------------------------
 #
-class cls_mygraphicsscene(QtGui.QGraphicsScene):
+class cls_mygraphicsscene(QtWidgets.QGraphicsScene):
 
    def __init__(self):
       super().__init__()
@@ -222,7 +222,7 @@ class cls_mygraphicsscene(QtGui.QGraphicsScene):
 #
 # custom class graphics view  with digitizing capabilities ----------------------------
 #
-class cls_mygraphicsview(QtGui.QGraphicsView):
+class cls_mygraphicsview(QtWidgets.QGraphicsView):
 
    def __init__(self,parent):
       super().__init__()
@@ -278,7 +278,7 @@ class cls_mygraphicsview(QtGui.QGraphicsView):
 # predefined pens in the pyILPER pen configuration file. These predefined pens
 # can be configures in the pyILPER main menu.
 #
-class cls_PlotterWidget(QtGui.QWidget):
+class cls_PlotterWidget(QtWidgets.QWidget):
 
    def __init__(self,parent,name):
       super().__init__()
@@ -341,32 +341,32 @@ class cls_PlotterWidget(QtGui.QWidget):
 #
 #     create user interface
 #
-      self.hbox=QtGui.QHBoxLayout()
+      self.hbox=QtWidgets.QHBoxLayout()
 #
 #     plot graphics view
 #
       self.plotview= cls_mygraphicsview(self)
       self.hbox.addWidget(self.plotview)
       self.hbox.setAlignment(self.plotview,QtCore.Qt.AlignLeft)
-      self.vbox=QtGui.QVBoxLayout()
+      self.vbox=QtWidgets.QVBoxLayout()
 #
 #     push buttons "Config" - starts configuration window
 #
-      self.configButton= QtGui.QPushButton("Config")
+      self.configButton= QtWidgets.QPushButton("Config")
       self.vbox.addWidget(self.configButton)
       self.vbox.setAlignment(self.configButton,QtCore.Qt.AlignTop)
       self.configButton.clicked.connect(self.do_config)
 #
 #     push buttons "View" - opens external view window
 #
-      self.viewButton= QtGui.QPushButton("View")
+      self.viewButton= QtWidgets.QPushButton("View")
       self.vbox.addWidget(self.viewButton)
       self.vbox.setAlignment(self.viewButton,QtCore.Qt.AlignTop)
       self.viewButton.clicked.connect(self.do_view)
 #
 #     push buttons "Enter" - digitize: this button is only enabled in digitizing mode
 #
-      self.digiButton= QtGui.QPushButton("Enter")
+      self.digiButton= QtWidgets.QPushButton("Enter")
       self.vbox.addWidget(self.digiButton)
       self.vbox.setAlignment(self.digiButton,QtCore.Qt.AlignTop)
       self.digiButton.clicked.connect(self.do_enter)
@@ -374,7 +374,7 @@ class cls_PlotterWidget(QtGui.QWidget):
 #
 #     push buttons "P1/p2" - show or alter P1/P2
 #
-      self.p1p2Button= QtGui.QPushButton("P1/P2")
+      self.p1p2Button= QtWidgets.QPushButton("P1/P2")
       self.vbox.addWidget(self.p1p2Button)
       self.vbox.setAlignment(self.p1p2Button,QtCore.Qt.AlignTop)
       self.p1p2Button.clicked.connect(self.do_p1p2)
@@ -382,21 +382,21 @@ class cls_PlotterWidget(QtGui.QWidget):
 #     push buttons "Clear" - in digitizing mode this clears that mode, otherwise it
 #     clears the graphics scene and issues an "IN" command to the plotter emulator
 #
-      self.clearButton= QtGui.QPushButton("Clear")
+      self.clearButton= QtWidgets.QPushButton("Clear")
       self.vbox.addWidget(self.clearButton)
       self.vbox.setAlignment(self.clearButton,QtCore.Qt.AlignTop)
       self.clearButton.clicked.connect(self.do_clear)
 #
 #     push buttons "Generate PDF"
 #
-      self.printButton= QtGui.QPushButton("PDF")
+      self.printButton= QtWidgets.QPushButton("PDF")
       self.vbox.addWidget(self.printButton)
       self.vbox.setAlignment(self.printButton,QtCore.Qt.AlignTop)
       self.printButton.clicked.connect(self.do_print)
 #
 #     push buttons "Show Status": shows status window with status and error information
 #
-      self.statusButton= QtGui.QPushButton("Status")
+      self.statusButton= QtWidgets.QPushButton("Status")
       self.vbox.addWidget(self.statusButton)
       self.vbox.setAlignment(self.statusButton,QtCore.Qt.AlignTop)
       self.statusButton.clicked.connect(self.do_status)
@@ -404,12 +404,12 @@ class cls_PlotterWidget(QtGui.QWidget):
 #     error LED: yellow: an error had occured, red: the emulator subprocess
 #     crashed
 #
-      self.hbox2=QtGui.QHBoxLayout()
+      self.hbox2=QtWidgets.QHBoxLayout()
       self.led=cls_LedWidget()
       self.hbox2.addWidget(self.led)
       self.hbox2.setAlignment(self.led,QtCore.Qt.AlignLeft)
       self.led.setSize(15)
-      self.label=QtGui.QLabel("Error")
+      self.label=QtWidgets.QLabel("Error")
       self.hbox2.addWidget(self.label)
       self.hbox2.setAlignment(self.label,QtCore.Qt.AlignLeft)
       self.hbox2.addStretch(1)
@@ -424,11 +424,11 @@ class cls_PlotterWidget(QtGui.QWidget):
          self.intvalidatorX=QtGui.QIntValidator(0,10300)
 
       self.intvalidatorY=QtGui.QIntValidator(0,7650)
-      self.hbox3=QtGui.QHBoxLayout()
-      self.labelX=QtGui.QLabel("X")
+      self.hbox3=QtWidgets.QHBoxLayout()
+      self.labelX=QtWidgets.QLabel("X")
       self.hbox3.addWidget(self.labelX)
       self.hbox3.setAlignment(self.labelX,QtCore.Qt.AlignLeft)
-      self.lineEditX= QtGui.QLineEdit()
+      self.lineEditX= QtWidgets.QLineEdit()
       self.lineEditX.setValidator(self.intvalidatorX)
       self.lineEditX.setText("")
       self.lineEditX.setEnabled(False)
@@ -437,11 +437,11 @@ class cls_PlotterWidget(QtGui.QWidget):
       self.hbox3.setAlignment(self.lineEditX,QtCore.Qt.AlignLeft)
       self.vbox.addLayout(self.hbox3)
 
-      self.hbox4=QtGui.QHBoxLayout()
-      self.labelY=QtGui.QLabel("Y")
+      self.hbox4=QtWidgets.QHBoxLayout()
+      self.labelY=QtWidgets.QLabel("Y")
       self.hbox4.addWidget(self.labelY)
       self.hbox4.setAlignment(self.labelY,QtCore.Qt.AlignLeft)
-      self.lineEditY= QtGui.QLineEdit()
+      self.lineEditY= QtWidgets.QLineEdit()
       self.lineEditY.setValidator(self.intvalidatorY)
       self.lineEditY.setText("")
       self.lineEditY.setEnabled(False)
@@ -455,8 +455,8 @@ class cls_PlotterWidget(QtGui.QWidget):
 #
 #     configure plotview and scene
 #
-      app= QtGui.QApplication.instance()
-      scrollbar_width=app.style().pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
+      app= QtWidgets.QApplication.instance()
+      scrollbar_width=app.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
       self.plotview.setFixedWidth(self.width+scrollbar_width)
       self.plotview.setFixedHeight(self.height+scrollbar_width)
       self.setLayout(self.hbox)
@@ -541,13 +541,13 @@ class cls_PlotterWidget(QtGui.QWidget):
 #     file name input dialogue for pdf print file
 #
    def get_pdfFilename(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Enter PDF file name")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
-      dialog.setFileMode(QtGui.QFileDialog.AnyFile)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       dialog.setDefaultSuffix("pdf")
       dialog.setNameFilters( ["PDF (*.pdf )", "All Files (*)"] )
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
       if dialog.exec():
          return dialog.selectedFiles()
 #
@@ -557,14 +557,14 @@ class cls_PlotterWidget(QtGui.QWidget):
       flist= self.get_pdfFilename()
       if flist==None:
          return
-      printer = QtGui.QPrinter (QtGui.QPrinter.HighResolution)
+      printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
       if self.papersize==0:
-         printer.setPageSize(QtGui.QPrinter.A4)
+         printer.setPageSize(QtPrintSupport.QPrinter.A4)
       else:
-         printer.setPageSize(QtGui.QPrinter.Letter)
+         printer.setPageSize(QtPrintSupport.QPrinter.Letter)
 
-      printer.setOrientation(QtGui.QPrinter.Landscape)
-      printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
+      printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
+      printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
       printer.setOutputFileName(flist[0])
       p = QtGui.QPainter(printer)
       self.plotscene.render(p)
@@ -578,7 +578,7 @@ class cls_PlotterWidget(QtGui.QWidget):
          try:
             PILCONFIG.save()
          except PilConfigError as e:
-            reply=QtGui.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
          self.penconfig1=PILCONFIG.get(self.name,"penconfig1")
          self.penconfig2=PILCONFIG.get(self.name,"penconfig2")
@@ -866,13 +866,13 @@ class cls_PlotterWidget(QtGui.QWidget):
 #
 # external lot view window class ------------------------------------------------------
 #
-class cls_plotViewWindow(QtGui.QDialog):
+class cls_plotViewWindow(QtWidgets.QDialog):
 
    def __init__(self,parent):
       super().__init__()
       self.parent=parent
       self.setWindowTitle(self.parent.name+" view")
-      self.vbox=QtGui.QVBoxLayout()
+      self.vbox=QtWidgets.QVBoxLayout()
       self.plotview= cls_mygraphicsview(self.parent)
       self.vbox.addWidget(self.plotview)
       self.setLayout(self.vbox)
@@ -904,7 +904,7 @@ class cls_plotViewWindow(QtGui.QDialog):
 # Display status byte, error code, error message and illegal HP-GL command
 # The window may remain open and the content of the window will be updated
 #
-class cls_statusWindow(QtGui.QDialog):
+class cls_statusWindow(QtWidgets.QDialog):
 
    def __init__(self,parent):
       super().__init__()
@@ -913,19 +913,19 @@ class cls_statusWindow(QtGui.QDialog):
       self.__timer__=QtCore.QTimer()
       self.__timer__.timeout.connect(self.do_refresh)
       
-      self.vbox=QtGui.QVBoxLayout()
-      self.grid=QtGui.QGridLayout()
+      self.vbox=QtWidgets.QVBoxLayout()
+      self.grid=QtWidgets.QGridLayout()
       self.grid.setSpacing(3)
-      self.grid.addWidget(QtGui.QLabel("emu7470 version:"),1,0)
-      self.grid.addWidget(QtGui.QLabel("Status:"),2,0)
-      self.grid.addWidget(QtGui.QLabel("Error code:"),3,0)
-      self.grid.addWidget(QtGui.QLabel("HP-GL command:"),4,0)
-      self.grid.addWidget(QtGui.QLabel("Error message:"),5,0)
-      self.lblVersion=QtGui.QLabel(decode_version(self.parent.emu_version))
-      self.lblStatus=QtGui.QLabel("")
-      self.lblError=QtGui.QLabel("")
-      self.lblIllCmd=QtGui.QLabel("")
-      self.lblErrMsg=QtGui.QLabel("")
+      self.grid.addWidget(QtWidgets.QLabel("emu7470 version:"),1,0)
+      self.grid.addWidget(QtWidgets.QLabel("Status:"),2,0)
+      self.grid.addWidget(QtWidgets.QLabel("Error code:"),3,0)
+      self.grid.addWidget(QtWidgets.QLabel("HP-GL command:"),4,0)
+      self.grid.addWidget(QtWidgets.QLabel("Error message:"),5,0)
+      self.lblVersion=QtWidgets.QLabel(decode_version(self.parent.emu_version))
+      self.lblStatus=QtWidgets.QLabel("")
+      self.lblError=QtWidgets.QLabel("")
+      self.lblIllCmd=QtWidgets.QLabel("")
+      self.lblErrMsg=QtWidgets.QLabel("")
       self.grid.addWidget(self.lblVersion,1,1)
       self.grid.addWidget(self.lblStatus,2,1)
       self.grid.addWidget(self.lblError,3,1)
@@ -934,8 +934,8 @@ class cls_statusWindow(QtGui.QDialog):
       self.vbox.addLayout(self.grid)
       self.vbox.addStretch(1)
 
-      self.hlayout=QtGui.QHBoxLayout()
-      self.button = QtGui.QPushButton('OK')
+      self.hlayout=QtWidgets.QHBoxLayout()
+      self.button = QtWidgets.QPushButton('OK')
       self.button.setFixedWidth(60)
       self.button.clicked.connect(self.do_exit)
       self.hlayout.addWidget(self.button)
@@ -964,7 +964,7 @@ class cls_statusWindow(QtGui.QDialog):
 #
 # Plotter configuration window class ------------------------------------------------
 #
-class cls_PlotterConfigWindow(QtGui.QDialog):
+class cls_PlotterConfigWindow(QtWidgets.QDialog):
 
    def __init__(self,parent):
       super().__init__()
@@ -973,15 +973,15 @@ class cls_PlotterConfigWindow(QtGui.QDialog):
       self.__penconfig1__= PILCONFIG.get(self.__name__,"penconfig1")
       self.__penconfig2__= PILCONFIG.get(self.__name__,"penconfig2")
       self.setWindowTitle("Plotter configuration")
-      self.vbox= QtGui.QVBoxLayout()
+      self.vbox= QtWidgets.QVBoxLayout()
 #
 #     Papersize combo box
 #
-      self.grid=QtGui.QGridLayout()
+      self.grid=QtWidgets.QGridLayout()
       self.grid.setSpacing(3)
 
-      self.grid.addWidget(QtGui.QLabel("Papersize:"),1,0)
-      self.combops=QtGui.QComboBox()
+      self.grid.addWidget(QtWidgets.QLabel("Papersize:"),1,0)
+      self.combops=QtWidgets.QComboBox()
       self.combops.addItem("A4")
       self.combops.addItem("US")
       self.combops.setCurrentIndex(self.__papersize__)
@@ -989,8 +989,8 @@ class cls_PlotterConfigWindow(QtGui.QDialog):
 #
 #     Pen1 combo box
 #
-      self.grid.addWidget(QtGui.QLabel("Pen1:"),2,0)
-      self.combopen1=QtGui.QComboBox()
+      self.grid.addWidget(QtWidgets.QLabel("Pen1:"),2,0)
+      self.combopen1=QtWidgets.QComboBox()
       for pen_desc in PENCONFIG.get_penlist():
          self.combopen1.addItem(pen_desc)
       self.combopen1.setCurrentIndex(self.__penconfig1__)
@@ -998,8 +998,8 @@ class cls_PlotterConfigWindow(QtGui.QDialog):
 #
 #     Pen2 combo box
 #
-      self.grid.addWidget(QtGui.QLabel("Pen2:"),3,0)
-      self.combopen2=QtGui.QComboBox()
+      self.grid.addWidget(QtWidgets.QLabel("Pen2:"),3,0)
+      self.combopen2=QtWidgets.QComboBox()
       for pen_desc in PENCONFIG.get_penlist():
          self.combopen2.addItem(pen_desc)
       self.combopen2.setCurrentIndex(self.__penconfig2__)
@@ -1009,12 +1009,12 @@ class cls_PlotterConfigWindow(QtGui.QDialog):
 #
 #     OK, Cancel
 #
-      self.buttonBox = QtGui.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBox)
       self.vbox.addLayout(self.hlayout)
 
@@ -1036,7 +1036,7 @@ class cls_PlotterConfigWindow(QtGui.QDialog):
    def getPlotterConfig(parent):
       dialog= cls_PlotterConfigWindow(parent)
       result= dialog.exec_()
-      if result== QtGui.QDialog.Accepted:
+      if result== QtWidgets.QDialog.Accepted:
          return True
       else:
          return False

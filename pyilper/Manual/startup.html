@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/w3.css">
+<link rel="stylesheet" href="css/w3-theme-black.css">
+<link rel="stylesheet" href="css/font-awesome.css">
+<script src="js/w3data.js"></script>
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+.w3-sidenav a,.w3-sidenav h4 {padding: 12px;}
+.w3-bar a {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+</style>
+</head><body>
+<div w3-include-html="nav.html"></div>
+
+<!-- Overlay effect when opening sidenav on small screens -->
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<!-- Main: shift it to the right by 250 pixels when the sidenav is visible -->
+<div class="w3-main" style="margin-left:250px">
+<div class="w3-row w3-padding-64">
+<div class="w3-col w3-container">
+
+<!-- Begin content -->
+<h2 class="w3-text-teal">Start Up</h2>
+
+<p>If you use pyILPER for the first time, please read this document
+to get pyILPER up and running.</p>
+
+<h3 class="w3-text-teal">Set up pyILPER with the PIL-Box</h3>
+
+<p>To use the file management capabilities of the virtual drives or
+the HP7470A plotter the latest version of the
+<a href="https://github.com/bug400/lifutils/releases" class="w3-hover-black">LIFUTILS</a>
+must be installed. After installation of the LIFUTILS restart
+pyILPER and check from the "Utilities" menu if the LIFUTILS
+version was detected by pyILPER.</p>
+
+<p>Connect the PIL-Box to your computer.</p>
+
+<p>Run "pyILPER configuration" from the "File" menu and configure the tty
+device of the PIL-Box and the pyILPER working directory.</p>
+
+<p>Open the pyILPER configuration dialog from the file menu. Change the
+name of the PIL-Box device to the USB serial device the box is
+connected to. pyILPER tries to figure out the proper device name.
+If that does not work, configure the device manually and check
+the <a href="https://github.com/bug400/pyilper/blob/master/INSTALL.md" class="w3-hover-black">Installation instructions</a> for further details.</ p>
+
+<p>pyILPER tries to determine the baud rate of the PIL-Box serial device.
+If that does not work, set the baud rate manually to the baud rate the
+PIL-Box is configured to. See the PIL-Box documentation for further details.</p>
+
+<p>pyILPER stores all log files in a working directory. The default
+of that directory is the users home directory. Change the working directory
+to an appropriate location.</p>
+
+<p>Now initialize the loop with the HP-IL controller:<p>
+<ul class="w3-ul " >
+<li>HP-41: switch the calculator OFF and ON.</li>
+<li>HP-71: issue an <code>RESET HPIL @ RESTORE IO @ CLEAR</code></li>
+</ul>
+
+<p>See the <a href="interface.html" class="w3-hover-black">User Interface Documentation</a> for further
+details.</p>
+
+<h3 class="w3-text-teal">Setup the Terminal Emulator (HP-71 only)</h3>
+
+<p>You can use pyILPER as a remote display and keyboard for the
+HP-71B. See the <a href="terminal.html" class="w3-hover-black">documentation of the virtual terminal</a>
+for further information.</b>
+
+
+<h3 class="w3-text-teal">Setup pyILPER with virtual HP-IL over TCP/IP</h3>
+
+<p>pyILPER supports
+<a href="http://hp.giesselink.com/hpil.htm" class="w3-hover-black">virtual HP-IL over TCP/IP</a>.
+You may hook up the
+<a href="http://hp.giesselink.com/emu71.htm" class="w3-hover-black">HP-71B Emulator of 
+Christoph Gie&szlig;elink</a> with pyILPER.</p>
+
+<p>Change the communication mode to TCP/IP in the pyILPER configuration.
+Check if the TCP/IP configuration parameters (remote host, remote port, local port)
+are configured properly. See the documentation of the virtual HP-IL over
+TCP/IP and the documentation of EMU71 for further details.<p>
+
+<p>The most recent version of Emu71 includes remote keyboard support. Setup
+the terminal emulator as documented above.</p>
+
+<p>The recommended procedure to connect Emu71 to pyILPER is:</p>
+
+<ul class="w3-ul " >
+<li>Start pyILPER configured in TCP/IP communication mode. The status line
+shows: "not connected to virtual HP-IL devices."</li>
+<li>Start Emu71 with the HP-IL module configured properly. Switch the calculator
+on and press the ATTN key until the pyILPER status line shows "connected to
+virtual HP-IL devices".
+<li>Initialize to loop as specified above.</li>
+</ul>
+
+<p>The recommended procedure to disconnect Emu71 from pyILPER is:</p>
+
+<ul class="w3-ul " >
+<li>Switch Emu71 off and close the program.</li>
+<li>Close pyILPER.</li>
+</ul>
+<!-- End content -->
+
+</div>
+</div>
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l1">
+      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+    </div>
+  </footer>
+
+<!-- END MAIN -->
+</div>
+<script>
+w3IncludeHTML();
+</script>
+
+</body></html>

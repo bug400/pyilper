@@ -47,6 +47,8 @@
 # - add encode version function
 # 03.01.2016 - jsi
 # - version - 1.5.0beta1 development
+# 16.03.2017 - jsi
+# - version - 1.5.0 production
 #
 import platform
 #
@@ -80,8 +82,8 @@ def encode_version(version_string):
 #
 # General constants:
 #
-PRODUCION= False      # Production/Development Version
-VERSION="1.5.0~beta1"       # pyILPR version number
+PRODUCION= True       # Production/Development Version
+VERSION="1.5.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # PIL-Box communication
@@ -127,6 +129,13 @@ if isLINUX():
    FONT="Monospace"
 else:
    FONT="Courier New"
+#
+# Min, Max Values for font sizes. Note: MIN value means: automatic!!
+#
+MIN_TERMCHAR_SIZE=14
+MAX_TERMCHAR_SIZE=20
+MIN_DIRCHAR_SIZE=12
+MAX_DIRCHAR_SIZE=18
 #
 # Tab types
 #

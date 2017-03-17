@@ -73,7 +73,7 @@
 import os
 import subprocess
 import tempfile
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .lifcore import *
 from .pilcharconv import charconv, stringconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .pilcore import isWINDOWS, FONT, decode_version
@@ -101,9 +101,9 @@ def exec_single(parent,cmd):
    try:
       subprocess.check_output(cmd,stderr=subprocess.STDOUT)
    except OSError as e:
-      reply=QtGui.QMessageBox.critical(parent,'Error',e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    except subprocess.CalledProcessError as exp:
-      reply=QtGui.QMessageBox.critical(parent,'Error',exp.output.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',exp.output.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
 #
 # exec piped command, read input from file, return True if success, False otherwise
@@ -125,7 +125,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
       p1= subprocess.Popen(cmd1,stdin=fd,stdout=tmpfile,stderr=subprocess.PIPE)
       output1,err1= p1.communicate()
       if err1.decode() != "":
-         reply=QtGui.QMessageBox.critical(d,'Error',err1.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(d,'Error',err1.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          os.close(fd)
          return
@@ -141,16 +141,16 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
       p2= subprocess.Popen(cmd2,stdin=tmpfile,stderr=subprocess.PIPE)
       output2,err2=p2.communicate()
       if err2.decode() != "":
-         reply=QtGui.QMessageBox.critical(parent,'Error',err2.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',err2.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          return
 #
 #  catch errors
 #
    except OSError as e:
-      reply=QtGui.QMessageBox.critical(parent,'Error',e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    except subprocess.CalledProcessError as exc:
-      reply=QtGui.QMessageBox.critical(parent,'Error',exc.output.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',exc.output.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       tmpfile.close()
 #
 # exec piped command, write output to file or stdout
@@ -163,8 +163,8 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 # open output file if specified
 #
          if os.access(outputfile,os.W_OK):
-            reply=QtGui.QMessageBox.warning(parent,'Warning',"Do you really want to overwrite file "+outputfile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
-            if reply== QtGui.QMessageBox.Cancel:
+            reply=QtWidgets.QMessageBox.warning(parent,'Warning',"Do you really want to overwrite file "+outputfile,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
+            if reply== QtWidgets.QMessageBox.Cancel:
                return
          if isWINDOWS():
             fd= os.open(outputfile, os.O_WRONLY | os.O_BINARY |  os.O_TRUNC | os.O_CREAT, 0o644)
@@ -180,7 +180,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
       p1= subprocess.Popen(cmd1,stdout=tmpfile,stderr=subprocess.PIPE)
       output1,err1= p1.communicate()
       if err1.decode() != "":
-         reply=QtGui.QMessageBox.critical(parent,'Error',err1.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',err1.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          if fd != None:
             os.close(fd)
@@ -195,7 +195,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
          p2= subprocess.Popen(cmd2,stdin=tmpfile,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       output2,err2=p2.communicate()
       if err2.decode() != "":
-         reply=QtGui.QMessageBox.critical(parent,'Error',err2.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',err2.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          if fd != None:
             os.close(fd)
          return None
@@ -205,11 +205,11 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 #  catch errors
 #
    except OSError as e:
-      reply=QtGui.QMessageBox.critical(parent,'Error',e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       tmpfile.close()
       return None
    except subprocess.CalledProcessError as exc:
-      reply=QtGui.QMessageBox.critical(parent,'Error',exc.output.decode(),QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',exc.output.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       tmpfile.close()
       return None
    tmpfile.close()
@@ -228,7 +228,7 @@ class cls_LIF_validator(QtGui.QValidator):
 #
 # pack lif image file dialog
 #
-class cls_lifpack(QtGui.QDialog):
+class cls_lifpack(QtWidgets.QDialog):
 
    def __init__(self,parent= None):
       super().__init__()
@@ -236,14 +236,14 @@ class cls_lifpack(QtGui.QDialog):
    @staticmethod
    def exec(lifimagefile):
       d=cls_lifpack()
-      reply = QtGui.QMessageBox.question(d, 'Message', 'Do you really want to pack the LIF image file', QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-      if reply == QtGui.QMessageBox.Yes:
+      reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to pack the LIF image file', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+      if reply == QtWidgets.QMessageBox.Yes:
          exec_single(d,["lifpack",lifimagefile])
 
 #
 # purge file dialog
 #
-class cls_lifpurge(QtGui.QDialog):
+class cls_lifpurge(QtWidgets.QDialog):
 
    def __init__(self,parent= None):
       super().__init__()
@@ -251,26 +251,26 @@ class cls_lifpurge(QtGui.QDialog):
    @staticmethod
    def exec(lifimagefile,liffile):
       d=cls_lifpurge()
-      reply = QtGui.QMessageBox.question(d, 'Message', 'Do you really want to purge '+liffile, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-      if reply == QtGui.QMessageBox.Yes:
+      reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to purge '+liffile, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+      if reply == QtWidgets.QMessageBox.Yes:
          exec_single(d,["lifpurge",lifimagefile, liffile])
 
 #
 # rename file dialog
 #
-class cls_lifrename (QtGui.QDialog):
+class cls_lifrename (QtWidgets.QDialog):
 
    def __init__(self,lifimagefile,filename,parent= None):
       super().__init__()
       self.lifimagefile=lifimagefile
       self.oldfilename=filename
       self.setWindowTitle("Rename File")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.lbl=QtGui.QLabel("Rename file:")
+      self.lbl=QtWidgets.QLabel("Rename file:")
       self.vlayout.addWidget(self.lbl)
-      self.leditFileName=QtGui.QLineEdit(self)
+      self.leditFileName=QtWidgets.QLineEdit(self)
       self.leditFileName.setText(filename)
       self.leditFileName.setMaxLength(10)
       self.leditFileName.textChanged.connect(self.do_checkenable)
@@ -278,8 +278,8 @@ class cls_lifrename (QtGui.QDialog):
       self.leditFileName.setValidator(self.validator)
       self.vlayout.addWidget(self.leditFileName)
 
-      self.buttonBox = QtGui.QDialogButtonBox(self)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
@@ -289,9 +289,9 @@ class cls_lifrename (QtGui.QDialog):
 #  check, if the OK button can be enabled
 #
    def do_checkenable(self):
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       if (self.leditFileName.text() != ""):
-         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+         self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       return
 
 # 
@@ -316,7 +316,7 @@ class cls_lifrename (QtGui.QDialog):
 #
 # export file dialog
 #
-class cls_lifexport (QtGui.QDialog):
+class cls_lifexport (QtWidgets.QDialog):
 
    def __init__(self,lifimagefile,liffilename,liffiletype,workdir,parent= None):
       super().__init__()
@@ -325,26 +325,26 @@ class cls_lifexport (QtGui.QDialog):
       self.liffilename= liffilename
       self.workdir=workdir
       self.setWindowTitle("Export File")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.gBox0=QtGui.QGroupBox("File to be exported to file system")
-      self.lblLifFilename=QtGui.QLabel(self.liffilename+" (type: "+self.liffiletype+")")
-      self.vbox0=QtGui.QVBoxLayout()
+      self.gBox0=QtWidgets.QGroupBox("File to be exported to file system")
+      self.lblLifFilename=QtWidgets.QLabel(self.liffilename+" (type: "+self.liffiletype+")")
+      self.vbox0=QtWidgets.QVBoxLayout()
       self.vbox0.addWidget(self.lblLifFilename)
       self.vbox0.addStretch(1)
       self.gBox0.setLayout(self.vbox0)
       self.vlayout.addWidget(self.gBox0)
       
-      self.gBox1=QtGui.QGroupBox("Postprocessing options")
-      self.radio1= QtGui.QRadioButton("convert LIF-Text to ASCII")
+      self.gBox1=QtWidgets.QGroupBox("Postprocessing options")
+      self.radio1= QtWidgets.QRadioButton("convert LIF-Text to ASCII")
       self.radio1.setEnabled(False)
-      self.radio2= QtGui.QRadioButton("descramble HP41 ROM file")
+      self.radio2= QtWidgets.QRadioButton("descramble HP41 ROM file")
       self.radio2.setEnabled(False)
-      self.radio3= QtGui.QRadioButton("unpack HEPAX HP41 SDATA ROM file")
+      self.radio3= QtWidgets.QRadioButton("unpack HEPAX HP41 SDATA ROM file")
       self.radio3.setEnabled(False)
-      self.radio4= QtGui.QRadioButton("remove LIF header")
-      self.radio5= QtGui.QRadioButton("None")
+      self.radio4= QtWidgets.QRadioButton("remove LIF header")
+      self.radio5= QtWidgets.QRadioButton("None")
 
       if self.liffiletype== "TEXT":
          self.radio1.setEnabled(True)
@@ -363,7 +363,7 @@ class cls_lifexport (QtGui.QDialog):
          self.radio5.setChecked(True)
          self.outputextension=".lif"
 
-      self.vbox=QtGui.QVBoxLayout()
+      self.vbox=QtWidgets.QVBoxLayout()
       self.vbox.addWidget(self.radio1)
       self.vbox.addWidget(self.radio2)
       self.vbox.addWidget(self.radio3)
@@ -374,21 +374,21 @@ class cls_lifexport (QtGui.QDialog):
 
       self.vlayout.addWidget(self.gBox1)
 
-      self.gBox2=QtGui.QGroupBox("Output file")
-      self.hbox=QtGui.QHBoxLayout()
+      self.gBox2=QtWidgets.QGroupBox("Output file")
+      self.hbox=QtWidgets.QHBoxLayout()
       self.outputfile=os.path.join(self.workdir, self.liffilename.lower()+self.outputextension)
-      self.lblFilename=QtGui.QLabel(self.outputfile)
+      self.lblFilename=QtWidgets.QLabel(self.outputfile)
       self.hbox.addWidget(self.lblFilename)
       self.hbox.addStretch(1)
-      self.butChange= QtGui.QPushButton("Change")
+      self.butChange= QtWidgets.QPushButton("Change")
       self.butChange.clicked.connect(self.do_filenameChanged)
       self.hbox.addWidget(self.butChange)
       self.gBox2.setLayout(self.hbox)
 
       self.vlayout.addWidget(self.gBox2)
 
-      self.buttonBox = QtGui.QDialogButtonBox(self)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
@@ -405,13 +405,13 @@ class cls_lifexport (QtGui.QDialog):
 #  enter output file name dialog
 #
    def get_outputFilename(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select Output File")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.AnyFile)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.selectFile(self.liffilename.lower()+self.outputextension)
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
 #     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
@@ -459,26 +459,26 @@ class cls_lifexport (QtGui.QDialog):
 #
 # label lif image file dialog
 #
-class cls_liflabel (QtGui.QDialog):
+class cls_liflabel (QtWidgets.QDialog):
 
    def __init__(self,lifimagefile,oldlabel,parent= None):
       super().__init__()
       self.lifimagefile=lifimagefile
       self.setWindowTitle("Label LIF image file")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.lbl=QtGui.QLabel("Label:")
+      self.lbl=QtWidgets.QLabel("Label:")
       self.vlayout.addWidget(self.lbl)
-      self.leditLabel=QtGui.QLineEdit(self)
+      self.leditLabel=QtWidgets.QLineEdit(self)
       self.leditLabel.setText(oldlabel)
       self.leditLabel.setMaxLength(6)
       self.validator = cls_LIF_validator()
       self.leditLabel.setValidator(self.validator)
       self.vlayout.addWidget(self.leditLabel)
 
-      self.buttonBox = QtGui.QDialogButtonBox(self)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
@@ -502,7 +502,7 @@ class cls_liflabel (QtGui.QDialog):
 #
 # import file dialog
 #
-class cls_lifimport (QtGui.QDialog):
+class cls_lifimport (QtWidgets.QDialog):
 
    def __init__(self,lifimagefile,workdir,parent= None):
       super().__init__()
@@ -512,26 +512,26 @@ class cls_lifimport (QtGui.QDialog):
       self.liffilename=""
 
       self.setWindowTitle("Import File")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.gBox0=QtGui.QGroupBox("Input file")
-      self.hbox=QtGui.QHBoxLayout()
-      self.lblFilename=QtGui.QLabel(self.inputfile)
+      self.gBox0=QtWidgets.QGroupBox("Input file")
+      self.hbox=QtWidgets.QHBoxLayout()
+      self.lblFilename=QtWidgets.QLabel(self.inputfile)
       self.hbox.addWidget(self.lblFilename)
       self.hbox.addStretch(1)
-      self.butChange= QtGui.QPushButton("Change")
+      self.butChange= QtWidgets.QPushButton("Change")
       self.butChange.clicked.connect(self.do_filenameChanged)
       self.hbox.addWidget(self.butChange)
       self.gBox0.setLayout(self.hbox)
       self.vlayout.addWidget(self.gBox0)
 
-      self.gBox1=QtGui.QGroupBox("Preprocessing options")
-      self.bGroup=QtGui.QButtonGroup()
-      self.radio1= QtGui.QRadioButton("convert from ASCII to LIF-Text")
-      self.radio2= QtGui.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
-      self.radio3= QtGui.QRadioButton("add LIF header to HP41 FOCAL raw file")
-      self.radio4= QtGui.QRadioButton("None")
+      self.gBox1=QtWidgets.QGroupBox("Preprocessing options")
+      self.bGroup=QtWidgets.QButtonGroup()
+      self.radio1= QtWidgets.QRadioButton("convert from ASCII to LIF-Text")
+      self.radio2= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
+      self.radio3= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
+      self.radio4= QtWidgets.QRadioButton("None")
       self.radio4.setChecked(True)
       self.bGroup.addButton(self.radio1) 
       self.bGroup.addButton(self.radio2)
@@ -539,15 +539,15 @@ class cls_lifimport (QtGui.QDialog):
       self.bGroup.addButton(self.radio4)
       self.bGroup.buttonClicked.connect(self.do_butclicked)
 
-      self.vbox=QtGui.QVBoxLayout()
+      self.vbox=QtWidgets.QVBoxLayout()
       self.vbox.addWidget(self.radio1)
       self.vbox.addWidget(self.radio2)
       self.vbox.addWidget(self.radio3)
 
-      self.hbox2=QtGui.QHBoxLayout()
-      self.lbl=QtGui.QLabel("LIF Filename:")
+      self.hbox2=QtWidgets.QHBoxLayout()
+      self.lbl=QtWidgets.QLabel("LIF Filename:")
       self.hbox2.addWidget(self.lbl)
-      self.leditFileName=QtGui.QLineEdit(self)
+      self.leditFileName=QtWidgets.QLineEdit(self)
       self.leditFileName.setText(self.liffilename)
       self.leditFileName.setMaxLength(10)
       self.validator = cls_LIF_validator()
@@ -562,23 +562,23 @@ class cls_lifimport (QtGui.QDialog):
       self.vbox.addWidget(self.radio4)
       self.vbox.addStretch(1)
 
-      self.buttonBox = QtGui.QDialogButtonBox(self)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       self.vlayout.addWidget(self.buttonBox)
 #
 #  dialog to enter input file name
 #
    def get_inputFilename(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select Input File")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["All Files (*)"] )
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
 #     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
@@ -612,11 +612,11 @@ class cls_lifimport (QtGui.QDialog):
 #  check, if the OK button can be enabled
 #
    def do_checkenable(self):
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       if (self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked()) and self.leditFileName.text() != "":
-         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+         self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       if self.radio4.isChecked():
-         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+         self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       return
 
 #
@@ -650,7 +650,7 @@ class cls_lifimport (QtGui.QDialog):
 #
 # check import dialog, ensure that we import a valid LIF transport file
 #
-class cls_chk_import(QtGui.QDialog):
+class cls_chk_import(QtWidgets.QDialog):
    def __init__(self,fd,inputfile,parent=None):
       super().__init__()
       self.filename=""
@@ -658,28 +658,28 @@ class cls_chk_import(QtGui.QDialog):
       self.blocks=0
       self.retval=False
       self.setWindowTitle("Import File to LIF Image file")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
-      self.vlayout.addWidget(QtGui.QLabel("Import this file?"))
-      self.grid=QtGui.QGridLayout()
-      self.grid.addWidget(QtGui.QLabel("Filename:"),0,0)
-      self.grid.addWidget(QtGui.QLabel("Filetype:"),1,0)
-      self.grid.addWidget(QtGui.QLabel("Filesize (Blocks):"),2,0)
-      self.lblFilename=QtGui.QLabel("")
+      self.vlayout.addWidget(QtWidgets.QLabel("Import this file?"))
+      self.grid=QtWidgets.QGridLayout()
+      self.grid.addWidget(QtWidgets.QLabel("Filename:"),0,0)
+      self.grid.addWidget(QtWidgets.QLabel("Filetype:"),1,0)
+      self.grid.addWidget(QtWidgets.QLabel("Filesize (Blocks):"),2,0)
+      self.lblFilename=QtWidgets.QLabel("")
       self.grid.addWidget(self.lblFilename,0,1)
-      self.lblFiletype=QtGui.QLabel("")
+      self.lblFiletype=QtWidgets.QLabel("")
       self.grid.addWidget(self.lblFiletype,1,1)
-      self.lblFilesize=QtGui.QLabel("")
+      self.lblFilesize=QtWidgets.QLabel("")
       self.grid.addWidget(self.lblFilesize,2,1)
 
       self.vlayout.addLayout(self.grid)
-      self.lblMessage=QtGui.QLabel("")
+      self.lblMessage=QtWidgets.QLabel("")
       self.vlayout.addWidget(self.lblMessage)
-      self.buttonBox = QtGui.QDialogButtonBox(self)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       self.buttonBox.rejected.connect(self.do_cancel)
       self.vlayout.addWidget(self.buttonBox)
 #
@@ -724,7 +724,7 @@ class cls_chk_import(QtGui.QDialog):
             self.lblMessage.setText("Illegal file name")
             return
          self.lblMessage.setText("Ready to import")
-         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+         self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       
       except OSError as e:
          self.lblMessage.setText("Error while examining file")
@@ -748,43 +748,43 @@ class cls_chk_import(QtGui.QDialog):
 #
 # check xroms dialog
 #
-class cls_chkxrom(QtGui.QDialog):
+class cls_chkxrom(QtWidgets.QDialog):
 
    def __init__(self,parent=None):
       super().__init__()
       self.call=["decomp41"]
 
       self.setWindowTitle("Check ROM Modules")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.cardrdr= QtGui.QCheckBox("Card Reader")
+      self.cardrdr= QtWidgets.QCheckBox("Card Reader")
       self.vlayout.addWidget(self.cardrdr)
-      self.printer= QtGui.QCheckBox("Printer")
+      self.printer= QtWidgets.QCheckBox("Printer")
       self.vlayout.addWidget(self.printer)
-      self.wand= QtGui.QCheckBox("Wand")
+      self.wand= QtWidgets.QCheckBox("Wand")
       self.vlayout.addWidget(self.wand)
-      self.hpil= QtGui.QCheckBox("HP-IL")
+      self.hpil= QtWidgets.QCheckBox("HP-IL")
       self.vlayout.addWidget(self.hpil)
       self.hpil.setChecked(True)
-      self.xfunc= QtGui.QCheckBox("X-Function")
+      self.xfunc= QtWidgets.QCheckBox("X-Function")
       self.vlayout.addWidget(self.xfunc)
       self.xfunc.setChecked(True)
-      self.time= QtGui.QCheckBox("Time")
+      self.time= QtWidgets.QCheckBox("Time")
       self.vlayout.addWidget(self.time)
-      self.hepax= QtGui.QCheckBox("HEPAX")
+      self.hepax= QtWidgets.QCheckBox("HEPAX")
       self.vlayout.addWidget(self.hepax)
-      self.xio= QtGui.QCheckBox("Extended IO")
+      self.xio= QtWidgets.QCheckBox("Extended IO")
       self.vlayout.addWidget(self.xio)
-      self.devil= QtGui.QCheckBox("HP-IL Devel")
+      self.devil= QtWidgets.QCheckBox("HP-IL Devel")
       self.vlayout.addWidget(self.devil)
-      self.plotter= QtGui.QCheckBox("Plotter")
+      self.plotter= QtWidgets.QCheckBox("Plotter")
       self.vlayout.addWidget(self.plotter)
 
-      self.exitButton= QtGui.QPushButton("Exit")
+      self.exitButton= QtWidgets.QPushButton("Exit")
       self.exitButton.setFixedWidth(60)
       self.exitButton.clicked.connect(self.do_exit)
-      self.hlayout= QtGui.QHBoxLayout()
+      self.hlayout= QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.exitButton)
       self.vlayout.addLayout(self.hlayout)
 #
@@ -834,7 +834,7 @@ class cls_chkxrom(QtGui.QDialog):
 #
 # view file dialog
 #
-class cls_lifview(QtGui.QDialog):
+class cls_lifview(QtWidgets.QDialog):
 
    def __init__(self,workdir,parent= None):
       super().__init__()
@@ -842,10 +842,10 @@ class cls_lifview(QtGui.QDialog):
       self.outputfile=""
 
       self.setWindowTitle("View File")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.viewer=QtGui.QTextEdit()
+      self.viewer=QtWidgets.QTextEdit()
       self.viewer.setMinimumWidth(600)
       self.viewer.setMinimumHeight(600)
       self.viewer.setReadOnly(True)
@@ -854,13 +854,13 @@ class cls_lifview(QtGui.QDialog):
       self.viewer.setFont(self.font)
 
       self.vlayout.addWidget(self.viewer)
-      self.saveButton= QtGui.QPushButton("Save")
+      self.saveButton= QtWidgets.QPushButton("Save")
       self.saveButton.setFixedWidth(60)
       self.saveButton.clicked.connect(self.do_save)
-      self.exitButton= QtGui.QPushButton("Exit")
+      self.exitButton= QtWidgets.QPushButton("Exit")
       self.exitButton.setFixedWidth(60)
       self.exitButton.clicked.connect(self.do_exit)
-      self.hlayout= QtGui.QHBoxLayout()
+      self.hlayout= QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.saveButton)
       self.hlayout.addWidget(self.exitButton)
       self.vlayout.addLayout(self.hlayout)
@@ -872,12 +872,12 @@ class cls_lifview(QtGui.QDialog):
 #  enter output file name dialog
 #
    def get_outputFilename(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select Output File")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.AnyFile)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       dialog.setNameFilters( ["All Files (*)"] )
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
 #     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
@@ -890,14 +890,14 @@ class cls_lifview(QtGui.QDialog):
          return
       self.outputfile=flist[0]
       if os.access(self.outputfile,os.W_OK):
-         reply=QtGui.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.outputfile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
-         if reply== QtGui.QMessageBox.Cancel:
+         reply=QtWidgets.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.outputfile,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
+         if reply== QtWidgets.QMessageBox.Cancel:
             return
       try:
          with open(self.outputfile,"w",encoding="UTF-8-SIG") as outfile:
             outfile.write(str(self.viewer.toPlainText()))
       except OSError as e:
-         reply=QtGui.QMessageBox.critical(self,'Error',"Cannot write to file: "+ e.strerror,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       return
 
 #
@@ -929,13 +929,13 @@ class cls_lifview(QtGui.QDialog):
          d.set_text(stringconv(output,charset))
 #        d.set_text(output.decode("HP-ROMAN8"))
       except UnicodeDecodeError as e:
-         reply=QtGui.QMessageBox.critical(d,'Error','cannot decode file',QtGui.QMessageBox.Ok,QtGui.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(d,'Error','cannot decode file',QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
       result= d.exec_()
 #
 # Init LIF image file dialog
 #      
-class cls_lifinit (QtGui.QDialog):
+class cls_lifinit (QtWidgets.QDialog):
 
    def __init__(self,workdir,parent= None):
       super().__init__()
@@ -944,30 +944,30 @@ class cls_lifinit (QtGui.QDialog):
       self.mt="hdrive1"
 
       self.setWindowTitle("Initialize LIF Image File")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.gBox0=QtGui.QGroupBox("LIF image file")
-      self.hbox=QtGui.QHBoxLayout()
-      self.lblFilename=QtGui.QLabel(self.lifimagefile)
+      self.gBox0=QtWidgets.QGroupBox("LIF image file")
+      self.hbox=QtWidgets.QHBoxLayout()
+      self.lblFilename=QtWidgets.QLabel(self.lifimagefile)
       self.hbox.addWidget(self.lblFilename)
       self.hbox.addStretch(1)
-      self.butChange= QtGui.QPushButton("Change")
+      self.butChange= QtWidgets.QPushButton("Change")
       self.butChange.clicked.connect(self.do_filenameChanged)
       self.hbox.addWidget(self.butChange)
 
       self.gBox0.setLayout(self.hbox)
       self.vlayout.addWidget(self.gBox0)
 
-      self.gBox1=QtGui.QGroupBox("Medium type")
-      self.bGroup=QtGui.QButtonGroup()
-      self.radio1= QtGui.QRadioButton("HP 82161A cassette")
-      self.radio2= QtGui.QRadioButton("HP 9114B double sided disk ")
-      self.radio3= QtGui.QRadioButton("HDRIVE1 640 KB")
-      self.radio4= QtGui.QRadioButton("HDRIVE1 2 MB")
-      self.radio5= QtGui.QRadioButton("HDRIVE1 4 MB")
-      self.radio6= QtGui.QRadioButton("HDRIVE1 8 MB")
-      self.radio7= QtGui.QRadioButton("HDRIVE1 16 MB")
+      self.gBox1=QtWidgets.QGroupBox("Medium type")
+      self.bGroup=QtWidgets.QButtonGroup()
+      self.radio1= QtWidgets.QRadioButton("HP 82161A cassette")
+      self.radio2= QtWidgets.QRadioButton("HP 9114B double sided disk ")
+      self.radio3= QtWidgets.QRadioButton("HDRIVE1 640 KB")
+      self.radio4= QtWidgets.QRadioButton("HDRIVE1 2 MB")
+      self.radio5= QtWidgets.QRadioButton("HDRIVE1 4 MB")
+      self.radio6= QtWidgets.QRadioButton("HDRIVE1 8 MB")
+      self.radio7= QtWidgets.QRadioButton("HDRIVE1 16 MB")
       self.radio3.setChecked(True)
       self.bGroup.addButton(self.radio1) 
       self.bGroup.addButton(self.radio2)
@@ -978,7 +978,7 @@ class cls_lifinit (QtGui.QDialog):
       self.bGroup.addButton(self.radio7)
       self.bGroup.buttonClicked.connect(self.do_butclicked)
 
-      self.vbox=QtGui.QVBoxLayout()
+      self.vbox=QtWidgets.QVBoxLayout()
       self.vbox.addWidget(self.radio1)
       self.vbox.addWidget(self.radio2)
       self.vbox.addWidget(self.radio3)
@@ -987,10 +987,10 @@ class cls_lifinit (QtGui.QDialog):
       self.vbox.addWidget(self.radio6)
       self.vbox.addWidget(self.radio7)
 
-      self.hbox1=QtGui.QHBoxLayout()
-      self.lbl1=QtGui.QLabel("Directory size:")
+      self.hbox1=QtWidgets.QHBoxLayout()
+      self.lbl1=QtWidgets.QLabel("Directory size:")
       self.hbox1.addWidget(self.lbl1)
-      self.leditDirSize=QtGui.QLineEdit(self)
+      self.leditDirSize=QtWidgets.QLineEdit(self)
       self.leditDirSize.setText("500")
       self.leditDirSize.setMaxLength(4)
       self.regexpDirSize = QtCore.QRegExp('[1-9][0-9]*')
@@ -1000,10 +1000,10 @@ class cls_lifinit (QtGui.QDialog):
       self.hbox1.addWidget(self.leditDirSize)
       self.vbox.addLayout(self.hbox1)
 
-      self.hbox2=QtGui.QHBoxLayout()
-      self.lbl2=QtGui.QLabel("LIF Label:")
+      self.hbox2=QtWidgets.QHBoxLayout()
+      self.lbl2=QtWidgets.QLabel("LIF Label:")
       self.hbox2.addWidget(self.lbl2)
-      self.leditLabel=QtGui.QLineEdit(self)
+      self.leditLabel=QtWidgets.QLineEdit(self)
       self.leditLabel.setText("")
       self.leditLabel.setMaxLength(6)
       self.validatorLabel =  cls_LIF_validator()
@@ -1016,23 +1016,23 @@ class cls_lifinit (QtGui.QDialog):
       self.vlayout.addWidget(self.gBox1)
       self.vbox.addStretch(1)
 
-      self.buttonBox = QtGui.QDialogButtonBox(self)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       self.vlayout.addWidget(self.buttonBox)
 #
 #  dialog to enter input file name
 #
    def get_inputFilename(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select LIF Image File")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.AnyFile)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       dialog.setNameFilters( ["All Files (*)"] )
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
 #     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
@@ -1082,9 +1082,9 @@ class cls_lifinit (QtGui.QDialog):
 #  check, if the OK button can be enabled
 #
    def do_checkenable(self):
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       if (self.leditDirSize.text() != "" and self.lifimagefile != ""):
-         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+         self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       return
 
 #
@@ -1093,8 +1093,8 @@ class cls_lifinit (QtGui.QDialog):
    def do_ok(self):
       if self.lifimagefile != "":
          if os.access(self.lifimagefile,os.W_OK):
-            reply=QtGui.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.lifimagefile,QtGui.QMessageBox.Ok,QtGui.QMessageBox.Cancel)
-            if reply== QtGui.QMessageBox.Cancel:
+            reply=QtWidgets.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.lifimagefile,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
+            if reply== QtWidgets.QMessageBox.Cancel:
                return
          exec_single(self,["lifinit","-m",self.mt,self.lifimagefile,self.leditDirSize.text()])
          if self.leditLabel.text() != "":
@@ -1114,7 +1114,7 @@ class cls_lifinit (QtGui.QDialog):
 #
 # fix LIF header dialog
 #
-class cls_liffix (QtGui.QDialog):
+class cls_liffix (QtWidgets.QDialog):
 
    def __init__(self,workdir,parent= None):
       super().__init__()
@@ -1123,30 +1123,30 @@ class cls_liffix (QtGui.QDialog):
       self.mt="hdrive1"
 
       self.setWindowTitle("Fix header of LIF Image File")
-      self.vlayout= QtGui.QVBoxLayout()
+      self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
 
-      self.gBox0=QtGui.QGroupBox("LIF image file")
-      self.hbox=QtGui.QHBoxLayout()
-      self.lblFilename=QtGui.QLabel(self.lifimagefile)
+      self.gBox0=QtWidgets.QGroupBox("LIF image file")
+      self.hbox=QtWidgets.QHBoxLayout()
+      self.lblFilename=QtWidgets.QLabel(self.lifimagefile)
       self.hbox.addWidget(self.lblFilename)
       self.hbox.addStretch(1)
-      self.butChange= QtGui.QPushButton("Change")
+      self.butChange= QtWidgets.QPushButton("Change")
       self.butChange.clicked.connect(self.do_filenameChanged)
       self.hbox.addWidget(self.butChange)
 
       self.gBox0.setLayout(self.hbox)
       self.vlayout.addWidget(self.gBox0)
 
-      self.gBox1=QtGui.QGroupBox("Medium type")
-      self.bGroup=QtGui.QButtonGroup()
-      self.radio1= QtGui.QRadioButton("HP 82161A cassette")
-      self.radio2= QtGui.QRadioButton("HP 9114B double sided disk ")
-      self.radio3= QtGui.QRadioButton("HDRIVE1 640 KB")
-      self.radio4= QtGui.QRadioButton("HDRIVE1 2 MB")
-      self.radio5= QtGui.QRadioButton("HDRIVE1 4 MB")
-      self.radio6= QtGui.QRadioButton("HDRIVE1 8 MB")
-      self.radio7= QtGui.QRadioButton("HDRIVE1 16 MB")
+      self.gBox1=QtWidgets.QGroupBox("Medium type")
+      self.bGroup=QtWidgets.QButtonGroup()
+      self.radio1= QtWidgets.QRadioButton("HP 82161A cassette")
+      self.radio2= QtWidgets.QRadioButton("HP 9114B double sided disk ")
+      self.radio3= QtWidgets.QRadioButton("HDRIVE1 640 KB")
+      self.radio4= QtWidgets.QRadioButton("HDRIVE1 2 MB")
+      self.radio5= QtWidgets.QRadioButton("HDRIVE1 4 MB")
+      self.radio6= QtWidgets.QRadioButton("HDRIVE1 8 MB")
+      self.radio7= QtWidgets.QRadioButton("HDRIVE1 16 MB")
       self.radio3.setChecked(True)
       self.bGroup.addButton(self.radio1) 
       self.bGroup.addButton(self.radio2)
@@ -1157,7 +1157,7 @@ class cls_liffix (QtGui.QDialog):
       self.bGroup.addButton(self.radio7)
       self.bGroup.buttonClicked.connect(self.do_butclicked)
 
-      self.vbox=QtGui.QVBoxLayout()
+      self.vbox=QtWidgets.QVBoxLayout()
       self.vbox.addWidget(self.radio1)
       self.vbox.addWidget(self.radio2)
       self.vbox.addWidget(self.radio3)
@@ -1169,23 +1169,23 @@ class cls_liffix (QtGui.QDialog):
       self.vbox.addStretch(1)
       self.vlayout.addLayout(self.vbox)
 
-      self.buttonBox = QtGui.QDialogButtonBox(self)
-      self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+      self.buttonBox = QtWidgets.QDialogButtonBox(self)
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       self.vlayout.addWidget(self.buttonBox)
 #
 #  dialog to enter input file name
 #
    def get_inputFilename(self):
-      dialog=QtGui.QFileDialog()
+      dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select LIF Image File")
-      dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtGui.QFileDialog.ExistingFile)
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["All Files (*)"] )
-      dialog.setOptions(QtGui.QFileDialog.DontUseNativeDialog)
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
 #     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
@@ -1228,9 +1228,9 @@ class cls_liffix (QtGui.QDialog):
 #  check, if the OK button can be enabled
 #
    def do_checkenable(self):
-      self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(False)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
       if self.lifimagefile != "":
-         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(True)
+         self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       return
 
 #
@@ -1253,21 +1253,21 @@ class cls_liffix (QtGui.QDialog):
 #
 # Check installation of LIFUTILS dialog
 #
-class cls_installcheck(QtGui.QDialog):
+class cls_installcheck(QtWidgets.QDialog):
 
    def __init__(self):
       super().__init__()
       self.setWindowTitle('Status of LIFUTILS installation')
-      self.vlayout = QtGui.QVBoxLayout()
+      self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
-      self.view = QtGui.QLabel()
+      self.view = QtWidgets.QLabel()
       self.view.setFixedWidth(500)
       self.view.setWordWrap(True)
-      self.button = QtGui.QPushButton('OK')
+      self.button = QtWidgets.QPushButton('OK')
       self.button.setFixedWidth(60)
       self.button.clicked.connect(self.do_exit)
       self.vlayout.addWidget(self.view)
-      self.hlayout = QtGui.QHBoxLayout()
+      self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.button)
       self.vlayout.addLayout(self.hlayout)
       required_version_installed, installed_version= check_lifutils()

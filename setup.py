@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.5.0~beta1',
+    version='1.5.0',
 
     description='Virtual HP-IL devices for the PIL-Box',
     long_description=long_description,
@@ -57,7 +57,7 @@ setup(
     # simple. Or you can use find_packages().
     packages=find_packages(exclude=['misc', 'debian', 'tests*']),
     package_data = {
-       'pyilper' : ['Manual/*.html', 'Manual/Introduction/*.html', 'Manual/Interface/*.html','Manual/Misc/*.html','Manual/Images/*.png','lifimage/*.DAT'],
+       'pyilper' : ['Manual/*.html', 'Manual/js/*.js', 'Manual/css/*.css','lifimage/*.DAT'],
     },
     entry_points={
        'gui_scripts': [ 'pyilper= pyilper:main', ] ,

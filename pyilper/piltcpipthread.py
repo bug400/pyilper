@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore
 from .piltcpip import TcpIpError
 #
 # tcpip thread class --------------------------------------------------------
