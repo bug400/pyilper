@@ -5,5 +5,7 @@ export PYBUILD_NAME=pyilper
 %:
 	dh $@ --with-python3 --buildsystem=pybuild
 
+override_dh_auto_test: ;
+
 
 
