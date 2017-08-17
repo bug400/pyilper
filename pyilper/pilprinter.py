@@ -22,7 +22,42 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# HP-IL virtual printer object class ----------------------------------------
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from .pilconfig import PilConfigError, PILCONFIG
+from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
+from .pilwidgets import cls_tabtermgeneric, LogCheckboxWidget
+from .pildevbase import cls_pildevbase
+#
+# Generic printer tab classes -------------------------------------------------
+#
+# Changelog
+# 01.08.2017 jsi
+# - refactoring: printer tab classes moved to this file
+#
+class cls_tabprinter(cls_tabtermgeneric):
+
+   def __init__(self,parent,name):
+      super().__init__(parent,name,True,True)
+      self.hbox2.addStretch(1)
+      self.pildevice= cls_pilprinter()
+
+   def enable(self):
+      super().enable()
+      self.parent.commobject.register(self.pildevice,self.name)
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
+      self.pildevice.register_callback_output(self.out_printer)
+      self.pildevice.register_callback_clear(self.hpterm.reset)
+
+#
+#  callback for virtual printer device to output a character 
+#
+   def out_printer(self,s):
+      self.hpterm.putchar(s)
+      t=ord(s)
+      if t !=8 and t != 13:
+         self.cbLogging.logWrite(charconv(s,self.charset))
+#
+# Generic HPIL printer class -------------------------------------------------
 #
 # Initial release derived from ILPER 1.4.3 for Windows
 #
@@ -43,12 +78,10 @@
 # - refactored and merged new Ildev base class of Christoph Giesselink
 # 09.02.2016 jsi
 # - clear device implemented
-#
-import threading
-from .pildevbase import cls_pildevbase
-
-
-class cls_printer(cls_pildevbase):
+# 09.07.2017 jsi
+# - register_callback_output and register_callback_clear implemented (from base 
+#   class)
+class cls_pilprinter(cls_pildevbase):
 
    def __init__(self):
 
@@ -57,6 +90,16 @@ class cls_printer(cls_pildevbase):
       self.__defaddr__ = 3        # default address alter AAU
       self.__did__ = "PRINTER"    # device id
       self.__fesc__ = False       # no escape sequence
+      self.__callback_output__= None
+      self.__callback_clear__= None
+#
+# public 
+#
+   def register_callback_output(self,func):
+      self.__callback_output__=func
+
+   def register_callback_clear(self,func):
+      self.__callback_clear__=func
 
 #
 # private (overloaded) ----------
@@ -92,6 +135,6 @@ class cls_printer(cls_pildevbase):
 #
    def __clear_device__(self):
       super().__clear_device__()
-      if self.__callback__clear__ != None:
-         self.__callback__clear__()
+      if self.__callback_clear__ != None:
+         self.__callback_clear__()
       return

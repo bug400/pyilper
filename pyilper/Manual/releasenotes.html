@@ -28,19 +28,18 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <!-- Begin content -->
 
-<h2 class="w3-text-teal">Release Notes for pyILPER 1.5.0</h2>
+<h2 class="w3-text-teal">Release Notes for pyILPER 1.6.0</h2>
 
 <ul class="w3-ul">
 
-<li>The PILTERM utility was updated to version 2. You'll find the old version
-as <em>PILTERM1</em> on the PILIMAGE.DAT image.</li>
+<li>The HP82162A printer is now included as virtual HP-IL device. It is not
+included in the default tab configuration. Thus, you must add it with the
+<em>Virtual HP-IL device configuration</em> in the file menu.</li>
 
-<li>This version needs Qt5.</li>
-
-<li>The font size of the drive directory listing can be configured. The
-row height of the listing is now properly adjusted to the font height.</li>
-
-<li>Improved online manual. The position and size of the manual browser is recorded in the program configuration file.</li>
+<li>The paper size option was moved from the plotter configuration to the
+<em>pyILPER</em> configuration in the file menu. Since this configuration 
+parameter is global now you must reconfigure it if you used letter size 
+in the plotter configuration.</li>
 
 <li>See the <a class="w3-hover-black" href="Changelog.html">Change Log</a> for a full list of changes.</li>
 

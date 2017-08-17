@@ -22,7 +22,127 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# scope object class -------------------------------------------------------
+
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from .pilconfig import PilConfigError, PILCONFIG
+from .pilwidgets import cls_tabtermgeneric, LogCheckboxWidget
+from .pildevbase import cls_pildevbase
+
+#
+# Scope tab object classes ----------------------------------------------------
+#
+# Changelog
+#
+# 21.11.2015 jsi
+# - introduced show IDY frames option in scope tab
+# 28.04.2016 jsi
+# - enable tabscope to log inbound, outbound and both traffic
+# 29.04.2016 jsi
+# - log scope unbuffered
+# 01.08.2017 jsi
+# - refactoring: tab classes moved to this file
+
+LOG_INBOUND=0
+LOG_OUTBOUND=1
+LOG_BOTH=2
+log_mode= ["Inbound", "Outbound", "Both"]
+
+class cls_tabscope(cls_tabtermgeneric):
+
+   def __init__(self,parent,name):
+      super().__init__(parent,name,True,False)
+      self.showIdy= PILCONFIG.get(self.name,"showidy",False)
+      self.cbShowIdy= QtWidgets.QCheckBox("Show IDY frames")
+      self.cbShowIdy.setChecked(self.showIdy)
+      self.cbShowIdy.setEnabled(False)
+      self.cbShowIdy.stateChanged.connect(self.do_show_idy)
+      self.hbox2.addWidget(self.cbShowIdy)
+      self.hbox2.setAlignment(self.cbShowIdy,QtCore.Qt.AlignLeft)
+
+      self.logMode= PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
+      self.lbltxtc=QtWidgets.QLabel("Log mode ")
+      self.comboLogMode=QtWidgets.QComboBox()
+      for txt in log_mode:
+         self.comboLogMode.addItem(txt)
+         self.hbox2.addWidget(self.lbltxtc)
+         self.hbox2.addWidget(self.comboLogMode)
+      self.comboLogMode.activated[str].connect(self.do_changeLogMode)
+      self.comboLogMode.setCurrentIndex(self.logMode)
+      self.comboLogMode.setEnabled(True)
+      self.hbox2.addStretch(1)
+      self.scope_charpos=0
+      self.pildevice= cls_pilscope(True)
+      self.pildevice2= cls_pilscope(False)
+
+   def enable(self):
+      super().enable()
+      self.parent.commobject.register(self.pildevice,self.name)
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.register_callback_output(self.out_scope)
+      self.cbShowIdy.setEnabled(True)
+      self.pildevice.set_show_idy(self.showIdy)
+
+   def post_enable(self):
+      self.parent.commobject.register(self.pildevice2,self.name)
+      self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
+      self.pildevice2.register_callback_output(self.out_scope)
+      self.pildevice2.set_show_idy(self.showIdy)
+
+   def disable(self):
+      super().disable()
+      self.cbShowIdy.setEnabled(False)
+
+   def do_changeLogMode(self,text):
+      self.logMode=self.comboLogMode.findText(text)
+      PILCONFIG.put(self.name,'logmode',self.logMode)
+      self.pildevice.setlocked(True)
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.setlocked(False)
+      self.pildevice2.setlocked(True)
+      self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
+      self.pildevice2.setlocked(False)
+
+   def do_cbActive(self):
+      self.active= self.cbActive.isChecked()
+      PILCONFIG.put(self.name,"active",self.active)
+      self.pildevice.setlocked(True)
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+      self.pildevice.setlocked(False)
+      self.pildevice2.setlocked(True)
+      self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
+      self.pildevice2.setlocked(False)
+
+      try:
+         self.toggle_active()
+      except AttributeError:
+         pass
+      return
+
+   def do_show_idy(self):
+      self.cbShowIdy.setEnabled(False)
+      self.showIdy= self.cbShowIdy.isChecked()
+      PILCONFIG.put(self.name,"showidy",self.showIdy)
+      self.pildevice.set_show_idy(self.showIdy)
+      self.pildevice2.set_show_idy(self.showIdy)
+      self.cbShowIdy.setEnabled(True)
+#
+#  callback output char to console
+#
+   def out_scope(self,s):
+#     ts= datetime.datetime.now()
+#     print("%s %d:%d:%d:%d %s" % (self.name,ts.hour, ts.minute, ts.second, ts.microsecond, s))
+      self.scope_charpos+=len(s)
+      if self.scope_charpos>self.cols :
+         self.hpterm.putchar("\x0D")
+         self.hpterm.putchar("\x0A")
+         self.cbLogging.logWrite("\n")
+         self.cbLogging.logFlush()
+         self.scope_charpos=0
+      for i in range(0,len(s)-1):
+         self.hpterm.putchar(s[i])
+      self.cbLogging.logWrite(s)
+#
+# HP-IL scope class -----------------------------------------------------------
 #
 # Changelog
 # 06.10.2015 jsi:
@@ -36,11 +156,10 @@
 # - refactored and merged new Ildev base class of Christoph Giesselink
 # 28.04.2016 jsi:
 # - introduced inbound parameter, if True use uppercase letters if False use loweercase
+# 09.08.2017
+# - register_callback_output implemented (from base class)
 
-from .pildevbase import cls_pildevbase
-
-
-class cls_scope(cls_pildevbase):
+class cls_pilscope(cls_pildevbase):
 
    def __init__ (self, inbound):
       super().__init__()
@@ -54,6 +173,7 @@ class cls_scope(cls_pildevbase):
                     "???", "???", "AAU", "LPD", "???", "???", "???", "???"]
       self.__show_idy__= False
       self.__count__ = 0
+      self.__callback_output__=None
 
 #
 # public -------
@@ -61,6 +181,9 @@ class cls_scope(cls_pildevbase):
 
    def set_show_idy(self,flag):
       self.__show_idy__= flag
+
+   def register_callback_output(self,proc):
+      self.__callback_output__=proc
 
 #
 #  public (overloaded) -------

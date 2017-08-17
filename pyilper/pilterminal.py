@@ -21,6 +21,43 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+import queue
+import threading
+from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+from .pilconfig import PilConfigError, PILCONFIG
+from .pilwidgets import cls_tabtermgeneric, LogCheckboxWidget
+from .pildevbase import cls_pildevbase
+#
+# Terminal tab object classes ----------------------------------------------
+#
+# Changelog
+#
+
+class cls_tabterminal(cls_tabtermgeneric):
+
+   def __init__(self,parent,name):
+      super().__init__(parent,name, False, True)
+      self.hbox2.addStretch(1)
+      self.pildevice= cls_pilterminal()
+#
+#     enable/disable
+#
+   def enable(self):
+      super().enable()
+      self.parent.commobject.register(self.pildevice,self.name)
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
+      self.pildevice.register_callback_output(self.out_terminal)
+      self.pildevice.register_callback_clear(self.hpterm.reset)
+      self.hpterm.set_kbdfunc(self.pildevice.queueOutput)
+
+   def disable(self):
+      super().disable()
+#
+#  callback to output character to teminal
+#
+   def out_terminal(self,s):
+      self.hpterm.putchar(s)
 #
 # HP-IL virtual terminal object class ---------------------------------------
 #
@@ -64,13 +101,11 @@
 # - ATTN is ignored if the keyboard queue is not empty
 # 06.03.2016 jsi:
 # - use no blocking queue get   
-
-
-import queue
-import threading
-from .pildevbase import cls_pildevbase
-
-class cls_terminal(cls_pildevbase):
+# 09.08.2017 jsi:
+# - register_callback_output and register_callback_clear implemented (from base
+#   class
+#
+class cls_pilterminal(cls_pildevbase):
 
    def __init__(self):
       super().__init__()
@@ -79,6 +114,8 @@ class cls_terminal(cls_pildevbase):
       self.__defaddr__ = 8        # default address alter AAU
       self.__did__ = "PILTERM"    # device id
       self.__kbdqueue__= queue.Queue()
+      self.__callback_output__= None
+      self.__callback_clear__= None
 #
 # public --------
 #
@@ -96,6 +133,12 @@ class cls_terminal(cls_pildevbase):
             self.__kbdqueue__.put(c)
          self.__status__ = 0xE2 # keyboard data available
       self.__status_lock__.release()
+
+   def register_callback_output(self,func):
+      self.__callback_output__=func
+
+   def register_callback_clear(self,func):
+      self.__callback_clear__=func
 
 #
 # private (overloaded) --------
@@ -124,8 +167,8 @@ class cls_terminal(cls_pildevbase):
          except queue.Empty:
             break
       self.__status_lock__.release()
-      if self.__callback__clear__ != None:
-         self.__callback__clear__() 
+      if self.__callback_clear__ != None:
+         self.__callback_clear__() 
       return
 #
 #  output data from keyboard queue to controller

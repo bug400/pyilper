@@ -35,6 +35,15 @@
 # 05.03.2016 jsi:
 # - wrong variable name __ptdsi__ corrected
 # - improved getstatus, use accesss lock and return ilstate as text
+# 02.08.2017 jsi:
+# - class variable for length of status information introduced, alter
+#   statement to clear service request bit to handle multiple byte status data
+#   changed the order of status bytes output (least significant byte first)
+# - reset service request bit, if DCL odr SDC
+# 07.08.2017 jsi:
+# - register functions for callbacks removed
+# 10.08.2017 jsi
+# - check if self.__did__ != "" and not != None
 
 
 import threading
@@ -65,13 +74,12 @@ class cls_pildevbase:
                                   # bit 1: SDA, SDI
                                   # bit 0: SST, SDI, SAI, NRD
       self.__ptsdi__ = 0          # output pointer for device id
+      self.__status_len__=1       # length of device status in bytes
       self.__ptssi__ = 0          # output pointer for hp-il status
       self.__isactive__= False    # device active in loop
       self.__status_lock__= threading.Lock()
       self.__islocked__= False
       self.__access_lock__= threading.Lock()
-      self.__callback_clear__=None
-      self.__callback_output__=None
 #
 # --- public functions ---
 #
@@ -80,18 +88,6 @@ class cls_pildevbase:
 #
    def setactive(self, active):
       self.__isactive__= active
-
-#
-#  register callback for device clear
-#
-   def register_callback_clear(self,func):
-      self.__callback__clear__= func
-
-#
-#  register callback for output function
-#
-   def register_callback_output(self,func):
-      self.__callback_output__= func
 
 #
 #  return device status
@@ -124,8 +120,14 @@ class cls_pildevbase:
 #
    def process(self,frame):
 
+#
+#     if device is not active, return
+#
       if not self.__isactive__:
          return(frame)
+#
+#     process frames
+#
       if (frame & 0x400) == 0:
          frame= self.__do_doe__(frame)
       elif (frame & 0x700) == 0x400:
@@ -178,6 +180,10 @@ class cls_pildevbase:
 #  device clear stub
 #
    def __clear_device__(self):
+      # reset service request bit
+      s= self.__getstatus__()
+      s &= ~ 0x40
+      self.__setstatus__(s)
       return
 #
 #  stub for extended sad commands
@@ -210,7 +216,7 @@ class cls_pildevbase:
                   if self.__ptssi__ > 0:   # SST
                      self.__ptssi__= self.__ptssi__-1
                      if self.__ptssi__ > 0:
-                        frame= (self.__getstatus__() >> (( self.__ptssi__ -1) * 8)) & 0xFF
+                        frame= (self.__getstatus__() >> (( self.__status_len__-self.__ptssi__ ) * 8)) & 0xFF
                   if self.__ptsdi__ > 0:   # SDI
                      if self.__ptsdi__ == len(self.__did__):
                         frame=0
@@ -304,17 +310,17 @@ class cls_pildevbase:
                if frame != 0x560: # not sda received data
                   self.__ilstate__= 0x42 # active talker, SDA/SDI
             elif n == 97: # SST
-                # reset keyboard data available bit
+                # reset service request bit
                 s= self.__getstatus__()
-                s &= 0xBF
+                s &= ~ 0x40
                 self.__setstatus__(s)
                 # update IL status and return no. of status bytes
-                self.__ptssi__ = 1
+                self.__ptssi__ = self.__status_len__
                 if self.__ptssi__ > 0: # response to status request
-                   frame = (self.__getstatus__() >> ((self.__ptssi__ -1) * 8)) & 0xFF
+                   frame = (self.__getstatus__() >> ((self.__status_len__-self.__ptssi__) * 8)) & 0xFF
                    self.__ilstate__= 0x43 # active talker
             elif n == 98:  # SDI
-               if self.__did__ != None:
+               if self.__did__ != "":
                   frame= ord(self.__did__[0])
                   self.__ptsdi__ = 1 # other 2
                   self.__ilstate__= 0x43 # active talker, SDA/SDI, SST/SDI/SAI

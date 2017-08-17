@@ -27,6 +27,8 @@
 # - open method introduced
 # 14.10.2016 jsi:
 # - added filename parameter to cls_userconfig
+# 17.08.2017 jsi:
+# - assign "" to self.add_msg if parameter is none in PilConfigError
 #
 from .userconfig import cls_userconfig, ConfigError
 from .pilcore import CONFIG_VERSION
@@ -35,7 +37,10 @@ from .pilcore import CONFIG_VERSION
 class PilConfigError(Exception):
    def __init__(self,msg,add_msg= None):
       self.msg= msg;
-      self.add_msg = add_msg
+      if add_msg== None:
+         self.add_msg=""
+      else:
+         self.add_msg = add_msg
 
 
 class cls_pilconfig:

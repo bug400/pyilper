@@ -101,7 +101,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -115,8 +115,11 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
 #       determine font metrics and terminal window size in pixel
 #
-        font= QtGui.QFont(font_name)
-        font.setPixelSize(font_size)
+#       font= QtGui.QFont(font_name)
+        font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
+        font.setStyleHint(QtGui.QFont.TypeWriter)
+        if font_size > MIN_TERMCHAR_SIZE:
+           font.setPixelSize(font_size)
         metrics= QtGui.QFontMetrics(font)
         font_width=metrics.width("A")
         font_height=metrics.height()
@@ -126,7 +129,7 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #       create terminal window and scrollbar
 #
         self.hbox= QtWidgets.QHBoxLayout()
-        self.terminalwidget= QTerminalWidget(self,font_name,font_size,font_height, width,height, colorscheme)
+        self.terminalwidget= QTerminalWidget(self,font,width,height, colorscheme)
         self.terminalwidget.setFixedSize(width,height)
         self.hbox.addWidget(self.terminalwidget)
         self.hbox.setAlignment(self.terminalwidget,QtCore.Qt.AlignLeft)
@@ -199,14 +202,14 @@ class QTerminalWidget(QtWidgets.QWidget):
     }
 
 
-    def __init__(self,parent, font_name, font_size, font_height, w,h, colorscheme):
+    def __init__(self,parent, font, w,h, colorscheme):
         super().__init__(parent)
         self.setFocusPolicy(QtCore.Qt.WheelFocus)
         self.setAutoFillBackground(False)
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, True)
         self.setCursor(QtCore.Qt.IBeamCursor)
-        font = QtGui.QFont(font_name)
-        font.setPixelSize(font_size)
+#       font = QtGui.QFont(font_name)
+#       font.setPixelSize(font_size)
         self.setFont(font)
         self._screen = []
         self._text = []

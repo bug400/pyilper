@@ -123,6 +123,14 @@
 # - catch exception if neither QtWebKitWidgets or QtWebEngineWidgets are found
 # 17.03.2017 jsi:
 # - do not load initial document, if online manual is re-opened
+# 01.08.2017 jsi
+# - HP82162A added
+# 07.08.2017 jsi
+# - papersize parameter now global
+# - refactoring of tab classes
+# - minimum display position is 50,50 - otherwise some display manager hide
+#   the menu bar (e.g. RASPBIAN)
+# - error in exception handling of reading the config file fixed
 #
 import os
 import sys
@@ -134,7 +142,7 @@ import pyilper
 import re
 import argparse
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .pilwidgets import cls_ui, cls_tabscope, cls_tabdrive, cls_tabprinter, cls_tabterminal, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow, cls_tabplotter, cls_PenConfigWindow
+from .pilwidgets import cls_ui, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilcore import *
 from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
 from .penconfig import cls_penconfig, PenConfigError, PENCONFIG
@@ -145,6 +153,12 @@ from .piltcpipthread import cls_PilTcpIpThread
 from .pilpipes import cls_pilpipes, PipesError
 from .pilpipesthread import cls_PilPipesThread
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
+from .pilhp82162a import cls_tabhp82162a
+from .pilplotter import cls_tabplotter, cls_PenConfigWindow
+from .pildrive import cls_tabdrive
+from .pilscope import cls_tabscope
+from .pilprinter import cls_tabprinter
+from .pilterminal import cls_tabterminal
 
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
@@ -152,7 +166,7 @@ MODE_PILBOX=0         # connect to PIL-Box
 MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
 MODE_PIPES=2          # conect via named pipes
 
-TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter}
+TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a}
 
 
 #
@@ -238,17 +252,18 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
+         PILCONFIG.get(self.name,"papersize",0)
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-         QtWidgets.QApplication.quit()
+         sys.exit(1)
 #
 #     2. pen configuration
       try:
          PENCONFIG.open(self.name,CONFIG_VERSION,self.instance)
       except PenConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-         QtWidgets.QApplication.quit()
+         sys.exit(1)
 #
 #     determine if we run a new version of pyILPER (or for the first time)
 #
@@ -506,11 +521,19 @@ class cls_pyilper(QtCore.QObject):
       self.disable()
       self.enable()
 #
-#  callback exit
+#  callback exit, store windows position
 #
    def do_Exit(self):
       self.disable()
-      position=[self.ui.pos().x(),self.ui.pos().y()]
+      pos_x=self.ui.pos().x()
+      pos_y=self.ui.pos().y()
+      if pos_x < 50:
+         pos_x=50
+      if pos_y < 50:
+         pos_y=50
+
+      position=[pos_x, pos_y]
+
       PILCONFIG.put(self.name,"position",position)
       if self.helpwin!= None:
          helpposition=[self.helpwin.pos().x(),self.helpwin.pos().y(),self.helpwin.width(),self.helpwin.height()]

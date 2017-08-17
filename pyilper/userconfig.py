@@ -34,6 +34,8 @@
 # - add instance to configuration file name
 # 14.10.2016 jsi
 # - added filename parameter to __init__
+# 17.08.2016 jsi
+# - added diagnostics to JSON encode/decode error messages
 
 import json
 import os
@@ -104,7 +106,8 @@ class cls_userconfig:
          f= open(self.__configfile__,"r")
          config= json.load(f)
       except json.JSONDecodeError as e:
-         raise ConfigError("Cannot encode configuration data")
+         add_msg="File: "+self.__configfile__+". Error: "+e.msg+" at line: "+str(e.lineno)
+         raise ConfigError("Cannot decode configuration data",add_msg)
       except OSError as e:
          raise ConfigError("Cannot read configuration file", e.strerror)
       finally:
@@ -121,7 +124,8 @@ class cls_userconfig:
          f= open(self.__configfile__,"w")
          json.dump(config,f,sort_keys=True,indent=3)
       except json.JSONDecodeError as e:
-         raise ConfigError("Cannot decode configuration data")
+         add_msg="File: "+self.__configfile__+". Error: "+e.msg+" at line: "+str(e.lineno)
+         raise ConfigError("Cannot encode configuration data",add_msg)
       except OSError as e:
          raise ConfigError("Cannot write to configuration file", e.strerror)
       finally:

@@ -49,6 +49,12 @@
 # - version - 1.5.0beta1 development
 # 16.03.2017 - jsi
 # - version - 1.5.0 production
+# 01.08.2017 - jsi
+# - device HP82162A added
+# 10.08.2017 jsi
+# - version 1.6.0 development
+# 11.08.2017 jsi
+# - catch error in decode_version if no version information exists
 #
 import platform
 #
@@ -64,6 +70,8 @@ def isMACOS():
 # decode version number of lifutils or emu7470
 #
 def decode_version(version_number):
+   if version_number==0:
+      return "(unknown)"
    version=str(version_number)
    major=int(version[0])
    minor=int(version[1:3])
@@ -82,8 +90,8 @@ def encode_version(version_string):
 #
 # General constants:
 #
-PRODUCION= True       # Production/Development Version
-VERSION="1.5.0"       # pyILPR version number
+PRODUCION= False      # Production/Development Version
+VERSION="1.6.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # PIL-Box communication
@@ -144,4 +152,5 @@ TAB_PRINTER=1
 TAB_DRIVE=2
 TAB_TERMINAL=3
 TAB_PLOTTER=4
-TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'Plotter'}
+TAB_HP82162A=5
+TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'Plotter',TAB_HP82162A:'HP82162A'}
