@@ -55,6 +55,8 @@
 # - version 1.6.0 development
 # 11.08.2017 jsi
 # - catch error in decode_version if no version information exists
+# 18.08.2017 jsi
+# - Tab name plotter renamed to HP7470A
 #
 import platform
 #
@@ -153,4 +155,4 @@ TAB_DRIVE=2
 TAB_TERMINAL=3
 TAB_PLOTTER=4
 TAB_HP82162A=5
-TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'Plotter',TAB_HP82162A:'HP82162A'}
+TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A'}
