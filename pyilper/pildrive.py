@@ -310,8 +310,10 @@
 # 04.02.2016 jsi
 # - added missing argument to sortbyColumn (QT5 fix)
 # 19.02.2017 jsi
-# - font size of the directory listing of the LifDirWidget can now be configured.
-#   The row height is now properly adjusted to the font height
+# - font size of the directory listing of the LifDirWidget can now be 
+#   configured. The row height is now properly adjusted to the font height
+# 17.08.2017 jsi
+# - set did to empty string instead of none
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -1029,7 +1031,7 @@ class cls_pildrive(cls_pildevbase):
 #
       self.__aid__ = 0x10         # accessory id = mass storage
       self.__defaddr__ = 2        # default address alter AAU
-      self.__did__ = None         # device id 
+      self.__did__ = ""           # device id 
 #
 #     disk management variables
 #
@@ -1113,7 +1115,7 @@ class cls_pildrive(cls_pildevbase):
    def setdevice(self,did,aid):
       self.__aid__= aid
       if did== "":
-         self.__did__= None
+         self.__did__= ""
       else:
          self.__did__=did
       self.__clear_device__()
