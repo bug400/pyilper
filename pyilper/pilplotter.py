@@ -43,6 +43,9 @@
 # - update pen configuration before each draw command
 # 07.08.2017 jsi
 # - papersize is now a global configuration parameter
+# 19.08.2017 jsi
+# - fixed refactoring bug: plotter HP-IL device was accidently disabled
+#   permanently when the disable method was called
 #
 
 from __future__ import print_function
@@ -1284,7 +1287,7 @@ class cls_HP7470(QtCore.QObject):
 #
 #     disable HP-IL device permanently
 #
-      self.parent.disable()
+      self.parent.disable_permanently()
 #
 #  start the subprocess of the plotter emulator, check required version,
 #  set papeersize according to  config 
@@ -1697,7 +1700,7 @@ class cls_pilplotter(cls_pildevbase):
 #
 #  disable permanently, if emu7470 is not available
 #
-   def disable(self):
+   def disable_permanently(self):
       self.__disabled__= True
       self.setactive(False)
 #
