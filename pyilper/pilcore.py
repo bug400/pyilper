@@ -57,6 +57,8 @@
 # - catch error in decode_version if no version information exists
 # 18.08.2017 jsi
 # - Tab name plotter renamed to HP7470A
+# 21.08.2017 jsi
+# - PDF and barcode constants added
 #
 import platform
 #
@@ -156,3 +158,19 @@ TAB_TERMINAL=3
 TAB_PLOTTER=4
 TAB_HP82162A=5
 TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A'}
+#
+# PDF Constants in 1/10 mm
+#
+PDF_MARGINS=100   
+PDF_FORMAT_A4=0
+PDF_FORMAT_LETTER=1
+PDF_ORIENTATION_PORTRAIT=0
+PDF_ORIENTATION_LANDSCAPE=1
+#
+# Barcode Constants in 1/10 mm
+#
+BARCODE_HEIGHT=100
+BARCODE_NARROW_W= 5
+BARCODE_WIDE_W= 10
+BARCODE_SPACING= 5
+

@@ -69,14 +69,31 @@
 # - removed duplicate dialog warning for overwriting existing file in  cls_lifexport
 # 01.10.2016 jsi
 # - plotter rom added to xrom dialog
+# 22.08.2017 jsi
+# - cls_lifbarcode added
+# - truncate error messages from external programs to 150 chars
 #
 import os
 import subprocess
 import tempfile
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 from .lifcore import *
 from .pilcharconv import charconv, stringconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
-from .pilcore import isWINDOWS, FONT, decode_version
+from .pilcore import isWINDOWS, FONT, decode_version, PDF_ORIENTATION_PORTRAIT
+from .pilconfig import PILCONFIG
+from .pilpdf import cls_pdfprinter
+
+PDF_MARGINS=100
+BARCODE_HEIGHT=100
+BARCODE_NARROW_W= 5
+BARCODE_WIDE_W= 10
+BARCODE_SPACING= 5
+#
+# decode an error message to string and truncate it to 150 chars
+#
+def trunc_message(msg):
+   temp= msg.decode()
+   return (temp[:75] + '.. (truncated)') if len(temp) > 150 else temp
 
 #
 # check if lifutils are installed, return if required version found
@@ -103,7 +120,7 @@ def exec_single(parent,cmd):
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    except subprocess.CalledProcessError as exp:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',exp.output.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exp.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
 #
 # exec piped command, read input from file, return True if success, False otherwise
@@ -125,7 +142,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
       p1= subprocess.Popen(cmd1,stdin=fd,stdout=tmpfile,stderr=subprocess.PIPE)
       output1,err1= p1.communicate()
       if err1.decode() != "":
-         reply=QtWidgets.QMessageBox.critical(d,'Error',err1.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(d,'Error',trunc_message(err1),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          os.close(fd)
          return
@@ -141,7 +158,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
       p2= subprocess.Popen(cmd2,stdin=tmpfile,stderr=subprocess.PIPE)
       output2,err2=p2.communicate()
       if err2.decode() != "":
-         reply=QtWidgets.QMessageBox.critical(parent,'Error',err2.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err2),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          return
 #
@@ -150,7 +167,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    except subprocess.CalledProcessError as exc:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',exc.output.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       tmpfile.close()
 #
 # exec piped command, write output to file or stdout
@@ -180,7 +197,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
       p1= subprocess.Popen(cmd1,stdout=tmpfile,stderr=subprocess.PIPE)
       output1,err1= p1.communicate()
       if err1.decode() != "":
-         reply=QtWidgets.QMessageBox.critical(parent,'Error',err1.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err1),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          if fd != None:
             os.close(fd)
@@ -195,7 +212,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
          p2= subprocess.Popen(cmd2,stdin=tmpfile,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       output2,err2=p2.communicate()
       if err2.decode() != "":
-         reply=QtWidgets.QMessageBox.critical(parent,'Error',err2.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err2),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          if fd != None:
             os.close(fd)
          return None
@@ -209,7 +226,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
       tmpfile.close()
       return None
    except subprocess.CalledProcessError as exc:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',exc.output.decode(),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       tmpfile.close()
       return None
    tmpfile.close()
@@ -239,6 +256,139 @@ class cls_lifpack(QtWidgets.QDialog):
       reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to pack the LIF image file', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       if reply == QtWidgets.QMessageBox.Yes:
          exec_single(d,["lifpack",lifimagefile])
+#
+# custom class for barcode
+#
+class cls_barcodeItem(QtWidgets.QGraphicsItem):
+
+   def __init__(self,barcode_title,barcode_row, barcode_height, barcode_narrow_w, barcode_wide_w, barcode_spacing):
+      super().__init__()
+      self.font=QtGui.QFont()
+      self.font.setPointSize(2)
+      metrics= QtGui.QFontMetrics(self.font)
+      self.font_h= metrics.height()
+      self.spacing=20
+      self.h= self.font_h+barcode_height+self.spacing*3
+      self.w= len(barcode_row)*(barcode_wide_w+barcode_spacing)*8+(barcode_wide_w+barcode_spacing)*4
+      self.barcode_title= barcode_title
+      self.barcode_row= barcode_row
+      self.barcode_height= barcode_height
+      self.barcode_narrow_w= barcode_narrow_w
+      self.barcode_wide_w= barcode_wide_w
+      self.barcode_spacing= barcode_spacing
+      self.rect= QtCore.QRectF(0,0,self.w,self.h)
+      
+   def setPos(self,x,y):
+      super().setPos(x,y-self.h)
+
+   def boundingRect(self):
+      return self.rect
+
+   def paint(self,painter,option,widget):
+      posx=0
+      posy=self.font_h
+#
+#     header text
+#
+      painter.setFont(self.font)
+      painter.drawText(posx,posy,self.barcode_title)
+      posy+=self.spacing
+#
+#     barcodes
+#
+      painter.fillRect(posx,posy,self.barcode_narrow_w,self.barcode_height,QtCore.Qt.black)
+      posx+= self.barcode_narrow_w+self.barcode_spacing
+      painter.fillRect(posx,posy,self.barcode_narrow_w,self.barcode_height,QtCore.Qt.black)
+      posx+= self.barcode_narrow_w+self.barcode_spacing
+
+      for i in range(len(self.barcode_row)):
+         for k in reversed(range(8)):
+            if self.barcode_row[i] & (1 << k):
+               painter.fillRect(posx,posy,self.barcode_wide_w,self.barcode_height,QtCore.Qt.black)
+               posx+= self.barcode_wide_w+self.barcode_spacing
+            else:
+               painter.fillRect(posx,posy,self.barcode_narrow_w,self.barcode_height,QtCore.Qt.black)
+               posx+= self.barcode_narrow_w+self.barcode_spacing
+      painter.fillRect(posx,posy,self.barcode_wide_w,self.barcode_height,QtCore.Qt.black)
+      posx+= self.barcode_wide_w+self.barcode_spacing
+      painter.fillRect(posx,posy,self.barcode_narrow_w,self.barcode_height,QtCore.Qt.black)
+      posx+= self.barcode_narrow_w+self.barcode_spacing
+      return
+#
+# output barcode dialog
+#
+class cls_lifbarcode(QtWidgets.QDialog):
+ 
+
+   def __init__(self):
+      super().__init__()
+
+   @staticmethod
+   def exec (lifimagefile, liffilename, ft):
+      d= cls_lifbarcode()
+      papersize=PILCONFIG.get("pyilper","papersize")
+#
+#     get output file name
+#
+      flist= cls_lifbarcode.get_pdfFilename()
+      if flist== None:
+         return
+      output_filename= flist[0]
+#
+#     generate binary barcode data from lifutils prog41bar or sdatabar
+#
+      if ft== 0xE080:
+         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],["prog41bar"],"")
+         title="Barcodes for HP-41 program file: "+liffilename
+      else:
+         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],["sdatabar"],"")
+         title="Barcodes for HP-41 data file: "+liffilename
+      if output == None:
+         return
+
+#
+#     initialize pdf printer
+#
+      pdfprinter=cls_pdfprinter(papersize,PDF_ORIENTATION_PORTRAIT, output_filename,title,True,1)
+      pdfprinter.begin()
+#
+#     process binary barcode data and generate PDF file
+#
+      i=0
+      row=0
+      while i < len(output):
+#        Process barcode, print title
+#
+         row+=1
+         length=(output[i] &0xF)+1
+         barcode_row= []
+         i+=1
+         for k in range(length):
+           if i== len(output):
+              return
+           barcode_row.append(output[i])
+           i+=1
+         barcode_header="Row: "+str(row)
+         barcode_item= cls_barcodeItem(barcode_header,barcode_row,BARCODE_HEIGHT, BARCODE_NARROW_W, BARCODE_WIDE_W, BARCODE_SPACING)
+         pdfprinter.print_item(barcode_item)
+#
+      pdfprinter.end()
+
+#
+#     file name input dialogue for pdf print file
+#
+   @staticmethod
+   def get_pdfFilename():
+      dialog=QtWidgets.QFileDialog()
+      dialog.setWindowTitle("Enter PDF file name")
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+      dialog.setDefaultSuffix("pdf")
+      dialog.setNameFilters( ["PDF (*.pdf )", "All Files (*)"] )
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
+      if dialog.exec():
+         return dialog.selectedFiles()
+
 
 #
 # purge file dialog

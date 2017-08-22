@@ -27,19 +27,26 @@
 # HP82162A virtual device classes  ---------------------------------------------
 #
 # Changelog
-# 05.10.2015 jsi:
+# 05.08.2017 jsi:
 # - initial version
+# 20.08.2017 jsi:
+# - fixed: papersize for pdf output not configurable
+# 21.08.2017 jsi:
+# - refactoring: new pdf printer class used
+# - store number of pdf columns in system configuration
+# - disable gui if device not enabled
 #
 import copy
 import queue
 import threading
 import re
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
-from .pilcore import UPDATE_TIMER, FONT
+from .pilcore import UPDATE_TIMER, FONT, PDF_ORIENTATION_PORTRAIT
 from .pilconfig import PILCONFIG
 from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
+from .pilpdf import cls_pdfprinter
 
 #
 # constants --------------------------------------------------------------
@@ -455,18 +462,21 @@ class cls_tabhp82162a(cls_tabgeneric):
       PILCONFIG.put(self.name,"logging",self.logging)
       self.pildevice.setlocked(False)
       self.cbLogging.setEnabled(True)
-
-
+#
+#  enable pildevice and gui object
+#
    def enable(self):
       super().enable()
       self.parent.commobject.register(self.pildevice,self.name)
-      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
+      self.pildevice.setactive(self.active)
       self.cbLogging.setEnabled(True)
       if self.logging:
          self.cbLogging.logOpen()
       self.pildevice.enable()
       self.guiobject.enable()
-
+#
+#  disable pildevice and gui object
+#
    def disable(self):
       self.pildevice.disable()
       self.guiobject.disable()
@@ -474,6 +484,11 @@ class cls_tabhp82162a(cls_tabgeneric):
          self.cbLogging.logClose()
       self.cbLogging.setEnabled(False)
       super().disable()
+#
+#  active/inactive: enable/disable GUI controls
+#
+   def toggle_active(self):
+      self.guiobject.toggle_active()
 #
 #  becomes visible, refresh content, activate update
 #
@@ -499,7 +514,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
 #     configuration
 #
-      self.pdfpixelsize=2
+      self.pdfpixelsize=3
       self.pixelsize=PILCONFIG.get("pyilper","hp82162a_pixelsize",1)
       self.linebuffersize=PILCONFIG.get("pyilper","linebuffersize",2000)
       self.papersize=PILCONFIG.get("pyilper","papersize")
@@ -511,7 +526,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
 #     scrolled printer view
 #
-      self.printview=cls_ScrolledHP82162AView(self,self.name,self.pixelsize, self.pdfpixelsize,self.linebuffersize)
+      self.printview=cls_ScrolledHP82162AView(self,self.name,self.pixelsize, self.pdfpixelsize,self.papersize,self.linebuffersize)
       self.hbox.addWidget(self.printview)
       self.hbox.setAlignment(self.printview,QtCore.Qt.AlignLeft)
       self.vbox=QtWidgets.QVBoxLayout()
@@ -527,6 +542,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     Man Mode
 #
       self.radbutMan= QtWidgets.QRadioButton(self.gbox)
+      self.radbutMan.setEnabled(False)
       self.radbutMan.setText("Man")
       self.radbutMan.toggled.connect(self.toggledCheckBoxes)
       self.vboxgbox.addWidget(self.radbutMan)
@@ -534,6 +550,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     Trace Mode
 #
       self.radbutTrace= QtWidgets.QRadioButton(self.gbox)
+      self.radbutTrace.setEnabled(False)
       self.radbutTrace.setText("Trace")
       self.radbutTrace.toggled.connect(self.toggledCheckBoxes)
       self.vboxgbox.addWidget(self.radbutTrace)
@@ -541,6 +558,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     Norm Mode
 #
       self.radbutNorm= QtWidgets.QRadioButton(self.gbox)
+      self.radbutNorm.setEnabled(False)
       self.radbutNorm.setText("Norm")
       self.radbutNorm.toggled.connect(self.toggledCheckBoxes)
       self.vboxgbox.addWidget(self.radbutNorm)
@@ -550,6 +568,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     Clear Button
 #
       self.clearButton= QtWidgets.QPushButton("Clear")
+      self.clearButton.setEnabled(False)
       self.vbox.addWidget(self.clearButton)
       self.vbox.setAlignment(self.clearButton,QtCore.Qt.AlignTop)
       self.clearButton.clicked.connect(self.do_clear)
@@ -557,6 +576,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     Print Button
 #
       self.printButton= QtWidgets.QPushButton("Print")
+      self.printButton.setEnabled(False)
       self.vbox.addWidget(self.printButton)
       self.vbox.setAlignment(self.printButton,QtCore.Qt.AlignTop)
       self.printButton.pressed.connect(self.do_print_pressed)
@@ -565,6 +585,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     Paper Advance Button
 #
       self.advanceButton= QtWidgets.QPushButton("Advance")
+      self.advanceButton.setEnabled(False)
       self.vbox.addWidget(self.advanceButton)
       self.vbox.setAlignment(self.advanceButton,QtCore.Qt.AlignTop)
       self.advanceButton.pressed.connect(self.do_advance_pressed)
@@ -573,6 +594,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     PDF Button
 #
       self.pdfButton= QtWidgets.QPushButton("PDF")
+      self.pdfButton.setEnabled(False)
       self.vbox.addWidget(self.pdfButton)
       self.vbox.setAlignment(self.pdfButton,QtCore.Qt.AlignTop)
       self.pdfButton.clicked.connect(self.do_pdf)
@@ -615,7 +637,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
          self.pildevice.put_cmd(CMD_TRACE)
       if self.printer_modeswitch== MODESWITCH_NORM:
          self.pildevice.put_cmd(CMD_NORM)
-
+      self.toggle_active()
       return
 #
 #     disable, clear the GUI queue, stop the timer
@@ -643,6 +665,27 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
    def becomes_invisible(self):
       pass
 #
+#     active/inactive: enable/disable GUI controls
+#
+   def toggle_active(self):
+      if self.parent.active:
+         self.radbutMan.setEnabled(True)
+         self.radbutTrace.setEnabled(True)
+         self.radbutNorm.setEnabled(True)
+         self.clearButton.setEnabled(True)
+         self.printButton.setEnabled(True)
+         self.advanceButton.setEnabled(True)
+         self.pdfButton.setEnabled(True)
+      else:
+         self.radbutMan.setEnabled(False)
+         self.radbutTrace.setEnabled(False)
+         self.radbutNorm.setEnabled(False)
+         self.clearButton.setEnabled(False)
+         self.printButton.setEnabled(False)
+         self.advanceButton.setEnabled(False)
+         self.pdfButton.setEnabled(False)
+
+#
 #     action scripts
 #
    def do_clear(self):
@@ -669,9 +712,11 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       return
 
    def do_pdf(self):
-      options=cls_PdfOptions.getPdfOptions(3,"")
+      self.pdf_columns=PILCONFIG.get(self.name,"pdfcolumns",3)
+      options=cls_PdfOptions.getPdfOptions(self.pdf_columns,"")
       if options== "":
          return
+      PILCONFIG.put(self.name,"pdfcolumns",options[1])
       self.printview.pdf(options[0],options[1],options[2])
       return
 #
@@ -768,7 +813,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
 class cls_ScrolledHP82162AView(QtWidgets.QWidget):
 
-   def __init__(self,parent,name,pixelsize,pdfpixelsize,linebuffersize):
+   def __init__(self,parent,name,pixelsize,pdfpixelsize,papersize,linebuffersize):
       super().__init__(parent)
       self.parent=parent
       self.name=name
@@ -778,7 +823,7 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
       
       self.hbox= QtWidgets.QHBoxLayout()
       self.scrollbar= QtWidgets.QScrollBar()
-      self.hp82162awidget= cls_HP82162aView(self,pixelsize,pdfpixelsize,linebuffersize)
+      self.hp82162awidget= cls_HP82162aView(self,pixelsize,pdfpixelsize,papersize,linebuffersize)
       self.hp82162awidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hp82162awidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hbox.addWidget(self.hp82162awidget)
@@ -833,7 +878,7 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
 #
 class cls_HP82162aView(QtWidgets.QGraphicsView):
 
-   def __init__(self,parent,pixelsize,pdfpixelsize,linebuffersize):
+   def __init__(self,parent,pixelsize,pdfpixelsize,papersize,linebuffersize):
       super().__init__()
       self.parent=parent
       self.pixelsize= pixelsize
@@ -844,7 +889,7 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
       self.pdfh=PRINTER_CHARACTER_HEIGHT_PIXELS*pdfpixelsize
       self.rows= 0
       self.linebuffersize= linebuffersize
-      self.papersize=0 # A4
+      self.papersize= papersize
 #
 #     initialize line bitmap buffer
 #
@@ -862,19 +907,8 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
       self.printscene= cls_hp82162a_scene(self,self.pixelsize,self.w, self.h)
       self.setScene(self.printscene)
       self.reset()
-#
-#     initialize PDF printer
-#
-      self.printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
-      self.printer.setOrientation(QtPrintSupport.QPrinter.Portrait)
-      if self.papersize==0:
-         self.printer.setPageSize(QtPrintSupport.QPrinter.A4)
-      else:
-         self.printer.setPageSize(QtPrintSupport.QPrinter.Letter)
 
-      self.printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
-      self.pdfpainter = QtGui.QPainter()
-      self.pdfscene=QtWidgets.QGraphicsScene()
+      self.pdfprinter=None
 #
 #     initialize refresh timer
 #
@@ -904,7 +938,7 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #
    def resizeEvent(self,event):
       h=self.height()
-      self.rows=h // (PRINTER_CHARACTER_HEIGHT_PIXELS*self.pixelsize) -1
+      self.rows=h // (PRINTER_CHARACTER_HEIGHT_PIXELS*self.pixelsize) 
       self.printscene.set_scenesize(self.rows)
       return
 
@@ -923,10 +957,10 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
       if self.lb_anz < self.linebuffersize:
          self.lb_anz+=1
          self.lb_current+=1
-         self.lb[self.lb_current]=cls_hp82162a_line(line,col_idx,self.pixelsize,self.w,self.h)
+         self.lb[self.lb_current]=cls_hp82162a_line(line,col_idx,self.pixelsize,)
       else:
          self.lb= self.lb[1:] + self.lb[:1]
-         self.lb[self.lb_current]=cls_hp82162a_line(line,col_idx,self.pixelsize,self.w,self.h)
+         self.lb[self.lb_current]=cls_hp82162a_line(line,col_idx,self.pixelsize,)
       self.lb_position=self.lb_current- self.rows+1
       if self.lb_position < 0:
          self.lb_position=0
@@ -946,92 +980,41 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #
    def pdf(self,filename,columns,title):
       
-      left_margin=0
-      if self.lb_anz==0:
-         return
-      scene_w=self.pdfw*PDF_MAX_COLS+PDF_COLUMN_SPACING*2+PDF_MARGINS*2
-      scene_h=self.pdfh*PDF_LINES+PDF_MARGINS*2
-      left_margin=(scene_w - (self.pdfw*columns+PDF_COLUMN_SPACING*(columns-1)+PDF_MARGINS*2))/2+PDF_MARGINS
-      self.printer.setOutputFileName(filename)
-      self.pdfscene.setSceneRect(0,0,scene_w,scene_h)
-      items= [None] * PDF_LINES* columns
-#
-#     initialize first page
-#
-      y=PDF_MARGINS
-      x=left_margin
-      i=0;
-      k=0;
-      self.pdfpainter.begin(self.printer)
+      self.pdfprinter= cls_pdfprinter(self.papersize,PDF_ORIENTATION_PORTRAIT,filename, title, True, columns)
+      self.pdfprinter.begin()
 # 
-#     print header and page number
+#     process lines
 #
-      font=QtGui.QFont()
-      font.setPixelSize(20)
-      titleitem=QtWidgets.QGraphicsSimpleTextItem(title)   
-      titleitem.setFont(font)
-      self.pdfscene.addItem(titleitem)
-      titleitem.setPos(PDF_MARGINS,PDF_MARGINS-titleitem.boundingRect().height()-10)
-      pageno=1
-      pagenumberitem=QtWidgets.QGraphicsSimpleTextItem("Page "+str(pageno))   
-      pagenumberitem.setFont(font)
-      self.pdfscene.addItem(pagenumberitem)
-      pagenumberitem.setPos(scene_w-pagenumberitem.boundingRect().width(),PDF_MARGINS-titleitem.boundingRect().height()-10)
-#
-#     process pages
-#
+      k=0
       while True:
 #
 #         end of output
 #
           if k == self.lb_anz:
-             self.pdfscene.render(self.pdfpainter)
              break;
-#
-#         column break
-#
-          if (i % PDF_LINES)==0 and i>0:
-             x+=PDF_COLUMN_SPACING+self.pdfw
-             y=PDF_MARGINS
-#
-#         page break
-#
-          if i == PDF_LINES*columns:
-             self.pdfscene.render(self.pdfpainter)
-             self.printer.newPage()
-             for l in range(PDF_LINES*columns):
-                self.pdfscene.removeItem(items[l])
-             i=0
-             y=PDF_MARGINS
-             x=left_margin
-             pageno+=1
              pagenumberitem.setText("Page "+str(pageno))
           item_args= cls_hp82162a_line.from_hp82162a_line(self.lb[k])
-          items[i]= cls_hp82162a_line(item_args[0],item_args[1],self.pdfpixelsize,item_args[3],item_args[4])
-          self.pdfscene.addItem(items[i])
-          items[i].setPos(x,y)
-          y+=self.pdfh
-          i+=1
+          item= cls_hp82162a_line(item_args[0],item_args[1],self.pdfpixelsize)
+          self.pdfprinter.print_item(item)
           k+=1
-      for l in range(i):
-         self.pdfscene.removeItem(items[l])
-      self.pdfscene.removeItem(titleitem)
-      self.pdfscene.removeItem(pagenumberitem)
-      self.pdfpainter.end()
+      self.pdfprinter.end()
 
 #
 # custom class for line bitmap ----------------------------------------------
 #
 class cls_hp82162a_line(QtWidgets.QGraphicsItem):
 
-   def __init__(self,line, col_idx, pixelsize,width,height):
+   def __init__(self,line, col_idx, pixelsize):
       super().__init__()
       self.pixelsize= pixelsize
-      self.w=width
-      self.h=height
+      self.w=PRINTER_WIDTH_CHARS*PRINTER_CHARACTER_WIDTH_PIXELS*pixelsize
+      self.h=PRINTER_CHARACTER_HEIGHT_PIXELS*pixelsize
       self.col_idx=col_idx
-      self.rect= QtCore.QRectF(0,0,width,height)
+      self.rect= QtCore.QRectF(0,0,self.w,self.h)
       self.line=bytes(line[:col_idx])
+
+   def setPos(self,x,y):
+      super().setPos(x,y-self.h)
 
    def boundingRect(self):
       return self.rect
@@ -1056,7 +1039,7 @@ class cls_hp82162a_line(QtWidgets.QGraphicsItem):
    @classmethod
    def from_hp82162a_line(cls, class_instance):
       line= copy.deepcopy(class_instance.line)
-      return(line,class_instance.col_idx,class_instance.pixelsize,class_instance.w,class_instance.h)
+      return(line,class_instance.col_idx)
 
 #
 # custom class for hp82162a graphics scene
@@ -1104,7 +1087,7 @@ class cls_hp82162a_scene(QtWidgets.QGraphicsScene):
       
       if end >= self.parent.lb_anz:
          end=self.parent.lb_anz
-      y=0
+      y=self.h
       j=0
       for i in range(start,end):
          self.si[j]=self.parent.lb[i]

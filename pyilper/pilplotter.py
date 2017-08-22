@@ -46,6 +46,8 @@
 # 19.08.2017 jsi
 # - fixed refactoring bug: plotter HP-IL device was accidently disabled
 #   permanently when the disable method was called
+# 22.08.2017 jsi
+# - disable gui elements if not active
 #
 
 from __future__ import print_function
@@ -226,19 +228,22 @@ class cls_tabplotter(cls_tabgeneric):
    def do_changeLoglevel(self,text):
       self.loglevel=self.comboLoglevel.currentIndex()
       PILCONFIG.put(self.name,'loglevel',self.loglevel)
-
+#
+#  enable pildevice and gui object
+#
    def enable(self):
       super().enable()
       self.parent.commobject.register(self.pildevice,self.name)
-      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
+      self.pildevice.setactive(self.active)
       self.cbLogging.setEnabled(True)
       self.comboLoglevel.setEnabled(True)
       if self.logging:
          self.cbLogging.logOpen()
       self.pildevice.enable()
       self.guiobject.enable()
-
-
+#
+#  disable pildevice and gui object
+#
    def disable(self):
       self.pildevice.disable()
       self.guiobject.disable()
@@ -247,6 +252,12 @@ class cls_tabplotter(cls_tabgeneric):
       self.cbLogging.setEnabled(False)
       self.comboLoglevel.setEnabled(False)
       super().disable()
+#
+#  active/inactive: enable/disable GUI controls
+#
+   def toggle_active(self):
+      self.guiobject.toggle_active()
+
 #
 #  becomes visible, refresh content, activate update and blink
 #
@@ -287,7 +298,7 @@ class cls_LedWidget(QtWidgets.QWidget):
       self.setFixedSize(size,size)
       self.repaint()
 #
-# custom class mark for digitized points -------------------------------------------
+# custom class mark for digitized points --------------------------------------
 #
 
 class cls_DigitizedMark(QtWidgets.QGraphicsItem):
@@ -311,7 +322,7 @@ class cls_DigitizedMark(QtWidgets.QGraphicsItem):
         painter.drawLine(0,10,10,0)
 
 #
-# custom class mark for Scaling points --------------------------------------------
+# custom class mark for Scaling points ----------------------------------------
 #
 class cls_P1P2Mark(QtWidgets.QGraphicsTextItem):
 
@@ -531,6 +542,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     push buttons "Config" - starts configuration window
 #
       self.configButton= QtWidgets.QPushButton("Config")
+      self.configButton.setEnabled(False)
       self.vbox.addWidget(self.configButton)
       self.vbox.setAlignment(self.configButton,QtCore.Qt.AlignTop)
       self.configButton.clicked.connect(self.do_config)
@@ -538,6 +550,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     push buttons "View" - opens external view window
 #
       self.viewButton= QtWidgets.QPushButton("View")
+      self.viewButton.setEnabled(False)
       self.vbox.addWidget(self.viewButton)
       self.vbox.setAlignment(self.viewButton,QtCore.Qt.AlignTop)
       self.viewButton.clicked.connect(self.do_view)
@@ -545,14 +558,16 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     push buttons "Enter" - digitize: this button is only enabled in digitizing mode
 #
       self.digiButton= QtWidgets.QPushButton("Enter")
+      self.digiButton.setEnabled(False)
       self.vbox.addWidget(self.digiButton)
       self.vbox.setAlignment(self.digiButton,QtCore.Qt.AlignTop)
       self.digiButton.clicked.connect(self.do_enter)
-      self.digiButton.setEnabled(False)
+      self.digibutton_state= self.digiButton.isEnabled()
 #
 #     push buttons "P1/p2" - show or alter P1/P2
 #
       self.p1p2Button= QtWidgets.QPushButton("P1/P2")
+      self.p1p2Button.setEnabled(False)
       self.vbox.addWidget(self.p1p2Button)
       self.vbox.setAlignment(self.p1p2Button,QtCore.Qt.AlignTop)
       self.p1p2Button.clicked.connect(self.do_p1p2)
@@ -561,6 +576,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     clears the graphics scene and issues an "IN" command to the plotter emulator
 #
       self.clearButton= QtWidgets.QPushButton("Clear")
+      self.clearButton.setEnabled(False)
       self.vbox.addWidget(self.clearButton)
       self.vbox.setAlignment(self.clearButton,QtCore.Qt.AlignTop)
       self.clearButton.clicked.connect(self.do_clear)
@@ -568,6 +584,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     push buttons "Generate PDF"
 #
       self.printButton= QtWidgets.QPushButton("PDF")
+      self.printButton.setEnabled(False)
       self.vbox.addWidget(self.printButton)
       self.vbox.setAlignment(self.printButton,QtCore.Qt.AlignTop)
       self.printButton.clicked.connect(self.do_print)
@@ -575,6 +592,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     push buttons "Show Status": shows status window with status and error information
 #
       self.statusButton= QtWidgets.QPushButton("Status")
+      self.statusButton.setEnabled(False)
       self.vbox.addWidget(self.statusButton)
       self.vbox.setAlignment(self.statusButton,QtCore.Qt.AlignTop)
       self.statusButton.clicked.connect(self.do_status)
@@ -664,6 +682,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
    def enable(self):
       self.UpdateTimer.start(UPDATE_TIMER)
+      self.toggle_active()
       return
 #
 #     disable: reset LED, clear the GUI command queue, stop the timer
@@ -691,6 +710,26 @@ class cls_PlotterWidget(QtWidgets.QWidget):
    def becomes_invisible(self):
       pass
 
+#     active/inactive: enable/disable GUI controls
+#
+   def toggle_active(self):
+      if self.parent.active:
+         self.configButton.setEnabled(True)
+         self.digiButton.setEnabled(self.digibutton_state)
+         self.viewButton.setEnabled(True)
+         self.p1p2Button.setEnabled(True)
+         self.clearButton.setEnabled(True)
+         self.printButton.setEnabled(True)
+         self.statusButton.setEnabled(True)
+      else:
+         self.configButton.setEnabled(False)
+         self.digibutton_state= self.digiButton.isEnabled()
+         self.digiButton.setEnabled(False)
+         self.viewButton.setEnabled(False)
+         self.p1p2Button.setEnabled(False)
+         self.clearButton.setEnabled(False)
+         self.printButton.setEnabled(False)
+         self.statusButton.setEnabled(False)
 #
 #     action: clear button
 #     if in digitize mode: leave digitize mode

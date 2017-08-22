@@ -54,7 +54,6 @@
 # 16.01.2016 jsi
 # - revert disabling filename and drivetype controls if the drive is enabled
 # - allow arbitrary disk layouts 
-
 # 08.01.2016 jsi
 # - introduced lifcore, refactoring
 # - do not lock pildevice, if pyilper is disabled
@@ -314,6 +313,8 @@
 #   configured. The row height is now properly adjusted to the font height
 # 17.08.2017 jsi
 # - set did to empty string instead of none
+# 20.08.2017 jsi
+# - add create barcode to context menu
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -327,7 +328,7 @@ from .pilconfig import PilConfigError, PILCONFIG
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
 from .lifcore import *
-from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils
+from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
 
 
 class cls_tabdrive(cls_tabgeneric):
@@ -785,11 +786,21 @@ class DirTableView(QtWidgets.QTableView):
             purgeAction = menu.addAction("Purge")
             renameAction = menu.addAction("Rename")
             ft=get_finfo_name(liffiletype)
+#
+#           view action
+#
+            viewAction= None
             if ft is not None:
                if get_finfo_type(ft)[1] != "":
                   viewAction= menu.addAction("View")
-            else:
-               viewAction= None
+#
+#           create barcode action
+#
+            barcodeAction= None
+            if ft is not None:
+               if ft== 0xE080 or ft== 0xE0D0:
+                  barcodeAction= menu.addAction("Barcode")
+            
             action = menu.exec_(self.mapToGlobal(event.pos()))
             if action== None:
                event.accept()
@@ -806,6 +817,8 @@ class DirTableView(QtWidgets.QTableView):
                 self.parent.refresh()
             elif action== viewAction:
                 cls_lifview.exec(imagefile, liffilename, liffiletype,workdir, charset)
+            elif action== barcodeAction:
+                cls_lifbarcode.exec(imagefile,liffilename,ft)
             event.accept()
 
 class cls_LifDirWidget(QtWidgets.QWidget):
