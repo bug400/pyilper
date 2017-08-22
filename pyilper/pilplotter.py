@@ -1410,7 +1410,7 @@ class cls_HP7470(QtCore.QObject):
          self.proc.stdin.write("\n")
          self.proc.stdin.flush()
          log_line+="\n"
-         self.guiobject.put_cmd([CMD_LOG,1,log_line])
+         self.guiobject.put_cmd([CMD_LOG,0,log_line])
       except OSError as e:
          self.proc.stdin.close()
          self.setInvalid(102,"ipc input/output error")
