@@ -48,6 +48,8 @@
 #   permanently when the disable method was called
 # 22.08.2017 jsi
 # - disable gui elements if not active
+# 24.08.2017 jsi
+# - error in logging fixed
 #
 
 from __future__ import print_function

@@ -24,26 +24,28 @@
 #
 #
 from PyQt5 import QtCore
-from .pilpipes import PipesError
+from .pilsocket import SocketError
 #
 # PIL-Box thread class --------------------------------------------------------
 #
 # Changelog
+# 25.08.2017 jsi
+# - frist version
 
 
-class cls_PilPipesThread(QtCore.QThread):
+class cls_PilSocketThread(QtCore.QThread):
 
-   def __init__(self, parent,pilpipes):
+   def __init__(self, parent,pilsocket):
       super().__init__(parent)
       self.parent=parent
-      self.pilpipes= pilpipes
+      self.pilsocket= pilsocket
       self.pause= False
       self.running=True
       self.cond=QtCore.QMutex()
       self.stop=QtCore.QMutex()
       self.pauseCond=QtCore.QWaitCondition()
       self.stoppedCond=QtCore.QWaitCondition()
-      self.parent.emit_message("not connected to named pipes")
+      self.parent.emit_message("not connected to socket")
 
    def isRunning(self):
       return(self.running)
@@ -59,7 +61,7 @@ class cls_PilPipesThread(QtCore.QThread):
       self.stop.lock()
       self.stoppedCond.wait(self.stop)
       self.stop.unlock()
-      self.parent.emit_message("named pipes connection suspended")
+      self.parent.emit_message("socket connection suspended")
 #
 # restart paused thread
 #
@@ -70,7 +72,7 @@ class cls_PilPipesThread(QtCore.QThread):
       self.pause= False
       self.cond.unlock()
       self.pauseCond.wakeAll()
-      self.parent.emit_message("connected to named pipes")
+      self.parent.emit_message("connected to socket")
 #
 #  finish thread
 #
@@ -94,7 +96,7 @@ class cls_PilPipesThread(QtCore.QThread):
    def run(self):
 #
       try:
-         self.parent.emit_message("connected to named pipes")
+         self.parent.emit_message("connected to socket")
 #
 #        Thread main loop    
 #
@@ -110,19 +112,23 @@ class cls_PilPipesThread(QtCore.QThread):
                self.stop.unlock()
                self.pauseCond.wait(self.cond)
             self.cond.unlock()
+            if self.pilsocket.isConnected():
+               self.parent.emit_message('client connected')
+            else:
+               self.parent.emit_message('waiting for client')
 #
-#           read frame from input pipe
+#           read byte from socket
 #
-            frame=self.pilpipes.read()
-            if frame == None:
+            byt=self.pilsocket.read()
+            if byt == None:
                continue
 #
 #           process frame
 #
-            self.pilpipes.process(frame)
+            self.pilsocket.process(ord(byt))
 
-      except PipesError as e:
-         self.parent.emit_message('named pipes disconnected after error. '+e.msg+': '+e.add_msg)
+      except SocketError as e:
+         self.parent.emit_message('socket disconnected after error. '+e.msg+': '+e.add_msg)
          self.parent.emit_crash()
       else:
-         self.parent.emit_message('named pipes disconnected')
+         self.parent.emit_message('socket disconnected')

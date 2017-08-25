@@ -131,6 +131,8 @@
 # - minimum display position is 50,50 - otherwise some display manager hide
 #   the menu bar (e.g. RASPBIAN)
 # - error in exception handling of reading the config file fixed
+# 23.08.2017 jsi:
+# - used pilsocket instead of pilpipes
 #
 import os
 import sys
@@ -150,8 +152,8 @@ from .pilbox import cls_pilbox, PilBoxError
 from .pilboxthread import cls_PilBoxThread
 from .piltcpip import cls_piltcpip, TcpIpError
 from .piltcpipthread import cls_PilTcpIpThread
-from .pilpipes import cls_pilpipes, PipesError
-from .pilpipesthread import cls_PilPipesThread
+from .pilsocket import cls_pilsocket, SocketError
+from .pilsocketthread import cls_PilSocketThread
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
 from .pilhp82162a import cls_tabhp82162a
 from .pilplotter import cls_tabplotter, cls_PenConfigWindow
@@ -164,7 +166,7 @@ STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 MODE_PILBOX=0         # connect to PIL-Box
 MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
-MODE_PIPES=2          # conect via named pipes
+MODE_SOCKET=2         # conect via Unix domain socket
 
 TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a}
 
@@ -247,8 +249,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
-         PILCONFIG.get(self.name,"inpipename","/tmp/pilinpipe")
-         PILCONFIG.get(self.name,"outpipename","/tmp/piloutpipe")
+         PILCONFIG.get(self.name,"socketname","/tmp/pilsocket")
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
@@ -376,11 +377,11 @@ class cls_pyilper(QtCore.QObject):
             reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
       else:
-         self.commobject= cls_pilpipes(PILCONFIG.get(self.name,"inpipename"),PILCONFIG.get(self.name,"outpipename"))
+         self.commobject= cls_pilsocket(PILCONFIG.get(self.name,"socketname"))
          try:
             self.commobject.open()
-            self.commthread= cls_PilPipesThread(self.ui,self.commobject)
-         except PipesError as e:
+            self.commthread= cls_PilSocketThread(self.ui,self.commobject)
+         except SocketError as e:
             self.commobject.close()
             self.commobject=None
             reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)

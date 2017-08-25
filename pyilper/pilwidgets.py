@@ -131,6 +131,8 @@
 # 01.08.2017 jsi
 # - add HP82162A tab
 # - refactoring: tab classes moved to pilxxxx.py 
+# 23.08.2017 jsi
+# - socket config replaced by unix domain socket config
 #
 import os
 import glob
@@ -618,8 +620,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__idyframe__= PILCONFIG.get(self.__name__,"idyframe")
       self.__remotehost__= PILCONFIG.get(self.__name__,"remotehost")
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
-      self.__inpipename__= PILCONFIG.get(self.__name__,"inpipename")
-      self.__outpipename__= PILCONFIG.get(self.__name__,"outpipename")
+      self.__socketname__= PILCONFIG.get(self.__name__,"socketname")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
       self.__termsize__= PILCONFIG.get(self.__name__,"terminalsize")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
@@ -730,20 +731,15 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
       if isLINUX() or isMACOS():
          self.radbutPipe = QtWidgets.QRadioButton(self.gbox)
-         self.radbutPipe.setText("Pipes")
+         self.radbutPipe.setText("Unix Domain socket (experimental)")
          self.radbutPipe.clicked.connect(self.setCheckBoxes)
          self.vboxgbox.addWidget(self.radbutPipe)
-         self.playout=QtWidgets.QGridLayout()
-         self.playout.addWidget(QtWidgets.QLabel("Input pipe:"),0,0)
-         self.edtInpipe=QtWidgets.QLineEdit()
-         self.edtInpipe.setText(self.__inpipename__)
-         self.playout.addWidget(self.edtInpipe,0,1)
-         self.playout.addWidget(QtWidgets.QLabel("Output pipe:"),1,0)
-         self.playout.addWidget(self.edtInpipe,0,1)
-         self.edtOutpipe=QtWidgets.QLineEdit()
-         self.playout.addWidget(self.edtOutpipe,1,1)
-         self.edtOutpipe.setText(self.__outpipename__)
-         self.vboxgbox.addLayout(self.playout)
+         self.slayout=QtWidgets.QGridLayout()
+         self.slayout.addWidget(QtWidgets.QLabel("Unix Domain socket:"),0,0)
+         self.edtSocket=QtWidgets.QLineEdit()
+         self.slayout.addWidget(self.edtSocket,0,1)
+         self.edtSocket.setText(self.__socketname__)
+         self.vboxgbox.addLayout(self.slayout)
 
 #
 #     Init radio buttons
@@ -936,8 +932,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
 
       if isLINUX() or isMACOS():
-         PILCONFIG.put(self.__name__,"inpipename", self.edtInpipe.text())
-         PILCONFIG.put(self.__name__,"outpipename", self.edtOutpipe.text())
+         PILCONFIG.put(self.__name__,"socketname", self.edtSocket.text())
       super().accept()
 
    def do_cancel(self):
