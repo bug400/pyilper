@@ -133,6 +133,8 @@
 # - refactoring: tab classes moved to pilxxxx.py 
 # 23.08.2017 jsi
 # - socket config replaced by unix domain socket config
+# 31.08.2017 jsi
+# - changed config param terminalsize to terminalwidth
 #
 import os
 import glob
@@ -273,9 +275,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
 #     Set default values
 #
-      self.termsize=PILCONFIG.get("pyilper","terminalsize")
-      self.cols=int(self.termsize.split(sep="x")[0])
-      self.rows=int(self.termsize.split(sep="x")[1])
+      self.cols=PILCONFIG.get("pyilper","terminalwidth")
 #
       self.colorscheme=PILCONFIG.get("pyilper","colorscheme")
 #
@@ -290,24 +290,21 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #     Build GUI 
 #
       self.scrollupbuffersize=PILCONFIG.get("pyilper","scrollupbuffersize")
-      if self.scrollupbuffersize < self.rows:
-         self.scrollupbuffersize= self.rows
+      if self.scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
+         self.scrollupbuffersize= TERMINAL_MINIMUM_ROWS
 
-      self.qterminal=QScrolledTerminalWidget(self,self.font_name, self.font_size, self.cols, self.rows,self.colorscheme)
+      self.qterminal=QScrolledTerminalWidget(self,self.font_size, self.cols, self.colorscheme,self.scrollupbuffersize)
 
       self.hbox1= QtWidgets.QHBoxLayout()
       self.hbox1.addStretch(1)
       self.hbox1.addWidget(self.qterminal)
-      self.hbox1.setAlignment(self.qterminal,QtCore.Qt.AlignHCenter)
-      self.hbox1.setContentsMargins(20,20,20,20)
+      self.hbox1.setContentsMargins(10,10,10,10)
       self.hbox1.addStretch(1)
       self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
-      self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
       if self.cblog:
          self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
          self.hbox2.addWidget(self.cbLogging)
-         self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
       if self.cbcharset:
          self.lbltxtc=QtWidgets.QLabel("Charset ")
          self.comboCharset=QtWidgets.QComboBox()
@@ -319,11 +316,10 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.hbox2.addStretch(1)
       self.vbox= QtWidgets.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
-      self.vbox.setAlignment(self.hbox1,QtCore.Qt.AlignTop)
       self.vbox.addLayout(self.hbox2)
-      self.vbox.setAlignment(self.hbox2,QtCore.Qt.AlignTop)
       self.setLayout(self.vbox)
-      self.hpterm=HPTerminal(self.cols,self.rows,self.scrollupbuffersize,self.qterminal)
+      self.hpterm=HPTerminal(self.cols,self.scrollupbuffersize,self.qterminal)
+      self.qterminal.setHPTerminal(self.hpterm)
 #
 #     initialize logging checkbox
 #
@@ -400,6 +396,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 class HelpError(Exception):
    def __init__(self,value):
       self.value=value
+
    def __str__(self):
       return repr(self.value)
 
@@ -523,7 +520,7 @@ class cls_TtyWindow(QtWidgets.QDialog):
 
       self.label= QtWidgets.QLabel()
       self.label.setText("Select or enter serial port")
-      self.label.setAlignment(QtCore.Qt.AlignCenter)
+#     self.label.setAlignment(QtCore.Qt.AlignCenter)
 
       self.__ComboBox__ = QtWidgets.QComboBox() 
       self.__ComboBox__.setEditable(True)
@@ -622,7 +619,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
       self.__socketname__= PILCONFIG.get(self.__name__,"socketname")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
-      self.__termsize__= PILCONFIG.get(self.__name__,"terminalsize")
+      self.__termsize__= PILCONFIG.get(self.__name__,"terminalwidth")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
       self.__colorscheme__= PILCONFIG.get(self.__name__,"colorscheme")
       self.__termcharsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
@@ -656,17 +653,17 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxtty= QtWidgets.QHBoxLayout()
       self.lbltxt1=QtWidgets.QLabel("Serial Device: ")
       self.hboxtty.addWidget(self.lbltxt1)
-      self.hboxtty.setAlignment(self.lbltxt1,QtCore.Qt.AlignLeft)
+#     self.hboxtty.setAlignment(self.lbltxt1,QtCore.Qt.AlignLeft)
       self.lblTty=QtWidgets.QLabel()
       self.lblTty.setText(self.__tty__)
       self.hboxtty.addWidget(self.lblTty)
-      self.hboxtty.setAlignment(self.lblTty,QtCore.Qt.AlignLeft)
+#     self.hboxtty.setAlignment(self.lblTty,QtCore.Qt.AlignLeft)
       self.hboxtty.addStretch(1)
       self.butTty=QtWidgets.QPushButton()
       self.butTty.setText("change")
       self.butTty.pressed.connect(self.do_config_Interface)
       self.hboxtty.addWidget(self.butTty)
-      self.hboxtty.setAlignment(self.butTty,QtCore.Qt.AlignRight)
+#     self.hboxtty.setAlignment(self.butTty,QtCore.Qt.AlignRight)
       self.vboxgbox.addLayout(self.hboxtty)
 #
 #     tty speed combo box
@@ -674,7 +671,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxbaud= QtWidgets.QHBoxLayout()
       self.lbltxt2=QtWidgets.QLabel("Baud rate ")
       self.hboxbaud.addWidget(self.lbltxt2)
-      self.hboxbaud.setAlignment(self.lbltxt2,QtCore.Qt.AlignLeft)
+#     self.hboxbaud.setAlignment(self.lbltxt2,QtCore.Qt.AlignLeft)
       self.comboBaud=QtWidgets.QComboBox()
       i=0
       for baud in BAUDRATES:
@@ -762,17 +759,17 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxwdir= QtWidgets.QHBoxLayout()
       self.lbltxt6=QtWidgets.QLabel("Directory: ")
       self.hboxwdir.addWidget(self.lbltxt6)
-      self.hboxwdir.setAlignment(self.lbltxt6,QtCore.Qt.AlignLeft)
+#     self.hboxwdir.setAlignment(self.lbltxt6,QtCore.Qt.AlignLeft)
       self.lblwdir=QtWidgets.QLabel()
       self.lblwdir.setText(self.__workdir__)
       self.hboxwdir.addWidget(self.lblwdir)
-      self.hboxwdir.setAlignment(self.lblwdir,QtCore.Qt.AlignLeft)
+#     self.hboxwdir.setAlignment(self.lblwdir,QtCore.Qt.AlignLeft)
       self.hboxwdir.addStretch(1)
       self.butwdir=QtWidgets.QPushButton()
       self.butwdir.setText("change")
       self.butwdir.pressed.connect(self.do_config_Workdir)
       self.hboxwdir.addWidget(self.butwdir)
-      self.hboxwdir.setAlignment(self.butwdir,QtCore.Qt.AlignRight)
+#     self.hboxwdir.setAlignment(self.butwdir,QtCore.Qt.AlignRight)
       self.vboxgboxw.addLayout(self.hboxwdir)
       self.vbox0.addWidget(self.gboxw)
 #
@@ -783,20 +780,19 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gboxt.setTitle("Terminal Settings (restart required)")
       self.gridt= QtWidgets.QGridLayout()
       self.gridt.setSpacing(3)
-      self.gridt.addWidget(QtWidgets.QLabel("Termial size"),1,0)
+      self.gridt.addWidget(QtWidgets.QLabel("Terminal width"),1,0)
       self.gridt.addWidget(QtWidgets.QLabel("Scroll up buffer size"),2,0)
       self.gridt.addWidget(QtWidgets.QLabel("Color Scheme"),3,0)
       self.gridt.addWidget(QtWidgets.QLabel("Font Size"),4,0)
 
-      self.comboRes=QtWidgets.QComboBox()
-      self.comboRes.addItem("80x24")
-      self.comboRes.addItem("80x40")
-      self.comboRes.addItem("120x25") 
-      self.gridt.addWidget(self.comboRes,1,1)
-      self.comboRes.setCurrentIndex(self.comboRes.findText(self.__termsize__))
+      self.comboTerminalWidth=QtWidgets.QComboBox()
+      self.comboTerminalWidth.addItem("80")
+      self.comboTerminalWidth.addItem("120") 
+      self.gridt.addWidget(self.comboTerminalWidth,1,1)
+      self.comboTerminalWidth.setCurrentIndex(self.comboTerminalWidth.findText(str(self.__termsize__)))
 
       self.spinScrollBufferSize=QtWidgets.QSpinBox()
-      self.spinScrollBufferSize.setMinimum(0)
+      self.spinScrollBufferSize.setMinimum(TERMINAL_MINIMUM_ROWS)
       self.spinScrollBufferSize.setMaximum(9999)
       self.spinScrollBufferSize.setValue(self.__scrollupbuffersize__)
       self.gridt.addWidget(self.spinScrollBufferSize,2,1)
@@ -924,7 +920,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"remotehost", self.edtRemoteHost.text())
       PILCONFIG.put(self.__name__,"remoteport", int(self.edtRemotePort.text()))
       PILCONFIG.put(self.__name__,"workdir", self.lblwdir.text())
-      PILCONFIG.put(self.__name__,"terminalsize", self.comboRes.currentText())
+      PILCONFIG.put(self.__name__,"terminalwidth", int(self.comboTerminalWidth.currentText()))
       PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
       PILCONFIG.put(self.__name__,"colorscheme", self.comboCol.currentText())
       PILCONFIG.put(self.__name__,"terminalcharsize",self.spinTermCharsize.value())
@@ -1464,7 +1460,8 @@ class cls_ui(QtWidgets.QMainWindow):
 
       self.tabs=QtWidgets.QTabWidget()
       self.vbox= QtWidgets.QVBoxLayout()
-      self.vbox.addWidget(self.tabs,1)
+#     self.vbox.addWidget(self.tabs,1)
+      self.vbox.addWidget(self.tabs)
       self.centralwidget.setLayout(self.vbox)
 #
 #     Status bar

@@ -324,9 +324,8 @@ class cls_lifbarcode(QtWidgets.QDialog):
       super().__init__()
 
    @staticmethod
-   def exec (lifimagefile, liffilename, ft):
+   def exec (lifimagefile, liffilename, ft,papersize):
       d= cls_lifbarcode()
-      papersize=PILCONFIG.get("pyilper","papersize")
 #
 #     get output file name
 #

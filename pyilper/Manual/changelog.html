@@ -128,17 +128,26 @@ height of the directory entries are now properly adjusted to the font size.</li>
 <h3 class="w3-text-teal">pyILPER 1.6.0</h3>
 
 <ul class="w3-ul">
-<li>The HP82162A printer is now included as virtual HP-IL device. It is not
-included in the default tab configuration. Thus, you must add it with the
-<em>Virtual HP-IL device configuration</em> in the file menu.</li>
+
+<li>The number of lines of the printer, scope and drive directory output is adjusted
+to the size of the main window.</li>
+
+<li>The output window of the plotter is adjusted to the size of the main window
+maintaining the aspect ratio of the papsersize setting (see below).</li>
+
+<li>The <em>terminal size</em> configuration parameter was replaced by the
+parameter <em>terminal width</em>.</li>
+
+<li>The previous size of the <em>pyILPER</em> main window is restored
+on start of the program.</li>
+
+<li>The HP82162A printer is now included as virtual HP-IL device. </li>
 
 <li>Barcodes can be created from the context menu in the drive tab for
 HP-41 program and SDATA files.</li>
 
 <li>The paper size option was moved from the plotter configuration to the
-<em>pyILPER</em> configuration in the file menu. Since this configuration
-parameter is global now you must reconfigure it if you used letter size
-in the plotter configuration.</li>
+<em>pyILPER</em> configuration in the file menu.<li> 
 
 <li>Improved diagnostics, if the configuration file is corrupt.</li>
 </ul>

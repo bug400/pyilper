@@ -57,7 +57,6 @@ class cls_tabscope(cls_tabtermgeneric):
       self.cbShowIdy.setEnabled(False)
       self.cbShowIdy.stateChanged.connect(self.do_show_idy)
       self.hbox2.addWidget(self.cbShowIdy)
-      self.hbox2.setAlignment(self.cbShowIdy,QtCore.Qt.AlignLeft)
 
       self.logMode= PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
       self.lbltxtc=QtWidgets.QLabel("Log mode ")

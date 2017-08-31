@@ -133,6 +133,10 @@
 # - error in exception handling of reading the config file fixed
 # 23.08.2017 jsi:
 # - used pilsocket instead of pilpipes
+# 30.08.2017 jsi:
+# - save and restore main window size
+# 31.08.2017 jsi:
+# - config parameter terminalsize changed to terminalwidth
 #
 import os
 import sys
@@ -244,7 +248,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"mode",MODE_PILBOX)
          PILCONFIG.get(self.name,"workdir",os.path.expanduser('~'))
          PILCONFIG.get(self.name,"position","")
-         PILCONFIG.get(self.name,"terminalsize","80x24")
+         PILCONFIG.get(self.name,"terminalwidth",80)
          PILCONFIG.get(self.name,"colorscheme","white")
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"directorycharsize",13)
@@ -308,6 +312,8 @@ class cls_pyilper(QtCore.QObject):
       position=PILCONFIG.get(self.name,"position")
       if position !="":
          self.ui.move(QtCore.QPoint(position[0],position[1]))
+         if len(position)==4:
+            self.ui.resize(position[2],position[3])
 #
 #  show and raise gui
 #
@@ -522,7 +528,7 @@ class cls_pyilper(QtCore.QObject):
       self.disable()
       self.enable()
 #
-#  callback exit, store windows position
+#  callback exit, store windows position and size
 #
    def do_Exit(self):
       self.disable()
@@ -532,8 +538,10 @@ class cls_pyilper(QtCore.QObject):
          pos_x=50
       if pos_y < 50:
          pos_y=50
+      width= self.ui.width()
+      height= self.ui.height()
 
-      position=[pos_x, pos_y]
+      position=[pos_x, pos_y, width, height]
 
       PILCONFIG.put(self.name,"position",position)
       if self.helpwin!= None:

@@ -315,6 +315,8 @@
 # - set did to empty string instead of none
 # 20.08.2017 jsi
 # - add create barcode to context menu
+# 28.08.2017 jsi
+# - get papersize config parameter in the constructor of the tab widget
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -371,6 +373,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.filename= PILCONFIG.get(self.name,"filename","")
       self.drivetype= PILCONFIG.get(self.name,"drivetype",self.DEV_HDRIVE1)
       self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
+      self.papersize=PILCONFIG.get("pyilper","papersize")
 
 #
 #     Build GUI 
@@ -411,7 +414,7 @@ class cls_tabdrive(cls_tabgeneric):
 
       self.vbox1= QtWidgets.QVBoxLayout()
       font_size=PILCONFIG.get("pyilper","directorycharsize")
-      self.lifdir=cls_LifDirWidget(self,10,FONT,font_size)
+      self.lifdir=cls_LifDirWidget(self,10,FONT,font_size,self.papersize)
       self.vbox1.addWidget(self.lifdir)
 
       self.hbox2= QtWidgets.QHBoxLayout()
@@ -761,9 +764,10 @@ class TableModel(QtGui.QStandardItemModel):
 
 class DirTableView(QtWidgets.QTableView):
 
-    def __init__(self,parent):
+    def __init__(self,parent,papersize):
         super().__init__(parent)
         self.parent=parent
+        self.papersize= papersize
 #
 #       context menu
 #
@@ -818,17 +822,18 @@ class DirTableView(QtWidgets.QTableView):
             elif action== viewAction:
                 cls_lifview.exec(imagefile, liffilename, liffiletype,workdir, charset)
             elif action== barcodeAction:
-                cls_lifbarcode.exec(imagefile,liffilename,ft)
+                cls_lifbarcode.exec(imagefile,liffilename,ft,self.papersize)
             event.accept()
 
 class cls_LifDirWidget(QtWidgets.QWidget):
 
-    def __init__(self,parent,rows,font_name, font_size):
+    def __init__(self,parent,rows,font_name, font_size,papersize):
         super().__init__(parent)
         self.parent=parent
         self.__font_name__= font_name
         self.__font_size__= font_size
-        self.__table__ = DirTableView(self)  # Table view for dir
+        self.__papersize__= papersize
+        self.__table__ = DirTableView(self,self.__papersize__)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
         self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 #

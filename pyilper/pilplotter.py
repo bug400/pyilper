@@ -50,7 +50,10 @@
 # - disable gui elements if not active
 # 24.08.2017 jsi
 # - error in logging fixed
-#
+# 28.08.2017 jsi
+# - remove alignments from GUI
+# - get papersize config parameter in constructor of tab widget
+# - full responsive design of plotter tab
 
 from __future__ import print_function
 import os
@@ -167,24 +170,25 @@ class cls_tabplotter(cls_tabgeneric):
       self.name=name
       self.logging= PILCONFIG.get(self.name,"logging",False)
       self.loglevel= PILCONFIG.get(self.name,"loglevel",0)
+      self.papersize=PILCONFIG.get("pyilper","papersize")
 #
 #     Create Plotter GUI object
 #
-      self.guiobject=cls_PlotterWidget(self,self.name)
+      self.guiobject=cls_PlotterWidget(self,self.name,self.papersize)
 #
 #     Build GUI of tab
 #
       self.hbox1= QtWidgets.QHBoxLayout()
       self.hbox1.addWidget(self.guiobject)
-      self.hbox1.setAlignment(self.guiobject,QtCore.Qt.AlignHCenter)
-      self.hbox1.setContentsMargins(20,20,20,20)
+#     self.hbox1.setAlignment(self.guiobject,QtCore.Qt.AlignHCenter)
+      self.hbox1.setContentsMargins(10,10,10,10)
       self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
-      self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
+#     self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
 
       self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
       self.hbox2.addWidget(self.cbLogging)
-      self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
+#     self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
 
       self.lbltxtc=QtWidgets.QLabel("Log level ")
       self.comboLoglevel=QtWidgets.QComboBox()
@@ -211,7 +215,7 @@ class cls_tabplotter(cls_tabgeneric):
 #
 #     create IL-Interface object, notify plotter processor object
 #
-      self.pildevice= cls_pilplotter(self.guiobject)
+      self.pildevice= cls_pilplotter(self.guiobject,self.papersize)
       self.guiobject.set_pildevice(self.pildevice)
 
 
@@ -407,17 +411,92 @@ class cls_mygraphicsscene(QtWidgets.QGraphicsScene):
          self.mark_p1=None
          self.mark_p2=None
       self.mark_added=False
+#
+# custom layout class, only valid for one item. Ensures that the
+# item keeps its aspect ratio on resize
+#
+class cls_AspectLayout(QtWidgets.QLayout):
+    def __init__(self, aspect_ratio,parent=None):
+        super(cls_AspectLayout, self).__init__(parent)
+        self.aspect_ratio=aspect_ratio
+        self.setSpacing(-1)
+        self.itemList = []
 
+    def __del__(self):
+        item = self.takeAt(0)
+        while item:
+            item = self.takeAt(0)
+
+    def addItem(self, item):
+        self.itemList.append(item)
+
+    def count(self):
+        return len(self.itemList)
+
+    def itemAt(self, index):
+        if index >= 0 and index < len(self.itemList):
+            return self.itemList[index]
+
+        return None
+
+    def takeAt(self, index):
+        if index >= 0 and index < len(self.itemList):
+            return self.itemList.pop(index)
+
+        return None
+
+    def expandingDirections(self):
+        return QtCore.Qt.Orientations(QtCore.Qt.Orientation(3))
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, width):
+        height = width/ self.aspect_ratio
+        return height
+
+    def setGeometry(self, rect):
+        super(cls_AspectLayout, self).setGeometry(rect)
+        self.doLayout(rect, False)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        size = QtCore.QSize()
+
+        for item in self.itemList:
+            size = size.expandedTo(item.minimumSize())
+
+        return size
+
+    def doLayout(self, rect, testOnly):
+        x = rect.x()
+        y = rect.y()
+        w = rect.width()
+        h = rect.height()
+        if int(w / self.aspect_ratio) > h:
+           item_w= int(h* self.aspect_ratio)
+           item_h= h
+        else:
+           item_w= w
+           item_h= int(w / self.aspect_ratio)
+        
+
+        for item in self.itemList:
+           item.setGeometry(QtCore.QRect(x,y,item_w,item_h))
+        return 
 #
 # custom class graphics view  with digitizing capabilities ---------------------
 #
 class cls_mygraphicsview(QtWidgets.QGraphicsView):
 
-   def __init__(self,parent):
+   def __init__(self,parent,aspect_ratio):
       super().__init__()
+      self.parent=parent
+      self.aspect_ratio= aspect_ratio
       self.restorecursor=None
       self.digitize=False
-      self.parent=parent
 #
 #  start digitizing, switch to crosshair cursor
 #
@@ -449,6 +528,10 @@ class cls_mygraphicsview(QtWidgets.QGraphicsView):
          y=int(round(self.parent.height -y)/self.parent.factor)
          self.parent.setKoord(x,y)
 
+   def resizeEvent(self,event):
+      self.fitInView(self.parent.plotscene.sceneRect(),QtCore.Qt.KeepAspectRatio)
+
+
 #
 # Plotter widget class - GUI component of the plotter emulator ------------------
 #
@@ -469,10 +552,11 @@ class cls_mygraphicsview(QtWidgets.QGraphicsView):
 #
 class cls_PlotterWidget(QtWidgets.QWidget):
 
-   def __init__(self,parent,name):
+   def __init__(self,parent,name,papersize):
       super().__init__()
       self.name=name
       self.parent=parent
+      self.papersize= papersize
       self.pildevice= None
 #
 #     get configuration for the virtual plotter
@@ -490,14 +574,15 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
 #     get papersize, set width and height of graphics scene according to papersize
 #
-      self.papersize=PILCONFIG.get("pyilper","papersize")
       self.width= 650
       self.lastx=-1
       self.lasty=-1
       if self.papersize ==0:    # A4
-         self.height= int(self.width/1.425)
+         self.aspect_ratio= 1.425
+         self.height= int(self.width/self.aspect_ratio)
       else:                     # US
-         self.height= int(self.width/1.346)
+         self.aspect_ratio= 1.346
+         self.height= int(self.width/aspect_ratio)
       self.factor=self.height/ 7650
 #
 #     initialize variables for plotter status information: status, error, error message
@@ -536,9 +621,11 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
 #     plot graphics view
 #
-      self.plotview= cls_mygraphicsview(self)
-      self.hbox.addWidget(self.plotview)
-      self.hbox.setAlignment(self.plotview,QtCore.Qt.AlignLeft)
+      self.plotview= cls_mygraphicsview(self,self.aspect_ratio)
+      self.plotlayout=cls_AspectLayout(self.aspect_ratio)
+      self.plotlayout.addWidget(self.plotview)
+     
+      self.hbox.addLayout(self.plotlayout,1)
       self.vbox=QtWidgets.QVBoxLayout()
 #
 #     push buttons "Config" - starts configuration window
@@ -546,7 +633,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.configButton= QtWidgets.QPushButton("Config")
       self.configButton.setEnabled(False)
       self.vbox.addWidget(self.configButton)
-      self.vbox.setAlignment(self.configButton,QtCore.Qt.AlignTop)
       self.configButton.clicked.connect(self.do_config)
 #
 #     push buttons "View" - opens external view window
@@ -554,7 +640,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.viewButton= QtWidgets.QPushButton("View")
       self.viewButton.setEnabled(False)
       self.vbox.addWidget(self.viewButton)
-      self.vbox.setAlignment(self.viewButton,QtCore.Qt.AlignTop)
       self.viewButton.clicked.connect(self.do_view)
 #
 #     push buttons "Enter" - digitize: this button is only enabled in digitizing mode
@@ -562,7 +647,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digiButton= QtWidgets.QPushButton("Enter")
       self.digiButton.setEnabled(False)
       self.vbox.addWidget(self.digiButton)
-      self.vbox.setAlignment(self.digiButton,QtCore.Qt.AlignTop)
       self.digiButton.clicked.connect(self.do_enter)
       self.digibutton_state= self.digiButton.isEnabled()
 #
@@ -571,7 +655,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.p1p2Button= QtWidgets.QPushButton("P1/P2")
       self.p1p2Button.setEnabled(False)
       self.vbox.addWidget(self.p1p2Button)
-      self.vbox.setAlignment(self.p1p2Button,QtCore.Qt.AlignTop)
       self.p1p2Button.clicked.connect(self.do_p1p2)
 #
 #     push buttons "Clear" - in digitizing mode this clears that mode, otherwise it
@@ -580,7 +663,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.clearButton= QtWidgets.QPushButton("Clear")
       self.clearButton.setEnabled(False)
       self.vbox.addWidget(self.clearButton)
-      self.vbox.setAlignment(self.clearButton,QtCore.Qt.AlignTop)
       self.clearButton.clicked.connect(self.do_clear)
 #
 #     push buttons "Generate PDF"
@@ -588,7 +670,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.printButton= QtWidgets.QPushButton("PDF")
       self.printButton.setEnabled(False)
       self.vbox.addWidget(self.printButton)
-      self.vbox.setAlignment(self.printButton,QtCore.Qt.AlignTop)
       self.printButton.clicked.connect(self.do_print)
 #
 #     push buttons "Show Status": shows status window with status and error information
@@ -596,7 +677,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.statusButton= QtWidgets.QPushButton("Status")
       self.statusButton.setEnabled(False)
       self.vbox.addWidget(self.statusButton)
-      self.vbox.setAlignment(self.statusButton,QtCore.Qt.AlignTop)
       self.statusButton.clicked.connect(self.do_status)
 #
 #     error LED: yellow: an error had occured, red: the emulator subprocess
@@ -605,11 +685,9 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.hbox2=QtWidgets.QHBoxLayout()
       self.led=cls_LedWidget()
       self.hbox2.addWidget(self.led)
-      self.hbox2.setAlignment(self.led,QtCore.Qt.AlignLeft)
       self.led.setSize(15)
       self.label=QtWidgets.QLabel("Error")
       self.hbox2.addWidget(self.label)
-      self.hbox2.setAlignment(self.label,QtCore.Qt.AlignLeft)
       self.hbox2.addStretch(1)
       self.vbox.addLayout(self.hbox2)
 #
@@ -625,44 +703,40 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.hbox3=QtWidgets.QHBoxLayout()
       self.labelX=QtWidgets.QLabel("X")
       self.hbox3.addWidget(self.labelX)
-      self.hbox3.setAlignment(self.labelX,QtCore.Qt.AlignLeft)
       self.lineEditX= QtWidgets.QLineEdit()
       self.lineEditX.setValidator(self.intvalidatorX)
       self.lineEditX.setText("")
       self.lineEditX.setEnabled(False)
       self.lineEditX.editingFinished.connect(self.do_finishX)
       self.hbox3.addWidget(self.lineEditX)
-      self.hbox3.setAlignment(self.lineEditX,QtCore.Qt.AlignLeft)
       self.vbox.addLayout(self.hbox3)
 
       self.hbox4=QtWidgets.QHBoxLayout()
       self.labelY=QtWidgets.QLabel("Y")
       self.hbox4.addWidget(self.labelY)
-      self.hbox4.setAlignment(self.labelY,QtCore.Qt.AlignLeft)
       self.lineEditY= QtWidgets.QLineEdit()
       self.lineEditY.setValidator(self.intvalidatorY)
       self.lineEditY.setText("")
       self.lineEditY.setEnabled(False)
       self.lineEditY.editingFinished.connect(self.do_finishY)
       self.hbox4.addWidget(self.lineEditY)
-      self.hbox4.setAlignment(self.lineEditY,QtCore.Qt.AlignLeft)
       self.vbox.addLayout(self.hbox4)
 
       self.vbox.addStretch(1)
       self.hbox.addLayout(self.vbox)
+      self.setLayout(self.hbox)
 #
 #     configure plotview and scene
 #
-      app= QtWidgets.QApplication.instance()
-      scrollbar_width=app.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
-      self.plotview.setFixedWidth(self.width+scrollbar_width)
-      self.plotview.setFixedHeight(self.height+scrollbar_width)
-      self.setLayout(self.hbox)
+#     app= QtWidgets.QApplication.instance()
+#     scrollbar_width=app.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
       self.plotscene=cls_mygraphicsscene()
       self.plotscene.setSceneRect(0,0,self.width,self.height)
       self.plotview.setScene(self.plotscene)
+      self.plotview.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+      self.plotview.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.plotview.setSceneRect(self.plotscene.sceneRect())
-      self.plotview.ensureVisible(0,0,self.width,self.height,0,0)
+#     self.plotview.ensureVisible(0,0,self.width,self.height,0,0)
 #
 #     initialize GUI command queue and lock
 #
@@ -754,7 +828,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
    def do_view(self):
       viewposition=PILCONFIG.get(self.name,"viewposition",[10,10,self.width,self.height])
       if self.viewwin== None:
-         self.viewwin= cls_plotViewWindow(self)
+         self.viewwin= cls_plotViewWindow(self,self.aspect_ratio)
       if self.digi_mode != MODE_NONE:
          self.viewwin.plotview.digi_start()
       self.viewwin.show()
@@ -1115,12 +1189,13 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
 class cls_plotViewWindow(QtWidgets.QDialog):
 
-   def __init__(self,parent):
+   def __init__(self,parent,aspect_ratio):
       super().__init__()
       self.parent=parent
+      self.aspect_ratio= aspect_ratio
       self.setWindowTitle(self.parent.name+" view")
       self.vbox=QtWidgets.QVBoxLayout()
-      self.plotview= cls_mygraphicsview(self.parent)
+      self.plotview= cls_mygraphicsview(self.parent,self.aspect_ratio)
       self.vbox.addWidget(self.plotview)
       self.setLayout(self.vbox)
 
@@ -1293,13 +1368,15 @@ class cls_PlotterConfigWindow(QtWidgets.QDialog):
 #
 class cls_HP7470(QtCore.QObject):
 
-   def __init__(self,parent,guiobject):
+   def __init__(self,parent,guiobject,papersize):
       super().__init__()
+      self.parent=parent
+      self.guiobject= guiobject
+      self.papersize= papersize
       self.cmdbuf=[]
       self.parse_state=0
       self.termchar= chr(3)
       self.proc=None
-      self.parent=parent
       self.pendown=False
       self.x=0
       self.y=0
@@ -1311,7 +1388,6 @@ class cls_HP7470(QtCore.QObject):
       self.separator=False
       self.numparam=0
       self.invalid=True
-      self.guiobject= guiobject
 #
 #  handle emulator not found or crashed
 #
@@ -1363,8 +1439,7 @@ class cls_HP7470(QtCore.QObject):
       self.guiobject.put_cmd([CMD_EMU_VERSION,line])
       self.parse_state=0
       self.invalid=False
-      papersize=PILCONFIG.get("pyilper","papersize")
-      self.parent.put_cmd("ZZ%d" % papersize)
+      self.parent.put_cmd("ZZ%d" % self.papersize)
 #
 #  stop the subprocess of the plotter emulator
 #
@@ -1630,8 +1705,10 @@ class cls_HP7470(QtCore.QObject):
 
 class cls_pilplotter(cls_pildevbase):
 
-   def __init__(self,guiobject):
+   def __init__(self,guiobject,papersize):
       super().__init__()
+      self.__guiobject__= guiobject
+      self.__papersize__= papersize
 #
 #     overloaded variable initialization
 #
@@ -1644,7 +1721,6 @@ class cls_pilplotter(cls_pildevbase):
 #     object specific variables
 #
       self.__disabled__=False     # flag to disable device permanently
-      self.__guiobject__= guiobject
 #
 #     initialize remote command queue and lock
 #
@@ -1653,7 +1729,7 @@ class cls_pilplotter(cls_pildevbase):
 #
 #     plotter processor
 #
-      self.__plotter__=cls_HP7470(self,self.__guiobject__)
+      self.__plotter__=cls_HP7470(self,self.__guiobject__,self.__papersize__)
 #
 # public (overloaded) --------
 #

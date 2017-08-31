@@ -35,6 +35,12 @@
 # - refactoring: new pdf printer class used
 # - store number of pdf columns in system configuration
 # - disable gui if device not enabled
+# 27.08.2017 jsi:
+# - removed redraw timer: not needed
+# - resize of printer tab now repositions everything correctly
+# 28.08.2017 jsi:
+# - remove alignments from GUI
+# - get papersize config parameter in constructor of tab widget
 #
 import copy
 import queue
@@ -416,24 +422,27 @@ class cls_tabhp82162a(cls_tabgeneric):
       super().__init__(parent,name)
       self.name=name
       self.logging= PILCONFIG.get(self.name,"logging",False)
+      self.papersize=PILCONFIG.get("pyilper","papersize")
 #
 #     create Printer GUI object
 #
-      self.guiobject=cls_HP82162AWidget(self,self.name)
+      self.guiobject=cls_HP82162AWidget(self,self.name,self.papersize)
 #
 #     Build gui of tab
 #
       self.hbox1= QtWidgets.QHBoxLayout()
+      self.hbox1.addStretch(1)
       self.hbox1.addWidget(self.guiobject)
-      self.hbox1.setAlignment(self.guiobject,QtCore.Qt.AlignHCenter)
-      self.hbox1.setContentsMargins(20,20,20,20)
+      self.hbox1.addStretch(1)
+#     self.hbox1.setAlignment(self.guiobject,QtCore.Qt.AlignHCenter)
+      self.hbox1.setContentsMargins(10,10,10,10)
       self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
-      self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
+#     self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
 
       self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
       self.hbox2.addWidget(self.cbLogging)
-      self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
+#     self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
       self.hbox2.addStretch(1)
 
       self.hbox2.setContentsMargins(10,3,10,3)
@@ -506,10 +515,11 @@ class cls_tabhp82162a(cls_tabgeneric):
 #
 class cls_HP82162AWidget(QtWidgets.QWidget):
 
-   def __init__(self,parent,name):
+   def __init__(self,parent,name,papersize):
       super().__init__()
       self.name= name
       self.parent= parent
+      self.papersize= papersize
       self.pildevice= None
 #
 #     configuration
@@ -517,7 +527,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.pdfpixelsize=3
       self.pixelsize=PILCONFIG.get("pyilper","hp82162a_pixelsize",1)
       self.linebuffersize=PILCONFIG.get("pyilper","linebuffersize",2000)
-      self.papersize=PILCONFIG.get("pyilper","papersize")
       self.printer_modeswitch= PILCONFIG.get(self.name,"modeswitch",MODESWITCH_MAN)
 #
 #     create user interface of printer widget
@@ -528,7 +537,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       self.printview=cls_ScrolledHP82162AView(self,self.name,self.pixelsize, self.pdfpixelsize,self.papersize,self.linebuffersize)
       self.hbox.addWidget(self.printview)
-      self.hbox.setAlignment(self.printview,QtCore.Qt.AlignLeft)
+#     self.hbox.setAlignment(self.printview,QtCore.Qt.AlignLeft)
       self.vbox=QtWidgets.QVBoxLayout()
 #
 #     radio buttons Man, Norm, Trace
@@ -570,7 +579,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.clearButton= QtWidgets.QPushButton("Clear")
       self.clearButton.setEnabled(False)
       self.vbox.addWidget(self.clearButton)
-      self.vbox.setAlignment(self.clearButton,QtCore.Qt.AlignTop)
+#     self.vbox.setAlignment(self.clearButton,QtCore.Qt.AlignTop)
       self.clearButton.clicked.connect(self.do_clear)
 #
 #     Print Button
@@ -578,7 +587,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.printButton= QtWidgets.QPushButton("Print")
       self.printButton.setEnabled(False)
       self.vbox.addWidget(self.printButton)
-      self.vbox.setAlignment(self.printButton,QtCore.Qt.AlignTop)
+#     self.vbox.setAlignment(self.printButton,QtCore.Qt.AlignTop)
       self.printButton.pressed.connect(self.do_print_pressed)
       self.printButton.released.connect(self.do_print_released)
 #
@@ -587,7 +596,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.advanceButton= QtWidgets.QPushButton("Advance")
       self.advanceButton.setEnabled(False)
       self.vbox.addWidget(self.advanceButton)
-      self.vbox.setAlignment(self.advanceButton,QtCore.Qt.AlignTop)
+#     self.vbox.setAlignment(self.advanceButton,QtCore.Qt.AlignTop)
       self.advanceButton.pressed.connect(self.do_advance_pressed)
       self.advanceButton.released.connect(self.do_advance_released)
 #
@@ -596,7 +605,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.pdfButton= QtWidgets.QPushButton("PDF")
       self.pdfButton.setEnabled(False)
       self.vbox.addWidget(self.pdfButton)
-      self.vbox.setAlignment(self.pdfButton,QtCore.Qt.AlignTop)
+#     self.vbox.setAlignment(self.pdfButton,QtCore.Qt.AlignTop)
       self.pdfButton.clicked.connect(self.do_pdf)
 
       self.vbox.addStretch(1)
@@ -783,7 +792,8 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
        if len(items):
           for c in items:
              self.process(c)
-       self.printview.update()
+#         self.printview.update()
+#         print("update triggered")
        self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
@@ -827,9 +837,9 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
       self.hp82162awidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hp82162awidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hbox.addWidget(self.hp82162awidget)
-      self.hbox.setAlignment(self.hp82162awidget,QtCore.Qt.AlignLeft)
+#     self.hbox.setAlignment(self.hp82162awidget,QtCore.Qt.AlignLeft)
       self.hbox.addWidget(self.scrollbar)
-      self.hbox.setAlignment(self.scrollbar,QtCore.Qt.AlignLeft)
+#     self.hbox.setAlignment(self.scrollbar,QtCore.Qt.AlignLeft)
       self.setLayout(self.hbox)
 #
 #     Initialize scrollbar
@@ -842,11 +852,6 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
 #
    def do_scrollbar(self):
       self.hp82162awidget.do_scroll(self.scrollbar.value())
-#
-#   redraw terminal window
-# 
-   def redraw(self):
-      self.hp82162awidget.redraw()
 #
 #   add line to printer output window
 #
@@ -865,9 +870,10 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
 #
    def pdf(self,filename,columns,title):
       self.hp82162awidget.pdf(filename,columns,title)
-
+#
+#  becomes visible/invisible: nothing to do
+#
    def becomes_visible(self):
-      self.hp82162awidget.redraw()
       return
 
    def becomes_invisible(self):
@@ -910,17 +916,6 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 
       self.pdfprinter=None
 #
-#     initialize refresh timer
-#
-      self.redrawTimer= QtCore.QTimer()
-      self.redrawTimer.timeout.connect(self.delayed_redraw)
-#
-#     redraw procedure
-#
-   def delayed_redraw(self):
-       self.redrawTimer.stop()
-       self.update()
-#
 #      reset output window
 #
    def reset(self):
@@ -934,19 +929,19 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #
 #  overwrite standard events
 #
-#  resize event, adjust the scene size
+#  resize event, adjust the scene size, reposition everything and redraw
 #
    def resizeEvent(self,event):
       h=self.height()
       self.rows=h // (PRINTER_CHARACTER_HEIGHT_PIXELS*self.pixelsize) 
       self.printscene.set_scenesize(self.rows)
+      self.lb_position=self.lb_current- self.rows+1
+      if self.lb_position < 0:
+         self.lb_position=0
+      self.parent.scrollbar.setMaximum(self.lb_position)
+      self.parent.scrollbar.setValue(self.lb_position)
+      self.printscene.update_scene()
       return
-
-#
-#  overwrite standard methods
-#
-   def redraw(self):
-      self.redrawTimer.start(UPDATE_TIMER*4)
 #
 #  external methods
 #
@@ -1028,7 +1023,6 @@ class cls_hp82162a_line(QtWidgets.QGraphicsItem):
           posy=0
           for i in range(0,8):
              if b & 0x01:
-#               painter.drawRect(posx,posy,self.pixelsize,self.pixelsize)
                 painter.fillRect(posx,posy,self.pixelsize,self.pixelsize,QtCore.Qt.black)
              b= b>>1
              posy+= self.pixelsize
@@ -1056,14 +1050,13 @@ class cls_hp82162a_scene(QtWidgets.QGraphicsScene):
       self.si= None
       return
 #
-#  set the size of the scene
+#  set or change the size of the scene
 #
    def set_scenesize(self,rows):
       self.reset()
       self.rows= rows
       self.si= [None] * rows
       self.setSceneRect(0,0,self.w,self.h*self.rows)
-      self.update_scene()
 
    
 #

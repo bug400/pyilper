@@ -88,8 +88,10 @@
 # - do not issue paint events where nothing gets painted (this cleared the display
 #   on qt5 (MAC OS)
 # - catch index error in HPTerminal.dump()
-# 03.02.2015 jsi:
+# 03.02.2017 jsi:
 # - do not fire cursor paint event, if cursor is off
+# 30.08.2016 jsi:
+# - make number of rows depend of window size
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -101,7 +103,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -109,39 +111,30 @@ CURSOR_OVERWRITE=2
 
 class QScrolledTerminalWidget(QtWidgets.QWidget):
 
-    def __init__(self,parent, font_name, font_size, cols, rows, colorscheme):
+    def __init__(self,parent, font_size, cols, colorscheme,scrollupbuffersize):
         super().__init__(parent)
+        self.HPTerminal= None
         self.callback_scrollbar= None
-#
-#       determine font metrics and terminal window size in pixel
-#
-#       font= QtGui.QFont(font_name)
-        font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
-        font.setStyleHint(QtGui.QFont.TypeWriter)
-        if font_size > MIN_TERMCHAR_SIZE:
-           font.setPixelSize(font_size)
-        metrics= QtGui.QFontMetrics(font)
-        font_width=metrics.width("A")
-        font_height=metrics.height()
-        width= font_width*cols
-        height= int(font_height* rows)
 #
 #       create terminal window and scrollbar
 #
         self.hbox= QtWidgets.QHBoxLayout()
-        self.terminalwidget= QTerminalWidget(self,font,width,height, colorscheme)
-        self.terminalwidget.setFixedSize(width,height)
+        self.terminalwidget= QTerminalWidget(self,cols,font_size, colorscheme,scrollupbuffersize)
         self.hbox.addWidget(self.terminalwidget)
-        self.hbox.setAlignment(self.terminalwidget,QtCore.Qt.AlignLeft)
         self.scrollbar= QtWidgets.QScrollBar()
         self.hbox.addWidget(self.scrollbar)
-        self.hbox.setAlignment(self.scrollbar,QtCore.Qt.AlignLeft)
         self.setLayout(self.hbox)
 #
 #       initialize scrollbar
 #
         self.scrollbar.valueChanged.connect(self.do_scrollbar)
         self.scrollbar.setEnabled(False)
+#
+#   make backend known to frontend
+#
+    def setHPTerminal(self,hpterminal):
+       self.HPTerminal= hpterminal
+       self.terminalwidget.setHPTerminal(self.HPTerminal)
 #
 #   scrollbar value changed action
 #
@@ -202,15 +195,38 @@ class QTerminalWidget(QtWidgets.QWidget):
     }
 
 
-    def __init__(self,parent, font, w,h, colorscheme):
+    def __init__(self,parent, cols, font_size, colorscheme,scrollupbuffersize):
         super().__init__(parent)
+#
+#       determine font metrics and terminal window size in pixel
+#
+        font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
+        font.setStyleHint(QtGui.QFont.TypeWriter)
+        if font_size > MIN_TERMCHAR_SIZE:
+           font.setPixelSize(font_size)
+        metrics= QtGui.QFontMetrics(font)
+        self._font_width=metrics.width("A")
+        self._font_height=metrics.height()
+        self.setFont(font)
+#
+#       set minimum dimensions for "cols" columns and 24 rows
+#
+        self._minw= cols* self._font_width
+        self._minh= self._font_height* TERMINAL_MINIMUM_ROWS
+#
+#       calculate size hints
+#
+        self._sizew= self._minw
+        self._sizeh= self._font_height* scrollupbuffersize
+        self.setMaximumSize(self._sizew,self._sizeh)
+#
+#       widget backround attributes
+#
         self.setFocusPolicy(QtCore.Qt.WheelFocus)
         self.setAutoFillBackground(False)
         self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, True)
         self.setCursor(QtCore.Qt.IBeamCursor)
-#       font = QtGui.QFont(font_name)
-#       font.setPixelSize(font_size)
-        self.setFont(font)
+        self._HPTerminal= None
         self._screen = []
         self._text = []
         self._transform= QtGui.QTransform()
@@ -218,8 +234,6 @@ class QTerminalWidget(QtWidgets.QWidget):
         self._cursor_row = 0
         self._dirty = False
         self._kbdfunc= None
-        self._w=w
-        self._h=h
         self._alt_sequence= False
         self._alt_seq_length=0
         self._alt_seq_value=0
@@ -236,6 +250,11 @@ class QTerminalWidget(QtWidgets.QWidget):
         self._cursor_update_rect=True      # true if cursor position was updated
         self._cursor_update_blink=True     # true if cursor only needs redraw
         self._blink= True                  # True: draw cursor, False: draw character
+#
+#   make backend known to frontend
+#
+    def setHPTerminal(self,hpterminal):
+       self._HPTerminal= hpterminal
 
     def delayed_redraw(self):
         self._redrawTimer.stop()
@@ -245,14 +264,17 @@ class QTerminalWidget(QtWidgets.QWidget):
 #  overwrite standard methods
 #
 
-    def sizeHint(self):
-        return QtCore.QSize(self._w,self._h)
+#   def sizeHint(self):
+#       return QtCore.QSize(self._sizew,self._sizeh)
 
     def minimumSizeHint(self):
-        return QtCore.QSize(self._w,self._h)
- 
+        return QtCore.QSize(self._minw,self._minh)
+#
+#   resize event
+# 
     def resizeEvent(self, event):
-        self.resize(self._w, self._h)
+        rows= self.height() // self._font_height
+        self._HPTerminal.resize_rows(rows)
 #
 #   overwrite standard events
 #
@@ -566,7 +588,7 @@ class QTerminalWidget(QtWidgets.QWidget):
 
 class HPTerminal:
 
-    def __init__(self, w, h, scrollupbuffersize,win):
+    def __init__(self, w,scrollupbuffersize,win):
         self.w = w
         self.h = scrollupbuffersize
         self.actual_h=0
@@ -579,9 +601,9 @@ class HPTerminal:
         self.UpdateTimer.setSingleShot(True)
         self.UpdateTimer.timeout.connect(self.process_queue)
         self.win=win
-        self.view_h= h
+        self.view_h= 0
         self.view_y0=0
-        self.view_y1=self.view_h-1
+        self.view_y1=0
         self.charset=CHARSET_HP71
         self.update_win= False
         self.reset_hard()
@@ -607,6 +629,25 @@ class HPTerminal:
         # Modes
         self.insert = False
         self.movecursor=0
+#
+#   Terminal window was resized, update display and scrollbar
+#
+    def resize_rows(self,rows):
+        if self.view_h == rows:
+           return
+        self.view_h= rows
+        if self.view_y1 == -1:
+           self.view_y1 = self.view_h
+        if self.view_y1 > rows:
+           self.view_y1= rows
+        self.view_y0= self.view_y1-rows
+        if self.view_y0<0:
+           self.view_y0=0
+        if self.actual_h >= self.view_h:
+           self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
+        self.win.scrollbar.setPageStep(self.view_h)
+        self.win.scrollbar.setValue(self.win.scrollbar.maximum())
+        self.win.terminalwidget.update_term(self.dump)
 
     def reset_screen(self):
         # Screen
