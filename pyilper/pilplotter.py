@@ -54,6 +54,8 @@
 # - remove alignments from GUI
 # - get papersize config parameter in constructor of tab widget
 # - full responsive design of plotter tab
+# 01.09.2017 jsi
+# - get open pdf file dialog from cls_pdfprinter
 
 from __future__ import print_function
 import os
@@ -72,6 +74,7 @@ from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PenConfigError, PENCONFIG
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
+from .pilpdf import cls_pdfprinter
 
 #
 # constants --------------------------------------------------------------
@@ -836,23 +839,10 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.viewwin.resize(viewposition[2],viewposition[3])
       self.viewwin.raise_()
 #
-#     file name input dialogue for pdf print file
-#
-   def get_pdfFilename(self):
-      dialog=QtWidgets.QFileDialog()
-      dialog.setWindowTitle("Enter PDF file name")
-      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-      dialog.setDefaultSuffix("pdf")
-      dialog.setNameFilters( ["PDF (*.pdf )", "All Files (*)"] )
-      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-      if dialog.exec():
-         return dialog.selectedFiles()
-#
 #     action: print pdf file
 #
    def do_print(self):
-      flist= self.get_pdfFilename()
+      flist= cls_pdfprinter.get_pdfFilename()
       if flist==None:
          return
       printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)

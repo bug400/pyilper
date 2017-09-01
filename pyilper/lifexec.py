@@ -72,6 +72,8 @@
 # 22.08.2017 jsi
 # - cls_lifbarcode added
 # - truncate error messages from external programs to 150 chars
+# 01.09.2017 jsi
+# - moved get_pdfFilename to cls_pdfprinter
 #
 import os
 import subprocess
@@ -121,6 +123,26 @@ def exec_single(parent,cmd):
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    except subprocess.CalledProcessError as exp:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exp.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+#
+# exec single command, return output
+#
+def exec_single_export(parent,cmd):
+   try:
+      p= subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      output,err=p.communicate()
+      if err.decode() != "":
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return None
+#
+#  catch errors
+#
+   except OSError as e:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      return None
+   except subprocess.CalledProcessError as exc:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      return None
+   return output
 
 #
 # exec piped command, read input from file, return True if success, False otherwise
@@ -257,6 +279,36 @@ class cls_lifpack(QtWidgets.QDialog):
       if reply == QtWidgets.QMessageBox.Yes:
          exec_single(d,["lifpack",lifimagefile])
 #
+# custom class for text item
+#
+class cls_textItem(QtWidgets.QGraphicsItem):
+
+   def __init__(self,text):
+      super().__init__()
+      self.text=text
+      self.font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
+      self.font.setStyleHint(QtGui.QFont.TypeWriter)
+      self.font.setPointSize(2)
+      metrics= QtGui.QFontMetrics(self.font)
+      self.font_h= metrics.height()
+      self.font_w= metrics.width("A")
+      self.spacing=20
+      self.h= self.font_h+self.spacing*2
+      self.w= len(text)* self.font_w
+      self.rect= QtCore.QRectF(0,0,self.w,self.h)
+
+   def setPos(self,x,y):
+      super().setPos(x,y-self.h)
+
+   def boundingRect(self):
+      return self.rect
+
+   def paint(self,painter,option,widget):
+      posx=0
+      posy=self.font_h
+      painter.setFont(self.font)
+      painter.drawText(posx,posy,self.text)
+#
 # custom class for barcode
 #
 class cls_barcodeItem(QtWidgets.QGraphicsItem):
@@ -329,7 +381,7 @@ class cls_lifbarcode(QtWidgets.QDialog):
 #
 #     get output file name
 #
-      flist= cls_lifbarcode.get_pdfFilename()
+      flist= cls_pdfprinter.get_pdfFilename()
       if flist== None:
          return
       output_filename= flist[0]
@@ -372,22 +424,6 @@ class cls_lifbarcode(QtWidgets.QDialog):
          pdfprinter.print_item(barcode_item)
 #
       pdfprinter.end()
-
-#
-#     file name input dialogue for pdf print file
-#
-   @staticmethod
-   def get_pdfFilename():
-      dialog=QtWidgets.QFileDialog()
-      dialog.setWindowTitle("Enter PDF file name")
-      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-      dialog.setDefaultSuffix("pdf")
-      dialog.setNameFilters( ["PDF (*.pdf )", "All Files (*)"] )
-      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-      if dialog.exec():
-         return dialog.selectedFiles()
-
 
 #
 # purge file dialog

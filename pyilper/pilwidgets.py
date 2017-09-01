@@ -253,15 +253,14 @@ class cls_tabgeneric(QtWidgets.QWidget):
    def enable(self):
       self.cbActive.setEnabled(True)
 
+   def toggle_active(self):
+      return
+
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
       PILCONFIG.put(self.name,"active",self.active)
       self.pildevice.setactive(self.active)
-      try:
-         self.toggle_active()
-      except AttributeError:
-         pass
-      return
+      self.toggle_active()
 #
 # generic terminal tab widget --------------------------------------------------
 #

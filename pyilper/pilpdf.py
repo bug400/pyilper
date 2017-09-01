@@ -23,6 +23,10 @@
 # Changelog
 # 21.08.2017 - jsi
 # - first version
+# 01.09.2017 - jsi
+# - minor layout changes
+# - added static method to obtain pdf output file name
+# - added textItem class
 #
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 from .pilcore import *
@@ -107,7 +111,7 @@ class cls_pdfprinter(QtCore.QObject):
       self.anzitems=0
       self.row=0
       self.column=0
-      self.top_y=PDF_MARGINS+self.titleitem.boundingRect().height()+20
+      self.top_y=PDF_MARGINS+self.titleitem.boundingRect().height()+40
       self.x= PDF_MARGINS
       self.y= self.top_y
 
@@ -167,5 +171,46 @@ class cls_pdfprinter(QtCore.QObject):
       self.pdfpainter.end()
  
 
+#     file name input dialogue for pdf print file
+#
+   @staticmethod
+   def get_pdfFilename():
+      dialog=QtWidgets.QFileDialog()
+      dialog.setWindowTitle("Enter PDF file name")
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+      dialog.setDefaultSuffix("pdf")
+      dialog.setNameFilters( ["PDF (*.pdf )", "All Files (*)"] )
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
+      if dialog.exec():
+         return dialog.selectedFiles()
+#
+# custom class for text item
+#
+class cls_textItem(QtWidgets.QGraphicsItem):
 
+   def __init__(self,text):
+      super().__init__()
+      self.text=text
+      self.font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
+      self.font.setStyleHint(QtGui.QFont.TypeWriter)
+      self.font.setPointSize(2)
+      metrics= QtGui.QFontMetrics(self.font)
+      self.font_h= metrics.height()
+      self.font_w= metrics.width("A")
+      self.spacing=20
+      self.h= self.font_h+self.spacing*2
+      self.w= len(text)* self.font_w
+      self.rect= QtCore.QRectF(0,0,self.w,self.h)
 
+   def setPos(self,x,y):
+      super().setPos(x,y-self.h)
+
+   def boundingRect(self):
+      return self.rect
+
+   def paint(self,painter,option,widget):
+      posx=0
+      posy=self.font_h
+      painter.setFont(self.font)
+      painter.drawText(posx,posy,self.text)

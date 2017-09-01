@@ -317,6 +317,8 @@
 # - add create barcode to context menu
 # 28.08.2017 jsi
 # - get papersize config parameter in the constructor of the tab widget
+# 01.09.2017 jsi
+# - added output directory list to pdf to tools
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -331,6 +333,7 @@ from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, c
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
 from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
+from .pilpdf import cls_pdfprinter,cls_textItem
 
 
 class cls_tabdrive(cls_tabgeneric):
@@ -438,6 +441,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.actPack= self.menu.addAction("Pack")
       self.actImport= self.menu.addAction("Import")
       self.actLabel=self.menu.addAction("Label")
+      self.actDirList=self.menu.addAction("Directory Listing")
       self.tBut.setText("Tools")
       self.tBut.setEnabled(False)
       self.hbox3.addWidget(self.tBut)
@@ -485,6 +489,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.actPack.triggered.connect(self.do_pack)
       self.actImport.triggered.connect(self.do_import)
       self.actLabel.triggered.connect(self.do_label)
+      self.actDirList.triggered.connect(self.do_dirlist)
       self.comboCharset.activated[str].connect(self.do_changeCharset)
 #
 #     create HPIL-device
@@ -646,6 +651,42 @@ class cls_tabdrive(cls_tabgeneric):
       oldlabel=self.lifdir.getLabel()
       cls_liflabel.exec(self.filename, oldlabel)
       self.lifdir.refresh()
+
+   def do_dirlist(self):
+#
+#     get medium summary, return if blank or no medium
+#
+      mediumsummary= self.lifdir.getMediumSummary()
+      linebreak= mediumsummary.find("Label")
+      if linebreak == -1:
+         return
+      mediuminfo= mediumsummary[:linebreak]
+      labelinfo=mediumsummary[linebreak:]
+#
+#     get output file name
+#
+      flist= cls_pdfprinter.get_pdfFilename()
+      if flist== None:
+         return
+      output_filename= flist[0]
+#
+#     initialize pdf printer
+#
+      title="Directory listing of: "+self.filename
+      pdfprinter=cls_pdfprinter(self.papersize,PDF_ORIENTATION_PORTRAIT, output_filename,title,True,1)
+      pdfprinter.begin()
+
+      model= self.lifdir.getModel()
+      cols=6
+      rows= self.lifdir.getRowCount()
+      pdfprinter.print_item(cls_textItem(mediuminfo))
+      pdfprinter.print_item(cls_textItem(labelinfo))
+      pdfprinter.print_item(cls_textItem(self.lifdir.getDirSummary()))
+      pdfprinter.print_item(cls_textItem("{:12} {:8} {:>6}/{:6} {:7} {:7}".format("Filename","Type","Size","Space","Date","Time")))
+      for i in range (rows):
+          line="{:12} {:8} {:>6}/{:6} {:7} {:7}".format(model.item(i,0).text().strip(), model.item(i,1).text().strip(), model.item(i,2).text().strip(), model.item(i,3).text().strip(), model.item(i,4).text(), model.item(i,5).text())
+          pdfprinter.print_item(cls_textItem(line))
+      pdfprinter.end()
 
 #
 #  Drive tab: refresh directory listing of medium
@@ -897,6 +938,14 @@ class cls_LifDirWidget(QtWidgets.QWidget):
     def getLabel(self):
         return(self.__label__)
 
+    def getRowCount(self):
+        return(self.__rowcount__)
+
+    def getMediumSummary(self):
+        return(self.__labelMedium__.text())
+
+    def getDirSummary(self):
+        return(self.__labelDir__.text())
 #
 #   connect lif data file 
 #
