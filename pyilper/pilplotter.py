@@ -59,6 +59,9 @@
 # 03.09.2017 jsi
 # - register pildevice is now method of commobject
 # - missing classes of pen config window moved from pilwidgets
+# 08.09.2017 jsi
+# - fixed crash when letter format
+# - fixed crash when using user defined pen configurations
 
 from __future__ import print_function
 import os
@@ -132,7 +135,10 @@ class PenTableModel(QtCore.QAbstractTableModel):
       return (self.arraydata[index.row()][index.column()])
 
    def setData(self, index, value,role):
-      self.arraydata[index.row()][index.column()] = value
+      if index.column()==0:
+         self.arraydata[index.row()][index.column()] = value
+      else:
+         self.arraydata[index.row()][index.column()] = int(value)
       self.dataChanged.emit(index,index) # this updates the edited cell
       return True
 
@@ -663,7 +669,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
          self.height= int(self.width/self.aspect_ratio)
       else:                     # US
          self.aspect_ratio= 1.346
-         self.height= int(self.width/aspect_ratio)
+         self.height= int(self.width/self.aspect_ratio)
       self.factor=self.height/ 7650
 #
 #     initialize variables for plotter status information: status, error, error message
@@ -1123,6 +1129,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
          pendef= PENCONFIG.get_pen(self.penconfig1)
       elif self.pen_number==2:
          pendef= PENCONFIG.get_pen(self.penconfig2)
+      print(pendef)
       self.pen.setColor(QtGui.QColor(pendef[0],pendef[1],pendef[2],pendef[3]))
       self.pen.setWidth(pendef[4])
 

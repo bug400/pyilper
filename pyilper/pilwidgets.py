@@ -140,6 +140,8 @@
 # 07.09.2017 jsi
 # - bugfixes: moved pen config classes to pilplotter, remove double addLayout in
 #   config window
+# 08.09.2017 jsi
+# - renamed paper format from US to Letter
 #
 import os
 import glob
@@ -847,7 +849,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridps.addWidget(QtWidgets.QLabel("Papersize:"),1,0)
       self.combops=QtWidgets.QComboBox()
       self.combops.addItem("A4")
-      self.combops.addItem("US")
+      self.combops.addItem("Letter")
       self.combops.setCurrentIndex(self.__papersize__)
       self.gridps.addWidget(self.combops,1,1)
       self.gboxps.setLayout(self.gridps)
