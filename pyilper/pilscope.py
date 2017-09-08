@@ -41,6 +41,8 @@ from .pildevbase import cls_pildevbase
 # - log scope unbuffered
 # 01.08.2017 jsi
 # - refactoring: tab classes moved to this file
+# 03.09.2017 jsi
+# - register pildevice is now method of comobject
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -75,14 +77,14 @@ class cls_tabscope(cls_tabtermgeneric):
 
    def enable(self):
       super().enable()
-      self.parent.commobject.register(self.pildevice,self.name)
+      self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.pildevice.register_callback_output(self.out_scope)
       self.cbShowIdy.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
 
    def post_enable(self):
-      self.parent.commobject.register(self.pildevice2,self.name)
+      self.parent.commthread.register(self.pildevice2,self.name)
       self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
       self.pildevice2.register_callback_output(self.out_scope)
       self.pildevice2.set_show_idy(self.showIdy)

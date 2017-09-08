@@ -33,6 +33,8 @@ from .pildevbase import cls_pildevbase
 #
 # Changelog
 #
+# 03.09.2017 jsi
+# - register pildevice is now method of commobject
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -45,7 +47,7 @@ class cls_tabterminal(cls_tabtermgeneric):
 #
    def enable(self):
       super().enable()
-      self.parent.commobject.register(self.pildevice,self.name)
+      self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       self.pildevice.register_callback_output(self.out_terminal)
       self.pildevice.register_callback_clear(self.hpterm.reset)

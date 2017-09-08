@@ -56,6 +56,9 @@
 # - full responsive design of plotter tab
 # 01.09.2017 jsi
 # - get open pdf file dialog from cls_pdfprinter
+# 03.09.2017 jsi
+# - register pildevice is now method of commobject
+# - missing classes of pen config window moved from pilwidgets
 
 from __future__ import print_function
 import os
@@ -106,6 +109,81 @@ MODE_NONE=3
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+#
+# Plotter pen table model class --------------------------------------------
+#
+class PenTableModel(QtCore.QAbstractTableModel):
+   def __init__(self, datain, parent = None):
+      super().__init__()
+      self.arraydata = datain
+
+   def rowCount(self, parent):
+      return len(self.arraydata)
+
+   def columnCount(self, parent):
+      return len(self.arraydata[0])
+
+   def data(self, index, role):
+      if not index.isValid():
+          return None
+      elif role != QtCore.Qt.DisplayRole:
+          return None
+      return (self.arraydata[index.row()][index.column()])
+
+   def setData(self, index, value,role):
+      self.arraydata[index.row()][index.column()] = value
+      self.dataChanged.emit(index,index) # this updates the edited cell
+      return True
+
+   def flags(self, index):
+      return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+   def headerData(self,section,orientation,role):
+      if role != QtCore.Qt.DisplayRole:
+         return None
+      if (orientation == QtCore.Qt.Horizontal):
+         if section==0:
+            return("Description")
+         elif section==1:
+            return("R")
+         elif section==2:
+            return("G")
+         elif section==3:
+            return("B")
+         elif section==3:
+            return("A")
+         elif section==4:
+            return("Alpha")
+         elif section==5:
+            return("Width")
+         else:
+            return("")
+
+   def getTable(self):
+      return self.arraydata
+
+   def setAll(self,penconfig):
+      self.arraydata=penconfig
+      self.layoutChanged.emit() # this updates all cells
+         
+#
+# Custom class with input validators ---------------------------------------
+#
+class PenDelegate(QtWidgets.QItemDelegate):
+
+   def createEditor(self, parent, option, index):
+      editor= super(PenDelegate,self).createEditor(parent,option,index)
+      if index.column() > 0 and index.column()< 5:
+         editor.setValidator(QtGui.QIntValidator(0,255))
+      elif index.column() == 5:
+         editor.setValidator(QtGui.QDoubleValidator(0.0,5.0,1))
+      return(editor)
+
+   def setEditorData(self, editor, index):
+      # Gets display text if edit data hasn't been set.
+      text = index.data(QtCore.Qt.EditRole) or index.data(QtCore.Qt.DisplayRole)
+      editor.setText(str(text))         
 
 #
 # Plotter pen  configuration class -----------------------------------
@@ -242,7 +320,7 @@ class cls_tabplotter(cls_tabgeneric):
 #
    def enable(self):
       super().enable()
-      self.parent.commobject.register(self.pildevice,self.name)
+      self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(self.active)
       self.cbLogging.setEnabled(True)
       self.comboLoglevel.setEnabled(True)

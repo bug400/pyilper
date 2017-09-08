@@ -63,6 +63,9 @@
 # - store tab name if device is registered
 # 30.10.2016 jsi
 # - getDevices added (removed by mistake)
+# 07.10.2017 jsi
+# - refactoring: moved process(), sendFrame() and device list handling code to
+#   thread object
 #
 # PIL-Box Commands
 #
@@ -77,18 +80,17 @@ from .pilcore import *
 class PilBoxError(Exception):
    def __init__(self,msg,add_msg=None):
       self.msg=msg;
-      self.add_msg= add_msg
+      if add_msg== None:
+         self.add_msg=""
+      else:
+         self.add_msg= add_msg
 
 
 class cls_pilbox:
 
-   def __init__(self,ttydevice,baudrate,idyframe,use8bits):
-      self.__running__ = False     # Connected to PIL-Box
-      self.__use8bits__= use8bits  # Use 8 bits for transfer
+   def __init__(self,ttydevice,baudrate,idyframe):
       self.__baudrate__= baudrate  # baudrate of connection or 0 for autodetect
       self.__idyframe__= idyframe  # switch box to send idy frames
-      self.__lasth__ = 0           # Copy of last byte sent
-      self.__devices__ = []        # list of virtual devices
       self.__tty__= cls_rs232()    # serial device object
       self.__ttydevice__=ttydevice # serial port name
 
@@ -101,10 +103,9 @@ class cls_pilbox:
 #  send command to PIL-Box, check return value
 #
    def __sendCmd__(self,cmdfrm,tmout):
-      sav= self.__lasth__
-      self.__lasth__ = 0
+      hbyt,lbyt= disassemble_frame(cmdfrm)
       try:
-         self.sendFrame(cmdfrm)
+         self.write(lbyt,hbyt)
          bytrx= self.__tty__.rcv(tmout)
       except Rs232Error as e:
          raise PilBoxError("PIL-Box command error:", e.value)
@@ -115,7 +116,6 @@ class cls_pilbox:
             raise PilBoxError("PIL-Box command error: illegal retval","")
       except TypeError:
          raise PilBoxError("PIL-Box command error: illegal retval","")
-      self.__lasth__= sav
 
 #
 #  Connect to PIL-Box in controller off mode
@@ -175,7 +175,6 @@ class cls_pilbox:
 
       if self.__idyframe__:
          self.__sendCmd__(COFI,TMOUTCMD)
-      self.__running__ = True
 
 #
 #  Disconnect PIL-Box
@@ -183,12 +182,10 @@ class cls_pilbox:
    def close(self):
       try:
          self.__sendCmd__(TDIS,TMOUTCMD)
-         self.__running__ = False
       finally:
          self.__tty__.close()
-
 #
-#  Read HP-IL frame from PIL-Box
+#  Read byte from PIL-Box
 #
    def read(self):
       try:
@@ -196,104 +193,15 @@ class cls_pilbox:
       except Rs232Error as e:
          raise PilBoxError("PIL-Box read frame error", e.value)
       return bytrx
-
 #
-#     send a IL frame to the PIL-Box
+# Send one or two bytes to the PIL-Box
 #
-   def sendFrame(self,frame):
-      if  not self.__use8bits__ :
-#
-#        use 7-bit characters for maximum compatibility
-#
-         hbyt = ((frame >> 6) & 0x1F) | 0x20
-         lbyt = (frame & 0x3F) | 0x40
+   def write(self,lbyt,hbyt=None):
+      if hbyt== None:
+         buf=bytearray([lbyt])
       else:
-#
-#        use  8-bit format for optimum speed
-#
-         hbyt = ((frame >> 6) & 0x1E) | 0x20
-         lbyt = (frame & 0x7F) | 0x80
-
-      if  hbyt != self.__lasth__:
-#
-#        send high part if different from last one
-#
-         self.__lasth__ = hbyt
-         buf=bytearray(2)
-         buf[0] = hbyt
-         buf[1] = lbyt
-      else:
-#
-#        otherwise send only low part
-#
-         buf=bytearray(1)
-         buf[0] = lbyt
+         buf=bytearray([hbyt,lbyt])
       try:
          self.__tty__.snd(buf)
       except Rs232Error as e:
          raise PilBoxError("PIL-Box send frame error", e.value)
-
-#
-#  process frame
-#
-   def process(self,byt):
-
-      if (byt & 0xE0) == 0x20:
-#
-#        high byte, save it
-#
-         self.__lasth__ = byt & 0xFF
-
-#
-#        send acknowledge only at 9600 baud connection
-#
-         if self.__baudrate__ == 9600:
-            b=bytearray(1)
-            b[0]= 0x0d
-            try:
-               self.__tty__.snd(b)
-            except Rs232Error as e:
-               raise PilBoxError("PIL-Box send frame error", e.value)
-      else:
-#
-#        low byte, build frame according to format
-#
-         if( byt & 0x80 ):
-            frame = ((self.__lasth__ & 0x1E) << 6) + (byt & 0x7F)
-         else:
-            frame = ((self.__lasth__ & 0x1F) << 6) + (byt & 0x3F)
-
-#
-#     process virtual HP-IL devices
-#
-         for i in self.__devices__:
-            frame=i[0].process(frame)
-#
-#     If received a cmd frame from the PIL-Box send RFC frame to virtual
-#     HPIL-Devices
-#
-         if (frame & 0x700) == 0x400:
-            for i in self.__devices__:
-               i[0].process(0x500)
-#
-#     send frame
-#
-         self.sendFrame(frame)
-#        if frame & 0x700 == 0x100 or frame & 0x700 == 0x300 or frame & 0x700 == 0x700:
-#           print("srq bit set")
-
-#
-#     virtualeHP-IL device
-#
-   def register(self, obj, name):
-      self.__devices__.append([obj,name])
-#
-#     get-/set-
-#
-   def isRunning(self):
-      return(self.__running__)
-#
-#  def Device list
-#
-   def getDevices(self):
-      return self.__devices__

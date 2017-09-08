@@ -137,6 +137,8 @@
 # - save and restore main window size
 # 31.08.2017 jsi:
 # - config parameter terminalsize changed to terminalwidth
+# 04.09.2017 jsi:
+# - refactoring of thread classes
 #
 import os
 import sys
@@ -152,12 +154,7 @@ from .pilwidgets import cls_ui, cls_PilMessageBox, cls_AboutWindow, cls_HelpWind
 from .pilcore import *
 from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
 from .penconfig import cls_penconfig, PenConfigError, PENCONFIG
-from .pilbox import cls_pilbox, PilBoxError
-from .pilboxthread import cls_PilBoxThread
-from .piltcpip import cls_piltcpip, TcpIpError
-from .piltcpipthread import cls_PilTcpIpThread
-from .pilsocket import cls_pilsocket, SocketError
-from .pilsocketthread import cls_PilSocketThread
+from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThread, cls_PilPipeThread, PilThreadError
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
 from .pilhp82162a import cls_tabhp82162a
 from .pilplotter import cls_tabplotter, cls_PenConfigWindow
@@ -168,12 +165,10 @@ from .pilterminal import cls_tabterminal
 
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
-MODE_PILBOX=0         # connect to PIL-Box
-MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
-MODE_SOCKET=2         # conect via Unix domain socket
+
+COMMTHREAD_CLASSES={MODE_PILBOX:cls_PilBoxThread,MODE_TCPIP:cls_PilTcpIpThread,MODE_SOCKET:cls_PilSocketThread,MODE_PIPE:cls_PilPipeThread}
 
 TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a}
-
 
 #
 # Main application ------------------------------------------------------ 
@@ -254,6 +249,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
          PILCONFIG.get(self.name,"socketname","/tmp/pilsocket")
+         PILCONFIG.get(self.name,"winpipename","\\\\.\\pipe\\pilpipe")
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
@@ -350,48 +346,17 @@ class cls_pyilper(QtCore.QObject):
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot change to working directory: "+e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
 #
-#     connect to HP-IL
+#     create and enable thread
 #
 
       mode=PILCONFIG.get(self.name,"mode")
-      if mode == MODE_PILBOX:
-#
-#        create PIL-Box object, connect to PIL-Box. Return if not configured
-#
-         if PILCONFIG.get(self.name,'tty') =="":
-            self.ui.emit_message("Serial device not confgured. Run pyILPER configuration")
-            return
-
-         try:
-            self.commobject= cls_pilbox(PILCONFIG.get(self.name,'tty'),PILCONFIG.get(self.name,'ttyspeed'),PILCONFIG.get(self.name,'idyframe'),USE8BITS)
-            self.commobject.open()
-            self.commthread= cls_PilBoxThread(self.ui,self.commobject)
-         except PilBoxError as e:
-            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-            return
-      elif mode== MODE_TCPIP:
-#
-#        create TCP-IP-object, connect to network
-#
-         try:
-            self.commobject= cls_piltcpip(PILCONFIG.get(self.name,"port"),PILCONFIG.get(self.name,"remotehost"),PILCONFIG.get(self.name,"remoteport"))
-            self.commobject.open()
-            self.commthread= cls_PilTcpIpThread(self.ui,self.commobject)
-         except TcpIpError as e:
-            self.commobject.close()
-            self.commobject=None
-            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-            return
-      else:
-         self.commobject= cls_pilsocket(PILCONFIG.get(self.name,"socketname"))
-         try:
-            self.commobject.open()
-            self.commthread= cls_PilSocketThread(self.ui,self.commobject)
-         except SocketError as e:
-            self.commobject.close()
-            self.commobject=None
-            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-            return
+      try:
+         commthread_class= COMMTHREAD_CLASSES[mode]
+         self.commthread= commthread_class(self.ui)
+         self.commthread.enable()
+      except PilThreadError as e:
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return
 #
 #     enable all registered tab objects
 #
@@ -433,18 +398,14 @@ class cls_pyilper(QtCore.QObject):
 #
 #     close commobject/tcpip connection
 #
-      if self.commobject != None:
-         try:
-            self.commobject.close()
-         except:
-            pass
-      self.commobject=None
+      if self.commthread is not None:
+         self.commthread.disable()
       self.status= STAT_DISABLED
+      self.commthread= None
 #
 #  clean up from thread crash
 #
    def do_crash_cleanup(self):
-      self.commthread= None
       self.disable()
 
 #

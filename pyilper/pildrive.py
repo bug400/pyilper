@@ -319,6 +319,8 @@
 # - get papersize config parameter in the constructor of the tab widget
 # 01.09.2017 jsi
 # - added output directory list to pdf to tools
+# 03.09.2017 jsi
+# - register pildevice is now method of commobject
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -512,7 +514,7 @@ class cls_tabdrive(cls_tabgeneric):
 #
    def enable(self):
       super().enable()
-      self.parent.commobject.register(self.pildevice,self.name)
+      self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       did,aid= self.deviceinfo[self.drivetype]
       self.pildevice.setdevice(did,aid)

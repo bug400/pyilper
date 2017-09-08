@@ -57,6 +57,10 @@
 # 16.01.2017 jsi:
 # - check for incoming connections to indicate isConnected
 # - close_outsocket method added
+# 07.01.2017 jsi:
+# - timeout parameter added
+# - refactoring: move code of process() and sendFrame() and device list handling
+#   to thread object
 
 import select
 import socket
@@ -65,7 +69,10 @@ import threading
 class TcpIpError(Exception):
    def __init__(self,msg,add_msg=None):
       self.msg = msg
-      self.add_msg = add_msg
+      if add_msg== None:
+         self.add_msg=""
+      else:
+         self.add_msg = add_msg
 
 class cls_piltcpip:
 
@@ -74,7 +81,6 @@ class cls_piltcpip:
       self.__remotehost__=remotehost     # host for output connection
       self.__remoteport__=remoteport     # port for output connection
 
-      self.__running__ = False     # Connected to Network
       self.__devices__ = []        # list of virtual devices
 
       self.__serverlist__ = []
@@ -114,7 +120,6 @@ class cls_piltcpip:
             continue
       if len(self.__serverlist__) is 0:
          raise TcpIpError("cannot bind to port","")
-      self.__running__ = True
 
    def openclient(self):
 #
@@ -152,7 +157,6 @@ class cls_piltcpip:
          self.__outsocket__.close()
          self.__outsocket__= None
          self.__outconnected__= False
-      self.__running__ = False
 
 #
 # Close output socket
@@ -166,8 +170,8 @@ class cls_piltcpip:
 #
 #  Read HP-IL frame from PIL-Box (2 byte), handle connect to server socket
 #
-   def read(self):
-      readable,writable,errored=select.select(self.__serverlist__ + self.__clientlist__,[],[],0.1)
+   def read(self,timeout):
+      readable,writable,errored=select.select(self.__serverlist__ + self.__clientlist__,[],[],timeout)
       for s in readable:
          if self.__serverlist__.count(s) > 0:
             cs,addr = s.accept()
@@ -185,7 +189,7 @@ class cls_piltcpip:
 #
 #     send a IL frame to the virtual loop
 #
-   def sendFrame(self,frame):
+   def write(self,frame):
       bRetry = True
       b=bytearray(2)
       f=socket.htons(frame)
@@ -203,44 +207,3 @@ class cls_piltcpip:
                self.__outconnected__ = False
          else:
             bRetry = self.openclient()
-
-#
-#  process frame
-#
-   def process(self,frame):
-
-#
-#     process virtual HP-IL devices
-#
-      for i in self.__devices__:
-         frame=i[0].process(frame)
-#
-#     If received a cmd frame from the PIL-Box send RFC frame to virtual
-#     HPIL-Devices
-#
-#     if (frame & 0x700) == 0x400:
-#        for i in self.__devices__:
-#           frame=i.process(0x500)
-#        self.request_service()
-#
-#     send frame
-#
-      self.sendFrame(frame)
-
-#
-#     virtual HP-IL device
-#
-   def register(self, obj, name):
-      self.__devices__.append([obj,name])
-
-#
-#     get-/set-
-#
-   def isRunning(self):
-      return self.__running__
-#
-#  def Device list
-#
-   def getDevices(self):
-      return self.__devices__
-

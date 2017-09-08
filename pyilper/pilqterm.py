@@ -92,6 +92,8 @@
 # - do not fire cursor paint event, if cursor is off
 # 30.08.2016 jsi:
 # - make number of rows depend of window size
+# 03.09.2017 jsi:
+# - reenabled self.update_win=True in becomes_visible
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -1098,7 +1100,7 @@ class HPTerminal:
 #    becomes visible
 #
     def becomes_visible(self):
-#      self.update_win=True
+       self.update_win=True
        self.win.terminalwidget.update_term(self.dump)
 #
 #    becomes_invisible(self):

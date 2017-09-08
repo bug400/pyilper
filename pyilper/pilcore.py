@@ -20,7 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# LIF image file classes ---------------------------------------------------
+# pyILPER support and constants  ---------------------------------------------------
 #
 # Changelog
 # 08.07.16 - jsi:
@@ -61,50 +61,43 @@
 # - PDF and barcode constants added
 # 31.08.2017 jsi
 # - parameter TERMINAL_MINIMUM_ROWS added
+# 03.09.2017 jsi
+# - communication mode constants moved from pyilpermain.py
+# 06.09.2017 jsi
+# - restructured, assemble_frame and disassemble_frame added
+# 07.09.2017 jsi
+# - timeout constants for TCP, socket and pipe communication added
 #
 import platform
-#
-#  get platform
-#
-def isLINUX():
-   return platform.system()=="Linux"
-def isWINDOWS():
-   return platform.system()=="Windows"
-def isMACOS():
-   return platform.system()=="Darwin"
-#
-# decode version number of lifutils or emu7470
-#
-def decode_version(version_number):
-   if version_number==0:
-      return "(unknown)"
-   version=str(version_number)
-   major=int(version[0])
-   minor=int(version[1:3])
-   subversion=int(version[3:5])
-   return "{:d}.{:d}.{:d}".format(major,minor,subversion)
-
-def encode_version(version_string):
-   v=version_string.split(".")
-   major="".join(filter(lambda x: x.isdigit(),v[0]))
-   minor="".join(filter(lambda x: x.isdigit(),v[1]))
-   subversion="".join(filter(lambda x: x.isdigit(),v[2]))
-   return int(major)*10000+ int(minor)*100 + int(subversion)
-
 #
 # Program constants --------------------------------------------------
 #
 # General constants:
 #
-PRODUCION= False      # Production/Development Version
+PRODUCTION= False     # Production/Development Version
 VERSION="1.6.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
+#
+# Communication modes and classes
+#
+MODE_PILBOX=0         # connect to PIL-Box
+MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
+MODE_SOCKET=2         # conect via Unix domain socket
+MODE_PIPE= 3          # connect via Windows named pipe
+
 #
 # PIL-Box communication
 #
 USE8BITS= True        # use 8 bit data transfer to PIL-Box
-TMOUTCMD=1    # time out for PIL-Box commands
-TMOUTFRM=0.05 # time out for HP-IL frames
+TMOUTCMD=1            # time out for PIL-Box commands
+TMOUTFRM=0.05         # time out for HP-IL frames
+
+#
+# TCP/IP, socket and pipe communication
+#
+COMTMOUTREAD=0.1      # time out for read
+COMTMOUTACK=1         # time out for receiving an acknowledge
+COMTMOUTWRITE=1       # tine out for write
 
 #
 # Drive tab - directory listing
@@ -134,16 +127,9 @@ EMU7470_VERSION=900
 #
 # if Development Version append string to VERSION and "d" to config file name
 #
-if not PRODUCION:
+if not PRODUCTION:
    VERSION=VERSION+" (Development)"
    CONFIG_VERSION= CONFIG_VERSION+"d"
-#
-# Standard FONT
-#
-if isLINUX():
-   FONT="Monospace"
-else:
-   FONT="Courier New"
 #
 # Min, Max Values for font sizes. Note: MIN value means: automatic!!
 #
@@ -160,6 +146,7 @@ TAB_DRIVE=2
 TAB_TERMINAL=3
 TAB_PLOTTER=4
 TAB_HP82162A=5
+#
 TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A'}
 #
 # PDF Constants in 1/10 mm
@@ -176,4 +163,61 @@ BARCODE_HEIGHT=100
 BARCODE_NARROW_W= 5
 BARCODE_WIDE_W= 10
 BARCODE_SPACING= 5
+
+#
+# utility functions --------------------------------------------------------------
+#
+#  get platform
+#
+def isLINUX():
+   return platform.system()=="Linux"
+def isWINDOWS():
+   return platform.system()=="Windows"
+def isMACOS():
+   return platform.system()=="Darwin"
+#
+# Standard FONT
+#
+if isLINUX():
+   FONT="Monospace"
+else:
+   FONT="Courier New"
+#
+# decode version number of lifutils or emu7470
+#
+def decode_version(version_number):
+   if version_number==0:
+      return "(unknown)"
+   version=str(version_number)
+   major=int(version[0])
+   minor=int(version[1:3])
+   subversion=int(version[3:5])
+   return "{:d}.{:d}.{:d}".format(major,minor,subversion)
+
+def encode_version(version_string):
+   v=version_string.split(".")
+   major="".join(filter(lambda x: x.isdigit(),v[0]))
+   minor="".join(filter(lambda x: x.isdigit(),v[1]))
+   subversion="".join(filter(lambda x: x.isdigit(),v[2]))
+   return int(major)*10000+ int(minor)*100 + int(subversion)
+#
+#  assemble frame from low and high byte according to 7- oder 8-bit format
+#
+def assemble_frame(hbyt,lbyt):
+   if( lbyt & 0x80 ):
+      return ((hbyt & 0x1E) << 6) + (lbyt & 0x7F)
+   else:
+      return ((hbyt & 0x1F) << 6) + (lbyt & 0x3F)
+#
+#  disassemble frame from low and high byte according to 7- oder 8-bit format
+#
+
+def disassemble_frame(frame):
+    if not USE8BITS :
+       hbyt = ((frame >> 6) & 0x1F) | 0x20
+       lbyt = (frame & 0x3F) | 0x40
+    else:
+       hbyt = ((frame >> 6) & 0x1E) | 0x20
+       lbyt = (frame & 0x7F) | 0x80
+    return(hbyt,lbyt)
 

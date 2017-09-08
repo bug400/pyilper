@@ -41,6 +41,8 @@
 # 28.08.2017 jsi:
 # - remove alignments from GUI
 # - get papersize config parameter in constructor of tab widget
+# 03.09.2017 jsi
+# - register pildevice is now method of commobject
 #
 import copy
 import queue
@@ -476,7 +478,7 @@ class cls_tabhp82162a(cls_tabgeneric):
 #
    def enable(self):
       super().enable()
-      self.parent.commobject.register(self.pildevice,self.name)
+      self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(self.active)
       self.cbLogging.setEnabled(True)
       if self.logging:

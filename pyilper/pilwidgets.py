@@ -135,6 +135,11 @@
 # - socket config replaced by unix domain socket config
 # 31.08.2017 jsi
 # - changed config param terminalsize to terminalwidth
+# 03.09.2017 jsi
+# - getDevices is now method of commthread
+# 07.09.2017 jsi
+# - bugfixes: moved pen config classes to pilplotter, remove double addLayout in
+#   config window
 #
 import os
 import glob
@@ -617,6 +622,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__remotehost__= PILCONFIG.get(self.__name__,"remotehost")
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
       self.__socketname__= PILCONFIG.get(self.__name__,"socketname")
+      self.__winpipename__= PILCONFIG.get(self.__name__,"winpipename")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
       self.__termsize__= PILCONFIG.get(self.__name__,"terminalwidth")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
@@ -652,17 +658,14 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxtty= QtWidgets.QHBoxLayout()
       self.lbltxt1=QtWidgets.QLabel("Serial Device: ")
       self.hboxtty.addWidget(self.lbltxt1)
-#     self.hboxtty.setAlignment(self.lbltxt1,QtCore.Qt.AlignLeft)
       self.lblTty=QtWidgets.QLabel()
       self.lblTty.setText(self.__tty__)
       self.hboxtty.addWidget(self.lblTty)
-#     self.hboxtty.setAlignment(self.lblTty,QtCore.Qt.AlignLeft)
       self.hboxtty.addStretch(1)
       self.butTty=QtWidgets.QPushButton()
       self.butTty.setText("change")
       self.butTty.pressed.connect(self.do_config_Interface)
       self.hboxtty.addWidget(self.butTty)
-#     self.hboxtty.setAlignment(self.butTty,QtCore.Qt.AlignRight)
       self.vboxgbox.addLayout(self.hboxtty)
 #
 #     tty speed combo box
@@ -670,7 +673,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxbaud= QtWidgets.QHBoxLayout()
       self.lbltxt2=QtWidgets.QLabel("Baud rate ")
       self.hboxbaud.addWidget(self.lbltxt2)
-#     self.hboxbaud.setAlignment(self.lbltxt2,QtCore.Qt.AlignLeft)
       self.comboBaud=QtWidgets.QComboBox()
       i=0
       for baud in BAUDRATES:
@@ -695,7 +697,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #     section TCP/IP communication
 #
       self.radbutTCPIP = QtWidgets.QRadioButton(self.gbox)
-      self.radbutTCPIP.setText("TCP/IP")
+      self.radbutTCPIP.setText("HP-IL over TCP/IP")
       self.radbutTCPIP.clicked.connect(self.setCheckBoxes)
       self.vboxgbox.addWidget(self.radbutTCPIP)
 #
@@ -723,19 +725,27 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.vboxgbox.addLayout(self.glayout)
       self.vbox0.addWidget(self.gbox)
 #
-#     Section Pipes
+#     Section Unix Domain Socket/Named Pipe
 #
-      if isLINUX() or isMACOS():
-         self.radbutPipe = QtWidgets.QRadioButton(self.gbox)
-         self.radbutPipe.setText("Unix Domain socket (experimental)")
-         self.radbutPipe.clicked.connect(self.setCheckBoxes)
-         self.vboxgbox.addWidget(self.radbutPipe)
-         self.slayout=QtWidgets.QGridLayout()
-         self.slayout.addWidget(QtWidgets.QLabel("Unix Domain socket:"),0,0)
-         self.edtSocket=QtWidgets.QLineEdit()
-         self.slayout.addWidget(self.edtSocket,0,1)
-         self.edtSocket.setText(self.__socketname__)
-         self.vboxgbox.addLayout(self.slayout)
+      self.radbutSocketPipe = QtWidgets.QRadioButton(self.gbox)
+      if isWINDOWS():
+         self.radbutSocketPipe.setText("Windows named pipe (experimental)")
+      else:
+         self.radbutSocketPipe.setText("Unix domain socket (experimental)")
+      self.radbutSocketPipe.clicked.connect(self.setCheckBoxes)
+      self.vboxgbox.addWidget(self.radbutSocketPipe)
+      self.splayout=QtWidgets.QGridLayout()
+      if isWINDOWS():
+         self.splayout.addWidget(QtWidgets.QLabel("Windows named pipe:"),0,0)
+      else:
+         self.splayout.addWidget(QtWidgets.QLabel("Unix Domain socket:"),0,0)
+      self.edtSocketPipe=QtWidgets.QLineEdit()
+      self.splayout.addWidget(self.edtSocketPipe,0,1)
+      if isWINDOWS():
+         self.edtSocketPipe.setText(self.__winpipename__)
+      else:
+         self.edtSocketPipe.setText(self.__socketname__)
+      self.vboxgbox.addLayout(self.splayout)
 
 #
 #     Init radio buttons
@@ -745,7 +755,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       elif self.__mode__==1:
          self.radbutTCPIP.setChecked(True)
       else:
-         self.radbutPipe.setChecked(True)
+         self.radbutSocketPipe.setChecked(True)
       self.setCheckBoxes()
 #
 #     Section Working Directory
@@ -758,17 +768,14 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxwdir= QtWidgets.QHBoxLayout()
       self.lbltxt6=QtWidgets.QLabel("Directory: ")
       self.hboxwdir.addWidget(self.lbltxt6)
-#     self.hboxwdir.setAlignment(self.lbltxt6,QtCore.Qt.AlignLeft)
       self.lblwdir=QtWidgets.QLabel()
       self.lblwdir.setText(self.__workdir__)
       self.hboxwdir.addWidget(self.lblwdir)
-#     self.hboxwdir.setAlignment(self.lblwdir,QtCore.Qt.AlignLeft)
       self.hboxwdir.addStretch(1)
       self.butwdir=QtWidgets.QPushButton()
       self.butwdir.setText("change")
       self.butwdir.pressed.connect(self.do_config_Workdir)
       self.hboxwdir.addWidget(self.butwdir)
-#     self.hboxwdir.setAlignment(self.butwdir,QtCore.Qt.AlignRight)
       self.vboxgboxw.addLayout(self.hboxwdir)
       self.vbox0.addWidget(self.gboxw)
 #
@@ -868,6 +875,8 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          self.edtRemoteHost.setEnabled(False)
          self.edtRemotePort.setEnabled(False)
          self.cbIdyFrame.setEnabled(True)
+         self.edtSocketPipe.setEnabled(False)
+         self.comboBaud.setEnabled(True)
       elif self.radbutTCPIP.isChecked():
          self.__mode__=1
          self.butTty.setEnabled(False)
@@ -875,13 +884,20 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          self.edtRemoteHost.setEnabled(True)
          self.edtRemotePort.setEnabled(True)
          self.cbIdyFrame.setEnabled(True)
-      elif self.radbutPipe.isChecked():
-         self.__mode__=2
+         self.edtSocketPipe.setEnabled(False)
+         self.comboBaud.setEnabled(False)
+      elif self.radbutSocketPipe.isChecked():
+         if isWINDOWS():
+            self.__mode__=3
+         else:
+            self.__mode__=2
          self.butTty.setEnabled(False)
-         self.edtPort.setEnabled(True)
+         self.edtPort.setEnabled(False)
          self.edtRemoteHost.setEnabled(False)
          self.edtRemotePort.setEnabled(False)
          self.cbIdyFrame.setEnabled(False)
+         self.edtSocketPipe.setEnabled(True)
+         self.comboBaud.setEnabled(False)
 
    def do_config_Interface(self):
       interface= cls_TtyWindow.getTtyDevice()
@@ -927,7 +943,9 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
 
       if isLINUX() or isMACOS():
-         PILCONFIG.put(self.__name__,"socketname", self.edtSocket.text())
+         PILCONFIG.put(self.__name__,"socketname", self.edtSocketPipe.text())
+      if isWINDOWS():
+         PILCONFIG.put(self.__name__,"winpipename", self.edtSocketPipe.text())
       super().accept()
 
    def do_cancel(self):
@@ -943,134 +961,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       else:
          return False
 
-#
-# Plotter pen table mode class --------------------------------------------
-#
-class PenTableModel(QtCore.QAbstractTableModel):
-   def __init__(self, datain, parent = None):
-      super().__init__()
-      self.arraydata = datain
-
-   def rowCount(self, parent):
-      return len(self.arraydata)
-
-   def columnCount(self, parent):
-      return len(self.arraydata[0])
-
-   def data(self, index, role):
-      if not index.isValid():
-          return None
-      elif role != QtCore.Qt.DisplayRole:
-          return None
-      return (self.arraydata[index.row()][index.column()])
-
-   def setData(self, index, value,role):
-      self.arraydata[index.row()][index.column()] = value
-      self.dataChanged.emit(index,index) # this updates the edited cell
-      return True
-
-   def flags(self, index):
-      return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-
-   def headerData(self,section,orientation,role):
-      if role != QtCore.Qt.DisplayRole:
-         return None
-      if (orientation == QtCore.Qt.Horizontal):
-         if section==0:
-            return("Description")
-         elif section==1:
-            return("R")
-         elif section==2:
-            return("G")
-         elif section==3:
-            return("B")
-         elif section==3:
-            return("A")
-         elif section==4:
-            return("Alpha")
-         elif section==5:
-            return("Width")
-         else:
-            return("")
-
-   def getTable(self):
-      return self.arraydata
-
-   def setAll(self,penconfig):
-      self.arraydata=penconfig
-      self.layoutChanged.emit() # this updates all cells
-         
-#
-# Custom class with input validators ---------------------------------------
-#
-class PenDelegate(QtWidgets.QItemDelegate):
-
-   def createEditor(self, parent, option, index):
-      editor= super(PenDelegate,self).createEditor(parent,option,index)
-      if index.column() > 0 and index.column()< 5:
-         editor.setValidator(QtGui.QIntValidator(0,255))
-      elif index.column() == 5:
-         editor.setValidator(QtGui.QDoubleValidator(0.0,5.0,1))
-      return(editor)
-
-   def setEditorData(self, editor, index):
-      # Gets display text if edit data hasn't been set.
-      text = index.data(QtCore.Qt.EditRole) or index.data(QtCore.Qt.DisplayRole)
-      editor.setText(str(text))         
-
-#
-# Plotter pen  configuration class -----------------------------------
-#
-class cls_PenConfigWindow(QtWidgets.QDialog):
-
-   def __init__(self): 
-      super().__init__()
-      self.setWindowTitle('Plotter pen config')
-      self.vlayout = QtWidgets.QVBoxLayout()
-#
-#     table widget
-#
-      self.tablemodel=PenTableModel(PENCONFIG.get_all())
-      self.tableview= QtWidgets.QTableView()
-      self.tableview.setModel(self.tablemodel)
-      self.tableview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-      self.tableview.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-      self.delegate= PenDelegate()
-      self.tableview.setItemDelegate(self.delegate)
-      self.vlayout.addWidget(self.tableview)
-#
-#     ok/cancel button box
-#    
-      self.buttonBox = QtWidgets.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Reset| QtWidgets.QDialogButtonBox.Ok)
-      self.buttonBox.setCenterButtons(True)
-      self.buttonBox.accepted.connect(self.do_ok)
-      self.buttonBox.rejected.connect(self.do_cancel)
-      self.buttonBox.button(QtWidgets.QDialogButtonBox.Reset).clicked.connect(self.do_reset)
-      self.vlayout.addWidget(self.buttonBox)
-      self.setLayout(self.vlayout)
-
-   def do_ok(self):
-      PENCONFIG.set_all(self.tablemodel.getTable())
-      super().accept()
-
-   def do_cancel(self):
-      super().reject()
-#
-#     reset populates table with the default configuration
-#
-   def do_reset(self):
-      self.tablemodel.setAll(PENCONFIG.default_config())
-
-   @staticmethod
-   def getPenConfig():
-      dialog= cls_PenConfigWindow()
-      dialog.resize(650,600)
-      result= dialog.exec_()
-      if result== QtWidgets.QDialog.Accepted:
-         return True
-      else:
-         return False
 #
 # HP-IL virtual device  configuration class -----------------------------------
 #
@@ -1358,7 +1248,7 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
       super().accept()
 
    def do_refresh(self):
-      devices=self.parent.commobject.getDevices()
+      devices=self.parent.commthread.getDevices()
       i=1
       for row in range(self.rows):
          pildevice= devices[i][0]

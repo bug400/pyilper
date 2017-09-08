@@ -28,6 +28,9 @@
 # Changelog
 # 25.08.2017 jsi
 # - first version
+# 07.09.2017 jsi
+# - read timeout as parameter, moved process(), sendFrame() and device list handling
+#   code to thread object
 #
 
 import select
@@ -39,7 +42,10 @@ import os
 class SocketError(Exception):
    def __init__(self,msg,add_msg=None):
       self.msg = msg
-      self.add_msg = add_msg
+      if add_msg== None:
+         self.add_msg=""
+      else:
+         self.add_msg = add_msg
 
 class cls_pilsocket:
 
@@ -47,16 +53,13 @@ class cls_pilsocket:
       self.__socketname__= socketname      # name of socket
       self.__socket__= None                # socket
       self.__connection__=None             # connection
-      self.__running__ = False             # Connected to socket
       self.__connected__= False
       self.__lasth__= 0
-      self.__devices__= []
       self.__serverlist__= []
       self.__clientlist__= []
 
    def isConnected(self):
       return self.__connected__ 
-
 #
 #  Connect to socket
 #
@@ -85,15 +88,14 @@ class cls_pilsocket:
 #  Disconnect from socket
 #
    def close(self):
-      self.__running__ = False
       self.__connected__= False
       self.__connection__.close()
 #
-#  Read byte from socket, handle connect to server socket
+#  Read byte from socket with timeout, handle connect to server socket
 #
-   def read(self):
+   def read(self,timeout):
 #
-      readable,writable,errored=select.select(self.__serverlist__+self.__clientlist__,[],[],0.1)
+      readable,writable,errored=select.select(self.__serverlist__+self.__clientlist__,[],[],timeout)
       for s in readable:
          if s== self.__socket__ and not self.__connected__ > 0:
            self.__connection__,addr= s.accept()
@@ -109,108 +111,18 @@ class cls_pilsocket:
                self.__connected__= False
                self.__connection__= None
       return None
-
 #
-#     send a frame to the socket
+# write bytes to the socket
 #
-   def sendFrame(self,frame):
-      hbyt = ((frame >> 6) & 0x1E) | 0x20
-      lbyt = (frame & 0x7F) | 0x80
-
-      if  hbyt != self.__lasth__:
-#
-#        send high part if different from last one
-#
-         self.__lasth__ = hbyt
-         buf=bytearray(1)
-         buf[0] = hbyt
-         self.__connection__.sendall(buf)
-#
-#        read acknowledge
-#
-         while True:
-            b= self.read()
-            if b != None:
-               if ord(b)== 0x0D:
-                  break
-#
-#        otherwise send only low part
-#
-      buf=bytearray(1)
-      buf[0] = lbyt
+   def write(self,lbyt,hbyt=None):
       if self.__connection__== None:
-         self.__connected__=False
-         raise SocketError("cannot send data:"," no connection")
+         self.__connected__= False
+         raise SocketError("cannot send data: ", " no connection")
+      if hbyt== None:
+         buf=bytearray([lbyt])
+      else:
+         buf=bytearray([lbyt,hbyt])
       try:
          self.__connection__.sendall(buf)
       except OSError as e:
-         self.__connected__=False
-         self.__connection__.close()
-         raise SocketError("cannot write to socket",e.strerror)
-#
-#  process frame
-#
-   def process(self,byt):
-#
-#        high byte, save it
-#
-      if (byt & 0xE0) == 0x20:
-         self.__lasth__ = byt & 0xFF
-#
-#        send acknowledge
-#
-         buf=bytearray(1)
-         buf[0]= 0x0d
-         try:
-            self.__connection__.sendall(buf)
-         except SocketError as e:
-            raise SocketError(e.msg, e.add_msg)
-         return
-
-#
-#        low byte, build frame according to format
-#
-      if( byt & 0x80 ):
-         frame = ((self.__lasth__ & 0x1E) << 6) + (byt & 0x7F)
-      else:
-         frame = ((self.__lasth__ & 0x1F) << 6) + (byt & 0x3F)
-#
-#     send acknowledge if pil box command
-#
-      if frame & 0x794 == 0x494:
-          frame= frame & 0x3F
-#
-#     process virtual HP-IL devices 
-#
-      else:
-         for i in self.__devices__:
-            frame=i[0].process(frame)
-#
-#     If received a cmd frame from the PIL-Box send RFC frame to virtual
-#     HPIL-Devices
-#
-#     if (frame & 0x700) == 0x400:
-#        for i in self.__devices__:
-#           frame=i.process(0x500)
-#        self.request_service()
-#
-#     send frame
-#
-      self.sendFrame(frame)
-#
-#     virtual HP-IL device
-#
-   def register(self, obj, name):
-      self.__devices__.append([obj,name])
-
-#
-#     get-/set-
-#
-   def isRunning(self):
-      return self.__running__
-#
-#  def Device list
-#
-   def getDevices(self):
-      return self.__devices__
-
+         raise SocketError("cannot send data:",e.strerror)

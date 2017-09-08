@@ -33,6 +33,8 @@ from .pildevbase import cls_pildevbase
 # Changelog
 # 01.08.2017 jsi
 # - refactoring: printer tab classes moved to this file
+# 03.09.2017 jsi
+# - register pildevice is now method of commobject
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
@@ -43,7 +45,7 @@ class cls_tabprinter(cls_tabtermgeneric):
 
    def enable(self):
       super().enable()
-      self.parent.commobject.register(self.pildevice,self.name)
+      self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       self.pildevice.register_callback_output(self.out_printer)
       self.pildevice.register_callback_clear(self.hpterm.reset)
