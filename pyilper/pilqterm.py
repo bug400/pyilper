@@ -92,8 +92,9 @@
 # - do not fire cursor paint event, if cursor is off
 # 30.08.2016 jsi:
 # - make number of rows depend of window size
-# 03.09.2017 jsi:
-# - reenabled self.update_win=True in becomes_visible
+# 09.09.2016 jsi:
+# - fixed incorrect cursor positioning for certain font sizes
+# - fixed incorrect initialization of terminal if not visible at program start
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -202,24 +203,34 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
 #       determine font metrics and terminal window size in pixel
 #
-        font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
-        font.setStyleHint(QtGui.QFont.TypeWriter)
+        self._font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
+        self._font.setStyleHint(QtGui.QFont.TypeWriter)
         if font_size > MIN_TERMCHAR_SIZE:
-           font.setPixelSize(font_size)
-        metrics= QtGui.QFontMetrics(font)
-        self._font_width=metrics.width("A")
-        self._font_height=metrics.height()
-        self.setFont(font)
+           self._font.setPixelSize(font_size)
+        metrics= QtGui.QFontMetrics(self._font)
+        self._char_width=metrics.maxWidth()
+        self._char_height=metrics.height()
+#
+#       we can't relay that the nth column begins at (n-1)*self._char_width
+#       because of rounding errors, so determine the correct column position
+#
+        s=""
+        self._true_w= []
+        for i in range(cols-1):
+            self._true_w.append(metrics.width(s))
+            s+="A"
+            
+
 #
 #       set minimum dimensions for "cols" columns and 24 rows
 #
-        self._minw= cols* self._font_width
-        self._minh= self._font_height* TERMINAL_MINIMUM_ROWS
+        self._minw= cols* self._char_width
+        self._minh= self._char_height* TERMINAL_MINIMUM_ROWS
 #
 #       calculate size hints
 #
         self._sizew= self._minw
-        self._sizeh= self._font_height* scrollupbuffersize
+        self._sizeh= self._char_height* scrollupbuffersize
         self.setMaximumSize(self._sizew,self._sizeh)
 #
 #       widget backround attributes
@@ -275,7 +286,7 @@ class QTerminalWidget(QtWidgets.QWidget):
 #   resize event
 # 
     def resizeEvent(self, event):
-        rows= self.height() // self._font_height
+        rows= self.height() // self._char_height
         self._HPTerminal.resize_rows(rows)
 #
 #   overwrite standard events
@@ -291,6 +302,7 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
+        painter.setFont(self._font)
 #
 #       repaint cursor only (blink)
 #
@@ -417,30 +429,17 @@ class QTerminalWidget(QtWidgets.QWidget):
            time.sleep(0.05)
         event.accept()
 #
-#   internal methods
-#
-    def _update_metrics(self):
-        fm = self.fontMetrics()
-        self._char_height = fm.height()
-        self._char_width = fm.width("W")
-#
 #  update cursor position
 #
     def _update_cursor_rect(self):
         if self._cursortype== CURSOR_OFF or (self._cursor_col== -1 and self._cursor_row==-1):
            return
-        cx, cy = self._pos2pixel(self._cursor_col, self._cursor_row)
+        cx= self._true_w[self._cursor_col]
+        cy= self._cursor_row* self._char_height
         self._transform.reset()
         self._transform.translate(cx,cy)
         self._cursor_update_rect=True
         self._blink=True
-#
-#   determine pixel position from rowl, column
-#
-    def _pos2pixel(self, col, row):
-        x = (col * self._char_width)
-        y = row * self._char_height
-        return x, y
 #
 #   paint cursor
 #
@@ -518,6 +517,8 @@ class QTerminalWidget(QtWidgets.QWidget):
                     rect = QtCore.QRect(
                         x, y, x + char_width * length, y + char_height)
                     painter_fillRect(rect, brush)
+                    metrics= QtGui.QFontMetrics(self._font)
+                    l=metrics.width(item.rstrip())
                     painter_drawText(rect, align, item)
                     col += length
                     text_line += item
@@ -553,12 +554,6 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
     def setkbdfunc(self,func):
         self._kbdfunc= func
-#
-#   configure font of terminal window
-#
-    def setFont(self, font):
-        super().setFont(font)
-        self._update_metrics()
 #
 #   return needs redraw state
 #
@@ -607,10 +602,9 @@ class HPTerminal:
         self.view_y0=0
         self.view_y1=0
         self.charset=CHARSET_HP71
-        self.update_win= False
+#       self.update_win= False
         self.reset_hard()
         self.win.register_callback_scrollbar(self.scroll_to)
-        self.UpdateTimer.start(UPDATE_TIMER)
         self.blink_counter=0
 #
 #   Reset functions
@@ -888,6 +882,7 @@ class HPTerminal:
                 try:
                    d = self.screen[y * self.w + x] # fix possible index out of range error
                 except IndexError:
+                   print("self.screen Index error")
                    continue
                 char = d & 0xffff
                 attr = d >> 16
@@ -1100,13 +1095,13 @@ class HPTerminal:
 #    becomes visible
 #
     def becomes_visible(self):
-       self.update_win=True
+       self.UpdateTimer.start(UPDATE_TIMER)
        self.win.terminalwidget.update_term(self.dump)
 #
 #    becomes_invisible(self):
 #
     def becomes_invisible(self):
-       self.update_win=False
+       pass
 #
 #    callback for scrollbar
 #
