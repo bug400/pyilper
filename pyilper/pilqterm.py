@@ -216,7 +216,7 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
         s=""
         self._true_w= []
-        for i in range(cols-1):
+        for i in range(cols):
             self._true_w.append(metrics.width(s))
             s+="A"
             
