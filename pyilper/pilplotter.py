@@ -1129,7 +1129,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
          pendef= PENCONFIG.get_pen(self.penconfig1)
       elif self.pen_number==2:
          pendef= PENCONFIG.get_pen(self.penconfig2)
-      print(pendef)
       self.pen.setColor(QtGui.QColor(pendef[0],pendef[1],pendef[2],pendef[3]))
       self.pen.setWidth(pendef[4])
 
