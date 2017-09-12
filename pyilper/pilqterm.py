@@ -95,6 +95,9 @@
 # 09.09.2016 jsi:
 # - fixed incorrect cursor positioning for certain font sizes
 # - fixed incorrect initialization of terminal if not visible at program start
+# 12.12.2016 jsi
+# - partial rewrite of the backend code, various bug fixes and documentation
+#   improvements
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -106,12 +109,14 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
 CURSOR_OVERWRITE=2
-
+#
+# scrolled terminal widget class ----------------------------------------------------
+#
 class QScrolledTerminalWidget(QtWidgets.QWidget):
 
     def __init__(self,parent, font_size, cols, colorscheme,scrollupbuffersize):
@@ -154,6 +159,9 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 # 
     def redraw(self):
        self.terminalwidget.redraw()
+#
+#  non scrolled terminal widget (front end) class ------------------------------------
+#
 
 class QTerminalWidget(QtWidgets.QWidget):
 
@@ -203,8 +211,9 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
 #       determine font metrics and terminal window size in pixel
 #
-        self._font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
-        self._font.setStyleHint(QtGui.QFont.TypeWriter)
+#       self._font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
+#       self._font.setStyleHint(QtGui.QFont.TypeWriter)
+        self._font=QtGui.QFont(FONT)
         if font_size > MIN_TERMCHAR_SIZE:
            self._font.setPixelSize(font_size)
         metrics= QtGui.QFontMetrics(self._font)
@@ -213,10 +222,11 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
 #       we can't relay that the nth column begins at (n-1)*self._char_width
 #       because of rounding errors, so determine the correct column position
+#       the last element is used to determine the true line width
 #
         s=""
         self._true_w= []
-        for i in range(cols):
+        for i in range(cols+1):
             self._true_w.append(metrics.width(s))
             s+="A"
             
@@ -224,7 +234,7 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
 #       set minimum dimensions for "cols" columns and 24 rows
 #
-        self._minw= cols* self._char_width
+        self._minw= self._true_w[len(self._true_w)-1] # true width
         self._minh= self._char_height* TERMINAL_MINIMUM_ROWS
 #
 #       calculate size hints
@@ -581,39 +591,58 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
     def redraw(self):
         self._redrawTimer.start(UPDATE_TIMER*4)
-
-
+#
+# Terminal backend class -----------------------------------------------------------
+#
 class HPTerminal:
 
     def __init__(self, w,scrollupbuffersize,win):
-        self.w = w
-        self.h = scrollupbuffersize
-        self.actual_h=0
+        self.w = w                        # terminal/buffer width (characters)
+        self.h = scrollupbuffersize       # buffer size (lines)
+        self.actual_h=0                   # number of lines in the buffer
+        self.fesc= False                  # status indicator for parsing esc 
+                                          # sequences
+        self.movecursor= 0                # status indicator for parsing the
+                                          # move cursor escape sequence
+        self.movecol=0                    # same as above
+        self.win=win                      # terminal widget
+        self.view_h= 0                    # terminal size (lines)
+                                          # initialized if window was resized
+        self.view_y0=0                    # bottom of buffer view
+        self.view_y1=0                    # top of buffer view
+        self.blink_counter=0              # counter that controls cursor blink
+        self.charset=CHARSET_HP71         # character set used for output
+        self.cx=0                         # actual cursor position
+        self.cy=0 
+        self.insert=False                 # inser mode flag
+        self.attr = 0x00000000            # character attribute mask:
+                                          # Bit 0 - Underlined (not used)
+                                          # Bit 1 - Negative
+                                          # Bit 2 - Concealed (not used)
+        self.screen=None                  # Terminal line buffer array
+                                          # initialized by reset_screen
+        self.linelength=None              # Vector with length of each line
+                                          # in the buffer array, initialized
+                                          # by reset screen
+                                          # a value of -1 indicates a continuation
+                                          # line of a wrapped line
+        self.reset_hard()
+        self.win.register_callback_scrollbar(self.scroll_to)
+#
+#       Queue with input data that will be displayed
+#
         self.termqueue= queue.Queue()
         self.termqueue_lock= threading.Lock()
-        self.fesc= False
-        self.movecursor= 0
-        self.movecol=0
+#
+#       Timer that triggers the processing of the input queue
+#
         self.UpdateTimer= QtCore.QTimer()
         self.UpdateTimer.setSingleShot(True)
         self.UpdateTimer.timeout.connect(self.process_queue)
-        self.win=win
-        self.view_h= 0
-        self.view_y0=0
-        self.view_y1=0
-        self.charset=CHARSET_HP71
-#       self.update_win= False
-        self.reset_hard()
-        self.win.register_callback_scrollbar(self.scroll_to)
-        self.blink_counter=0
 #
 #   Reset functions
 #
     def reset_hard(self):
-        # Attribute mask: 0x0X000000
-        #	X:	Bit 0 - Underlined (not used)
-        #		Bit 1 - Negative
-        #		Bit 2 - Concealed (not used)
         self.attr = 0x00000000
         # Invoke other resets
         self.reset_screen()
@@ -625,30 +654,12 @@ class HPTerminal:
         # Modes
         self.insert = False
         self.movecursor=0
-#
-#   Terminal window was resized, update display and scrollbar
-#
-    def resize_rows(self,rows):
-        if self.view_h == rows:
-           return
-        self.view_h= rows
-        if self.view_y1 == -1:
-           self.view_y1 = self.view_h
-        if self.view_y1 > rows:
-           self.view_y1= rows
-        self.view_y0= self.view_y1-rows
-        if self.view_y0<0:
-           self.view_y0=0
-        if self.actual_h >= self.view_h:
-           self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
-        self.win.scrollbar.setPageStep(self.view_h)
-        self.win.scrollbar.setValue(self.win.scrollbar.maximum())
-        self.win.terminalwidget.update_term(self.dump)
 
     def reset_screen(self):
         # Screen
         self.screen = array.array('i', [self.attr | 0x20] * self.w * self.h)
         self.linelength= array.array('i', [0] * self.h)
+        self.linewrapped= array.array('i',[False] * self.h)
         # Scroll parameters
         self.view_y0=0
         self.view_y1= self.view_h-1
@@ -665,7 +676,26 @@ class HPTerminal:
         self.win.scrollbar.setSingleStep(1)
         self.win.scrollbar.setPageStep(self.view_h)
 #
-#   Low-level terminal functions
+#   Terminal window was resized, update display and scrollbar
+#
+    def resize_rows(self,rows):
+        if self.view_h == rows:
+           return
+        self.view_h= rows
+        if self.view_y1 == -1:
+           self.view_y1 = self.view_h-1
+        if self.view_y1 > rows:
+           self.view_y1= rows-1
+        self.view_y0= self.view_y1-rows
+        if self.view_y0<0:
+           self.view_y0=0
+        if self.actual_h >= self.view_h:
+           self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
+        self.win.scrollbar.setPageStep(self.view_h)
+        self.win.scrollbar.setValue(self.win.scrollbar.maximum())
+        self.win.terminalwidget.update_term(self.dump)
+#
+#   Low-level terminal functions on terminal line buffer
 #
     def peek(self, y0, x0, y1, x1):
         return self.screen[self.w * y0 + x0:self.w * (y1 - 1) + x1]
@@ -681,47 +711,121 @@ class HPTerminal:
     def clear(self, y0, x0, y1, x1):
         self.fill(y0, x0, y1, x1, self.attr | 0x20)
 #
-#   Scrolling functions
+#   utility functions for wrapped lines
 #
-    def scroll_area_up(self, y0, y1):
-        n = 1
-        self.poke(y0, 0, self.peek(y0 + n, 0, y1, self.w))
-        self.clear(y1 - n, 0, y1, self.w)
-        self.linelength[0:self.h-1]=self.linelength[1:]
-        self.linelength[self.h-1]=0
-
+#   get length of a wrapped line
+#
+    def get_wrapped_linelength(self,cy):
+       if self.linelength[cy]==-1:
+          return(self.linelength[cy-1])
+       else:
+          return(self.linelength[cy])
+#
+#   set length of a wrapped line
+#
+    def set_wrapped_linelength(self,cy,ll):
+       if self.linelength[cy]==-1:
+          self.linelength[cy-1]= ll
+       else:
+          self.linelength[cy]= ll
+#
+#   get the position of the cursor in the wrapped line
+#
+    def get_wrapped_cursor_x(self,cx,cy):
+       if self.linelength[cy]==-1:
+          return(cx+self.w)
+       else:
+          return(cx)
+#
+#   check if line is wrapped, cursor may or may not be in the wrapped part
+#
+    def is_wrapped(self,cy):
+       if self.linelength[cy]==-1:
+          return(self.linewrapped[cy-1])
+       else:
+          return(self.linewrapped[cy])
+#
+#   check, if cursor position is in the wrapped part
+#
+    def in_wrapped_part(self,cy):
+       return(self.linelength[cy]== -1)
+#
+#   add wrapped part of a line, cy must be in the wrapped part
+#
+    def add_wrapped_part(self,cy):
+       self.linewrapped[cy-1]=True
+       self.linelength[cy]=-1
+       self.linewrapped[cy]=False
+#
+#   remove wrapped part of a line, cy must be in the non wrapped part
+#
+    def remove_wrapped_part(self,cy):
+       self.linewrapped[cy]=False
+       self.linelength[cy+1]=0
+       self.linewrapped[cy+1]=False
+#
+#   scroll screen buffer up if no room to add a new line
+#   note: this adjust the object variables self.cy and self.actual_h
+#   the method returns the new value of self.cy
+#
+    def scroll_screenbuffer_up(self,n):
+        self.poke(0, 0, self.peek(0 + n, 0, self.h, self.w))
+        self.clear(self.h - n, 0, self.h, self.w)
+        self.linelength[0:self.h-n]=self.linelength[n:]
+        self.linewrapped[0:self.h-n]=self.linewrapped[n:]
+        for i in range(n):
+           self.linelength[self.h-n]=0
+           self.linewrapped[self.h-n]=False
+        self.cy-=n
+        self.actual_h-=n
+        return(self.cy)
+#
+# Scroll line right, add wrapped part if needed
+#
     def scroll_line_right(self, y, x):
-        if x < self.w:
-            # scroll up needed?
-            if self.linelength[y] > self.w and y== self.h-1:
-               self.scroll_area_up(0, self.h)
-               y=y-1
-               self.cy=self.cy-1
-               self.linelength[y+1]=-1
-
-            # wrap line
-            if self.linelength[y] > self.w:
-               self.poke(y+1,1,self.peek(y+1, 0, y + 2, self.w))
-               self.poke(y+1,0,self.peek(y,self.w-1,y+1,self.w))
-               if self.linelength[y] == self.w+1:
-                  self.scroll_view_down()
-                  self.update_size(1)
-            self.poke(y, x + 1, self.peek(y, x, y + 1, self.w - 1))
-            self.clear(y, x, y + 1, x + 1)
-
+        wx= self.get_wrapped_cursor_x(x,y)
+        oldlinelength= self.get_wrapped_linelength(y)
+        if wx  < oldlinelength:
+           newlinelength= oldlinelength+1
+           self.set_wrapped_linelength(y,newlinelength)
+#
+#          move characters in wrapped part, add wrapped part if needed
+#
+           if self.get_wrapped_linelength(y) > self.w:
+              if oldlinelength== self.w:
+                 self.cy=self.add_bufferline(self.cy)
+                 self.add_wrapped_part(self.cy)
+                 y=self.cy
+              self.poke(y+1,1,self.peek(y+1, 0, y + 2, self.w))
+              self.poke(y+1,0,self.peek(y,self.w-1,y+1,self.w))
+           self.poke(y, x + 1, self.peek(y, x, y + 1, self.w - 1))
+           self.clear(y, x, y + 1, x + 1)
+#
+#   scroll line left, remove character at cursor position
+#
     def scroll_line_left(self, y, x):
-        if x < self.w:
+        wx= self.get_wrapped_cursor_x(x,y)
+        oldlinelength= self.get_wrapped_linelength(y)
+        if wx  < oldlinelength:
+#
+#           remove character, shift left, adjust line length
+#
             self.poke(y, x, self.peek(y, x + 1, y + 1, self.w))
             self.clear(y, self.w - 1, y + 1, self.w)
-            # wrapped line
-            if self.linelength[y] > self.w:
+            self.set_wrapped_linelength(y,oldlinelength-1)
+#
+#           we are in a wrapped line and must move the wrapped part too.
+#
+            if oldlinelength > self.w:
                self.poke(y,self.w-1,self.peek(y+1,0,y+2,1))
                self.poke(y+1, 0, self.peek(y+1, 1, y + 2, self.w))
-               if self.linelength[y]== self.w+1:
-                  self.linelength[y+1]=0
-                  self.scroll_view_up()
-                  self.update_size(-1)
-            self.linelength[y]-=1
+#
+#           if the wrapped part is empty and the cursor is in the non wrapped part
+#           remove the wrapped part
+# 
+            if oldlinelength-1<= self.w and wx< self.w and self.is_wrapped(y):
+               self.remove_wrapped_part(y)
+               self.cy=self.remove_bufferline(y+1)
 #
 #   View functions, scroll up and down
 #
@@ -734,52 +838,57 @@ class HPTerminal:
        if self.view_y0 >0:
           self.view_y0-=1
           self.view_y1-=1
-
-    def update_size(self,n):
-        if n > 0:
-           if self.actual_h < self.h:
-              self.actual_h=self.actual_h+1
-        else:
-           if self.actual_h > 0:
-              self.actual_h=self.actual_h-1
+#
+#   scroll to the last line of the buffer
+#
+    def scroll_view_to_bottom(self):
+       self.win.scrollbar.setValue(self.win.scrollbar.maximum())
+       return
+#
+#   add new buffer line, scroll up the screen line buffer if needed
+#   note: this adjusts the object variables self.cy and self.last_h
+#   the scrollbar is adjusted to the new size of the screen line buffer
+#
+    def add_bufferline(self,cy):
+       n=1
+#      if self.is_wrapped(0):
+#         n=2
+       newcy=cy+1
+       if newcy < self.h:
+          self.actual_h= max(self.actual_h, newcy)
+       if newcy == self.h:
+          newcy=self.scroll_screenbuffer_up(n)+1
+       self.update_scrollbar()
+       return(newcy)
+#
+#  remove buffer line
+#
+    def remove_bufferline(self,cy):
+       newcy= cy-1
+       self.actual_h= newcy
+       self.update_scrollbar()
+       return(newcy)
+#
+#   Update scroll bar parameters
+#       
+    def update_scrollbar(self):
         if self.actual_h < self.view_h:
            self.win.scrollbar.setMaximum(0)
         else:
            self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
            self.win.scrollbar.setValue(self.actual_h)
-
-
-    def scroll_view_to_bottom(self):
-       self.win.scrollbar.setValue(self.win.scrollbar.maximum())
-       return
-       
 #
-#   Cursor functions
+#   Cursor functions, up and down
 #
-
-    def utf8_charwidth(self, char):
-        if char == 0x0304:
-            return 0
-        if char >= 0x2e80:
-            return 2
-        else:
-            return 1
-
-    def cursor_line_width(self, next_char):
-        wx = self.utf8_charwidth(next_char)
-        lx = 0
-        for x in range(min(self.cx, self.w)):
-            char = self.peek(self.cy, x, self.cy + 1, x + 1)[0] & 0xffff
-            wx += self.utf8_charwidth(char)
-            lx += 1
-        return wx, lx
-
     def cursor_up(self):
         self.cy = max(0, self.cy - 1)
 
     def cursor_down(self):
-        self.cy = min(self.h - 1, self.cy + 1)
-
+      self.cy = min(self.h - 1, self.cy + 1)
+#
+# Move cursor left, if the cursor is at the beginning of the wrapped part of a line
+# then remove that wrapped part
+#
     def cursor_left(self):
         self.cx= self.cx -1
         if self.cx < 0:
@@ -788,18 +897,19 @@ class HPTerminal:
            if self.cy < 0:
               self.cy=0
               self.cx=0
-
+           if self.get_wrapped_linelength(self.cy) <= self.w and self.is_wrapped(self.cy):
+              self.remove_wrapped_part(self.cy)
+              self.cy=self.remove_bufferline(self.cy+1)
+#
+#   move cursor right, add wrapped part of a line if needed
+#
     def cursor_right(self):
         self.cx= self.cx +1
         if self.cx == self.w:
            self.cx=0
-           self.cy= self.cy+1
-           if self.cy- self.view_y0 >= self.view_h:
-              self.scroll_view_down()
-           if self.cy == self.h:
-              self.scroll_area_up(0, self.h)
-              self.cy=self.cy-1
-              self.linelength[self.cy]=-1
+           if self.get_wrapped_linelength(self.cy)== self.w and not self.is_wrapped(self.cy):
+              self.cy=self.add_bufferline(self.cy)
+              self.add_wrapped_part(self.cy)
 
     def cursor_set_x(self, x):
         self.cx = max(0, x)
@@ -825,6 +935,8 @@ class HPTerminal:
 #
 #   Dumb terminal output
 #
+#   Backspace
+#
     def ctrl_BS(self):
         cx= self.cx-1
         cy= self.cy
@@ -836,38 +948,31 @@ class HPTerminal:
            else:
               cx=self.w-1
         self.cursor_set(cy, cx)
-
+#
+#   Linefeed
+#
     def ctrl_LF(self):
-        if self.cy == self.h - 1:
-            self.scroll_area_up(0, self.h)
-        else:
-            self.cy+=1
-            if self.cy >= self.actual_h:
-               self.update_size(1)
-            if self.cy - self.view_y0 >= self.view_h:
-               self.scroll_view_down()
-
+        if self.is_wrapped(self.cy)  and not self.in_wrapped_part(self.cy):
+           self.cy+=1
+        self.cy=self.add_bufferline(self.cy)
+#
+#   Carriage Return
+#
     def ctrl_CR(self):
         self.cursor_set_x(0)
-
-    def dumb_echo(self, char):
-        if self.linelength[self.cy]== -1:
-           self.linelength[self.cy-1]+=1
-        else: 
-           self.linelength[self.cy]+=1
-        # wrap
-        wx, cx = self.cursor_line_width(char)
-        if wx > self.w:
-             self.ctrl_CR()
-             self.ctrl_LF()
-             self.linelength[self.cy]= -1
-        # insert
-        if self.insert:
-            self.scroll_line_right(self.cy, self.cx)
-        self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
-        self.cursor_set_x(self.cx + 1)
 #
-#   dump screen to terminal window
+#   Dumb echo
+#
+    def dumb_echo(self, char):
+        if self.insert:
+           self.scroll_line_right(self.cy, self.cx)
+           self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
+        else:
+           self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
+           self.set_wrapped_linelength(self.cy,self.get_wrapped_linelength(self.cy)+1)
+        self.cursor_right()
+#
+#   dump screen to terminal window, the data are painted during a paint event
 #
     def dump(self):
         screen = []
@@ -882,7 +987,7 @@ class HPTerminal:
                 try:
                    d = self.screen[y * self.w + x] # fix possible index out of range error
                 except IndexError:
-                   print("self.screen Index error")
+                   print("self.screen Index error %d %d"% (y,x))
                    continue
                 char = d & 0xffff
                 attr = d >> 16
@@ -898,7 +1003,7 @@ class HPTerminal:
                     line.append(inv)
                     line.append("")
                     attr_ = attr
-                wx += self.utf8_charwidth(char)
+                wx += 1
                 if wx <= self.w:
                     line[-1] += chr(char)
             screen.append(line)
@@ -966,10 +1071,9 @@ class HPTerminal:
        if t == 27:
           self.fesc= True
           return
- #
- #     process escape sequences, translate to pyqterm
- #
- 
+#
+#      process escape sequences, translate to pyqterm
+#
        if self.fesc:
           if t== 67: # cursor right (ESC C)
              self.cursor_right()
