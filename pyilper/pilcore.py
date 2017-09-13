@@ -108,7 +108,10 @@ NOT_TALKER_SPAN=3     # time (s) a drive must be inactive to be concidered as id
 # Terminal tab
 #
 UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
-CURSOR_BLINK=500 / UPDATE_TIMER # 500 ms cursor blink rate
+CURSOR_BLINK=500                # 500 ms cursor blink rate
+CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
+
+
 TERMINAL_MINIMUM_ROWS=24        # cant get beyond that
 
 #

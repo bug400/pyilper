@@ -92,12 +92,15 @@
 # - do not fire cursor paint event, if cursor is off
 # 30.08.2016 jsi:
 # - make number of rows depend of window size
-# 09.09.2016 jsi:
+# 09.09.2017 jsi:
 # - fixed incorrect cursor positioning for certain font sizes
 # - fixed incorrect initialization of terminal if not visible at program start
-# 12.12.2016 jsi
+# 12.09.2017 jsi
 # - partial rewrite of the backend code, various bug fixes and documentation
 #   improvements
+# 13.09.2017 jsi
+# - bug fix incorrect number of lines in screen buffer after buffer scroll
+# - proper positioning of text
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -109,7 +112,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT, CURSOR_BLINK_INTERVAL
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -522,13 +525,11 @@ class QTerminalWidget(QtWidgets.QWidget):
             text_line = ""
             for item in line:
                 if isinstance(item, str):
-                    x = col * char_width
+                    x = self._true_w[col]
                     length = len(item)
                     rect = QtCore.QRect(
-                        x, y, x + char_width * length, y + char_height)
+                        x, y, x + self._true_w[col+length]- self._true_w[col], y + char_height)
                     painter_fillRect(rect, brush)
-                    metrics= QtGui.QFontMetrics(self._font)
-                    l=metrics.width(item.rstrip())
                     painter_drawText(rect, align, item)
                     col += length
                     text_line += item
@@ -858,6 +859,7 @@ class HPTerminal:
           self.actual_h= max(self.actual_h, newcy)
        if newcy == self.h:
           newcy=self.scroll_screenbuffer_up(n)+1
+          self.actual_h+=1
        self.update_scrollbar()
        return(newcy)
 #
@@ -1052,7 +1054,7 @@ class HPTerminal:
 #
 #      fire paint event if we need to update the cursor (if not off...)
 #
-       elif self.blink_counter> CURSOR_BLINK and \
+       elif self.blink_counter> CURSOR_BLINK_INTERVAL and \
             self.win.terminalwidget.getCursorType() != CURSOR_OFF:
           self.win.terminalwidget.setCursorUpdateBlink()
           self.blink_counter=0 
