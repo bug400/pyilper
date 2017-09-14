@@ -90,7 +90,7 @@
 # - catch index error in HPTerminal.dump()
 # 03.02.2017 jsi:
 # - do not fire cursor paint event, if cursor is off
-# 30.08.2016 jsi:
+# 30.08.2017 jsi:
 # - make number of rows depend of window size
 # 09.09.2017 jsi:
 # - fixed incorrect cursor positioning for certain font sizes
@@ -98,9 +98,8 @@
 # 12.09.2017 jsi
 # - partial rewrite of the backend code, various bug fixes and documentation
 #   improvements
-# 13.09.2017 jsi
-# - bug fix incorrect number of lines in screen buffer after buffer scroll
-# - proper positioning of text
+# 14.09.2017 jsi
+# - rewrite of the frontend code, use QGraphicsView and QGraphicsScene
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -112,7 +111,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT, CURSOR_BLINK_INTERVAL
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -158,15 +157,74 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
         self.callback_scrollbar=func
         self.scrollbar.setEnabled(True)
 #
-#   redraw terminal window
-# 
+#   redraw do nothing
+#
     def redraw(self):
-       self.terminalwidget.redraw()
+       return
+
+#
+#  terminal cursor custom class ------------------------------------------------------
+#
+class TermCursor(QtWidgets.QGraphicsItem):
+
+   def __init__(self,w,h,cursortype,foregroundcolor):
+      super().__init__()
+      self.w=w
+      self.h=h
+      self.rect=QtCore.QRectF(0,0,w,h)
+      self.cursorcolor=foregroundcolor
+      self.cursortype=cursortype
+      self.brush=QtGui.QBrush(foregroundcolor)
+      self.draw=True
+      self.blink_timer=QtCore.QTimer()
+      self.blink_timer.setInterval(CURSOR_BLINK)
+      self.blink_timer.timeout.connect(self.do_blink)
+      self.blink_timer.start()
+      self.insertpolygon=QtGui.QPolygon([QtCore.QPoint(0,0+(self.h/2)), QtCore.QPoint(0+(self.w*0.8),0+self.h), QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.67)), QtCore.QPoint(0+self.w,0+(self.h*0.67)), QtCore.QPoint(0+self.w,0+(self.h*0.33)), QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.33)), QtCore.QPoint(0+(self.w*0.8),0), QtCore.QPoint(0,0+(self.h/2))])
+#
+#  called when terminal widget becomes invisible, stop cursor blink
+#
+   def stop(self):
+      self.blink_timer.stop()
+#
+#  called when terminal widget becomes visible, start cursor blink
+#
+   def start(self):
+      self.blink_timer.start()
+#
+#  timeout procedure, switch self.draw and fire draw event
+#
+   def do_blink(self):
+      if not self.scene():
+         return
+      self.draw= not self.draw
+      self.update()
+#
+#  boundingRect and setPos are necessary for custim graphics items
+#
+   def boundingRect(self):
+      return self.rect
+
+   def setPos(self,x,y):
+      super().setPos(x,y)
+      return
+#
+#  paint cursor (insert or overwrite cursor)
+#
+   def paint(self,painter,option,widget):
+      if self.draw:
+         if self.cursortype== CURSOR_OVERWRITE:
+            painter.setBrush(self.brush)
+            painter.fillRect(0,0,self.w,self.h,self.cursorcolor)
+         if self.cursortype== CURSOR_INSERT:
+            painter.setBrush(self.brush)
+            painter.drawPolygon(self.insertpolygon)
+
 #
 #  non scrolled terminal widget (front end) class ------------------------------------
 #
 
-class QTerminalWidget(QtWidgets.QWidget):
+class QTerminalWidget(QtWidgets.QGraphicsView):
 
 # color scheme: normal_foreground, normal_background, inverse_foreground, inverse_background, cursor_color
 
@@ -212,10 +270,8 @@ class QTerminalWidget(QtWidgets.QWidget):
     def __init__(self,parent, cols, font_size, colorscheme,scrollupbuffersize):
         super().__init__(parent)
 #
-#       determine font metrics and terminal window size in pixel
+#       set font, determine font metrics and character size in pixel
 #
-#       self._font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
-#       self._font.setStyleHint(QtGui.QFont.TypeWriter)
         self._font=QtGui.QFont(FONT)
         if font_size > MIN_TERMCHAR_SIZE:
            self._font.setPixelSize(font_size)
@@ -232,8 +288,6 @@ class QTerminalWidget(QtWidgets.QWidget):
         for i in range(cols+1):
             self._true_w.append(metrics.width(s))
             s+="A"
-            
-
 #
 #       set minimum dimensions for "cols" columns and 24 rows
 #
@@ -246,93 +300,65 @@ class QTerminalWidget(QtWidgets.QWidget):
         self._sizeh= self._char_height* scrollupbuffersize
         self.setMaximumSize(self._sizew,self._sizeh)
 #
-#       widget backround attributes
+#       widget cursor type
 #
-        self.setFocusPolicy(QtCore.Qt.WheelFocus)
-        self.setAutoFillBackground(False)
-        self.setAttribute(QtCore.Qt.WA_OpaquePaintEvent, True)
         self.setCursor(QtCore.Qt.IBeamCursor)
-        self._HPTerminal= None
-        self._screen = []
-        self._text = []
-        self._transform= QtGui.QTransform()
-        self._cursor_col = 0
-        self._cursor_row = 0
-        self._dirty = False
-        self._kbdfunc= None
-        self._alt_sequence= False
-        self._alt_seq_length=0
-        self._alt_seq_value=0
-        self._cursortype= CURSOR_OFF
+#
+#       initialize Variables
+#
+        self._HPTerminal= None        # backend object,set by setHPterminal
+        self._screen = []             # frontend screen buffer
+        self._cursor_col = 0          # cursor position
+        self._cursor_row = 0          # dto.
+        self._kbdfunc= None           # function that is called to send keyboard input
+                                      # to the loop, set by setkbdfunc
+        self._alt_sequence= False     # Variables for parsing ALT keyboard sequences
+        self._alt_seq_length=0        #
+        self._alt_seq_value=0         #
+        self._cursortype= CURSOR_OFF  # cursor mode (off, overwrite, insert)
+        self._cursor_char= 0x20       # character at cursor position
+        self._cursor_attr=-1          # attribute at cursor position
+#
+#       initialize selected color scheme
+#
         self._color_scheme=self.color_schemes[self.color_scheme_names[colorscheme]]
         self._cursor_color=self._color_scheme[2]
-        self._cursor_char= 0x20
-        self._cursor_attr=-1
-        self._cursor_rect = QtCore.QRect(0, 0, self._char_width, self._char_height)
-        self._cursor_polygon=QtGui.QPolygon([QtCore.QPoint(0,0+(self._char_height/2)), QtCore.QPoint(0+(self._char_width*0.8),0+self._char_height), QtCore.QPoint(0+(self._char_width*0.8),0+(self._char_height*0.67)), QtCore.QPoint(0+self._char_width,0+(self._char_height*0.67)), QtCore.QPoint(0+self._char_width,0+(self._char_height*0.33)), QtCore.QPoint(0+(self._char_width*0.8),0+(self._char_height*0.33)), QtCore.QPoint(0+(self._char_width*0.8),0), QtCore.QPoint(0,0+(self._char_height/2))])
-        self._redrawTimer= QtCore.QTimer()
-        self._redrawTimer.timeout.connect(self.delayed_redraw)
-        self._redraw=False
-        self._cursor_update_rect=True      # true if cursor position was updated
-        self._cursor_update_blink=True     # true if cursor only needs redraw
-        self._blink= True                  # True: draw cursor, False: draw character
 #
-#   make backend known to frontend
+#       Initialize graphics view and screne, set view background
 #
-    def setHPTerminal(self,hpterminal):
-       self._HPTerminal= hpterminal
+        self._scene= QtWidgets.QGraphicsScene()
+        self._scene.setSceneRect(0,0,self._minw,self._minh)
+        self.setScene(self._scene)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setBackgroundBrush(QtGui.QBrush(self._color_scheme[0]))
+        self._cursorItem=None
 
-    def delayed_redraw(self):
-        self._redrawTimer.stop()
-        self._redraw=True
-        self.update()
 #
 #  overwrite standard methods
 #
-
-#   def sizeHint(self):
-#       return QtCore.QSize(self._sizew,self._sizeh)
-
+#   minimum size hint
+#
     def minimumSizeHint(self):
         return QtCore.QSize(self._minw,self._minh)
 #
-#   resize event
+#   resize event, adjust number of rows and reconfigure graphicsscene and backend
 # 
     def resizeEvent(self, event):
         rows= self.height() // self._char_height
         self._HPTerminal.resize_rows(rows)
+        self._scene.setSceneRect(0,0,self._sizew, self._char_height* rows)
+        self.fitInView(0,0,self._sizew, self._char_height* rows)
 #
-#   overwrite standard events
+#   hide/show event: stop/start timer of cursor
 #
-#
-#   Paint event, this event repaints the screen if the screen memory was changed or
-#   paints the cursor
-#   This event is fired if
-#   - the terminal window becomes visible again (self._redraw is True)
-#   - after processing a new key in the termianl output queue (self._dirty is True)
-#   - the time period exceeded to redraw the cursor only for cursor blink
-#     (self._cursor_update_blink is True)
-#
-    def paintEvent(self, event):
-        painter = QtGui.QPainter(self)
-        painter.setFont(self._font)
-#
-#       repaint cursor only (blink)
-#
-        if self._cursor_update_blink:
-           self._cursor_update_blink= False
-           if isMACOS():
-              self._paint_screen(painter)
-           self._paint_cursor(painter)
-#
-#       redraw screen
-#
-        else:
-           self._dirty = False
-           self._redraw=False
-           self._paint_screen(painter)
-           self._paint_cursor(painter)
-        event.accept()
+    def hideEvent(self,event):
+       if self._cursorItem != None:
+          self._cursorItem.stop()
+
+    def showEvent(self,event):
+       if self._cursorItem != None:
+          self._cursorItem.start()
 #
 #   keyboard pressed event, process keys and put them into the keyboard input buffer
 #
@@ -442,114 +468,12 @@ class QTerminalWidget(QtWidgets.QWidget):
            time.sleep(0.05)
         event.accept()
 #
-#  update cursor position
-#
-    def _update_cursor_rect(self):
-        if self._cursortype== CURSOR_OFF or (self._cursor_col== -1 and self._cursor_row==-1):
-           return
-        cx= self._true_w[self._cursor_col]
-        cy= self._cursor_row* self._char_height
-        self._transform.reset()
-        self._transform.translate(cx,cy)
-        self._cursor_update_rect=True
-        self._blink=True
-#
-#   paint cursor
-#
-    def _paint_cursor(self, painter):
-        if self._cursortype== CURSOR_OFF or (self._cursor_col== -1 and self._cursor_row==-1):
-           return
-#
-#       cursor position was updated initialize some variables
-#
-        if self._cursor_update_rect:
-           self._cursor_update_rect= False
-           self._blink_brush=QtGui.QBrush(self._cursor_color)
-           self._blink_pen=QtGui.QPen(self._cursor_color)
-           self._blink_pen.setStyle(0)
-           if self._cursor_attr:
-              self._noblink_background_color = self._color_scheme[1]
-              self._noblink_foreground_color = self._color_scheme[0]
-           else:
-              self._noblink_background_color = self._color_scheme[0]
-              self._noblink_foreground_color = self._color_scheme[1]
-           self._noblink_brush = QtGui.QBrush(self._noblink_background_color)
-#
-#       blink on: draw cursor
-#
-        if self._blink:
-           painter.setPen(self._blink_pen)
-           painter.setBrush(self._blink_brush)
-           painter.setTransform(self._transform)
-           if self._cursortype== CURSOR_OVERWRITE:
-              painter.drawRect(self._cursor_rect)
-           else:
-              painter.drawPolygon(self._cursor_polygon)
-           self._blink= not self._blink
-#
-#       blink off: draw character
-#
-        else:
-           painter.setBrush(self._noblink_brush)
-           painter.setTransform(self._transform)
-           painter.setPen(QtGui.QPen(self._noblink_background_color))
-           painter.drawRect(self._cursor_rect)
-           painter.fillRect(self._cursor_rect, self._noblink_brush)
-           painter.setPen(QtGui.QPen(self._noblink_foreground_color))
-           painter.drawText(self._cursor_rect,QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft,chr(self._cursor_char))
-           self._blink= not self._blink
-#
-#   paint screen from screen memory 
-#
-    def _paint_screen(self, painter):
-        # Speed hacks: local name lookups are faster
-        char_width = self._char_width
-        char_height = self._char_height
-        painter_drawText = painter.drawText
-        painter_fillRect = painter.fillRect
-        painter_setPen = painter.setPen
-        align = QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft
-        color_scheme= self._color_scheme
-        # set defaults
-        background_color = color_scheme[1]
-        foreground_color = color_scheme[0]
-        brush = QtGui.QBrush(background_color)
-        painter_fillRect(self.rect(), brush)
-        pen = QtGui.QPen(foreground_color)
-        painter_setPen(pen)
-        y = 0
-        text = []
-        text_append = text.append
-        for row, line in enumerate(self._screen):
-            col = 0
-            text_line = ""
-            for item in line:
-                if isinstance(item, str):
-                    x = self._true_w[col]
-                    length = len(item)
-                    rect = QtCore.QRect(
-                        x, y, x + self._true_w[col+length]- self._true_w[col], y + char_height)
-                    painter_fillRect(rect, brush)
-                    painter_drawText(rect, align, item)
-                    col += length
-                    text_line += item
-                else:
-                    invers_flag = item
-                    if invers_flag:
-                       background_color = color_scheme[1]
-                       foreground_color = color_scheme[0]
-                    else:
-                       background_color = color_scheme[0]
-                       foreground_color = color_scheme[1]
-                    pen = QtGui.QPen(foreground_color)
-                    brush = QtGui.QBrush(background_color)
-                    painter_setPen(pen)
-                    painter.setBrush(brush)
-            y += char_height
-            text_append(text_line)
-        self._text = text
-#
 #   External interface
+#
+#   make backend known to frontend
+#
+    def setHPTerminal(self,hpterminal):
+       self._HPTerminal= hpterminal
 #
 #   get cursor type (insert, replace, off
 #
@@ -565,33 +489,89 @@ class QTerminalWidget(QtWidgets.QWidget):
 #
     def setkbdfunc(self,func):
         self._kbdfunc= func
-#
-#   return needs redraw state
-#
-    def needsRedraw(self):
-       return(self._redraw)
-#
-#   returns is dirty state
-#
-    def isDirty(self):
-       return(self._dirty)
-#
-#   returns cursor update blink state
-#
-    def setCursorUpdateBlink(self):
-       self._cursor_update_blink=True
-#:
-#   get terminal memory and cursor information
+# 
+#   draw terminal content, this is called by the backend
 #    
     def update_term(self,dump):
-        (self._cursor_col, self._cursor_row, self._cursor_char, self._cursor_attr), self._screen = dump()
-        self._update_cursor_rect()
-        self._dirty = True
 #
-#   repaint terminal after delay, issued by resize events of parent widgets
+#      fetch screen buffer dump from backend
 #
-    def redraw(self):
-        self._redrawTimer.start(UPDATE_TIMER*4)
+       (self._cursor_col, self._cursor_row, self._cursor_char, self._cursor_attr), self._screen = dump()
+#
+#      clear scene, remove and delete display items
+#
+       olditemlist= self._scene.items()
+       for item in olditemlist:
+          self._scene.removeItem(item)
+          item=None
+       self._cursorItem=None
+       y=0
+       text=[]
+#
+#      initialize attributes (bg/fg-color, invers attribute
+#
+       background_color = self._color_scheme[0]
+       foreground_color = self._color_scheme[1]
+       fgbrush=QtGui.QBrush(foreground_color)
+       invers_flag=False
+#
+#      loop over each row
+#
+       for row,line in enumerate(self._screen):
+          col=0
+          text_line=""
+#
+#         loop over each item in a row
+#
+          for item in line:
+#
+#             item is a string
+#
+              if isinstance (item,str):
+                 x=self._true_w[col]
+                 length= len(item)
+#
+#                if inverse flag set, add background rectangle to scene
+#
+                 if invers_flag:
+                    fillItem=QtWidgets.QGraphicsRectItem(0,0,self._true_w[col+length]- self._true_w[col],self._char_height)
+                    fillItem.setBrush(bgbrush)
+                    fillItem.setPos(x,y)
+                    self._scene.addItem(fillItem)
+#
+#                add text to scene
+#
+                 txtItem=QtWidgets.QGraphicsSimpleTextItem(item)
+                 txtItem.setFont(self._font)
+                 txtItem.setPos(x,y)
+                 txtItem.setBrush(fgbrush)
+                 self._scene.addItem(txtItem)
+                 col += length
+              else:
+#
+#                item is attribute, set fg/bg color
+# 
+                 invers_flag = item
+                 if invers_flag:
+                    background_color = self._color_scheme[1]
+                    foreground_color = self._color_scheme[0]
+                 else:
+                    background_color = self._color_scheme[0]
+                    foreground_color = self._color_scheme[1]
+                 fgbrush=QtGui.QBrush(foreground_color)
+                 bgbrush=QtGui.QBrush(background_color)
+          y += self._char_height
+#
+#      add cursor at cursor position to scene
+#
+       if self._cursortype != CURSOR_OFF:
+          if self._cursor_attr:
+             cursor_foreground_color= self._color_scheme[0]
+          else:
+             cursor_foreground_color= self._color_scheme[1]
+          self._cursorItem= TermCursor(self._char_width,self._char_height,self._cursortype, cursor_foreground_color)
+          self._cursorItem.setPos(self._true_w[self._cursor_col],self._cursor_row*self._char_height)
+          self._scene.addItem(self._cursorItem)
 #
 # Terminal backend class -----------------------------------------------------------
 #
@@ -1041,24 +1021,6 @@ class HPTerminal:
           for c in items:
              self.process(c)
           self.win.terminalwidget.update_term(self.dump)
-#
-#      increase counter for cursor blink
-#
-       self.blink_counter+=1
-#
-#      fire paint event if we need to redraw the screen
-#
-       if self.win.terminalwidget.isDirty() or self.win.terminalwidget.needsRedraw():
-          self.win.terminalwidget.update() # fire the paintEvent, radraw display 
-          self.blink_counter=0 
-#
-#      fire paint event if we need to update the cursor (if not off...)
-#
-       elif self.blink_counter> CURSOR_BLINK_INTERVAL and \
-            self.win.terminalwidget.getCursorType() != CURSOR_OFF:
-          self.win.terminalwidget.setCursorUpdateBlink()
-          self.blink_counter=0 
-          self.win.terminalwidget.update() # fire the paintEvent, cursor blink only 
        self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
@@ -1202,7 +1164,7 @@ class HPTerminal:
 #
     def becomes_visible(self):
        self.UpdateTimer.start(UPDATE_TIMER)
-       self.win.terminalwidget.update_term(self.dump)
+#      self.win.terminalwidget.update_term(self.dump)
 #
 #    becomes_invisible(self):
 #
