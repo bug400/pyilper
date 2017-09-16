@@ -43,6 +43,8 @@
 # - get papersize config parameter in constructor of tab widget
 # 03.09.2017 jsi
 # - register pildevice is now method of commobject
+# 16.09.2017 jsi
+# - added missing entries in ASCII character table
 #
 import copy
 import queue
@@ -175,6 +177,12 @@ class hp82162a_char(object):
       self.ac[0x17] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
       self.ac[0x18] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
       self.ac[0x19] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
+      self.ac[0x1A] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
+      self.ac[0x1B] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
+      self.ac[0x1C] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
+      self.ac[0x1D] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
+      self.ac[0x1E] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
+      self.ac[0x1F] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  
       self.ac[0x20] = bytes([ 0x00, 0x00, 0x00, 0x00, 0x00 ])  # space
       self.ac[0x21] = bytes([ 0x00, 0x00, 0x5f, 0x00, 0x00 ])  # bang
       self.ac[0x22] = bytes([ 0x00, 0x03, 0x00, 0x03, 0x00 ])  # double quote
@@ -436,15 +444,12 @@ class cls_tabhp82162a(cls_tabgeneric):
       self.hbox1.addStretch(1)
       self.hbox1.addWidget(self.guiobject)
       self.hbox1.addStretch(1)
-#     self.hbox1.setAlignment(self.guiobject,QtCore.Qt.AlignHCenter)
       self.hbox1.setContentsMargins(10,10,10,10)
       self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
-#     self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
 
       self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
       self.hbox2.addWidget(self.cbLogging)
-#     self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
       self.hbox2.addStretch(1)
 
       self.hbox2.setContentsMargins(10,3,10,3)
@@ -539,7 +544,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       self.printview=cls_ScrolledHP82162AView(self,self.name,self.pixelsize, self.pdfpixelsize,self.papersize,self.linebuffersize)
       self.hbox.addWidget(self.printview)
-#     self.hbox.setAlignment(self.printview,QtCore.Qt.AlignLeft)
       self.vbox=QtWidgets.QVBoxLayout()
 #
 #     radio buttons Man, Norm, Trace
@@ -581,7 +585,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.clearButton= QtWidgets.QPushButton("Clear")
       self.clearButton.setEnabled(False)
       self.vbox.addWidget(self.clearButton)
-#     self.vbox.setAlignment(self.clearButton,QtCore.Qt.AlignTop)
       self.clearButton.clicked.connect(self.do_clear)
 #
 #     Print Button
@@ -589,7 +592,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.printButton= QtWidgets.QPushButton("Print")
       self.printButton.setEnabled(False)
       self.vbox.addWidget(self.printButton)
-#     self.vbox.setAlignment(self.printButton,QtCore.Qt.AlignTop)
       self.printButton.pressed.connect(self.do_print_pressed)
       self.printButton.released.connect(self.do_print_released)
 #
@@ -598,7 +600,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.advanceButton= QtWidgets.QPushButton("Advance")
       self.advanceButton.setEnabled(False)
       self.vbox.addWidget(self.advanceButton)
-#     self.vbox.setAlignment(self.advanceButton,QtCore.Qt.AlignTop)
       self.advanceButton.pressed.connect(self.do_advance_pressed)
       self.advanceButton.released.connect(self.do_advance_released)
 #
@@ -607,7 +608,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.pdfButton= QtWidgets.QPushButton("PDF")
       self.pdfButton.setEnabled(False)
       self.vbox.addWidget(self.pdfButton)
-#     self.vbox.setAlignment(self.pdfButton,QtCore.Qt.AlignTop)
       self.pdfButton.clicked.connect(self.do_pdf)
 
       self.vbox.addStretch(1)
@@ -794,8 +794,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
        if len(items):
           for c in items:
              self.process(c)
-#         self.printview.update()
-#         print("update triggered")
        self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
@@ -839,9 +837,7 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
       self.hp82162awidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hp82162awidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hbox.addWidget(self.hp82162awidget)
-#     self.hbox.setAlignment(self.hp82162awidget,QtCore.Qt.AlignLeft)
       self.hbox.addWidget(self.scrollbar)
-#     self.hbox.setAlignment(self.scrollbar,QtCore.Qt.AlignLeft)
       self.setLayout(self.hbox)
 #
 #     Initialize scrollbar
@@ -1390,7 +1386,6 @@ class cls_special_k(QtCore.QObject):
       while len(self.bcline)< PRINTER_CHARACTER_HEIGHT_PIXELS:
          self.add_bar(1,False)
       self.bclist.append(self.bcline)
-#     print(self.bclist)
       return
 #
 #  add column to line buffer
