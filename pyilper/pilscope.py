@@ -43,6 +43,8 @@ from .pildevbase import cls_pildevbase
 # - refactoring: tab classes moved to this file
 # 03.09.2017 jsi
 # - register pildevice is now method of comobject
+# 14.09.2017 jsi
+# - refactoring
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -72,21 +74,20 @@ class cls_tabscope(cls_tabtermgeneric):
       self.comboLogMode.setEnabled(True)
       self.hbox2.addStretch(1)
       self.scope_charpos=0
-      self.pildevice= cls_pilscope(True)
-      self.pildevice2= cls_pilscope(False)
+      self.pildevice= cls_pilscope(True,self)
+      self.pildevice2= cls_pilscope(False,self)
+      self.guiobject.set_pildevice(self.pildevice)
 
    def enable(self):
       super().enable()
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
-      self.pildevice.register_callback_output(self.out_scope)
       self.cbShowIdy.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
 
    def post_enable(self):
       self.parent.commthread.register(self.pildevice2,self.name)
       self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
-      self.pildevice2.register_callback_output(self.out_scope)
       self.pildevice2.set_show_idy(self.showIdy)
 
    def disable(self):
@@ -118,7 +119,9 @@ class cls_tabscope(cls_tabtermgeneric):
       except AttributeError:
          pass
       return
-
+#
+#  action: show idy frames checkbox 
+#
    def do_show_idy(self):
       self.cbShowIdy.setEnabled(False)
       self.showIdy= self.cbShowIdy.isChecked()
@@ -127,20 +130,20 @@ class cls_tabscope(cls_tabtermgeneric):
       self.pildevice2.set_show_idy(self.showIdy)
       self.cbShowIdy.setEnabled(True)
 #
-#  callback output char to console
+#  forward character to the terminal frontend widget and do logging
 #
    def out_scope(self,s):
 #     ts= datetime.datetime.now()
 #     print("%s %d:%d:%d:%d %s" % (self.name,ts.hour, ts.minute, ts.second, ts.microsecond, s))
       self.scope_charpos+=len(s)
       if self.scope_charpos>self.cols :
-         self.hpterm.putchar("\x0D")
-         self.hpterm.putchar("\x0A")
+         self.guiobject.out_terminal("\x0D")
+         self.guiobject.out_terminal("\x0A")
          self.cbLogging.logWrite("\n")
          self.cbLogging.logFlush()
          self.scope_charpos=0
       for i in range(0,len(s)-1):
-         self.hpterm.putchar(s[i])
+         self.guiobject.out_terminal(s[i])
       self.cbLogging.logWrite(s)
 #
 # HP-IL scope class -----------------------------------------------------------
@@ -157,12 +160,14 @@ class cls_tabscope(cls_tabtermgeneric):
 # - refactored and merged new Ildev base class of Christoph Giesselink
 # 28.04.2016 jsi:
 # - introduced inbound parameter, if True use uppercase letters if False use loweercase
-# 09.08.2017
+# 09.08.2017 jsi:
 # - register_callback_output implemented (from base class)
+# 14.09.2017 jsi
+# - refactoring
 
 class cls_pilscope(cls_pildevbase):
 
-   def __init__ (self, inbound):
+   def __init__ (self, inbound,parent):
       super().__init__()
       self.__inbound__= inbound
       self.__mnemo__= ["DAB", "DSR", "END", "ESR", "CMD", "RDY", "IDY", "ISR"]
@@ -174,7 +179,7 @@ class cls_pilscope(cls_pildevbase):
                     "???", "???", "AAU", "LPD", "???", "???", "???", "???"]
       self.__show_idy__= False
       self.__count__ = 0
-      self.__callback_output__=None
+      self.__parent__= parent
 
 #
 # public -------
@@ -182,12 +187,10 @@ class cls_pilscope(cls_pildevbase):
 
    def set_show_idy(self,flag):
       self.__show_idy__= flag
-
-   def register_callback_output(self,proc):
-      self.__callback_output__=proc
-
 #
 #  public (overloaded) -------
+#
+#  convert frame to readable text and call the parent method out_scope
 #
    def process (self,frame):
       if not self.__isactive__:
@@ -272,12 +275,14 @@ class cls_pilscope(cls_pildevbase):
                   s = "RDY {:2X}".format(n)
 
       s= s.ljust(8)
+#
+#     inbound frames are lowercase, outbound frames are uppercase
+#
       if not self.__inbound__:
          s= s.lower()
-      if self.__callback_output__ != None:
-         self.__access_lock__.acquire()
-         locked= self.__islocked__
-         self.__access_lock__.release()
-         if not locked:
-            self.__callback_output__(s)
+      self.__access_lock__.acquire()
+      locked= self.__islocked__
+      self.__access_lock__.release()
+      if not locked:
+         self.__parent__.out_scope(s)
       return (frame)

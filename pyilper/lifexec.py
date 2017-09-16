@@ -74,13 +74,15 @@
 # - truncate error messages from external programs to 150 chars
 # 01.09.2017 jsi
 # - moved get_pdfFilename to cls_pdfprinter
+# 16.08.2017 jsi
+# - used barrconv instead of stringconv. There is no unicode exception any more.
 #
 import os
 import subprocess
 import tempfile
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 from .lifcore import *
-from .pilcharconv import charconv, stringconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
+from .pilcharconv import barrconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
 from .pilcore import isWINDOWS, FONT, decode_version, PDF_ORIENTATION_PORTRAIT
 from .pilconfig import PILCONFIG
 from .pilpdf import cls_pdfprinter
@@ -1110,12 +1112,7 @@ class cls_lifview(QtWidgets.QDialog):
 #
       if output == None:
          return
-      try:
-         d.set_text(stringconv(output,charset))
-#        d.set_text(output.decode("HP-ROMAN8"))
-      except UnicodeDecodeError as e:
-         reply=QtWidgets.QMessageBox.critical(d,'Error','cannot decode file',QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-         return
+      d.set_text(barrconv(output,charset))
       result= d.exec_()
 #
 # Init LIF image file dialog

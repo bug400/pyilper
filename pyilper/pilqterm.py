@@ -100,6 +100,11 @@
 #   improvements
 # 14.09.2017 jsi
 # - rewrite of the frontend code, use QGraphicsView and QGraphicsScene
+# - refactoring
+# 16.10.2017 jsi
+# - charconv always returns one character
+# - fixed error in ctrl_CR
+# - check for line length overflows
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -123,8 +128,7 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 
     def __init__(self,parent, font_size, cols, colorscheme,scrollupbuffersize):
         super().__init__(parent)
-        self.HPTerminal= None
-        self.callback_scrollbar= None
+        self.pildevice= None
 #
 #       create terminal window and scrollbar
 #
@@ -134,33 +138,69 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
         self.scrollbar= QtWidgets.QScrollBar()
         self.hbox.addWidget(self.scrollbar)
         self.setLayout(self.hbox)
+        self.HPTerminal= HPTerminal(self,cols,scrollupbuffersize)
+        self.terminalwidget.setHPTerminal(self.HPTerminal)
 #
 #       initialize scrollbar
 #
         self.scrollbar.valueChanged.connect(self.do_scrollbar)
         self.scrollbar.setEnabled(False)
 #
-#   make backend known to frontend
+#       enable/disable
 #
-    def setHPTerminal(self,hpterminal):
-       self.HPTerminal= hpterminal
-       self.terminalwidget.setHPTerminal(self.HPTerminal)
+    def enable(self):
+        self.scrollbar.setEnabled(True)
+        return
+
+    def disable(self):
+        self.scrollbar.setEnabled(False)
+        return
+#
+#      enable/disable keyboard input
+#
+    def enable_keyboard(self):
+        self.terminalwidget.set_kbdfunc(self.pildevice.queueOutput)
+
+    def disable_keyboard(self):
+        self.terminalwidget.set_kbdfunc(None)
+  
 #
 #   scrollbar value changed action
 #
     def do_scrollbar(self):
-       self.callback_scrollbar(self.scrollbar.value())
+       self.HPTerminal.scroll_to(self.scrollbar.value())
+       self.scrollbar.setEnabled(True)
 #
-#   register callback for scrolling
+#   setting function pass through to backend
 #
-    def register_callback_scrollbar(self,func):
-        self.callback_scrollbar=func
-        self.scrollbar.setEnabled(True)
+    def set_charset(self,charset):
+        self.HPTerminal.set_charset(charset)
+ 
+    def becomes_visible(self):
+        self.HPTerminal.becomes_visible()
+
+    def becomes_invisible(self):
+        self.HPTerminal.becomes_invisible()
+#
+#   output character to terminal
+#
+    def out_terminal(self,s):
+        self.HPTerminal.out_terminal(s)
+#
+#   reset terminal
+#
+    def reset_terminal(self):
+        self.HPTerminal.reset_terminal()
 #
 #   redraw do nothing
 #
     def redraw(self):
        return
+#
+#   set pildevice
+#
+    def set_pildevice(self,device):
+        self.pildevice= device
 
 #
 #  terminal cursor custom class ------------------------------------------------------
@@ -333,7 +373,6 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setBackgroundBrush(QtGui.QBrush(self._color_scheme[0]))
         self._cursorItem=None
-
 #
 #  overwrite standard methods
 #
@@ -487,7 +526,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #   register external function to process keyboard requests
 #
-    def setkbdfunc(self,func):
+    def set_kbdfunc(self,func):
         self._kbdfunc= func
 # 
 #   draw terminal content, this is called by the backend
@@ -575,9 +614,15 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 # Terminal backend class -----------------------------------------------------------
 #
+# The terminal backend class maintains the terminal line buffer. The terminal
+# line buffer content is arranged by the input of text and escape sequences that
+# control editing and and the cursor position.
+# The backend class also maintains the boundaries of the visible part of the
+# line buffer that is rendered by the frontend widget and sets the scrollbar parameters.
+#
 class HPTerminal:
 
-    def __init__(self, w,scrollupbuffersize,win):
+    def __init__(self, win, w,scrollupbuffersize):
         self.w = w                        # terminal/buffer width (characters)
         self.h = scrollupbuffersize       # buffer size (lines)
         self.actual_h=0                   # number of lines in the buffer
@@ -608,7 +653,6 @@ class HPTerminal:
                                           # a value of -1 indicates a continuation
                                           # line of a wrapped line
         self.reset_hard()
-        self.win.register_callback_scrollbar(self.scroll_to)
 #
 #       Queue with input data that will be displayed
 #
@@ -761,11 +805,14 @@ class HPTerminal:
         self.actual_h-=n
         return(self.cy)
 #
-# Scroll line right, add wrapped part if needed
+# Scroll line right, add wrapped part if needed. If we exceed the length of the
+# wrapped line, ignore characters
 #
     def scroll_line_right(self, y, x):
         wx= self.get_wrapped_cursor_x(x,y)
         oldlinelength= self.get_wrapped_linelength(y)
+        if oldlinelength == self.w*2:
+           return
         if wx  < oldlinelength:
            newlinelength= oldlinelength+1
            self.set_wrapped_linelength(y,newlinelength)
@@ -941,17 +988,23 @@ class HPTerminal:
 #   Carriage Return
 #
     def ctrl_CR(self):
+        if self.is_wrapped(self.cy) and self.in_wrapped_part(self.cy):
+           self.cy-=1
         self.cursor_set_x(0)
 #
-#   Dumb echo
+#   Dumb echo, if we exceed the wrapped part then issue a CR/LF
 #
     def dumb_echo(self, char):
         if self.insert:
            self.scroll_line_right(self.cy, self.cx)
            self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
         else:
+           oldwrappedlinelength=self.get_wrapped_linelength(self.cy)
+           if oldwrappedlinelength == self.w*2:
+              self.ctrl_CR()
+              self.ctrl_LF()
            self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
-           self.set_wrapped_linelength(self.cy,self.get_wrapped_linelength(self.cy)+1)
+           self.set_wrapped_linelength(self.cy,oldwrappedlinelength+1)
         self.cursor_right()
 #
 #   dump screen to terminal window, the data are painted during a paint event
@@ -1124,11 +1177,10 @@ class HPTerminal:
                 self.clear(self.cy, self.cx, self.cy+1, self.cx+1)
              else:
                 cc= charconv(c,self.charset)
-                for i in range(len(cc)):
-                   if t > 127 and (not self.charset == CHARSET_ROMAN8):
-                      self.attr |= 0x02000000
-                   self.dumb_echo(ord(cc[i])) 
-                   self.attr = 0x00000000
+                if t > 127 and (not self.charset == CHARSET_ROMAN8):
+                   self.attr |= 0x02000000
+                self.dumb_echo(ord(cc)) 
+                self.attr = 0x00000000
        return
  
 #
@@ -1140,21 +1192,16 @@ class HPTerminal:
     def set_charset(self,charset):
        self.charset= charset
 #
-#   register keyboard function
-#
-    def set_kbdfunc(self,func):
-       self.win.terminalwidget.setkbdfunc(func)
-#
 #   put character into terminal output buffer
 # 
-    def putchar (self,c):
+    def out_terminal (self,c):
        self.termqueue_lock.acquire()
        self.termqueue.put(c)
        self.termqueue_lock.release()
 #
 #   reset terminal
 # 
-    def reset(self):
+    def reset_terminal(self):
        self.termqueue_lock.acquire()
        self.termqueue.put("\x1b")
        self.termqueue.put("e")

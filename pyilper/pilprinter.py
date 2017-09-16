@@ -41,23 +41,27 @@ class cls_tabprinter(cls_tabtermgeneric):
    def __init__(self,parent,name):
       super().__init__(parent,name,True,True)
       self.hbox2.addStretch(1)
-      self.pildevice= cls_pilprinter()
+      self.pildevice= cls_pilprinter(self,self.guiobject)
+      self.guiobject.set_pildevice(self.pildevice)
 
    def enable(self):
       super().enable()
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
-      self.pildevice.register_callback_output(self.out_printer)
-      self.pildevice.register_callback_clear(self.hpterm.reset)
 
 #
-#  callback for virtual printer device to output a character 
+#   output a character to the terminal and perform logging
 #
    def out_printer(self,s):
-      self.hpterm.putchar(s)
+      self.guiobject.out_terminal(s)
       t=ord(s)
       if t !=8 and t != 13:
          self.cbLogging.logWrite(charconv(s,self.charset))
+#
+#  callback reset terminal
+#
+   def reset_printer(self):
+      self.guiobject.reset()
 #
 # Generic HPIL printer class -------------------------------------------------
 #
@@ -85,24 +89,16 @@ class cls_tabprinter(cls_tabtermgeneric):
 #   class)
 class cls_pilprinter(cls_pildevbase):
 
-   def __init__(self):
+   def __init__(self,parent,guiobject):
 
       super().__init__()
       self.__aid__ = 0x2E         # accessory id = printer
       self.__defaddr__ = 3        # default address alter AAU
       self.__did__ = "PRINTER"    # device id
       self.__fesc__ = False       # no escape sequence
-      self.__callback_output__= None
-      self.__callback_clear__= None
+      self.__parent__= parent     # parent object
+      self.__guiobject__= guiobject
 #
-# public 
-#
-   def register_callback_output(self,func):
-      self.__callback_output__=func
-
-   def register_callback_clear(self,func):
-      self.__callback_clear__=func
-
 #
 # private (overloaded) ----------
 #
@@ -120,12 +116,11 @@ class cls_pilprinter(cls_pildevbase):
          if t == 27:
             self.__fesc__ = True
          if not self.__fesc__:
-            if self.__callback_output__ != None:
-               self.__access_lock__.acquire()
-               locked= self.__islocked__
-               self.__access_lock__.release()
-               if not locked:
-                  self.__callback_output__(c)
+            self.__access_lock__.acquire()
+            locked= self.__islocked__
+            self.__access_lock__.release()
+            if not locked:
+               self.__parent__.out_printer(c)
 #
 #     ignore escape sequences
 #
@@ -137,6 +132,5 @@ class cls_pilprinter(cls_pildevbase):
 #
    def __clear_device__(self):
       super().__clear_device__()
-      if self.__callback_clear__ != None:
-         self.__callback_clear__()
+      self.__guiobject__.reset_terminal()
       return

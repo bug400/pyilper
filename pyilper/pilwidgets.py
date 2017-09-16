@@ -142,6 +142,7 @@
 #   config window
 # 08.09.2017 jsi
 # - renamed paper format from US to Letter
+# 14.04.2017 refactoring of cls_tabtermgeneric
 #
 import os
 import glob
@@ -299,11 +300,11 @@ class cls_tabtermgeneric(cls_tabgeneric):
       if self.scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
          self.scrollupbuffersize= TERMINAL_MINIMUM_ROWS
 
-      self.qterminal=QScrolledTerminalWidget(self,self.font_size, self.cols, self.colorscheme,self.scrollupbuffersize)
+      self.guiobject=QScrolledTerminalWidget(self,self.font_size, self.cols, self.colorscheme,self.scrollupbuffersize)
 
       self.hbox1= QtWidgets.QHBoxLayout()
       self.hbox1.addStretch(1)
-      self.hbox1.addWidget(self.qterminal)
+      self.hbox1.addWidget(self.guiobject)
       self.hbox1.setContentsMargins(10,10,10,10)
       self.hbox1.addStretch(1)
       self.hbox2= QtWidgets.QHBoxLayout()
@@ -324,8 +325,6 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.vbox.addLayout(self.hbox1)
       self.vbox.addLayout(self.hbox2)
       self.setLayout(self.vbox)
-      self.hpterm=HPTerminal(self.cols,self.scrollupbuffersize,self.qterminal)
-      self.qterminal.setHPTerminal(self.hpterm)
 #
 #     initialize logging checkbox
 #
@@ -340,12 +339,12 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.comboCharset.activated[str].connect(self.do_changeCharset)
          self.comboCharset.setCurrentIndex(self.charset)
          self.comboCharset.setEnabled(False)
-         self.hpterm.set_charset(self.charset)
+         self.guiobject.set_charset(self.charset)
 #
 #     catch resize event to redraw the terminal window
 #
    def resizeEvent(self,event):
-      self.qterminal.redraw()
+      self.guiobject.redraw()
 
 
    def do_cbLogging(self):
@@ -364,7 +363,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.charset=self.comboCharset.findText(text)
       PILCONFIG.put(self.name,'charset',self.charset)
       self.pildevice.setlocked(True)
-      self.hpterm.set_charset(self.charset)
+      self.guiobject.set_charset(self.charset)
       self.pildevice.setlocked(False)
 
    def enable(self):
@@ -375,9 +374,11 @@ class cls_tabtermgeneric(cls_tabgeneric):
             self.cbLogging.logOpen()
       if self.cbcharset:
          self.comboCharset.setEnabled(True)
+      self.guiobject.enable()
 
    def disable(self):
       super().disable()
+      self.guiobject.disable()
       if self.cblog:
          if self.logging:
             self.cbLogging.logClose()
@@ -388,13 +389,13 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #  becomes visible, refresh content, activate update and blink
 #
    def becomes_visible(self):
-      self.hpterm.becomes_visible()
+      self.guiobject.becomes_visible()
       return
 #
 #  becomes invisible, deactivate update and blink
 #
    def becomes_invisible(self):
-      self.hpterm.becomes_invisible()
+      self.guiobject.becomes_invisible()
       return
 #
 # Help Dialog class ----------------------------------------------------------

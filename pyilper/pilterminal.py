@@ -35,13 +35,16 @@ from .pildevbase import cls_pildevbase
 #
 # 03.09.2017 jsi
 # - register pildevice is now method of commobject
+# 14.09.2017 jsi
+# - refactoring, keyboard input is disabled if device not active
 
 class cls_tabterminal(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
       super().__init__(parent,name, False, True)
       self.hbox2.addStretch(1)
-      self.pildevice= cls_pilterminal()
+      self.pildevice= cls_pilterminal(self.guiobject)
+      self.guiobject.set_pildevice(self.pildevice)
 #
 #     enable/disable
 #
@@ -49,17 +52,19 @@ class cls_tabterminal(cls_tabtermgeneric):
       super().enable()
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
-      self.pildevice.register_callback_output(self.out_terminal)
-      self.pildevice.register_callback_clear(self.hpterm.reset)
-      self.hpterm.set_kbdfunc(self.pildevice.queueOutput)
+      self.guiobject.enable_keyboard()
 
    def disable(self):
       super().disable()
+      self.guiobject.disable_keyboard()
 #
-#  callback to output character to teminal
+#     enable keyboard only if terminal active
 #
-   def out_terminal(self,s):
-      self.hpterm.putchar(s)
+   def toggle_active(self):
+      if self.active:
+         self.guiobject.enable_keyboard()
+      else:
+         self.guiobject.disable_keyboard()
 #
 # HP-IL virtual terminal object class ---------------------------------------
 #
@@ -106,22 +111,23 @@ class cls_tabterminal(cls_tabtermgeneric):
 # 09.08.2017 jsi:
 # - register_callback_output and register_callback_clear implemented (from base
 #   class
+# 14.09.2017 jsi:
+# - refactoring
 #
 class cls_pilterminal(cls_pildevbase):
 
-   def __init__(self):
+   def __init__(self,guiobject):
       super().__init__()
 
-      self.__aid__ = 0x3E         # accessory id = general interface
-      self.__defaddr__ = 8        # default address alter AAU
-      self.__did__ = "PILTERM"    # device id
-      self.__kbdqueue__= queue.Queue()
-      self.__callback_output__= None
-      self.__callback_clear__= None
+      self.__aid__ = 0x3E              # accessory id = general interface
+      self.__defaddr__ = 8             # default address alter AAU
+      self.__did__ = "PILTERM"         # device id
+      self.__kbdqueue__= queue.Queue() # keyboard input queue to be sent to the loop
+      self.__guiobject__= guiobject    # terminal gui object
 #
 # public --------
 #
-#  put character or escape sequence to keyboard queue
+#  put character or escape sequence to keyboard queue, called by terminal frontend
 #
    def queueOutput(self,c,esc):
       self.__status_lock__.acquire()
@@ -136,28 +142,21 @@ class cls_pilterminal(cls_pildevbase):
          self.__status__ = 0xE2 # keyboard data available
       self.__status_lock__.release()
 
-   def register_callback_output(self,func):
-      self.__callback_output__=func
-
-   def register_callback_clear(self,func):
-      self.__callback_clear__=func
-
 #
 # private (overloaded) --------
 #
 #
-#  output character to terminal
+#  forward data character to the terminal frontend widget
 #
    def __indata__(self,frame):
 
-      if self.__callback_output__ != None:
-         self.__access_lock__.acquire()
-         locked= self.__islocked__
-         self.__access_lock__.release()
-         if not locked:
-            self.__callback_output__(chr(frame & 0xFF))
+      self.__access_lock__.acquire()
+      locked= self.__islocked__
+      self.__access_lock__.release()
+      if not locked:
+         self.__guiobject__.out_terminal(chr(frame & 0xFF))
 #
-#  clear device: empty keyboard queue and reset terminal via callback
+#  clear device: empty keyboard queue and reset terminal
 #
    def __clear_device__(self):
       super().__clear_device__()
@@ -169,8 +168,7 @@ class cls_pilterminal(cls_pildevbase):
          except queue.Empty:
             break
       self.__status_lock__.release()
-      if self.__callback_clear__ != None:
-         self.__callback_clear__() 
+      self.__guiobject__.reset_terminal() 
       return
 #
 #  output data from keyboard queue to controller
