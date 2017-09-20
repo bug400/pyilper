@@ -50,7 +50,7 @@ from .pilcore import isWINDOWS
 
 class LifError(Exception):
    def __init__(self,msg,add_msg=None):
-      self.msg=msg;
+      self.msg=msg
       self.add_msg= add_msg
 
 class cls_LifDir:
@@ -77,8 +77,8 @@ class cls_LifDir:
             entry[j]= self.liffile.buffer[j+i*32]
          ft= getLifInt(entry,10,2)
          if ft == 0xFFFF:
-            break;
-         if self.cur_entry== None:
+            break
+         if self.cur_entry is None:
             self.cur_entry=0
          else:
             self.cur_entry+=1
@@ -265,7 +265,7 @@ class cls_LifFile:
       self.filename= name
 
    def __open__(self):
-      if self.filename== None:
+      if self.filename is None:
          raise LifError("No file specified","")
       try:
          if self.isWindows:
@@ -276,7 +276,7 @@ class cls_LifFile:
          raise LifError("Cannot open file",e.strerror)
         
    def __close__(self):
-      if self.filefd == None:
+      if self.filefd is None:
          raise LifError("File not open","")
       try:
           os.close(self.filefd)
@@ -295,12 +295,6 @@ class cls_LifFile:
       except OSError as e:
          raise LifError("Cannot read from file",e.strerror)
 
-   def wrec(self,recno):
-      try:
-         os.lseek(self.filefd,recno_ * 256, os.SEEK_SET)
-         os.write(fd,self.buffer)
-      except OSError as e:
-         raise LifError("Cannot read from file",e.strerror)
 
    def lifopen(self):
       self.__open__()

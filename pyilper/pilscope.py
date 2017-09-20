@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
-from .pilconfig import PilConfigError, PILCONFIG
-from .pilwidgets import cls_tabtermgeneric, LogCheckboxWidget
+from PyQt5 import  QtWidgets
+from .pilconfig import PILCONFIG
+from .pilwidgets import cls_tabtermgeneric
 from .pildevbase import cls_pildevbase
 
 #

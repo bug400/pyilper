@@ -139,11 +139,11 @@ class cls_pildevbase:
 #
       if self.__getstatus__() & 0x40:
          if (frame & 0x700) == 0x000:  # data 00x xxxx xxxx -> 001 xxxx xxxx
-            frame= frame | 0x100;
+            frame= frame | 0x100
          if (frame & 0x700) == 0x200:  # end  01x xxxx xxxx -> 011 xxxx xxxx
-            frame= frame | 0x100;
+            frame= frame | 0x100
          if (frame & 0x700) == 0x600:  # idy  11x xxxx xxxx -> 111 xxxx xxxx
-            frame= frame | 0x100;
+            frame= frame | 0x100
       return(frame)
 
 #

@@ -43,7 +43,7 @@ BUFSIZE=1
 class WinPipeError(Exception):
    def __init__(self,msg,add_msg=None):
       self.msg = msg
-      if add_msg== None:
+      if add_msg is None:
          self.add_msg= add_msg
       else:
          self.add_msg = add_msg

@@ -77,14 +77,13 @@
 # 16.08.2017 jsi
 # - used barrconv instead of stringconv. There is no unicode exception any more.
 #
-import os
 import subprocess
 import tempfile
-from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
+import os
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .lifcore import *
-from .pilcharconv import barrconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
+from .pilcharconv import barrconv
 from .pilcore import isWINDOWS, FONT, decode_version, PDF_ORIENTATION_PORTRAIT
-from .pilconfig import PILCONFIG
 from .pilpdf import cls_pdfprinter
 
 PDF_MARGINS=100
@@ -151,6 +150,7 @@ def exec_single_export(parent,cmd):
 #
 def exec_double_import(parent,cmd1,cmd2,inputfile):
 
+   tmpfile=None
    try:
       if isWINDOWS():
          fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
@@ -166,7 +166,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
       p1= subprocess.Popen(cmd1,stdin=fd,stdout=tmpfile,stderr=subprocess.PIPE)
       output1,err1= p1.communicate()
       if err1.decode() != "":
-         reply=QtWidgets.QMessageBox.critical(d,'Error',trunc_message(err1),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err1),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          os.close(fd)
          return
@@ -192,11 +192,13 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    except subprocess.CalledProcessError as exc:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-      tmpfile.close()
+      if tmpfile is not None:
+         tmpfile.close()
 #
 # exec piped command, write output to file or stdout
 #
-def exec_double_export(parent,cmd1,cmd2,outputfile): 
+def exec_double_export(parent,cmd1,cmd2,outputfile):
+   tmpfile=None
    try:
       fd=None
       if outputfile != "":
@@ -223,7 +225,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
       if err1.decode() != "":
          reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err1),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
-         if fd != None:
+         if fd is not None:
             os.close(fd)
          return None
 #
@@ -237,21 +239,23 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
       output2,err2=p2.communicate()
       if err2.decode() != "":
          reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err2),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-         if fd != None:
+         if fd is not None:
             os.close(fd)
          return None
-      if fd != None:
+      if fd is not None:
          os.close(fd)
 #
 #  catch errors
 #
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-      tmpfile.close()
+      if tmpfile is not None:
+         tmpfile.close()
       return None
    except subprocess.CalledProcessError as exc:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-      tmpfile.close()
+      if tmpfile is not None:
+         tmpfile.close()
       return None
    tmpfile.close()
    return output2
@@ -384,7 +388,7 @@ class cls_lifbarcode(QtWidgets.QDialog):
 #     get output file name
 #
       flist= cls_pdfprinter.get_pdfFilename()
-      if flist== None:
+      if flist is None:
          return
       output_filename= flist[0]
 #
@@ -396,7 +400,7 @@ class cls_lifbarcode(QtWidgets.QDialog):
       else:
          output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],["sdatabar"],"")
          title="Barcodes for HP-41 data file: "+liffilename
-      if output == None:
+      if output is None:
          return
 
 #
@@ -611,7 +615,7 @@ class cls_lifexport (QtWidgets.QDialog):
 
    def do_filenameChanged(self):
       flist= self.get_outputFilename()
-      if flist == None:
+      if flist is None:
          return
       self.outputfile=flist[0]
       self.lblFilename.setText(self.outputfile)
@@ -779,7 +783,7 @@ class cls_lifimport (QtWidgets.QDialog):
 #
    def do_filenameChanged(self):
       flist= self.get_inputFilename()
-      if flist == None:
+      if flist is None:
          return
       self.inputfile=flist[0]
       self.lblFilename.setText(self.inputfile)
@@ -886,7 +890,7 @@ class cls_chk_import(QtWidgets.QDialog):
             self.ftype_num=getLifInt(b,10,2)
             self.blocks=getLifInt(b,16,4)
             self.filetype=get_finfo_type(self.ftype_num)
-            if self.filetype== None:
+            if self.filetype is None:
                self.filetype="Unknown"
             else:
                self.filetype= self.filetype[0]
@@ -1073,7 +1077,7 @@ class cls_lifview(QtWidgets.QDialog):
 #
    def do_save(self):
       flist= self.get_outputFilename()
-      if flist == None:
+      if flist is None:
          return
       self.outputfile=flist[0]
       if os.access(self.outputfile,os.W_OK):
@@ -1110,7 +1114,7 @@ class cls_lifview(QtWidgets.QDialog):
 #
 # convert and show the file content
 #
-      if output == None:
+      if output is None:
          return
       d.set_text(barrconv(output,charset))
       result= d.exec_()
@@ -1227,7 +1231,7 @@ class cls_lifinit (QtWidgets.QDialog):
 #
    def do_filenameChanged(self):
       flist= self.get_inputFilename()
-      if flist == None:
+      if flist is None:
          return
       self.lifimagefile=flist[0]
       self.lblFilename.setText(self.lifimagefile)
@@ -1380,7 +1384,7 @@ class cls_liffix (QtWidgets.QDialog):
 #
    def do_filenameChanged(self):
       flist= self.get_inputFilename()
-      if flist == None:
+      if flist is None:
          return
       self.lifimagefile=flist[0]
       self.lblFilename.setText(self.lifimagefile)

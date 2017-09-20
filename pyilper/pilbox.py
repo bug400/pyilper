@@ -73,14 +73,13 @@ COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 
-import threading
 from .pilrs232 import Rs232Error, cls_rs232
 from .pilcore import *
 
 class PilBoxError(Exception):
    def __init__(self,msg,add_msg=None):
-      self.msg=msg;
-      if add_msg== None:
+      self.msg=msg
+      if add_msg is None:
          self.add_msg=""
       else:
          self.add_msg= add_msg
@@ -109,7 +108,7 @@ class cls_pilbox:
          bytrx= self.__tty__.rcv(tmout)
       except Rs232Error as e:
          raise PilBoxError("PIL-Box command error:", e.value)
-      if bytrx== None:
+      if bytrx is None:
          raise PilBoxError("PIL-Box command error: timeout","")
       try:
          if ((ord(bytrx) & 0x3F) != (cmdfrm & 0x3F)):
@@ -137,6 +136,7 @@ class cls_pilbox:
 #     BAUDRATES list in reverse order
 #
          success= False
+         errmsg=""
          for i in range(len(BAUDRATES)-1,0,-1):
 #
 #           open device at the beginning of the loop, if error throw exception and exit
@@ -197,7 +197,7 @@ class cls_pilbox:
 # Send one or two bytes to the PIL-Box
 #
    def write(self,lbyt,hbyt=None):
-      if hbyt== None:
+      if hbyt is None:
          buf=bytearray([lbyt])
       else:
          buf=bytearray([hbyt,lbyt])

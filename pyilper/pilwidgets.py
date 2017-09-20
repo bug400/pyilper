@@ -147,7 +147,6 @@
 import os
 import glob
 import datetime
-import time
 import re
 import sys
 import pyilper
@@ -167,10 +166,9 @@ except:
    pass
 if HAS_WEBKIT and HAS_WEBENGINE:
    HAS_WEBENGINE=False
-from .pilqterm import QScrolledTerminalWidget,HPTerminal
-from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
-from .pilconfig import PilConfigError, PILCONFIG
-from .penconfig import PenConfigError, PENCONFIG
+from .pilqterm import QScrolledTerminalWidget
+from .pilcharconv import CHARSET_HP71, charsets
+from .pilconfig import PILCONFIG
 from .pilcore import *
 if isWINDOWS():
    import winreg
@@ -588,7 +586,6 @@ class cls_TtyWindow(QtWidgets.QDialog):
       super().accept()
 
    def do_cancel(self):
-      self.__device__==""
       super().reject()
 
 
@@ -923,7 +920,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 
    def do_config_Workdir(self):
       flist=self.getWorkDirName()
-      if flist== None:
+      if flist is None:
          return
       self.__workdir__= flist[0]
       self.lblwdir.setText(self.__workdir__)
@@ -1260,7 +1257,7 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
          self.__items__[row,0].setText(name)
          for col in range (1,self.cols):
             self.__items__[row,col].setText("")
-         if pildevice== None:
+         if pildevice is None:
             continue
          (active, did, aid, addr, addr2nd, hpilstatus)= pildevice.getstatus()
          if not active:
@@ -1288,7 +1285,7 @@ class cls_PilMessageBox(QtWidgets.QMessageBox):
       self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
       textEdit = self.findChild(QtWidgets.QTextEdit)
-      if textEdit != None :
+      if textEdit is not None:
          textEdit.setMinimumHeight(0)
          textEdit.setMaximumHeight(16777215)
          textEdit.setMinimumWidth(0)

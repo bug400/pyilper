@@ -45,13 +45,17 @@
 # - register pildevice is now method of commobject
 # 16.09.2017 jsi
 # - added missing entries in ASCII character table
+# 19.09.2017 jsi
+# - use raw strings in re.findall
+# 19.09.2017 jsi
+# - use raw strings in re.findall
 #
 import copy
 import queue
 import threading
 import re
-from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
-from .pilcore import UPDATE_TIMER, FONT, PDF_ORIENTATION_PORTRAIT
+from PyQt5 import QtCore, QtWidgets
+from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT
 from .pilconfig import PILCONFIG
 from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
 from .pildevbase import cls_pildevbase
@@ -669,7 +673,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
    def becomes_visible(self):
       self.printview.becomes_visible()
-      pass
 #
 #     becomes invisible, do nothing
 #
@@ -918,7 +921,7 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #
    def reset(self):
       for i in range(0,self.linebuffersize):
-         if self.lb[i] != None:
+         if self.lb[i] is not None:
             self.lb[i]= None
       self.lb_current= -1
       self.lb_anz=0
@@ -984,8 +987,7 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #         end of output
 #
           if k == self.lb_anz:
-             break;
-             pagenumberitem.setText("Page "+str(pageno))
+             break
           item_args= cls_hp82162a_line.from_hp82162a_line(self.lb[k])
           item= cls_hp82162a_line(item_args[0],item_args[1],self.pdfpixelsize)
           self.pdfprinter.print_item(item)
@@ -1062,7 +1064,7 @@ class cls_hp82162a_scene(QtWidgets.QGraphicsScene):
 #
    def reset(self):
       for i in range(0,self.rows):
-         if self.si[i] != None:
+         if self.si[i] is not None:
             self.removeItem(self.si[i])
             self.si[i]=None
 #
@@ -1070,7 +1072,7 @@ class cls_hp82162a_scene(QtWidgets.QGraphicsScene):
 #
    def update_scene(self):
       for i in range(0,self.rows):
-         if self.si[i] != None:
+         if self.si[i] is not None:
             self.removeItem(self.si[i])
             self.si[i]=None
       start= self.parent.lb_position
@@ -1147,7 +1149,7 @@ class cls_PdfOptions(QtWidgets.QDialog):
 
    def change_pdffile(self):
       flist= self.get_pdfFilename()
-      if flist== None:
+      if flist is None:
          return
       self.filename= flist [0]
       self.lfilename.setText(self.filename)
@@ -1171,7 +1173,7 @@ class cls_PdfOptions(QtWidgets.QDialog):
 #
 # Printer buffer object each entry has the following information:
 # value: value of entry
-# type: character, column data, barcode data
+# types: character, column data, barcode data
 # mode: current printer mode (we need double wide and lowercase mode)
 # width: pixel width of information
 #
@@ -1570,7 +1572,7 @@ class cls_special_k(QtCore.QObject):
 #     Graphic
 #
       elif self.esc_seq.startswith("*b") and self.esc_seq.endswith("G"):
-         ret=re.findall("\d+",self.esc_seq)
+         ret=re.findall(r"\d+",self.esc_seq)
          if ret== []:
             return
          try:
@@ -1585,7 +1587,7 @@ class cls_special_k(QtCore.QObject):
 #     barcode
 #
       elif self.esc_seq.startswith("*z") and self.esc_seq.endswith("B"):
-         ret=re.findall("\d+",self.esc_seq)
+         ret=re.findall(r"\d+",self.esc_seq)
          if ret== []:
             return
          try:
@@ -1607,7 +1609,7 @@ class cls_special_k(QtCore.QObject):
 #     skip characters
 #
       elif self.esc_seq.startswith("&a+") and self.esc_seq.endswith("C"):
-         ret=re.findall("\d+",self.esc_seq)
+         ret=re.findall(r"\d+",self.esc_seq)
          if ret== []:
             return
          try:
@@ -1623,7 +1625,7 @@ class cls_special_k(QtCore.QObject):
 #    skip columns
 #
       elif self.esc_seq.startswith("&a+") and self.esc_seq.endswith("D"):
-         ret=re.findall("\d+",self.esc_seq)
+         ret=re.findall(r"\d+",self.esc_seq)
          if ret== []:
             return
          try:
@@ -1639,7 +1641,7 @@ class cls_special_k(QtCore.QObject):
 #    skip absolute
 #
       elif self.esc_seq.startswith("&a") and self.esc_seq.endswith("D"):
-         ret=re.findall("\d+",self.esc_seq)
+         ret=re.findall(r"\d+",self.esc_seq)
          if ret== []:
             return
          try:

@@ -41,7 +41,7 @@ if isWINDOWS():
 #
 class PilThreadError(Exception):
    def __init__(self,msg,add_msg=None):
-      self.msg=msg;
+      self.msg=msg
       self.add_msg= add_msg
 
 #
@@ -140,7 +140,7 @@ class cls_pilthread_generic(QtCore.QThread):
       return
 
    def disable(self):
-      if self.commobject != None:
+      if self.commobject is not None:
          try:
             self.commobject.close()
          except:
@@ -307,7 +307,7 @@ class cls_PilTcpIpThread(cls_pilthread_generic):
                   self.commobject.close_outsocket()
                   self.send_message('not connected to virtual HP-IL devices')
                
-            if frame== None:
+            if frame is None:
                continue
 #
 #           process frame and return it to loop
@@ -362,7 +362,7 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #           read byte from socket
 #
             ret=self.commobject.read(COMTMOUTREAD)
-            if ret == None:
+            if ret is None:
                continue
       
             byt=ord(ret)
@@ -405,7 +405,7 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #              read acknowledge
 #
                b= self.commobject.read(COMTMOUTACK)
-               if b== None:
+               if b is None:
                   raise SocketError("cannot get acknowledge: ","timeout")
                if ord(b)!= 0x0D:
                   raise SocketError("cannot get acknowledge: ","unexpected value")
@@ -456,7 +456,7 @@ class cls_PilPipeThread(cls_pilthread_generic):
 #           read byte from pipe
 #
             ret=self.commobject.read(COMTMOUTREAD)
-            if ret == None:
+            if ret is None:
                continue
 
             byt=ord(ret)
@@ -500,7 +500,7 @@ class cls_PilPipeThread(cls_pilthread_generic):
 #              read acknowledge
 #
                b= self.commobject.read(COMTMOUTACK)
-               if b== None:
+               if b is None:
                   raise WinPipeError("cannot get acknowledge: ","timeout")
                if ord(b)!= 0x0D:
                   raise WinPipeError("cannot get acknowledge: ","unexpected value")

@@ -43,7 +43,7 @@ import platform
 
 class ConfigError(Exception):
    def __init__(self,msg,add_msg= None):
-      self.msg= msg;
+      self.msg= msg
       self.add_msg = add_msg
 
 
@@ -101,8 +101,8 @@ class cls_userconfig:
          except OSError as e:
             raise ConfigError("Cannot write default configuration file", e.strerror)
          return default
+      f=None
       try:
-         f=None
          f= open(self.__configfile__,"r")
          config= json.load(f)
       except json.JSONDecodeError as e:
@@ -111,16 +111,16 @@ class cls_userconfig:
       except OSError as e:
          raise ConfigError("Cannot read configuration file", e.strerror)
       finally:
-         if f != None:
+         if f is not None:
             f.close()
 
       return config
 #
 #  Store configuration, create file if it does not exist
 #
-   def write(self,config): 
+   def write(self,config):
+      f=None
       try:
-         f= None
          f= open(self.__configfile__,"w")
          json.dump(config,f,sort_keys=True,indent=3)
       except json.JSONDecodeError as e:
@@ -129,6 +129,6 @@ class cls_userconfig:
       except OSError as e:
          raise ConfigError("Cannot write to configuration file", e.strerror)
       finally:
-         if f != None:
+         if f is not None:
             f.close()
 

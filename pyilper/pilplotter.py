@@ -62,22 +62,17 @@
 # 08.09.2017 jsi
 # - fixed crash when letter format
 # - fixed crash when using user defined pen configurations
+# 19.09.2017 jsi
+# - fixed call if setInvalid
 
-from __future__ import print_function
-import os
-import re
 import sys
 import subprocess
-import time
-import sys
 import queue
-import base64
 import threading
-import pyilper
 from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version, isWINDOWS
 from .pilconfig import PilConfigError, PILCONFIG
-from .penconfig import PenConfigError, PENCONFIG
+from .penconfig import PENCONFIG
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
 from .pilpdf import cls_pdfprinter
@@ -914,7 +909,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
    def do_view(self):
       viewposition=PILCONFIG.get(self.name,"viewposition",[10,10,self.width,self.height])
-      if self.viewwin== None:
+      if self.viewwin is None:
          self.viewwin= cls_plotViewWindow(self,self.aspect_ratio)
       if self.digi_mode != MODE_NONE:
          self.viewwin.plotview.digi_start()
@@ -927,7 +922,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
    def do_print(self):
       flist= cls_pdfprinter.get_pdfFilename()
-      if flist==None:
+      if flist is None:
          return
       printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
       if self.papersize==0:
@@ -958,7 +953,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     action: show status window
 #
    def do_status(self):
-      if self.statuswin== None:
+      if self.statuswin is None:
          self.statuswin= cls_statusWindow(self)
       self.statuswin.show()
       self.statuswin.raise_()
@@ -988,12 +983,12 @@ class cls_PlotterWidget(QtWidgets.QWidget):
             self.p1x=x
             self.p1y=y
             self.plotview.digi_clear()
-            if self.viewwin != None:
+            if self.viewwin is not None:
                self.viewwin.plotview.digi_clear()
             self.digi_mode= MODE_P2
             self.plotscene.digi_mode(self.digi_mode)
             self.plotview.digi_start()
-            if self.viewwin != None:
+            if self.viewwin is not None:
                self.viewwin.plotview.digi_start()
             self.lineEditX.setText(str(self.p2x))
             self.lineEditY.setText(str(self.p2y))
@@ -1020,7 +1015,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digi_mode= MODE_DIGI
       self.plotscene.digi_mode(self.digi_mode)
       self.plotview.digi_start()
-      if self.viewwin != None:
+      if self.viewwin is not None:
          self.viewwin.plotview.digi_start()
 #
 #  stop digitizing in both views and the scene, disable Enter button, enable P1/p2 button
@@ -1035,7 +1030,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digi_mode= MODE_NONE
       self.plotscene.digi_clear()
       self.plotview.digi_clear()
-      if self.viewwin != None:
+      if self.viewwin is not None:
          self.viewwin.plotview.digi_clear()
       return
 #
@@ -1053,7 +1048,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digi_mode= MODE_P1
       self.plotscene.digi_mode(self.digi_mode)
       self.plotview.digi_start()
-      if self.viewwin != None:
+      if self.viewwin is not None:
          self.viewwin.plotview.digi_start()
 #
 #     set marks according to the original postion of P1, P2
@@ -1123,6 +1118,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 # update pen definition
 #
    def update_PenDef(self):
+      pendef = [0xff, 0xff, 0xff, 0x00, 0x01]
       if self.pen_number==0:
          pendef=[0xff,0xff,0xff,0x00,0x01]    
       elif self.pen_number==1:
@@ -1583,7 +1579,7 @@ class cls_HP7470(QtCore.QObject):
          if line =="":
             self.proc.stdin.close()
             self.proc.stdin.close()
-            self.setInvalid("ipc input/output error")
+            self.setInvalid(104,"ipc input/output error")
             return
          ret=line.split()
          cmd= int(ret[0])

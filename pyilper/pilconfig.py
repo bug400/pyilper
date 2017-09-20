@@ -31,13 +31,12 @@
 # - assign "" to self.add_msg if parameter is none in PilConfigError
 #
 from .userconfig import cls_userconfig, ConfigError
-from .pilcore import CONFIG_VERSION
 
 
 class PilConfigError(Exception):
    def __init__(self,msg,add_msg= None):
-      self.msg= msg;
-      if add_msg== None:
+      self.msg= msg
+      if add_msg is None:
          self.add_msg=""
       else:
          self.add_msg = add_msg

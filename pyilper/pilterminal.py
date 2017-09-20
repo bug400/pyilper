@@ -23,10 +23,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import queue
-import threading
-from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
-from .pilconfig import PilConfigError, PILCONFIG
-from .pilwidgets import cls_tabtermgeneric, LogCheckboxWidget
+from .pilconfig import PILCONFIG
+from .pilwidgets import cls_tabtermgeneric
 from .pildevbase import cls_pildevbase
 #
 # Terminal tab object classes ----------------------------------------------

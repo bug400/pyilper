@@ -26,12 +26,11 @@
 #
 import copy
 from .userconfig import cls_userconfig, ConfigError
-from .pilcore import CONFIG_VERSION
 
 
 class PenConfigError(Exception):
    def __init__(self,msg,add_msg= None):
-      self.msg= msg;
+      self.msg= msg
       self.add_msg = add_msg
 
 

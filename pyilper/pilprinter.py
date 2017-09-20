@@ -22,10 +22,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
-from .pilconfig import PilConfigError, PILCONFIG
-from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
-from .pilwidgets import cls_tabtermgeneric, LogCheckboxWidget
+from .pilconfig import PILCONFIG
+from .pilcharconv import charconv
+from .pilwidgets import cls_tabtermgeneric
 from .pildevbase import cls_pildevbase
 #
 # Generic printer tab classes -------------------------------------------------

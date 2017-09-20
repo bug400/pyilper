@@ -324,15 +324,15 @@
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-import os
 import time
 import threading
+import os
 from .pilcore import *
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric
 from .pilconfig import PilConfigError, PILCONFIG
-from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8, charsets
-from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt
+from .pilcharconv import CHARSET_HP71, charsets
+from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt, putLifInt
 from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
 from .pilpdf import cls_pdfprinter,cls_textItem
@@ -587,7 +587,7 @@ class cls_tabdrive(cls_tabgeneric):
 
    def do_filenameChanged(self):
       flist= self.get_lifFilename()
-      if flist == None:
+      if flist is None:
          return
       status, tracks, surfaces, blocks= self.lifMediumCheck(flist[0],False)
       if status:
@@ -668,7 +668,7 @@ class cls_tabdrive(cls_tabgeneric):
 #     get output file name
 #
       flist= cls_pdfprinter.get_pdfFilename()
-      if flist== None:
+      if flist is None:
          return
       output_filename= flist[0]
 #
@@ -849,7 +849,7 @@ class DirTableView(QtWidgets.QTableView):
                   barcodeAction= menu.addAction("Barcode")
             
             action = menu.exec_(self.mapToGlobal(event.pos()))
-            if action== None:
+            if action is None:
                event.accept()
                return
             workdir=PILCONFIG.get('pyilper','workdir')
@@ -1074,21 +1074,10 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 # 08.07.2016 jsi
 # - refactoring: windows platform flag is constructor parameter now
 #
-def putLifInt(data,offset,length,value):
-   i=length - 1
-   while i >= 0:
-      data[offset+i]= value & 0xFF
-      value=value >> 8
-      i-=1
-   return
+# 19.09.2017 jsi
+# - duplicate definition of getLifInt and putLifInt removed
 
-def getLifInt(data,offset,length):
-   i=0
-   value=0
-   while i < length:
-      value= (value <<8) + data[offset+i]
-      i+=1
-   return value
+
 
 class cls_pildrive(cls_pildevbase):
 
@@ -1192,25 +1181,6 @@ class cls_pildrive(cls_pildevbase):
 #
 # private
 #
-#
-# copy buffer 0 to buffer 1
-#
-   def __copybuf__(self):
-      self.__oc__=0
-      for i in range (256):
-         self.__buf1__[i]= self.__buf0__[i]
-      return
-
-#
-# exchange buffers
-#
-   def __exchbuf__(self):
-      self.__oc__=0
-      for i in range (256):
-         x=self.__buf1__[i]
-         self.__buf1__[i]= self.__buf0__[i]
-         self.__buf0__[i]= x
-      return
 #
 # copy buffer 0 to buffer 1
 #

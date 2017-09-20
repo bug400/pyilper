@@ -73,7 +73,7 @@
 # - revert last change, keys > 128 are mapped to characters < 128
 # 17.04.2016 jsi:
 # - reduce keyboard rate for autorepeated function keys to prevent hang up:
-#   type: vers$[Return] and then press left arrow for three seconds
+#   key in: vers$[Return] and then press left arrow for three seconds
 # 05.05.2016 jsi:
 # - introduced new Object class for scrollable terminal widget
 # 07.05.2016 jsi:
@@ -115,8 +115,8 @@ import threading
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .pilcharconv import charconv, CHARSET_HP71, CHARSET_HP41, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, isMACOS, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT
+from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -392,11 +392,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #   hide/show event: stop/start timer of cursor
 #
     def hideEvent(self,event):
-       if self._cursorItem != None:
+       if self._cursorItem is not None:
           self._cursorItem.stop()
 
     def showEvent(self,event):
-       if self._cursorItem != None:
+       if self._cursorItem is not None:
           self._cursorItem.start()
 #
 #   keyboard pressed event, process keys and put them into the keyboard input buffer
@@ -406,7 +406,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         key = event.key()
         modifiers = event.modifiers()
         alt = modifiers == QtCore.Qt.AltModifier 
-        if (event.isAutoRepeat() and text) or self._kbdfunc == None:
+        if (event.isAutoRepeat() and text) or self._kbdfunc is None:
            event.accept()
            return
         if alt:
@@ -552,6 +552,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
        background_color = self._color_scheme[0]
        foreground_color = self._color_scheme[1]
        fgbrush=QtGui.QBrush(foreground_color)
+       bgbrush=QtGui.QBrush(background_color)
        invers_flag=False
 #
 #      loop over each row
@@ -958,7 +959,7 @@ class HPTerminal:
 
     def cursor_far_right(self):
         if self.linelength[self.cy] == -1:
-           self.cursor_set(self.cy, (self.linelengt[self.cy-1]-self.w-1))
+           self.cursor_set(self.cy, (self.linelength[self.cy-1]-self.w-1))
         else:
            self.cursor_set(self.cy, (self.linelength[self.cy]-1))
 #

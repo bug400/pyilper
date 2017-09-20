@@ -143,17 +143,16 @@
 import os
 import sys
 import signal
-import threading
 import traceback
 import shutil
 import pyilper
 import re
 import argparse
-from PyQt5 import QtCore, QtGui, QtWidgets
-from .pilwidgets import cls_ui, cls_PilMessageBox, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
+from PyQt5 import QtCore, QtWidgets
+from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilcore import *
-from .pilconfig import cls_pilconfig, PilConfigError, PILCONFIG
-from .penconfig import cls_penconfig, PenConfigError, PENCONFIG
+from .pilconfig import  PilConfigError, PILCONFIG
+from .penconfig import  PenConfigError, PENCONFIG
 from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThread, cls_PilPipeThread, PilThreadError
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
 from .pilhp82162a import cls_tabhp82162a
@@ -478,7 +477,7 @@ class cls_pyilper(QtCore.QObject):
 #  callback show hp-il device status
 #
    def do_DevStatus(self):
-      if self.devstatuswin== None:
+      if self.devstatuswin is None:
          self.devstatuswin= cls_DevStatusWindow(self)
       self.devstatuswin.show()
       self.devstatuswin.raise_()
@@ -505,7 +504,7 @@ class cls_pyilper(QtCore.QObject):
       position=[pos_x, pos_y, width, height]
 
       PILCONFIG.put(self.name,"position",position)
-      if self.helpwin!= None:
+      if self.helpwin is not None:
          helpposition=[self.helpwin.pos().x(),self.helpwin.pos().y(),self.helpwin.width(),self.helpwin.height()]
          PILCONFIG.put(self.name,"helpposition",helpposition)
       try:
@@ -513,6 +512,7 @@ class cls_pyilper(QtCore.QObject):
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       QtWidgets.QApplication.quit()
+#     print(os.times())
 #
 #  callback initialize LIF medium
 #
@@ -554,7 +554,7 @@ class cls_pyilper(QtCore.QObject):
 #  callback show about window
 #
    def do_About(self):
-      if self.aboutwin== None:
+      if self.aboutwin is None:
          self.aboutwin= cls_AboutWindow(VERSION)
       self.aboutwin.show()
       self.aboutwin.raise_()
@@ -577,7 +577,7 @@ class cls_pyilper(QtCore.QObject):
 #  show help windows for a certain document
 #
    def show_Help(self,path,document):
-      if self.helpwin == None:
+      if self.helpwin is None:
          try:
             self.helpwin= cls_HelpWindow()
             self.helpwin.loadDocument(path,document)

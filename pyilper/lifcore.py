@@ -38,8 +38,6 @@
 # 01.12.2016 jsi
 # - use wcat41 instead of wall to display wall files
 #
-import platform
-import os
 
 #
 # core constants and functions to handle lif image files

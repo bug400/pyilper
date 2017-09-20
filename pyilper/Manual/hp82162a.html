@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head>
+<html xmlns="http://www.w3.org/1999/html"><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>W3.CSS Template</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,7 +24,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 <!-- Main: shift it to the right by 250 pixels when the sidenav is visible -->
 <div class="w3-main" style="margin-left:250px">
 <div class="w3-row w3-padding-64">
-<div class="w3-col w3-container">
+<p class="w3-col w3-container">
 
 <!-- Begin content -->
 
@@ -65,26 +65,23 @@ device configuration</em> in the file menu.</p>
 
 <p>The paper size setting in the <em>pyILPER</em> configuration controls the
 paper size of the PDF output (see below). Setting the terminal size to
-80x40 enlarges the HP82162A as well.</em>
+  80x40 enlarges the HP82162A as well.</p>
 
 <h3 class="w3-text-teal">Device controls</h3>
 
 <p>The HP82162A tab has the following controls:</p>
 
-<ul class="w3-ul"</ul>
-<li><em>Printer mode radio buttons</em>. Selects one of the three printer modes.
-</li>
-<li><em>Clear</em> Resets the device in the same way as a HP-IL device clear.</em>
-<li><em>Print</em> Signal the HP-IL controller that the print key is down.</em>
+<ul class="w3-ul">
+<li><em>Printer mode radio buttons</em>. Selects one of the three printer modes. </li>
+<li><em>Clear</em> Resets the device in the same way as a HP-IL device clear.</li>
+<li><em>Print</em> Signal the HP-IL controller that the print key is down.</li>
 <li><em>Advance</em> Signal the HP-IL controller that the paper advance key is
-down.</em>
+down.</li>
 <li><em>PDF</em> Generate a PDF file with the content of the printer display
-buffer. You may choose a filename, a header and the number of columns (1-3).
-</li>
+buffer. You may choose a filename, a header and the number of columns (1-3).</li>
 <li><em>Device enabled</em> checkbox: If checked, the virtual HP-IL printer is
 available and can be used as HP-IL device. The HP-IL loop must
-always be reconfigured after activation or deactivation.
-</li>
+always be reconfigured after activation or deactivation.</li>
 
 <li><em>Log Printer</em> checkbox: Activates writing printer output to the file
 <em>Devicename.log</em> in the pyILPR working directory. Output is always 
@@ -95,7 +92,6 @@ program termination. Note: only character information is sent to the log file.
 </ul>
 <!-- End content -->
 
-</div>
 </div>
   <footer id="myFooter">
     <div class="w3-container w3-theme-l1">

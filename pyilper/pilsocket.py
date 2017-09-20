@@ -34,15 +34,13 @@
 #
 
 import select
-import threading
 import socket
-import sys
 import os
 
 class SocketError(Exception):
    def __init__(self,msg,add_msg=None):
       self.msg = msg
-      if add_msg== None:
+      if add_msg is None:
          self.add_msg=""
       else:
          self.add_msg = add_msg
@@ -115,10 +113,10 @@ class cls_pilsocket:
 # write bytes to the socket
 #
    def write(self,lbyt,hbyt=None):
-      if self.__connection__== None:
+      if self.__connection__ is None:
          self.__connected__= False
          raise SocketError("cannot send data: ", " no connection")
-      if hbyt== None:
+      if hbyt is None:
          buf=bytearray([lbyt])
       else:
          buf=bytearray([lbyt,hbyt])
