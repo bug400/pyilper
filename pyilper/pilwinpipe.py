@@ -85,7 +85,7 @@ class cls_pilwinpipe:
                              )
       if (self.__pipe__ == INVALID_HANDLE_VALUE):
          self.__last_error__= win32api.GetLastError()
-         raise WinPipeError("Error in creating Named Pipe",str(self.__last_error_))
+         raise WinPipeError("Error in creating Named Pipe",str(self.__last_error__))
       self.__io_pending__= False
 
 #

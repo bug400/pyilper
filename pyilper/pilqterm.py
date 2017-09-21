@@ -105,6 +105,8 @@
 # - charconv always returns one character
 # - fixed error in ctrl_CR
 # - check for line length overflows
+# 20.10.2017 jsi:
+# - make number of comumns (80/120), font size and color scheme configurable at runtime
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -117,6 +119,7 @@ import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
 from .pilcore import UPDATE_TIMER, CURSOR_BLINK, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT
+from .pilconfig import PILCONFIG
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -126,19 +129,19 @@ CURSOR_OVERWRITE=2
 #
 class QScrolledTerminalWidget(QtWidgets.QWidget):
 
-    def __init__(self,parent, font_size, cols, colorscheme,scrollupbuffersize):
+    def __init__(self,parent):
         super().__init__(parent)
         self.pildevice= None
 #
 #       create terminal window and scrollbar
 #
         self.hbox= QtWidgets.QHBoxLayout()
-        self.terminalwidget= QTerminalWidget(self,cols,font_size, colorscheme,scrollupbuffersize)
+        self.terminalwidget= QTerminalWidget(self)
         self.hbox.addWidget(self.terminalwidget)
         self.scrollbar= QtWidgets.QScrollBar()
         self.hbox.addWidget(self.scrollbar)
         self.setLayout(self.hbox)
-        self.HPTerminal= HPTerminal(self,cols,scrollupbuffersize)
+        self.HPTerminal= HPTerminal(self)
         self.terminalwidget.setHPTerminal(self.HPTerminal)
 #
 #       initialize scrollbar
@@ -201,6 +204,12 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
     def set_pildevice(self,device):
         self.pildevice= device
+#
+#   reconfigure
+#
+    def reconfigure(self):
+      self.terminalwidget.reconfigure()
+      self.HPTerminal.reconfigure()
 
 #
 #  terminal cursor custom class ------------------------------------------------------
@@ -307,45 +316,15 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     }
 
 
-    def __init__(self,parent, cols, font_size, colorscheme,scrollupbuffersize):
+    def __init__(self,parent):
         super().__init__(parent)
-#
-#       set font, determine font metrics and character size in pixel
-#
-        self._font=QtGui.QFont(FONT)
-        if font_size > MIN_TERMCHAR_SIZE:
-           self._font.setPixelSize(font_size)
-        metrics= QtGui.QFontMetrics(self._font)
-        self._char_width=metrics.maxWidth()
-        self._char_height=metrics.height()
-#
-#       we can't relay that the nth column begins at (n-1)*self._char_width
-#       because of rounding errors, so determine the correct column position
-#       the last element is used to determine the true line width
-#
-        s=""
-        self._true_w= []
-        for i in range(cols+1):
-            self._true_w.append(metrics.width(s))
-            s+="A"
-#
-#       set minimum dimensions for "cols" columns and 24 rows
-#
-        self._minw= self._true_w[len(self._true_w)-1] # true width
-        self._minh= self._char_height* TERMINAL_MINIMUM_ROWS
-#
-#       calculate size hints
-#
-        self._sizew= self._minw
-        self._sizeh= self._char_height* scrollupbuffersize
-        self.setMaximumSize(self._sizew,self._sizeh)
-#
-#       widget cursor type
-#
-        self.setCursor(QtCore.Qt.IBeamCursor)
 #
 #       initialize Variables
 #
+        self._cols=  -1               # terminal config, initialized in reconfigure
+        self._font_size=size= -1      # dto
+        self._colorscheme= -1         # dto
+        self._scrollupbuffersize= -1  # dto
         self._HPTerminal= None        # backend object,set by setHPterminal
         self._screen = []             # frontend screen buffer
         self._cursor_col = 0          # cursor position
@@ -358,21 +337,73 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._cursortype= CURSOR_OFF  # cursor mode (off, overwrite, insert)
         self._cursor_char= 0x20       # character at cursor position
         self._cursor_attr=-1          # attribute at cursor position
-#
-#       initialize selected color scheme
-#
-        self._color_scheme=self.color_schemes[self.color_scheme_names[colorscheme]]
-        self._cursor_color=self._color_scheme[2]
+        self._font=QtGui.QFont(FONT)  # monospaced font
 #
 #       Initialize graphics view and screne, set view background
 #
         self._scene= QtWidgets.QGraphicsScene()
-        self._scene.setSceneRect(0,0,self._minw,self._minh)
         self.setScene(self._scene)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setBackgroundBrush(QtGui.QBrush(self._color_scheme[0]))
         self._cursorItem=None
+#
+#       widget cursor type
+#
+        self.setCursor(QtCore.Qt.IBeamCursor)
+#
+#       now configure
+#       
+        self.reconfigure()
+#
+#    reconfigure
+#
+    def reconfigure(self):
+#
+#       get current configuration
+#
+        self._cols=PILCONFIG.get("pyilper","terminalwidth")
+        self._colorscheme=PILCONFIG.get("pyilper","colorscheme")
+        self._font_size=PILCONFIG.get("pyilper","terminalcharsize")
+        self._scrollupbuffersize=PILCONFIG.get("pyilper","scrollupbuffersize")
+        if self._scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
+           self._scrollupbuffersize= TERMINAL_MINIMUM_ROWS
+
+#
+#       determine font metrics and character size in pixel
+#
+        if self._font_size > MIN_TERMCHAR_SIZE:
+           self._font.setPixelSize(self._font_size)
+        metrics= QtGui.QFontMetrics(self._font)
+        self._char_width=metrics.maxWidth()
+        self._char_height=metrics.height()
+#
+#       we can't relay that the nth column begins at (n-1)*self._char_width
+#       because of rounding errors, so determine the correct column position
+#       the last element is used to determine the true line width
+#
+        s=""
+        self._true_w= []
+        for i in range(self._cols+1):
+            self._true_w.append(metrics.width(s))
+            s+="A"
+#
+#       set minimum dimensions for "cols" columns and 24 rows
+#
+        self._minw= self._true_w[len(self._true_w)-1] # true width
+        self._minh= self._char_height* TERMINAL_MINIMUM_ROWS
+#
+#       calculate size hints
+#
+        self._sizew= self._minw
+        self._sizeh= self._char_height* self._scrollupbuffersize
+        self.setMaximumSize(self._sizew,self._sizeh)
+#
+#       initialize selected color scheme
+#
+        self._color_scheme=self.color_schemes[self.color_scheme_names[self._colorscheme]]
+        self._cursor_color=self._color_scheme[2]
+        self.setBackgroundBrush(QtGui.QBrush(self._color_scheme[0]))
+        return
 #
 #  overwrite standard methods
 #
@@ -623,9 +654,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 class HPTerminal:
 
-    def __init__(self, win, w,scrollupbuffersize):
-        self.w = w                        # terminal/buffer width (characters)
-        self.h = scrollupbuffersize       # buffer size (lines)
+    def __init__(self, win):
+        self.w = -1                       # terminal/buffer width (characters)
+        self.h =  -1                      # buffer size (lines)
+                                          # both variables are initialized in
+                                          # reconfigure
         self.actual_h=0                   # number of lines in the buffer
         self.fesc= False                  # status indicator for parsing esc 
                                           # sequences
@@ -653,7 +686,7 @@ class HPTerminal:
                                           # by reset screen
                                           # a value of -1 indicates a continuation
                                           # line of a wrapped line
-        self.reset_hard()
+        self.reconfigure()
 #
 #       Queue with input data that will be displayed
 #
@@ -665,6 +698,19 @@ class HPTerminal:
         self.UpdateTimer= QtCore.QTimer()
         self.UpdateTimer.setSingleShot(True)
         self.UpdateTimer.timeout.connect(self.process_queue)
+#
+#  reconfigure: changing the number of columns results in a hard reset of the screen
+#
+    def reconfigure(self):
+       self.h = PILCONFIG.get("pyilper","scrollupbuffersize")
+       if self.h < TERMINAL_MINIMUM_ROWS:
+          self.h= TERMINAL_MINIMUM_ROWS
+       w=PILCONFIG.get("pyilper","terminalwidth")
+       if w != self.w:
+          self.w= w
+          self.reset_hard()
+       self.win.terminalwidget.update_term(self.dump)
+       return
 #
 #   Reset functions
 #

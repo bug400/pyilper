@@ -142,7 +142,12 @@
 #   config window
 # 08.09.2017 jsi
 # - renamed paper format from US to Letter
-# 14.04.2017 refactoring of cls_tabtermgeneric
+# 14.04.2017 jsi
+# - refactoring of cls_tabtermgeneric
+# 20.09.2017 jsi
+# - changes of the pyILPER configuration dialog. Determine which changes need a
+#   restart of the communication and wich need a restart of the application.
+#   Issue appropriate messages. 
 #
 import os
 import glob
@@ -250,9 +255,6 @@ class cls_tabgeneric(QtWidgets.QWidget):
       self.cbActive.setEnabled(False)
       self.cbActive.stateChanged.connect(self.do_cbActive)
 
-      self.pildevice=None
-
-
    def disable(self):
       self.cbActive.setEnabled(False)
 
@@ -267,6 +269,9 @@ class cls_tabgeneric(QtWidgets.QWidget):
       PILCONFIG.put(self.name,"active",self.active)
       self.pildevice.setactive(self.active)
       self.toggle_active()
+
+   def reconfigure(self):
+      return
 #
 # generic terminal tab widget --------------------------------------------------
 #
@@ -277,15 +282,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.cblog= cblog
       self.cbcharset= cbcharset
       self.kbd_delay=False
-#
-#     Set default values
-#
-      self.cols=PILCONFIG.get("pyilper","terminalwidth")
-#
-      self.colorscheme=PILCONFIG.get("pyilper","colorscheme")
-#
-      self.font_size=PILCONFIG.get("pyilper","terminalcharsize")
-#
+
       if self.cblog:
          self.logging= PILCONFIG.get(self.name,"logging",False)
       if self.cbcharset:
@@ -294,11 +291,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
 #     Build GUI 
 #
-      self.scrollupbuffersize=PILCONFIG.get("pyilper","scrollupbuffersize")
-      if self.scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
-         self.scrollupbuffersize= TERMINAL_MINIMUM_ROWS
-
-      self.guiobject=QScrolledTerminalWidget(self,self.font_size, self.cols, self.colorscheme,self.scrollupbuffersize)
+      self.guiobject=QScrolledTerminalWidget(self)
 
       self.hbox1= QtWidgets.QHBoxLayout()
       self.hbox1.addStretch(1)
@@ -612,6 +605,9 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 
    def __init__(self,parent): 
       super().__init__()
+      self.__needs_reconnect__= False
+      self.__needs_reconfigure__= False
+      self.__needs_restart__= False
       self.__name__=parent.name
       self.__parent__= parent
       self.__mode__=  PILCONFIG.get(self.__name__,"mode")
@@ -783,7 +779,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
       self.gboxt= QtWidgets.QGroupBox()
       self.gboxt.setFlat(True)
-      self.gboxt.setTitle("Terminal Settings (restart required)")
+      self.gboxt.setTitle("Terminal Settings")
       self.gridt= QtWidgets.QGridLayout()
       self.gridt.setSpacing(3)
       self.gridt.addWidget(QtWidgets.QLabel("Terminal width"),1,0)
@@ -823,7 +819,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
       self.gboxd= QtWidgets.QGroupBox()
       self.gboxd.setFlat(True)
-      self.gboxd.setTitle("Directory Listing Settings (restart required)")
+      self.gboxd.setTitle("Directory Listing Settings")
       self.gridd= QtWidgets.QGridLayout()
       self.gridd.setSpacing(3)
       self.gridd.addWidget(QtWidgets.QLabel("Font Size"),0,0)
@@ -840,7 +836,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
       self.gboxps= QtWidgets.QGroupBox()
       self.gboxps.setFlat(True)
-      self.gboxps.setTitle("Set Papersize (restart required)")
+      self.gboxps.setTitle("Set Papersize")
       self.gridps=QtWidgets.QGridLayout()
       self.gridps.setSpacing(3)
 
@@ -924,9 +920,56 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          return
       self.__workdir__= flist[0]
       self.lblwdir.setText(self.__workdir__)
+#
+#     check if configuration parameter was changed
+#
+   def check_param(self,param,value):
+      oldvalue= PILCONFIG.get(self.__name__,param,value)
+      return (value!= oldvalue)
 
-
+#
+#  OK button pressed
+#
    def do_ok(self):
+#
+#     check if we need to restart the pyILPER communication
+#
+      self.__needs_reconnect__= False
+      self.__needs_reconnect__ |= self.check_param("mode",self.__mode__)
+      self.__needs_reconnect__ |= self.check_param("tty", self.lblTty.text())
+      self.__needs_reconnect__ |= self.check_param("ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
+      self.__needs_reconnect__ |= self.check_param("idyframe",self.__idyframe__)
+      self.__needs_reconnect__ |= self.check_param("port", int(self.edtPort.text()))
+      self.__needs_reconnect__ |= self.check_param("remotehost", self.edtRemoteHost.text())
+      if isLINUX() or isMACOS():
+         self.__needs_reconnect__ |= self.check_param("socketname", self.edtSocketPipe.text())
+      if isWINDOWS():
+         self.__needs_reconnect__ |= self.check_param("winpipename", self.edtSocketPipe.text())
+      self.__needs_reconnect__ |= self.check_param("workdir", self.lblwdir.text())
+#
+#     we need to reconnect, so get confirmation
+#
+      if self.__needs_reconnect__ and PILCONFIG.get("pyilper","show_msg_commparams_changed",True):
+         msgbox= QtWidgets.QMessageBox()
+         msgbox.setText("The changes of communication parameters or the working directory require a disconnect and reconnect of the pyILPER communication. Continue?")
+         msgbox.setIcon(QtWidgets.QMessageBox.Warning)
+         msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+         msgbox.setDefaultButton(QtWidgets.QMessageBox.Cancel)
+         cb=QtWidgets.QCheckBox("Do not show this message again")
+         msgbox.setCheckBox(cb)
+         msgbox.setWindowTitle("Warning")
+         reply=msgbox.exec()
+         PILCONFIG.put("pyilper","show_msg_commparams_changed",cb.checkState()!=QtCore.Qt.Checked)
+        
+
+#
+#    not confirmed, cancel everything
+#
+         if reply == QtWidgets.QMessageBox.Cancel:
+            super().reject
+#
+#     store parameters
+#
       PILCONFIG.put(self.__name__,"mode",self.__mode__)
       PILCONFIG.put(self.__name__,"tty", self.lblTty.text())
       PILCONFIG.put(self.__name__,"ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
@@ -934,32 +977,66 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"port", int(self.edtPort.text()))
       PILCONFIG.put(self.__name__,"remotehost", self.edtRemoteHost.text())
       PILCONFIG.put(self.__name__,"remoteport", int(self.edtRemotePort.text()))
+      if isLINUX() or isMACOS():
+         PILCONFIG.put(self.__name__,"socketname", self.edtSocketPipe.text())
+      if isWINDOWS():
+         PILCONFIG.put(self.__name__,"winpipename", self.edtSocketPipe.text())
       PILCONFIG.put(self.__name__,"workdir", self.lblwdir.text())
+#
+#     these parameters require a reconfiguration 
+#
+      self.__needs_reconfigure__= False
+      self.__needs_reconfigure__ |= self.check_param("terminalwidth", int(self.comboTerminalWidth.currentText()))
+      self.__needs_reconfigure__ |= self.check_param("colorscheme", self.comboCol.currentText())
+      self.__needs_reconfigure__ |= self.check_param("terminalcharsize",self.spinTermCharsize.value())
+      self.__needs_reconfigure__ |= self.check_param("directorycharsize",self.spinDirCharsize.value())
+#
+#     These parameters need a restart, display message
+#
+      self.__needs_restart__= False
+      self.__needs_restart__ |= self.check_param("papersize",self.combops.currentIndex())
+      self.__needs_restart__ |= self.check_param("scrollupbuffersize", self.spinScrollBufferSize.value())
+#
+#     some parameters need a restart of the application, inform user
+#
+      if self.__needs_restart__ and PILCONFIG.get("pyilper","show_msg_restartparams_changed",True):
+         msgbox= QtWidgets.QMessageBox()
+         msgbox.setText("Changes of the papersize or the scrollup buffer size require a restart of pyILPER for take the changes to effect.")
+         msgbox.setIcon(QtWidgets.QMessageBox.Information)
+         msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+         msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
+         cb=QtWidgets.QCheckBox("Do not show this message again")
+         msgbox.setCheckBox(cb)
+         msgbox.setWindowTitle("Information")
+         reply=msgbox.exec()
+         PILCONFIG.put("pyilper","show_msg_restartparams_changed",cb.checkState()!=QtCore.Qt.Checked)
+#
+#     store parameters
+#
       PILCONFIG.put(self.__name__,"terminalwidth", int(self.comboTerminalWidth.currentText()))
       PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
       PILCONFIG.put(self.__name__,"colorscheme", self.comboCol.currentText())
       PILCONFIG.put(self.__name__,"terminalcharsize",self.spinTermCharsize.value())
       PILCONFIG.put(self.__name__,"directorycharsize",self.spinDirCharsize.value())
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
-
-      if isLINUX() or isMACOS():
-         PILCONFIG.put(self.__name__,"socketname", self.edtSocketPipe.text())
-      if isWINDOWS():
-         PILCONFIG.put(self.__name__,"winpipename", self.edtSocketPipe.text())
       super().accept()
 
    def do_cancel(self):
       super().reject()
+
+   def get_status(self):
+      return (self.__needs_reconnect__, self.__needs_reconfigure__)
 
 
    @staticmethod
    def getPilConfig(parent):
       dialog= cls_PilConfigWindow(parent)
       result= dialog.exec_()
+      (reconnect,reconfigure)= dialog.get_status()
       if result== QtWidgets.QDialog.Accepted:
-         return True
+         return True, reconnect, reconfigure
       else:
-         return False
+         return False, False, False
 
 #
 # HP-IL virtual device  configuration class -----------------------------------

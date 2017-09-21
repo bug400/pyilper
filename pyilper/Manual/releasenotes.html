@@ -30,46 +30,53 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <h2 class="w3-text-teal">Release Notes for pyILPER 1.6.0</h2>
 
+<p>pyILPER 1.6.0 introduces an emulated HP82162A printer as new devices and
+includes major improvements to customize the user interface. Directory listings,
+printer output and barcodes can be created as high quality PDF files.</p>
+
+<h3 class="w3-text-teal">New features and enhancements</h3>
+
 <ul class="w3-ul">
 
-<li><em>pyILPER</em> now automatically adjusts the number of lines of the printer,
-scope and drive directory output as well as the size of the plotter output
-to the size of the main window. The number of columns of the terminal, scope and
-printer output remains fixed and can be configured to either 80 or 120 
-characters (see below).</li>
+<li>The HP82162A printer is now included as virtual HP-IL device. 
+The device provides high quality output to a PDF file. Add this device with the 
+<em>Virtual HP-IL device configuration</em> in the file menu.</li>
+ 
+<li>Resizing the main window of <em>pyILPER</em> now adjusts the number of lines 
+of the printer, scope and drive directory output as well as the size of the plotter 
+output automatically. The size of the main window is restored at start of the
+application.</li>
 
-<li>This implied the removal of the <em>terminal size</em> configuration
-parameter and the introduction of the new parameter <em>terminal
-width</em>.</li>
-
-<li>The way to disable scrolling changed as well. Set the scroll up buffer size
-to favored number of lines. Then resize the main window until all lines are
-displayed. The minimum number of lines of the scroll up buffer is 24.</li>
-
-<li>In addition to the position the previous <em>pyILPER</em> main
-window size is restored on start of the program.</li>
-
-<li>The HP82162A printer is now included as virtual HP-IL device. It 
-is not included in the default tab configuration. Thus, you must add 
-it with the <em>Virtual HP-IL device configuration</em> in the 
-file menu.</li>
+<li>The change of GUI related configuration parameters (Font sizes, terminal color 
+scheme, number of columns of the terminal widget) now effects immediately and does 
+not require a restart of the application any more.</li>
 
 <li>Barcodes can be created from the context menu in the drive tab for
 HP-41 program and SDATA files.</li>
 
 <li>A PDF file of the directory listing can be created from the tool menu
 of the drive tab.</li>
+</ul>
 
+<h3 class="w3-text-teal">Changes and incompatibilities</h3>
+
+<ul class="w3-ul">
 <li>The paper size option was moved from the plotter configuration to the
 <em>pyILPER</em> configuration in the file menu. This parameter now controls
-the medium size of the PDF output as well as the plotter settings. 
-Since this configuration parameter is global now you must reconfigure it if 
-you used it in previous <em>pyILPER</em> versions.
+the medium size of all PDF output as well as important plotter settings. 
+The default for this parameter is A4. <b>Reconfiguration required if letter format
+is used!</b></li>
 
+<li>The way to disable scrolling changed as well. Set the scroll up buffer size
+to the favored number of lines. Then resize the main window until all lines are
+displayed. The minimum number of lines of the scroll up buffer is 24.</li>
 
-<li>See the <a class="w3-hover-black" href="Changelog.html">Change Log</a> for a full list of changes.</li>
-
+<li>The <em>terminal size</em> configuration parameter was replaced by the
+<em>terminal width</em> parameter which specifies the number of columns
+(80 or 120). <b>Reconfiguration required!</b></li>
 </ul>
+<p>See the <a class="w3-hover-black" href="Changelog.html">Change Log</a> for a full list of changes.</p>
+
 <!-- End content -->
 
 </div>

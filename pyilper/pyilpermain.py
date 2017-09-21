@@ -139,6 +139,8 @@
 # - config parameter terminalsize changed to terminalwidth
 # 04.09.2017 jsi:
 # - refactoring of thread classes
+# 20.09.2017 jsi:
+# - configuration of tab parameters at runtime
 #
 import os
 import sys
@@ -347,7 +349,6 @@ class cls_pyilper(QtCore.QObject):
 #
 #     create and enable thread
 #
-
       mode=PILCONFIG.get(self.name,"mode")
       try:
          commthread_class= COMMTHREAD_CLASSES[mode]
@@ -435,18 +436,34 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.put(self.name,"active_tab",idx)
 
 #
-#  callback pyilper configuration
+#  callback pyilper configuration, reset the communication only if needed
 #
    def do_pyilperConfig(self):
-      
-      if cls_PilConfigWindow.getPilConfig(self):
-         self.disable()
+      (accept, needs_reconnect, needs_reconfigure)= cls_PilConfigWindow.getPilConfig(self) 
+      if accept:
+         if needs_reconnect:
+            self.disable()
          try:
             PILCONFIG.save()
          except PilConfigError as e:
             reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
-         self.enable()
+         if needs_reconnect:
+            self.enable()
+#
+#        reconfigure the tabs while the thread is stopped
+#
+         if needs_reconfigure:
+            if self.status== STAT_ENABLED:
+               if self.commthread is not None:
+                  if self.commthread.isRunning():
+                     self.commthread.halt()
+            for obj in self.tabobjects:
+               obj.reconfigure()
+            if self.status== STAT_ENABLED:
+               if self.commthread is not None:
+                  self.commthread.resume()
+
 #
 #  callback HP-IL device config
 #

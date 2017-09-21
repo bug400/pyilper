@@ -130,13 +130,17 @@ height of the directory entries are now properly adjusted to the font size.</li>
 <ul class="w3-ul">
 
 <li>The number of lines of the printer, scope and drive directory output is adjusted
-to the size of the main window.</li>
+to the size of the main window automatically.</li>
 
 <li>The output window of the plotter is adjusted to the size of the main window
-maintaining the aspect ratio of the papsersize setting (see below).</li>
+maintaining the aspect ratio of the papser size setting (see below).</li>
 
-<li>The <em>terminal size</em> configuration parameter was replaced by the
-parameter <em>terminal width</em>.</li>
+<li>Most <em>pyILPER</em> configuration parameters that control the GUI layout now
+take effect at runtime. Only the scroll up buffer size and the paper size require a
+restart of the application.</li>
+
+<li>The <em>pyILPER</em> configuration dialog now informs if configuration changes
+issue a reset of the communication or require a restart of the application.</li>
 
 <li>The previous size of the <em>pyILPER</em> main window is restored
 on start of the program.</li>
@@ -149,7 +153,12 @@ HP-41 program and SDATA files.</li>
 <li>Directory listings can be created from the tool menu in the drive tab.</li>
 
 <li>The paper size option was moved from the plotter configuration to the
-<em>pyILPER</em> configuration in the file menu.<li> 
+<em>pyILPER</em> configuration in the file menu. It controls the paper size of PDF
+output, the plotter paper size switch and the aspect ratio of the plotter output
+window. A reconfiguration is required if the letter format is used.<li> 
+
+<li>The <em>terminal size</em> configuration parameter was replaced by the
+parameter <em>terminal width</em>. A reconfiguration is required.</li>
 
 <li>Various bug fixes of the terminal.<li>
 

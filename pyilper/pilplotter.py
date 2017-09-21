@@ -262,15 +262,12 @@ class cls_tabplotter(cls_tabgeneric):
 #
       self.hbox1= QtWidgets.QHBoxLayout()
       self.hbox1.addWidget(self.guiobject)
-#     self.hbox1.setAlignment(self.guiobject,QtCore.Qt.AlignHCenter)
       self.hbox1.setContentsMargins(10,10,10,10)
       self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addWidget(self.cbActive)
-#     self.hbox2.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
 
       self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
       self.hbox2.addWidget(self.cbLogging)
-#     self.hbox2.setAlignment(self.cbLogging,QtCore.Qt.AlignLeft)
 
       self.lbltxtc=QtWidgets.QLabel("Log level ")
       self.comboLoglevel=QtWidgets.QComboBox()

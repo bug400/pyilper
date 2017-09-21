@@ -64,6 +64,12 @@ class cls_tabterminal(cls_tabtermgeneric):
       else:
          self.guiobject.disable_keyboard()
 #
+#     reconfigure
+#
+   def reconfigure(self):
+      self.guiobject.reconfigure()
+
+#
 # HP-IL virtual terminal object class ---------------------------------------
 #
 # Initial release derived from ILPER 1.43 for Windows

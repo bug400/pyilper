@@ -321,6 +321,8 @@
 # - added output directory list to pdf to tools
 # 03.09.2017 jsi
 # - register pildevice is now method of commobject
+# 20.09.2017 jsi
+# - make directory font size reconfigurable on runtime
 #
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -389,12 +391,9 @@ class cls_tabdrive(cls_tabgeneric):
       self.butFilename=QtWidgets.QPushButton()
       self.butFilename.setText("change")
       self.hbox1.addWidget(self.lbltxt1)
-      self.hbox1.setAlignment(self.lbltxt1,QtCore.Qt.AlignLeft)
       self.hbox1.addWidget(self.lblFilename)
-      self.hbox1.setAlignment(self.lblFilename,QtCore.Qt.AlignLeft)
       self.hbox1.addStretch(1)
       self.hbox1.addWidget(self.butFilename)
-      self.hbox1.setAlignment(self.butFilename,QtCore.Qt.AlignRight)
       self.hbox1.setContentsMargins(15,10,10,5)
 
       self.gbox = QtWidgets.QGroupBox()
@@ -414,23 +413,19 @@ class cls_tabdrive(cls_tabgeneric):
       self.gbox_buttonlist=[self.radbutCass, self.radbutDisk, self.radbutHdrive1]
       self.vbox3= QtWidgets.QVBoxLayout()
       self.vbox3.addWidget(self.gbox)
-      self.vbox3.setAlignment(self.gbox,QtCore.Qt.AlignTop)
       self.vbox3.addStretch(1)
 
       self.vbox1= QtWidgets.QVBoxLayout()
-      font_size=PILCONFIG.get("pyilper","directorycharsize")
-      self.lifdir=cls_LifDirWidget(self,10,FONT,font_size,self.papersize)
+      self.lifdir=cls_LifDirWidget(self,10,FONT,self.papersize)
       self.vbox1.addWidget(self.lifdir)
 
       self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addLayout(self.vbox1)
       self.hbox2.addLayout(self.vbox3)
-      self.hbox2.setAlignment(self.gbox,QtCore.Qt.AlignRight)
       self.hbox2.setContentsMargins(10,3,10,3)
 
       self.hbox3= QtWidgets.QHBoxLayout()
       self.hbox3.addWidget(self.cbActive)
-      self.hbox3.setAlignment(self.cbActive,QtCore.Qt.AlignLeft)
       self.hbox3.setContentsMargins(10,3,10,3)
 #
 #     Initialize file management tool bar
@@ -458,16 +453,12 @@ class cls_tabdrive(cls_tabgeneric):
       self.hbox3.addWidget(self.comboCharset)
       self.comboCharset.setEnabled(False)
 
-      self.hbox3.setAlignment(self.tBar,QtCore.Qt.AlignLeft)
       self.hbox3.addStretch(1)
 
       self.vbox= QtWidgets.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
-      self.vbox.setAlignment(self.hbox1,QtCore.Qt.AlignTop)
       self.vbox.addLayout(self.hbox2)
-      self.vbox.setAlignment(self.hbox2,QtCore.Qt.AlignTop)
       self.vbox.addLayout(self.hbox3)
-      self.vbox.setAlignment(self.hbox2,QtCore.Qt.AlignTop)
       self.setLayout(self.vbox)
 #
 #     basic initialization
@@ -508,6 +499,11 @@ class cls_tabdrive(cls_tabgeneric):
 #     enable/disable GUI elements
 #
       self.toggle_controls()
+#
+#     reconfigure
+#
+   def reconfigure(self):
+      self.lifdir.reconfigure()
 
 #
 #     enable/disable
@@ -532,7 +528,7 @@ class cls_tabdrive(cls_tabgeneric):
 
    def disable(self):
       super().disable()
-      self.timer.stop()
+#     self.timer.stop()
 #
 #  enable/disable lif image file controls:
 #  - change drive type
@@ -870,12 +866,12 @@ class DirTableView(QtWidgets.QTableView):
 
 class cls_LifDirWidget(QtWidgets.QWidget):
 
-    def __init__(self,parent,rows,font_name, font_size,papersize):
+    def __init__(self,parent,rows,font_name,papersize):
         super().__init__(parent)
         self.parent=parent
+        self.__papersize__=papersize
         self.__font_name__= font_name
-        self.__font_size__= font_size
-        self.__papersize__= papersize
+        self.__font_size__= 13
         self.__table__ = DirTableView(self,self.__papersize__)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
         self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -916,9 +912,10 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 #
 #       self.__font__= QtGui.QFont(self.__font_name__)
         self.__font__= QtGui.QFont()
-        self.__font__.setPixelSize(self.__font_size__)
-        metrics= QtGui.QFontMetrics(self.__font__)
-        self.__table__.verticalHeader().setDefaultSectionSize(metrics.height()+1)
+#       self.__font__.setPixelSize(13)
+#       metrics= QtGui.QFontMetrics(self.__font__)
+#       self.__table__.verticalHeader().setDefaultSectionSize(metrics.height()+1)
+
 #
 #       add labels for text information (label, medium, directory)
 #
@@ -930,6 +927,17 @@ class cls_LifDirWidget(QtWidgets.QWidget):
         self.__labelDir__.setText("")
         layout.addWidget(self.__labelDir__)
         layout.addWidget(self.__table__)
+
+        self.reconfigure()
+#
+#   reconfigure the font size of the directory list
+#
+    def reconfigure(self):
+        self.__font_size__= PILCONFIG.get("pyilper","directorycharsize")
+        self.__font__.setPixelSize(self.__font_size__)
+        metrics= QtGui.QFontMetrics(self.__font__)
+        self.__table__.verticalHeader().setDefaultSectionSize(metrics.height()+1)
+        self.refresh()  
 
     def getModel(self):
         return(self.__model__)
