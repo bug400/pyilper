@@ -27,6 +27,8 @@
 # Changelog
 # 07.09.2017 jsi:
 # - refactored from pilboxthread.py, piltcpipthread.py, pilsocketthread.py
+# 21.09.2017 jsi:
+# - removed message "suspended"
 #
 from PyQt5 import QtCore
 from .pilconfig import PILCONFIG
@@ -87,7 +89,7 @@ class cls_pilthread_generic(QtCore.QThread):
       self.stop.lock()
       self.stoppedCond.wait(self.stop)
       self.stop.unlock()
-      self.send_message("Communication thread suspended")
+#     self.send_message("Communication thread suspended")
 #
 # restart paused thread
 #
