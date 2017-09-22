@@ -29,6 +29,8 @@
 # 07.09.2017 jsi
 # - first version (never thought that I would do Windows low level programming one
 #   fine day)
+# 22.09.2017 jsi
+# - fixed incorrect calculation of timeout
 #
 import win32event
 import win32pipe
@@ -147,7 +149,7 @@ class cls_pilwinpipe:
 #
 #     i/o operation pending, wait for completion until timeout
 #
-      mtimeout=int(timeout)*1000
+      mtimeout=int(timeout*1000)
       retval= win32event.WaitForSingleObject(self.__overlapped__.hEvent,mtimeout)
 #
 #     timeout, return None
