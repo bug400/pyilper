@@ -105,8 +105,10 @@
 # - charconv always returns one character
 # - fixed error in ctrl_CR
 # - check for line length overflows
-# 20.10.2017 jsi:
+# 20.09.2017 jsi:
 # - make number of comumns (80/120), font size and color scheme configurable at runtime
+# 22.09.2017 jsi:
+# - get_cols method introduced (needed by scope)
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -210,6 +212,11 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
     def reconfigure(self):
       self.terminalwidget.reconfigure()
       self.HPTerminal.reconfigure()
+#
+#   get actual number of columns
+#
+    def get_cols(self):
+      return self.terminalwidget.get_cols()
 
 #
 #  terminal cursor custom class ------------------------------------------------------
@@ -545,7 +552,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     def setHPTerminal(self,hpterminal):
        self._HPTerminal= hpterminal
 #
-#   get cursor type (insert, replace, off
+#   get cursor type (insert, replace, off)
 #
     def getCursorType(self):
        return(self._cursortype)
@@ -559,6 +566,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
     def set_kbdfunc(self,func):
         self._kbdfunc= func
+#
+#   get actual number of columns
+#
+    def get_cols(self):
+       return (self._cols)
 # 
 #   draw terminal content, this is called by the backend
 #    

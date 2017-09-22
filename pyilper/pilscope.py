@@ -45,6 +45,8 @@ from .pildevbase import cls_pildevbase
 # - register pildevice is now method of comobject
 # 14.09.2017 jsi
 # - refactoring
+# 22.09.2017 jsi
+# - get actual number of columns with the get_cols method
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -136,7 +138,7 @@ class cls_tabscope(cls_tabtermgeneric):
 #     ts= datetime.datetime.now()
 #     print("%s %d:%d:%d:%d %s" % (self.name,ts.hour, ts.minute, ts.second, ts.microsecond, s))
       self.scope_charpos+=len(s)
-      if self.scope_charpos>self.cols :
+      if self.scope_charpos>self.guiobject.get_cols() :
          self.guiobject.out_terminal("\x0D")
          self.guiobject.out_terminal("\x0A")
          self.cbLogging.logWrite("\n")
