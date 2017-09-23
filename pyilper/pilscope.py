@@ -47,6 +47,9 @@ from .pildevbase import cls_pildevbase
 # - refactoring
 # 22.09.2017 jsi
 # - get actual number of columns with the get_cols method
+# 23.09.2017 jsi
+# - output hex code option added
+# - fixed bug in form feed condition determination in out_scope
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -63,6 +66,13 @@ class cls_tabscope(cls_tabtermgeneric):
       self.cbShowIdy.setEnabled(False)
       self.cbShowIdy.stateChanged.connect(self.do_show_idy)
       self.hbox2.addWidget(self.cbShowIdy)
+
+      self.showHex= PILCONFIG.get(self.name,"showhex",False)
+      self.cbShowHex= QtWidgets.QCheckBox("Show hex codes")
+      self.cbShowHex.setChecked(self.showHex)
+      self.cbShowHex.setEnabled(False)
+      self.cbShowHex.stateChanged.connect(self.do_show_hex)
+      self.hbox2.addWidget(self.cbShowHex)
 
       self.logMode= PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
       self.lbltxtc=QtWidgets.QLabel("Log mode ")
@@ -85,7 +95,9 @@ class cls_tabscope(cls_tabtermgeneric):
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.cbShowIdy.setEnabled(True)
+      self.cbShowHex.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
+      self.pildevice.set_show_hex(self.showHex)
 
    def post_enable(self):
       self.parent.commthread.register(self.pildevice2,self.name)
@@ -95,6 +107,7 @@ class cls_tabscope(cls_tabtermgeneric):
    def disable(self):
       super().disable()
       self.cbShowIdy.setEnabled(False)
+      self.cbShowHex.setEnabled(False)
 
    def do_changeLogMode(self,text):
       self.logMode=self.comboLogMode.findText(text)
@@ -132,21 +145,33 @@ class cls_tabscope(cls_tabtermgeneric):
       self.pildevice2.set_show_idy(self.showIdy)
       self.cbShowIdy.setEnabled(True)
 #
+#  action: show hex codes checkbox 
+#
+   def do_show_hex(self):
+      self.cbShowHex.setEnabled(False)
+      self.showHex= self.cbShowHex.isChecked()
+      PILCONFIG.put(self.name,"showhex",self.showHex)
+      self.pildevice.set_show_hex(self.showHex)
+      self.pildevice2.set_show_hex(self.showHex)
+      self.cbShowHex.setEnabled(True)
+#
+#
 #  forward character to the terminal frontend widget and do logging
 #
    def out_scope(self,s):
 #     ts= datetime.datetime.now()
 #     print("%s %d:%d:%d:%d %s" % (self.name,ts.hour, ts.minute, ts.second, ts.microsecond, s))
-      self.scope_charpos+=len(s)
-      if self.scope_charpos>self.guiobject.get_cols() :
+      l=len(s) 
+      if self.scope_charpos+l>=self.guiobject.get_cols() :
          self.guiobject.out_terminal("\x0D")
          self.guiobject.out_terminal("\x0A")
          self.cbLogging.logWrite("\n")
          self.cbLogging.logFlush()
          self.scope_charpos=0
-      for i in range(0,len(s)-1):
+      for i in range(0,len(s)):
          self.guiobject.out_terminal(s[i])
       self.cbLogging.logWrite(s)
+      self.scope_charpos+=l
 #
 # HP-IL scope class -----------------------------------------------------------
 #
@@ -180,7 +205,7 @@ class cls_pilscope(cls_pildevbase):
       self.__scmd9__= ["IFC", "???", "REN", "NRE", "???", "???", "???", "???",
                     "???", "???", "AAU", "LPD", "???", "???", "???", "???"]
       self.__show_idy__= False
-      self.__count__ = 0
+      self.__show_hex__= False
       self.__parent__= parent
 
 #
@@ -189,6 +214,9 @@ class cls_pilscope(cls_pildevbase):
 
    def set_show_idy(self,flag):
       self.__show_idy__= flag
+
+   def set_show_hex(self,flag):
+      self.__show_hex__= flag
 #
 #  public (overloaded) -------
 #
@@ -276,10 +304,13 @@ class cls_pilscope(cls_pildevbase):
                else:
                   s = "RDY {:2X}".format(n)
 
-      s= s.ljust(8)
 #
 #     inbound frames are lowercase, outbound frames are uppercase
 #
+      if self.__show_hex__:
+         s="{:6s} ({:03X}) ".format(s,frame)
+      else:
+         s="{:6s}  ".format(s)
       if not self.__inbound__:
          s= s.lower()
       self.__access_lock__.acquire()

@@ -109,6 +109,8 @@
 # - make number of comumns (80/120), font size and color scheme configurable at runtime
 # 22.09.2017 jsi:
 # - get_cols method introduced (needed by scope)
+# 23.09.2017 jsi:
+# - do not update scene, if tab is invisible. Redraw view if tab becomes visible
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -155,10 +157,12 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
     def enable(self):
         self.scrollbar.setEnabled(True)
+        self.HPTerminal.enable()
         return
 
     def disable(self):
         self.scrollbar.setEnabled(False)
+        self.HPTerminal.disable()
         return
 #
 #      enable/disable keyboard input
@@ -180,11 +184,22 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
     def set_charset(self,charset):
         self.HPTerminal.set_charset(charset)
- 
+#
+#   tab becomes visible, call appropriate methods to:
+#   - stop cursor blink
+#   - disable update of the graphics scene (the buffer gets still updated)
+# 
     def becomes_visible(self):
+        self.terminalwidget.becomes_visible()
         self.HPTerminal.becomes_visible()
-
+#
+#   tab becomes invisible, call appropriate methods to:
+#   - restart cursor blink
+#   - enable update of the graphics scene
+#   - redraw graphics scene
+#
     def becomes_invisible(self):
+        self.terminalwidget.becomes_invisible()
         self.HPTerminal.becomes_invisible()
 #
 #   output character to terminal
@@ -345,6 +360,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._cursor_char= 0x20       # character at cursor position
         self._cursor_attr=-1          # attribute at cursor position
         self._font=QtGui.QFont(FONT)  # monospaced font
+        self._isVisible= False        # visible state
 #
 #       Initialize graphics view and screne, set view background
 #
@@ -426,16 +442,6 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._HPTerminal.resize_rows(rows)
         self._scene.setSceneRect(0,0,self._sizew, self._char_height* rows)
         self.fitInView(0,0,self._sizew, self._char_height* rows)
-#
-#   hide/show event: stop/start timer of cursor
-#
-    def hideEvent(self,event):
-       if self._cursorItem is not None:
-          self._cursorItem.stop()
-
-    def showEvent(self,event):
-       if self._cursorItem is not None:
-          self._cursorItem.start()
 #
 #   keyboard pressed event, process keys and put them into the keyboard input buffer
 #
@@ -571,10 +577,31 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
     def get_cols(self):
        return (self._cols)
+#
+#   tab becomes invisible, stop cursor blink, set self._isVisible to false to disable
+#   updates of the graphics scene
+#   
+    def becomes_invisible(self):
+       if self._cursorItem is not None:
+          self._cursorItem.stop()
+       self._isVisible=False
+#
+#   tab becomes visible, start cursor blink, set self._isVisible to true to enable
+#   updates of the graphics scene
+#   
+    def becomes_visible(self):
+       if self._cursorItem is not None:
+          self._cursorItem.start()
+       self._isVisible=True
 # 
 #   draw terminal content, this is called by the backend
 #    
     def update_term(self,dump):
+#
+#      do nothing if not visible
+#
+       if not self._isVisible:
+          return
 #
 #      fetch screen buffer dump from backend
 #
@@ -759,6 +786,15 @@ class HPTerminal:
         self.win.scrollbar.setMaximum(0)
         self.win.scrollbar.setSingleStep(1)
         self.win.scrollbar.setPageStep(self.view_h)
+#
+#   enable: start update timer
+#
+    def enable(self):
+       self.UpdateTimer.start(UPDATE_TIMER)
+       pass
+
+    def disable(self):
+       pass
 #
 #   Terminal window was resized, update display and scrollbar
 #
@@ -1266,13 +1302,12 @@ class HPTerminal:
        self.termqueue.put("e")
        self.termqueue_lock.release()
 #
-#    becomes visible
+#    becomes visible, call update_term to redraw the view
 #
     def becomes_visible(self):
-       self.UpdateTimer.start(UPDATE_TIMER)
-#      self.win.terminalwidget.update_term(self.dump)
+       self.win.terminalwidget.update_term(self.dump)
 #
-#    becomes_invisible(self):
+#    becomes_invisible: nothing to do
 #
     def becomes_invisible(self):
        pass
