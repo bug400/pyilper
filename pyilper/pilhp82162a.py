@@ -49,6 +49,8 @@
 # - use raw strings in re.findall
 # 19.09.2017 jsi
 # - use raw strings in re.findall
+# 24.09.2016 jsi
+# - added mouse wheel scrolling support
 #
 import copy
 import queue
@@ -943,6 +945,26 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
       self.parent.scrollbar.setValue(self.lb_position)
       self.printscene.update_scene()
       return
+#
+#  Mouse wheel event
+#
+   def wheelEvent(self,event):
+       numDegrees= event.angleDelta()/8
+       delta=0
+       if numDegrees.y() is not None:
+          if numDegrees.y() < 0:
+             delta=1 
+          if numDegrees.y() > 0:
+             delta=-1
+       event.accept()
+       if self.lb_current < self.rows:
+          return
+       if self.lb_position+delta <0 or self.lb_position+delta+self.rows-1 > self.lb_current:
+          return
+       self.lb_position+=delta
+       self.parent.scrollbar.setValue(self.lb_position)
+       self.printscene.update_scene()
+       return
 #
 #  external methods
 #

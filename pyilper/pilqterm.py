@@ -111,6 +111,8 @@
 # - get_cols method introduced (needed by scope)
 # 23.09.2017 jsi:
 # - do not update scene, if tab is invisible. Redraw view if tab becomes visible
+# 24.09.2017 jsi:
+# - added mouse wheel scrolling support
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -443,6 +445,17 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._scene.setSceneRect(0,0,self._sizew, self._char_height* rows)
         self.fitInView(0,0,self._sizew, self._char_height* rows)
 #
+#   Mouse wheel event
+#
+    def wheelEvent(self,event):
+        numDegrees= event.angleDelta()/8
+        if numDegrees.y() is not None:
+           if numDegrees.y() < 0:
+              self._HPTerminal.scroll_view_down()
+           if numDegrees.y() > 0:
+              self._HPTerminal.scroll_view_up()
+        event.accept()
+#
 #   keyboard pressed event, process keys and put them into the keyboard input buffer
 #
     def keyPressEvent(self, event):
@@ -725,6 +738,11 @@ class HPTerminal:
                                           # by reset screen
                                           # a value of -1 indicates a continuation
                                           # line of a wrapped line
+        self.needs_update=False           # indicator that a screen update is needed
+                                          # triggered by:
+                                          # reconfigure, becomes_visible, 
+                                          # scroll_view_up, scroll_view_down, 
+                                          # terminal output
         self.reconfigure()
 #
 #       Queue with input data that will be displayed
@@ -748,7 +766,7 @@ class HPTerminal:
        if w != self.w:
           self.w= w
           self.reset_hard()
-       self.win.terminalwidget.update_term(self.dump)
+       self.needsUpdate=True
        return
 #
 #   Reset functions
@@ -761,7 +779,6 @@ class HPTerminal:
 
     def reset_soft(self):
         self.attr = 0x00000000
-        # Scroll parameters
         # Modes
         self.insert = False
         self.movecursor=0
@@ -787,12 +804,14 @@ class HPTerminal:
         self.win.scrollbar.setSingleStep(1)
         self.win.scrollbar.setPageStep(self.view_h)
 #
-#   enable: start update timer
+#   enable: start update timer (one shot timer)
 #
     def enable(self):
        self.UpdateTimer.start(UPDATE_TIMER)
        pass
-
+#
+#   disable: do nothing
+#
     def disable(self):
        pass
 #
@@ -813,7 +832,7 @@ class HPTerminal:
            self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
         self.win.scrollbar.setPageStep(self.view_h)
         self.win.scrollbar.setValue(self.win.scrollbar.maximum())
-        self.win.terminalwidget.update_term(self.dump)
+        self.needsUpdate=True
 #
 #   Low-level terminal functions on terminal line buffer
 #
@@ -956,11 +975,15 @@ class HPTerminal:
        if self.view_y1< self.cy:
           self.view_y0+=1
           self.view_y1+=1
+          self.needsUpdate=True
+          self.win.scrollbar.setValue(self.view_y0)
 
     def scroll_view_up(self):
        if self.view_y0 >0:
           self.view_y0-=1
           self.view_y1-=1
+          self.needsUpdate=True
+          self.win.scrollbar.setValue(self.view_y0)
 #
 #   scroll to the last line of the buffer
 #
@@ -1166,9 +1189,12 @@ class HPTerminal:
 #      process items and generate new terminal screen dump
 #
        if len(items):
+          self.needsUpdate=True
           for c in items:
              self.process(c)
+       if self.needsUpdate:
           self.win.terminalwidget.update_term(self.dump)
+       self.needsUpdate=False
        self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
@@ -1305,7 +1331,7 @@ class HPTerminal:
 #    becomes visible, call update_term to redraw the view
 #
     def becomes_visible(self):
-       self.win.terminalwidget.update_term(self.dump)
+       self.needsUpdate=True
 #
 #    becomes_invisible: nothing to do
 #
@@ -1317,4 +1343,4 @@ class HPTerminal:
     def scroll_to(self,value):
        self.view_y0= value
        self.view_y1= value + self.view_h-1
-       self.win.terminalwidget.update_term(self.dump)
+       self.needsUpdate=True
