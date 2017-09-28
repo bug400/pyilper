@@ -64,11 +64,17 @@
 # - fixed crash when using user defined pen configurations
 # 19.09.2017 jsi
 # - fixed call if setInvalid
+# 27.09.2017 jsi
+# - renamed putOutput to putDataToHPIL
+# - code to output data to HP-IL rewritten
+# 28.09.2017 jsi
+# - block multiple calls of start_digi
 
 import sys
 import subprocess
 import queue
 import threading
+import array
 from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version, isWINDOWS
 from .pilconfig import PilConfigError, PILCONFIG
@@ -580,14 +586,18 @@ class cls_mygraphicsview(QtWidgets.QGraphicsView):
 #  start digitizing, switch to crosshair cursor
 #
    def digi_start(self):
-      self.restorecursor=self.viewport().cursor()
-      self.viewport().setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
+      if self.digitize:
+         return
+      if self.restorecursor is None:
+         self.restorecursor=self.viewport().cursor()
+         self.viewport().setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
       self.digitize= True
 #
 #  finish digitizing, restore old cursor
 #
    def digi_clear(self):
       self.viewport().setCursor(self.restorecursor)
+      self.restorecursor=None
       self.digitize= False
 #
 #  Mouse click event, convert coordinates first to scene coordinates and then to
@@ -1005,6 +1015,8 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #  line edit, disable P1/P2 button. Called by GUI command queue processing
 #
    def digi_start(self):
+      if self.digi_mode== MODE_DIGI:
+         return
       self.digiButton.setEnabled(True)
       self.p1p2Button.setEnabled(False)
       self.lineEditX.setEnabled(True)
@@ -1624,12 +1636,12 @@ class cls_HP7470(QtCore.QObject):
             self.guiobject.put_cmd([CMD_PLOT_AT, self.x,self.y])
             self.guiobject.put_cmd([CMD_LOG,2,"Plot At %d %d\n" % (self.x,self.y)])
 #
-#        output from plotter to HP-IL, use the cls_pilplotter setOutput 
-#        method. This puts the data to an output data queue of pilotter
+#        output from plotter to HP-IL, use the cls_pilplotter putDataToHPIL 
+#        method. This puts the data to an output data buffer of pilotter
 #
          elif cmd== CMD_OUTPUT:
             result=ret[1]+chr(0x0D)+chr(0x0A)
-            self.parent.setOutput(result)
+            self.parent.putDataToHPIL(result)
             self.guiobject.put_cmd([CMD_LOG,1,"Plotter to HP-IL: %s\n" % ret[1]])
 #
 #        status, error, termchar
@@ -1782,8 +1794,6 @@ class cls_pilplotter(cls_pildevbase):
       self.__aid__ = 0x60         # accessory id 
       self.__defaddr__ = 5        # default address alter AAU
       self.__did__ = "HP7470A"    # device id
-      self.__outbuf__=bytearray(256) # output buffer
-      self.__oc__= 0              # byte pointer in output buffer
 #
 #     object specific variables
 #
@@ -1798,6 +1808,11 @@ class cls_pilplotter(cls_pildevbase):
 #
       self.__plotter__=cls_HP7470(self,self.__guiobject__,self.__papersize__)
 #
+#     initialize HP-IL outdata buffer
+#
+      self.__outbuf__= array.array('i')
+      self.__oc__=0
+#
 # public (overloaded) --------
 #
 #  enable: reset
@@ -1806,7 +1821,7 @@ class cls_pilplotter(cls_pildevbase):
       self.__plotter__.enable()
       return
 #
-#  disable: clear the HP-GL command queue
+#  disable: clear the remote HP-GL command queue
 #
    def disable(self):
       self.__plot_queue_lock__.acquire()
@@ -1828,7 +1843,7 @@ class cls_pilplotter(cls_pildevbase):
       frame= super().process(frame)
       return frame
 #
-#  process the HPGL command queue
+#  process the remote HPGL command queue
 #
    def process_plot_queue(self):
        items=[]
@@ -1846,23 +1861,22 @@ class cls_pilplotter(cls_pildevbase):
              self.__plotter__.process(c)
        return
 #
-#  put command into the plot-command queue
+#  put remote HP-GL command into the plot-command queue
 #
    def put_cmd(self,item):
        self.__plot_queue_lock__.acquire()
        self.__plot_queue__.put(item)
        self.__plot_queue_lock__.release()
-
 #
 # public --------
 #
-#  put output into buffer
+#  put data to the HP-IL outdata buffer, called by the plotter processor
 #
-   def setOutput(self,s):
+   def putDataToHPIL(self,s):
       self.__status_lock__.acquire()
       self.__oc__=0
-      for c in reversed(s):
-         self.__outbuf__[self.__oc__]= ord(c)
+      for c in s:
+         self.__outbuf__.insert(0,ord(c))
          self.__oc__+=1
       self.__status__ = self.__status__ | 0x10 # set ready for data bit
       self.__status_lock__.release()
@@ -1900,7 +1914,7 @@ class cls_pilplotter(cls_pildevbase):
 # private (overloaded) --------
 #
 #
-#  output character to plotter
+#  forward data coming from HP-IL to the plotter processor
 #
    def __indata__(self,frame):
 
@@ -1910,12 +1924,13 @@ class cls_pilplotter(cls_pildevbase):
       if not locked:
          self.__plotter__.process_char(chr(frame & 0xFF))
 #
-#  clear device: empty output queue and reset plotter
+#  clear device: empty HP-IL outdata buffer and reset plotter
 #
    def __clear_device__(self):
       super().__clear_device__()
       self.__status_lock__.acquire()
       self.__oc__=0
+      self.__outbuf__= array.array('i')
       self.__status__= self.__status__ & 0xEF # clear ready for data
       self.__status_lock__.release()
 #
@@ -1935,15 +1950,16 @@ class cls_pilplotter(cls_pildevbase):
       self.__plotter__.reset()
       return
 #
-#  output data from plotter to controller
+#  send data from HP-IL outdata buffer to the loop
 #
    def __outdata__(self,frame):
       self.__status_lock__.acquire()
-      if self.__oc__ > 0:
-         self.__oc__-=1
-         frame= self.__outbuf__[self.__oc__]
+      if self.__oc__== 0:
+         frame= 0x540 # EOT
       else:
-         frame= 0x540
-         self.__status__= self.__status__ & 0xEF # clear ready for data
+         frame= self.__outbuf__.pop()
+         self.__oc__-=1
+         if self.__oc__== 0:
+            self.__status__= self.__status__ & 0xEF # clear ready for data bit
       self.__status_lock__.release()
-      return (frame)
+      return(frame)

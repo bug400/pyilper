@@ -50,11 +50,17 @@ from .pildevbase import cls_pildevbase
 # 23.09.2017 jsi
 # - output hex code option added
 # - fixed bug in form feed condition determination in out_scope
+# 25.09.2017 jsi
+# - extended options to display frames (mnemonic only, hex only, mnemonic and hex)
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
 LOG_BOTH=2
+DISPLAY_MNEMONIC=0
+DISPLAY_HEX=1
+DISPLAY_BOTH=2
 log_mode= ["Inbound", "Outbound", "Both"]
+display_mode= ["Mnemonic","Hex","Both"]
 
 class cls_tabscope(cls_tabtermgeneric):
 
@@ -67,12 +73,16 @@ class cls_tabscope(cls_tabtermgeneric):
       self.cbShowIdy.stateChanged.connect(self.do_show_idy)
       self.hbox2.addWidget(self.cbShowIdy)
 
-      self.showHex= PILCONFIG.get(self.name,"showhex",False)
-      self.cbShowHex= QtWidgets.QCheckBox("Show hex codes")
-      self.cbShowHex.setChecked(self.showHex)
-      self.cbShowHex.setEnabled(False)
-      self.cbShowHex.stateChanged.connect(self.do_show_hex)
-      self.hbox2.addWidget(self.cbShowHex)
+      self.displayMode= PILCONFIG.get(self.name,"displaymode",LOG_INBOUND)
+      self.lbltxtc=QtWidgets.QLabel("Display mode ")
+      self.comboDisplayMode=QtWidgets.QComboBox()
+      for txt in display_mode:
+         self.comboDisplayMode.addItem(txt)
+         self.hbox2.addWidget(self.lbltxtc)
+         self.hbox2.addWidget(self.comboDisplayMode)
+      self.comboDisplayMode.activated[str].connect(self.do_changeDisplayMode)
+      self.comboDisplayMode.setCurrentIndex(self.displayMode)
+      self.comboDisplayMode.setEnabled(False)
 
       self.logMode= PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
       self.lbltxtc=QtWidgets.QLabel("Log mode ")
@@ -83,7 +93,8 @@ class cls_tabscope(cls_tabtermgeneric):
          self.hbox2.addWidget(self.comboLogMode)
       self.comboLogMode.activated[str].connect(self.do_changeLogMode)
       self.comboLogMode.setCurrentIndex(self.logMode)
-      self.comboLogMode.setEnabled(True)
+      self.comboLogMode.setEnabled(False)
+
       self.hbox2.addStretch(1)
       self.scope_charpos=0
       self.pildevice= cls_pilscope(True,self)
@@ -95,9 +106,9 @@ class cls_tabscope(cls_tabtermgeneric):
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.cbShowIdy.setEnabled(True)
-      self.cbShowHex.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
-      self.pildevice.set_show_hex(self.showHex)
+      self.comboLogMode.setEnabled(True)
+      self.comboDisplayMode.setEnabled(True)
 
    def post_enable(self):
       self.parent.commthread.register(self.pildevice2,self.name)
@@ -107,7 +118,8 @@ class cls_tabscope(cls_tabtermgeneric):
    def disable(self):
       super().disable()
       self.cbShowIdy.setEnabled(False)
-      self.cbShowHex.setEnabled(False)
+      self.comboLogMode.setEnabled(False)
+      self.comboDisplayMode.setEnabled(False)
 
    def do_changeLogMode(self,text):
       self.logMode=self.comboLogMode.findText(text)
@@ -118,6 +130,12 @@ class cls_tabscope(cls_tabtermgeneric):
       self.pildevice2.setlocked(True)
       self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
       self.pildevice2.setlocked(False)
+
+   def do_changeDisplayMode(self,text):
+      self.displayMode=self.comboDisplayMode.findText(text)
+      PILCONFIG.put(self.name,'displaymode',self.displayMode)
+      self.pildevice.set_displayMode(self.displayMode)
+      self.pildevice2.set_displayMode(self.displayMode)
 
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
@@ -144,16 +162,6 @@ class cls_tabscope(cls_tabtermgeneric):
       self.pildevice.set_show_idy(self.showIdy)
       self.pildevice2.set_show_idy(self.showIdy)
       self.cbShowIdy.setEnabled(True)
-#
-#  action: show hex codes checkbox 
-#
-   def do_show_hex(self):
-      self.cbShowHex.setEnabled(False)
-      self.showHex= self.cbShowHex.isChecked()
-      PILCONFIG.put(self.name,"showhex",self.showHex)
-      self.pildevice.set_show_hex(self.showHex)
-      self.pildevice2.set_show_hex(self.showHex)
-      self.cbShowHex.setEnabled(True)
 #
 #
 #  forward character to the terminal frontend widget and do logging
@@ -205,7 +213,7 @@ class cls_pilscope(cls_pildevbase):
       self.__scmd9__= ["IFC", "???", "REN", "NRE", "???", "???", "???", "???",
                     "???", "???", "AAU", "LPD", "???", "???", "???", "???"]
       self.__show_idy__= False
-      self.__show_hex__= False
+      self.__displayMode__= DISPLAY_MNEMONIC
       self.__parent__= parent
 
 #
@@ -215,8 +223,8 @@ class cls_pilscope(cls_pildevbase):
    def set_show_idy(self,flag):
       self.__show_idy__= flag
 
-   def set_show_hex(self,flag):
-      self.__show_hex__= flag
+   def set_displayMode(self,flag):
+      self.__displayMode__= flag
 #
 #  public (overloaded) -------
 #
@@ -307,10 +315,12 @@ class cls_pilscope(cls_pildevbase):
 #
 #     inbound frames are lowercase, outbound frames are uppercase
 #
-      if self.__show_hex__:
-         s="{:6s} ({:03X}) ".format(s,frame)
-      else:
+      if self.__displayMode__== DISPLAY_MNEMONIC:
          s="{:6s}  ".format(s)
+      elif self.__displayMode__== DISPLAY_HEX:
+         s="{:03X}  ".format(frame)
+      elif self.__displayMode__== DISPLAY_BOTH:
+         s="{:6s} ({:03X}) ".format(s,frame)
       if not self.__inbound__:
          s= s.lower()
       self.__access_lock__.acquire()

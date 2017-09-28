@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import queue
+import threading
+import array
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric
 from .pildevbase import cls_pildevbase
@@ -117,6 +119,8 @@ class cls_tabterminal(cls_tabtermgeneric):
 #   class
 # 14.09.2017 jsi:
 # - refactoring
+# 27.09.2017 jsi
+# - code to output data to HP-IL rewritten
 #
 class cls_pilterminal(cls_pildevbase):
 
@@ -126,69 +130,72 @@ class cls_pilterminal(cls_pildevbase):
       self.__aid__ = 0x3E              # accessory id = general interface
       self.__defaddr__ = 8             # default address alter AAU
       self.__did__ = "PILTERM"         # device id
-      self.__kbdqueue__= queue.Queue() # keyboard input queue to be sent to the loop
       self.__guiobject__= guiobject    # terminal gui object
+#
+#     initialize HP-IL outdata buffer
+#
+      self.__outbuf__= array.array('i')
+      self.__oc__=0
+
 #
 # public --------
 #
-#  put character or escape sequence to keyboard queue, called by terminal frontend
+#  put character or escape sequence to HP-IL outdata queue, called by terminal frontend
 #
-   def queueOutput(self,c,esc):
+   def putDataToHPIL(self,c,esc):
       self.__status_lock__.acquire()
-      if not self.__kbdqueue__.full():
-         if esc:
-#           do not queue ATTN if queue not empty
-            if not (self.__status__ & 0x40 and c== 76):
-               self.__kbdqueue__.put(0x1B)
-               self.__kbdqueue__.put(c)
-         else:
-            self.__kbdqueue__.put(c)
-         self.__status__ = 0xE2 # keyboard data available
+      if esc:
+#        do not queue ATTN if queue not empty, put esc sequence in reverse order!
+         if not (self.__status__ & 0x40 and c== 76):
+            self.__outbuf__.insert(0, 0x1B)
+            self.__oc__+=1
+            self.__outbuf__.insert(0, c)
+            self.__oc__+=1
+            self.__status__ = self.__status__ | 0x50 # set ready for data and srq bit
+      else:
+         self.__outbuf__.insert(0, c)
+         self.__oc__+=1
+         self.__status__ = self.__status__ | 0x50 # set ready for data and srq bit
       self.__status_lock__.release()
-
 #
 # private (overloaded) --------
 #
-#
-#  forward data character to the terminal frontend widget
+#  forward data coming from HP-IL to the terminal frontend widget
 #
    def __indata__(self,frame):
-
       self.__access_lock__.acquire()
       locked= self.__islocked__
       self.__access_lock__.release()
       if not locked:
          self.__guiobject__.out_terminal(chr(frame & 0xFF))
 #
-#  clear device: empty keyboard queue and reset terminal
+#  clear device: empty HP-IL outdata buffer and reset terminal
 #
    def __clear_device__(self):
-      super().__clear_device__()
+      super().__clear_device__()              # this clears srq
       self.__status_lock__.acquire()
-      while True:
-         try:
-            self.__kbdqueue__.get_nowait() 
-            self.__kbdqueue__.task_done()
-         except queue.Empty:
-            break
+      self.__oc__=0
+      self.__outbuf__= array.array('i')
+      self.__status__= self.__status__ & 0xEF # clear ready for data
       self.__status_lock__.release()
+
+#
+#     reset device
+#
       self.__guiobject__.reset_terminal() 
       return
 #
-#  output data from keyboard queue to controller
+#  send data from HP-IL outdata buffer to the loop
 #
    def __outdata__(self,frame):
       self.__status_lock__.acquire()
-      if self.__status__ == 0xE2:
-         try:
-            outbyte= self.__kbdqueue__.get_nowait()
-            self.__kbdqueue__.task_done()
-            frame= outbyte
-         except queue.Empty:
-            self.__status__=0
-            self.__status_lock__.release()
-            return 0x540
+      self.__status__= self.__status__ & 0xBF # clear srq bit
+      if self.__oc__== 0:
+         frame= 0x540 # EOT
       else:
-         frame= 0x540
+         frame= self.__outbuf__.pop()
+         self.__oc__-=1
+         if self.__oc__== 0:
+            self.__status__= self.__status__ & 0xEF # clear ready for data bit
       self.__status_lock__.release()
-      return (frame)
+      return(frame)

@@ -113,6 +113,8 @@
 # - do not update scene, if tab is invisible. Redraw view if tab becomes visible
 # 24.09.2017 jsi:
 # - added mouse wheel scrolling support
+# 27.09.2017 jsi:
+# - renamed method queueOutput to putDataToHPIL
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -170,7 +172,7 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #      enable/disable keyboard input
 #
     def enable_keyboard(self):
-        self.terminalwidget.set_kbdfunc(self.pildevice.queueOutput)
+        self.terminalwidget.set_kbdfunc(self.pildevice.putDataToHPIL)
 
     def disable_keyboard(self):
         self.terminalwidget.set_kbdfunc(None)
