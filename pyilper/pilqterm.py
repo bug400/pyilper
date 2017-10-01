@@ -115,6 +115,8 @@
 # - added mouse wheel scrolling support
 # 27.09.2017 jsi:
 # - renamed method queueOutput to putDataToHPIL
+# 30.09.2017 jsi:
+# - added copy and paste support
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -236,6 +238,53 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
     def get_cols(self):
       return self.terminalwidget.get_cols()
+#
+#  Select area custom class ---------------------------------------------
+#
+class cls_SelectArea(QtWidgets.QGraphicsItem):
+
+   def __init__(self,start_row, start_col, end_row, end_col,cols, char_height, true_w,fillcolor):
+      super().__init__()
+      area_rows= end_row - start_row +1
+      w= true_w[cols]
+      h= area_rows * char_height
+      self.rect=QtCore.QRectF(0,0,w,h)
+      self.brush=QtGui.QBrush(fillcolor)
+#
+#     construct select area polygon
+#
+      if start_row== end_row:
+         self.areapolygon= QtGui.QPolygon([QtCore.QPoint(true_w[start_col],0), 
+              QtCore.QPoint(true_w[end_col+1],0), 
+              QtCore.QPoint(true_w[end_col+1],char_height),         
+              QtCore.QPoint(true_w[start_col],char_height),
+              QtCore.QPoint(true_w[start_col],0)])
+      else:
+         self.areapolygon= QtGui.QPolygon([QtCore.QPoint(true_w[start_col],0), 
+              QtCore.QPoint(true_w[cols],0), 
+              QtCore.QPoint(true_w[cols], (area_rows-1)* char_height),
+              QtCore.QPoint(true_w[end_col+1],(area_rows-1)* char_height),
+              QtCore.QPoint(true_w[end_col+1], area_rows* char_height),
+              QtCore.QPoint(0,area_rows* char_height),
+              QtCore.QPoint(0,char_height),
+              QtCore.QPoint(true_w[start_col],char_height),
+              QtCore.QPoint(true_w[start_col],0)])
+
+#
+#  boundingRect and setPos are necessary for custim graphics items
+#
+   def boundingRect(self):
+      return self.rect
+
+   def setPos(self,x,y):
+      super().setPos(x,y)
+      return
+#
+#  paint select area
+#
+   def paint(self,painter,option,widget):
+       painter.setBrush(self.brush)
+       painter.drawPolygon(self.areapolygon)
 
 #
 #  terminal cursor custom class ------------------------------------------------------
@@ -255,7 +304,14 @@ class TermCursor(QtWidgets.QGraphicsItem):
       self.blink_timer.setInterval(CURSOR_BLINK)
       self.blink_timer.timeout.connect(self.do_blink)
       self.blink_timer.start()
-      self.insertpolygon=QtGui.QPolygon([QtCore.QPoint(0,0+(self.h/2)), QtCore.QPoint(0+(self.w*0.8),0+self.h), QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.67)), QtCore.QPoint(0+self.w,0+(self.h*0.67)), QtCore.QPoint(0+self.w,0+(self.h*0.33)), QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.33)), QtCore.QPoint(0+(self.w*0.8),0), QtCore.QPoint(0,0+(self.h/2))])
+      self.insertpolygon=QtGui.QPolygon([QtCore.QPoint(0,0+(self.h/2)), 
+                         QtCore.QPoint(0+(self.w*0.8),0+self.h), 
+                         QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.67)), 
+                         QtCore.QPoint(0+self.w,0+(self.h*0.67)), 
+                         QtCore.QPoint(0+self.w,0+(self.h*0.33)), 
+                         QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.33)), 
+                         QtCore.QPoint(0+(self.w*0.8),0), 
+                         QtCore.QPoint(0,0+(self.h/2))])
 #
 #  called when terminal widget becomes invisible, stop cursor blink
 #
@@ -365,6 +421,9 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._cursor_attr=-1          # attribute at cursor position
         self._font=QtGui.QFont(FONT)  # monospaced font
         self._isVisible= False        # visible state
+        self._press_pos= None         # mouse click position
+        self._selectionText=""        # text of selection
+
 #
 #       Initialize graphics view and screne, set view background
 #
@@ -377,6 +436,10 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #       widget cursor type
 #
         self.setCursor(QtCore.Qt.IBeamCursor)
+#
+#       system clipboard object
+#
+        self._clipboard= QtWidgets.QApplication.clipboard()
 #
 #       now configure
 #       
@@ -447,7 +510,69 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._scene.setSceneRect(0,0,self._sizew, self._char_height* rows)
         self.fitInView(0,0,self._sizew, self._char_height* rows)
 #
-#   Mouse wheel event
+#   context menu event (pops up when right button clicked)
+#
+    def contextMenuEvent(self,event):
+       menu=QtWidgets.QMenu()
+#
+#      show copy menu entry only if selection text is available
+#
+       copyAction=None
+       if self._selectionText != "":
+          copyAction=menu.addAction("Copy")
+       pasteAction=None
+#
+#      show paste menu entry only if a keyboard is emulated
+#
+       if self._kbdfunc is not None:
+          pasteAction=menu.addAction("Paste")
+       action=menu.exec_(self.mapToGlobal(event.pos()))
+       if action is not None:
+#
+#      copy to system clipboard
+#
+          if action == copyAction:
+             self._clipboard.setText(self._selectionText, QtGui.QClipboard.Clipboard)
+#
+#      paste, only send printable characters, replace lf with ENDLINE 
+#
+          if action == pasteAction:
+             paste_text = self._clipboard.text(QtGui.QClipboard.Clipboard)
+             for c in paste_text:
+                 t=ord(c)
+                 if t >= 0x20 and t <= 0x7E:
+                    self._kbdfunc(t,False)
+                 elif t == 0x0A:
+                    self._kbdfunc(82, True)
+       self._press_pos = None
+       self._HPTerminal.selectionStop()
+       self._selectionText=""
+       event.accept()
+       return
+#
+#   Mouse press event we only process the left button, right button is context menu
+#
+    def mousePressEvent(self, event):
+        button = event.button()
+#
+#       left button, quit selection and start a new one
+#
+        if button == QtCore.Qt.LeftButton:
+            self._HPTerminal.selectionStop()
+            self._selectionText=""
+            self._press_pos = event.pos()
+            if not self._HPTerminal.selectionStart(self._press_pos,self._true_w, self._char_height):
+               self._press_pos = None
+#
+#   Mouse move event, draw selection area and get selection text
+#
+    def mouseMoveEvent(self, event):
+        if self._press_pos:
+            move_pos = event.pos()
+            if self._HPTerminal.selectionMove(move_pos,self._true_w, self._char_height):
+               self._selectionText= self._HPTerminal.getSelectionText()
+#
+#   Mouse wheel event: scroll
 #
     def wheelEvent(self,event):
         numDegrees= event.angleDelta()/8
@@ -458,7 +583,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
               self._HPTerminal.scroll_view_up()
         event.accept()
 #
-#   keyboard pressed event, process keys and put them into the keyboard input buffer
+#   keyboard pressed event, process keys and put them into the HP-IL outdata buffer
 #
     def keyPressEvent(self, event):
         text = event.text()
@@ -620,7 +745,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #      fetch screen buffer dump from backend
 #
-       (self._cursor_col, self._cursor_row, self._cursor_char, self._cursor_attr), self._screen = dump()
+       (self._cursor_col, self._cursor_row, self._cursor_attr, start_row, start_col, end_row, end_col), self._screen = dump()
 #
 #      clear scene, remove and delete display items
 #
@@ -687,9 +812,28 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                  bgbrush=QtGui.QBrush(background_color)
           y += self._char_height
 #
+#      add selection area to scene
+#
+       cursor_in_selection= False
+       if start_row is not None:
+#
+#         check if cursor is in selection
+#
+          startidx= start_row* self._cols+ start_col
+          endidx= end_row* self._cols+ end_col
+          cursoridx= self._cursor_row* self._cols + self._cursor_col
+          if cursoridx >= startidx and cursoridx <= endidx:
+             cursor_in_selection= True
+          selectAreaItem= cls_SelectArea(start_row, start_col, end_row, end_col,
+                          self._cols, self._char_height, self._true_w,
+                          self._cursor_color)
+          selectAreaItem.setPos(0,start_row* self._char_height)
+          self._scene.addItem(selectAreaItem)
+          
+#
 #      add cursor at cursor position to scene
 #
-       if self._cursortype != CURSOR_OFF:
+       if self._cursortype != CURSOR_OFF and not cursor_in_selection:
           if self._cursor_attr:
              cursor_foreground_color= self._color_scheme[0]
           else:
@@ -697,6 +841,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
           self._cursorItem= TermCursor(self._char_width,self._char_height,self._cursortype, cursor_foreground_color)
           self._cursorItem.setPos(self._true_w[self._cursor_col],self._cursor_row*self._char_height)
           self._scene.addItem(self._cursorItem)
+
 #
 # Terminal backend class -----------------------------------------------------------
 #
@@ -745,6 +890,13 @@ class HPTerminal:
                                           # reconfigure, becomes_visible, 
                                           # scroll_view_up, scroll_view_down, 
                                           # terminal output
+        self.press_row= 0                 # row, col of selection press position
+        self.press_col=0
+        self.start_row= 0                 # row, col of selection (upper left)
+        self.start_col= 0   
+        self.move_row= 0                  # row, col of selection (upper right)
+        self.move_col= 0            
+        self.showSelection=False          # display a selection area
         self.reconfigure()
 #
 #       Queue with input data that will be displayed
@@ -784,6 +936,7 @@ class HPTerminal:
         # Modes
         self.insert = False
         self.movecursor=0
+        self.showSelection=False
 
     def reset_screen(self):
         # Screen
@@ -1168,8 +1321,11 @@ class HPTerminal:
         else:
            cy= -1
            cx= -1
-
-        return (cx, cy, cursor_char, cursor_attr), screen
+        if self.showSelection:
+           (start_row, start_col, end_row, end_col)= self.getSelection()
+        else:
+           (start_row, start_col, end_row, end_col)= (None,None,None,None)
+        return (cx, cy, cursor_attr,start_row, start_col, end_row, end_col), screen
 #
 #   process terminal output queue and refresh display
 #        
@@ -1346,3 +1502,118 @@ class HPTerminal:
        self.view_y0= value
        self.view_y1= value + self.view_h-1
        self.needsUpdate=True
+#
+#   Get true (scrolled!) row column in terminal line buffer from click position
+#
+    def row_col_from_px(self,pos,true_w,char_h):
+       x=pos.x()
+       y=pos.y()
+#
+#      get column, use true_w
+#
+       col=0
+       for i in range(self.w):
+          if true_w[i]>x:
+             col=i-1
+             break
+#
+#      get row
+#
+       row=int(round((y- char_h) /char_h))+ self.view_y0 
+       if row < 0:
+          row=0
+#
+#      return NULL if position is beyond the last line
+#
+       if row > self.actual_h:
+          return (None, None)
+       else:
+          return (row,col)
+#
+#   Selection start, process press pos
+#
+    def selectionStart(self,pos,true_w,char_h):
+       (self.press_row, self.press_col)= self.row_col_from_px(pos,true_w,char_h)
+#
+#      return false if we have an illegal click position
+#
+       if self.press_row is None and self.press_col is None:
+          return False
+       else:
+          return True
+#
+#   Selection stop, do not display selection area any more
+#
+    def selectionStop(self):
+       self.showSelection=False
+       self.needsUpdate=True
+#
+#   Selection move, process actual position, show selection
+#
+    def selectionMove(self,pos,true_w,char_h):
+       (self.move_row, self.move_col)= self.row_col_from_px(pos,true_w,char_h)
+#
+#      return false if we have an illegal click position
+#
+       if self.move_row is None and self.move_col is None:
+          return False
+       self.showSelection=True
+       self.start_row= self.press_row
+       self.start_col= self.press_col
+#
+#      swap coordinates if necessary
+#
+       if self.start_row > self.move_row:
+          self.start_row,self.move_row= self.move_row, self.start_row
+       if self.start_col > self.move_col:
+          self.start_col,self.move_col= self.move_col, self.start_col
+       self.needsUpdate=True
+       return True
+#
+#   return Text of selection
+#
+    def getSelectionText(self):
+        selection_text=""
+        rowcount= self.start_row
+        row_text=""
+        while rowcount <= self.move_row:
+           if rowcount== self.start_row:
+              colcount= self.start_col
+           else:
+              colcount=0
+           if rowcount== self.move_row:
+              colend= self.move_col
+           else:
+              colend= self.w-1
+           while colcount <= colend:
+              row_text+= (chr(self.screen[self.w*rowcount+colcount] & 0xFFFF))
+              colcount+=1
+           if self.is_wrapped(rowcount) and not self.in_wrapped_part(rowcount):
+              rowcount+=1
+              continue
+           row_text=row_text.rstrip()
+           if rowcount < self.move_row:
+              row_text+="\n"
+           rowcount+=1
+           selection_text+= row_text
+           row_text=""
+        return selection_text
+#
+#   return screen rows, columns of selection, returns None if outside
+#
+    def getSelection(self):
+        if self.start_row > self.view_y1 or self.move_row < self.view_y0:
+           return (None, None, None, None)
+        start_row= self.start_row
+        start_col= self.start_col
+        move_row= self.move_row
+        move_col= self.move_col
+        if self.start_row < self.view_y0:
+           start_row= self.view_y0
+           start_col=0
+        if self.move_row > self.view_y1:
+           move_row= self.view_y1
+           move_col= self.w-1
+        start_row -= self.view_y0
+        move_row -= self.view_y0
+        return (start_row, start_col, move_row, move_col)

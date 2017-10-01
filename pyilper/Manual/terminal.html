@@ -33,7 +33,9 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 <h3 class="w3-text-teal">Description</h3>
 
 <p>This virtual HP-IL device emulates a terminal (display and
-keyboard).<p>
+keyboard). It can be used as a sole display device without
+using a keyboard by all HP-IL controllers. The keyboard emulation is only
+supported by the HP-71B (see below).<p>
 
 <p>HP-IL configuration:</p>
 
@@ -44,9 +46,10 @@ keyboard).<p>
 </table>
 
 <p>The display supports all escape sequences which are
-specified on page 328 of the HP-71B reference manual.</p>
+specified on page 328 of the HP-71B reference manual. Selected text can be
+copied to the system clipboard.</p>
 
-<h3 class="w3-text-teal">Requirements and setup</h3>
+<h3 class="w3-text-teal">Requirements and setup for the keyboard emulation</h3>
 
 <p>The <em>Enable IDY frames</em> option in the pyILPER configuration must 
 be enabled if pyILPER is connected to the PIL-BOX. You need at least the 
@@ -112,6 +115,9 @@ key and enter a 3 digit numeric value (000 - 127).</p>
 <tr><td>ALT-L</td><td>@</td></tr>
 <tr><td>ALT-I</td><td>toggle insert/replace</td></tr>
 </table>
+
+<p>You can paste keyboard input from the system clipboard. Use this feature 
+with care.</p>
 
 <h3 class="w3-text-teal">Device controls</h3>
 
