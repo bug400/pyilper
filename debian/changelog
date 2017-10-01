@@ -1,8 +1,8 @@
-pyilper (1.6.0~ubuntu1) xenial; urgency=medium
+pyilper (1.6.0~beta1) xenial; urgency=medium
 
-  * added virtual thermal printer HP82162a 
+  * first beta of 1.6.0
 
- -- trusty <achim@trillian>  Thu, 17 Aug 2017 16:20:57 +0200
+ -- trusty <achim@trillian>  Sun, 01 Oct 2017 10:05:36 +0200
 
 pyilper (1.5.0~ubuntu1) xenial; urgency=medium
 
