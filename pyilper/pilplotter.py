@@ -69,6 +69,8 @@
 # - code to output data to HP-IL rewritten
 # 28.09.2017 jsi
 # - block multiple calls of start_digi
+# 02.10.2017 jsi
+# - fixed crash on cursor restore if digitizing mode was stopped twice
 
 import sys
 import subprocess
@@ -596,6 +598,8 @@ class cls_mygraphicsview(QtWidgets.QGraphicsView):
 #  finish digitizing, restore old cursor
 #
    def digi_clear(self):
+      if not self.digitize:
+         return
       self.viewport().setCursor(self.restorecursor)
       self.restorecursor=None
       self.digitize= False
