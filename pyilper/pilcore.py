@@ -67,6 +67,8 @@
 # - restructured, assemble_frame and disassemble_frame added
 # 07.09.2017 jsi
 # - timeout constants for TCP, socket and pipe communication added
+# 01.10.2017 jsi
+# - 1.6.0 beta1
 #
 import platform
 #
@@ -75,7 +77,7 @@ import platform
 # General constants:
 #
 PRODUCTION= False     # Production/Development Version
-VERSION="1.6.0"       # pyILPR version number
+VERSION="1.6.0b1"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Communication modes and classes
