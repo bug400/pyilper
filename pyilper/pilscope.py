@@ -52,6 +52,8 @@ from .pildevbase import cls_pildevbase
 # - fixed bug in form feed condition determination in out_scope
 # 25.09.2017 jsi
 # - extended options to display frames (mnemonic only, hex only, mnemonic and hex)
+# 04.10.2017 jsi
+# - display mode of scopes not initialized properly on program start
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -73,7 +75,7 @@ class cls_tabscope(cls_tabtermgeneric):
       self.cbShowIdy.stateChanged.connect(self.do_show_idy)
       self.hbox2.addWidget(self.cbShowIdy)
 
-      self.displayMode= PILCONFIG.get(self.name,"displaymode",LOG_INBOUND)
+      self.displayMode= PILCONFIG.get(self.name,"displaymode",DISPLAY_MNEMONIC)
       self.lbltxtc=QtWidgets.QLabel("Display mode ")
       self.comboDisplayMode=QtWidgets.QComboBox()
       for txt in display_mode:
@@ -107,6 +109,7 @@ class cls_tabscope(cls_tabtermgeneric):
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.cbShowIdy.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
+      self.pildevice.set_displayMode(self.displayMode)
       self.comboLogMode.setEnabled(True)
       self.comboDisplayMode.setEnabled(True)
 
@@ -114,6 +117,7 @@ class cls_tabscope(cls_tabtermgeneric):
       self.parent.commthread.register(self.pildevice2,self.name)
       self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode== LOG_INBOUND))
       self.pildevice2.set_show_idy(self.showIdy)
+      self.pildevice2.set_displayMode(self.displayMode)
 
    def disable(self):
       super().disable()
