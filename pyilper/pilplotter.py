@@ -1609,6 +1609,7 @@ class cls_HP7470(QtCore.QObject):
 #
          elif cmd== CMD_CLEAR:
             self.guiobject.put_cmd([CMD_CLEAR])
+            self.parent.clear_outbuf()
 #
 #        set pen 
 #
@@ -1837,6 +1838,17 @@ class cls_pilplotter(cls_pildevbase):
             break
       self.__plot_queue_lock__.release()
       self.__plotter__.disable()
+      self.clear_outbuf()
+#
+#  clear output buffer
+#
+   def clear_outbuf(self):
+      self.__status_lock__.acquire()
+      self.__oc__=0
+      self.__outbuf__= array.array('i')
+      self.__status__= self.__status__ & 0xEF # clear ready for data
+      self.__status_lock__.release()
+
 #
 #  process frames 
 #
@@ -1932,11 +1944,7 @@ class cls_pilplotter(cls_pildevbase):
 #
    def __clear_device__(self):
       super().__clear_device__()
-      self.__status_lock__.acquire()
-      self.__oc__=0
-      self.__outbuf__= array.array('i')
-      self.__status__= self.__status__ & 0xEF # clear ready for data
-      self.__status_lock__.release()
+      self.clear_outbuf()
 #
 #     clear plotter queue
 #

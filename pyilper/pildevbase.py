@@ -44,6 +44,9 @@
 # - register functions for callbacks removed
 # 10.08.2017 jsi
 # - check if self.__did__ != "" and not != None
+# 05.10.2017 jsi:
+# - reset device address if device was reactivated an an HP-IL addressing
+#   operation happened in the meantime
 
 
 import threading
@@ -52,43 +55,60 @@ class cls_pildevbase:
 
    def __init__(self):
 
-      self.__aid__ = 0x00         # accessory id 
-      self.__defaddr__ = 0        # default address alter AAU
-      self.__did__ = ""           # device id
-      self.__status__ = 0         # HP-IL status
-      self.__addr__ = 0           # HP-IL primary address (by TAD,LAD)
-                                  # bits 0-5=AAD or AEP, bit 7=1 means
-                                  # auto address taken
-      self.__addr2nd__ = 0        # HP-IL secondary address (by SAD)
-                                  # bits 0-5=AES, bit 7 means auto addr taken
-      self.__ilstate__ =0         # state machine flag
-                                  # bit 7, bit 6, bit5, bit 4
-                                  # 0      0      0     0 idle
-                                  # 0      0      1     0 addressed listener in
-                                  #                       second. add. mode
-                                  # 0      0      0     1 addressed talker in
-                                  #                       second. add. mode
-                                  # 1      0      0     0 addressed listener
-                                  # 0      1      0     0 addressed talker 
-                                  # bit 0 or bit 1 set    active takler
-                                  # bit 1: SDA, SDI
-                                  # bit 0: SST, SDI, SAI, NRD
-      self.__ptsdi__ = 0          # output pointer for device id
-      self.__status_len__=1       # length of device status in bytes
-      self.__ptssi__ = 0          # output pointer for hp-il status
-      self.__isactive__= False    # device active in loop
+      self.__aid__ = 0x00          # accessory id 
+      self.__defaddr__ = 0         # default address alter AAU
+      self.__did__ = ""            # device id
+      self.__status__ = 0          # HP-IL status
+      self.__addr__ = 0            # HP-IL primary address (by TAD,LAD)
+                                   # bits 0-5=AAD or AEP, bit 7=1 means
+                                   # auto address taken
+      self.__addr2nd__ = 0         # HP-IL secondary address (by SAD)
+                                   # bits 0-5=AES, bit 7 means auto addr taken
+      self.__ilstate__ =0          # state machine flag
+                                   # bit 7, bit 6, bit5, bit 4
+                                   # 0      0      0     0 idle
+                                   # 0      0      1     0 addressed listener in
+                                   #                       second. add. mode
+                                   # 0      0      0     1 addressed talker in
+                                   #                       second. add. mode
+                                   # 1      0      0     0 addressed listener
+                                   # 0      1      0     0 addressed talker 
+                                   # bit 0 or bit 1 set    active takler
+                                   # bit 1: SDA, SDI
+                                   # bit 0: SST, SDI, SAI, NRD
+      self.__ptsdi__ = 0           # output pointer for device id
+      self.__status_len__=1        # length of device status in bytes
+      self.__ptssi__ = 0           # output pointer for hp-il status
+      self.__isactive__= False     # device active in loop
+      self.__addr_framecounter__=0 # framecounter when device got an address
+      self.__threadobject__=None   # reference to the thread object
       self.__status_lock__= threading.Lock()
       self.__islocked__= False
       self.__access_lock__= threading.Lock()
 #
 # --- public functions ---
 #
-#
-#  set device active/inactive
+#  set device active/inactive. If the device becomes active check if an AAU,
+#  AAD, AEP or AES happened in the mean time. In this case reset the device
+#  address
 #
    def setactive(self, active):
+      if not self.__isactive__ and active:
+         if self.__addr_framecounter__ != self.__threadobject__.get_addr_framecounter():
+            self.__addr__=0
+            self.__addr2nd__=0
       self.__isactive__= active
-
+#
+#  set object reference to thread object
+#
+   def setThreadObject(self,obj):
+      self.__threadobject__= obj
+#
+#  set local and update globel addr_framecounter
+#
+   def update_addr_framecounter(self):
+      self.__addr_framecounter__= self.__threadobject__.get_framecounter()
+      self.__threadobject__.update_addr_framecounter(self.__addr_framecounter__)
 #
 #  return device status
 #
@@ -286,6 +306,7 @@ class cls_pildevbase:
          if n == 16: # IFC
             self.__ilstate__= 0x0 # idle
          elif n == 26: # AAU
+            self.update_addr_framecounter()
             self.__addr__=  self.__defaddr__
             self.__addr2nd__= 0
       else:
@@ -331,15 +352,18 @@ class cls_pildevbase:
          if n < 0x80 +31: # AAD
             if ((self.__addr__ & 0x80) == 0 and self.__addr2nd__ ==0):
                # AAD, if not already an assigned address, take it
+               self.update_addr_framecounter()
                self.__addr__ = n
                frame=frame+1
          elif  (n >= 0xA0 and n < 0xA0 + 31): # AEP
             # AEP, if not already an assigned address and got an AES frame,
             if ((self.__addr__ & 0x80) == 0 and (self.__addr2nd__ & 0x80) != 0):
                # take it
+               self.update_addr_framecounter()
                self.__addr__= n & 0x9F
          elif (n >= 0xC0 and n < 0xC0 +31): # AES
             if (self.__addr__ & 0x80) == 0:
+               self.update_addr_framecounter()
                self.__addr2nd__= n & 0x9F
                frame=frame + 1
       return (frame)

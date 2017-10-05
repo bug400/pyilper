@@ -30,45 +30,41 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <h2 class="w3-text-teal">Release Notes for <em>pyILPER</em> 1.6.0</h2>
 
-<p><em>pyILPER</em> 1.6.0 introduces an emulated HP82162A printer as new devices and
-includes major improvements to customize the user interface. Directory listings,
-printer output and barcodes can be created as high quality PDF files.</p>
+<p><em>pyILPER</em> 1.6.0 introduces an emulated HP82162A printer as new devices and includes major improvements of the user interface.</p>
 
 <h3 class="w3-text-teal">New features and enhancements</h3>
 
 <ul class="w3-ul">
-
-<li>The HP82162A printer is now included as virtual HP-IL device. 
-The device provides high quality output to a PDF file. Add this device with the 
+<li>The HP82162A printer is now included as virtual HP-IL device.
+The device provides high quality output to a PDF file. Add this device with the
 <em>Virtual HP-IL device configuration</em> in the file menu.</li>
- 
-<li>Resizing the main window of <em>pyILPER</em> now adjusts the number of lines 
-of the printer, scope and drive directory output as well as the size of the plotter 
-output automatically. The size of the main window is restored at start of the
-application.</li>
 
-<li>The change of GUI related configuration parameters (Font sizes, terminal color 
-scheme, number of columns of the terminal widget) now effects immediately and does 
-not require a restart of the application any more.</li>
+<li>Resizing the main window of <em>pyILPER</em> now adjusts the number of lines of the printer, scope and drive directory automatically. This also applies to the size of the plotter viewport. The dimensions of the <em>pyILPER</em> main window is restored at start of the application.</li>
 
-<li>The terminal, printer and scope now support copy selected text to the system 
-clipboard. The terminal supports paste text from the system clipboard.</li>
+<li>Any change of GUI related configuration parameters (font sizes, terminal color scheme, number of columns of the terminal widget) now effects immediately and does not require a restart of the application any more.</li>
 
-<li>Barcodes can be created from the context menu in the drive tab for
-HP-41 program and SDATA files.</li>
+<li>The terminal, printer and scope now support copying selected text to the system clipboard. The terminal supports pasting text from the system clipboard.</li>
 
-<li>Added mouse wheel scrolling support. Note the focus must be in the output
-window</li>
+<li>Barcodes of HP-41 program and SDATA files can now be created as PDF files from the context menu of the directory listing.</li>
 
-<li>A PDF file of the directory listing can be created from the tool menu
-of the drive tab.</li>
+<li>Terminal, scope and printers got mouse wheel scrolling support. Note: the focus must be in the output window.</li>
+
+<li>A PDF file of the directory listing can now be created from the tool menu of the drive tab.</li>
 
 <li>The scope got an option to display the frames as hex codes.</li>
+
 </ul>
 
 <h3 class="w3-text-teal">Changes and incompatibilities</h3>
 
 <ul class="w3-ul">
+<li>If a virtual device is reenabled again, its HP-IL address is reset
+to zero if any HP-IL operation that changed addresses of other devices 
+(AAU, AAD, AEP or AES) happened in the meantime. You must reconfigure
+the loop to access the device again. <b>This prevents duplicate HP-IL
+addresses of virtual devices which can cause data corruption of LIF media
+</b>.</li>
+
 <li>The paper size option was moved from the plotter configuration to the
 <em>pyILPER</em> configuration in the file menu. This parameter now controls
 the medium size of all PDF output as well as important plotter settings. 

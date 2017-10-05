@@ -29,6 +29,9 @@
 # - refactored from pilboxthread.py, piltcpipthread.py, pilsocketthread.py
 # 21.09.2017 jsi:
 # - removed message "suspended"
+# 05.10.2017 jsi
+# - added global frame counter and store counter of most recent fraame that
+#   addressed a device
 #
 from PyQt5 import QtCore
 from .pilconfig import PILCONFIG
@@ -60,8 +63,11 @@ class cls_pilthread_generic(QtCore.QThread):
       self.stop=QtCore.QMutex()
       self.pauseCond=QtCore.QWaitCondition()
       self.stoppedCond=QtCore.QWaitCondition()
-      self.commobject= None
-      self.devices= []
+      self.commobject= None                    # i/o object (PIL-Box, TCP/IP...)
+      self.framecounter=0                      # global frame counter
+      self.addr_framecounter=0                 # frame counter of the last
+                                               # HP-IL addressing command
+      self.devices= []                         # list of devices
 #
 #  report if thread is running
 #
@@ -89,7 +95,6 @@ class cls_pilthread_generic(QtCore.QThread):
       self.stop.lock()
       self.stoppedCond.wait(self.stop)
       self.stop.unlock()
-#     self.send_message("Communication thread suspended")
 #
 # restart paused thread
 #
@@ -150,15 +155,36 @@ class cls_pilthread_generic(QtCore.QThread):
       self.commobject= None
       return
 #
-#  register devices
+#  register devices, make thread object known to the device object
 #
    def register(self, obj, name):
       self.devices.append([obj,name])
+      obj.setThreadObject(self)
 #
 #  get device list
 #
    def getDevices(self):
       return self.devices
+#
+#  increase global frame counter
+#
+   def update_framecounter(self):
+      self.framecounter+=1
+#
+#  get value of global frame counter
+#
+   def get_framecounter(self):
+      return self.framecounter
+#
+#  update value of addr_framecounter
+#
+   def update_addr_framecounter(self,value):
+      self.addr_framecounter=value
+#
+#  get value of addr_framecounter
+#
+   def get_addr_framecounter(self):
+      return self.addr_framecounter
 #
 # PIL-Box communications thread over serial port
 #
@@ -227,6 +253,7 @@ class cls_PilBoxThread(cls_pilthread_generic):
 #
 #           process virtual HP-IL devices
 #
+            self.update_framecounter()
             for i in self.devices:
                frame=i[0].process(frame)
 #
@@ -234,6 +261,7 @@ class cls_PilBoxThread(cls_pilthread_generic):
 #           HPIL-Devices
 #
             if (frame & 0x700) == 0x400:
+               self.update_framecounter()
                for i in self.devices:
                   i[0].process(0x500)
 #
@@ -314,6 +342,7 @@ class cls_PilTcpIpThread(cls_pilthread_generic):
 #
 #           process frame and return it to loop
 #
+            self.update_framecounter()
             for i in self.devices:
                frame=i[0].process(frame)
 #
@@ -391,6 +420,7 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #           process virtual HP-IL devices 
 #
             else:
+               self.update_framecounter()
                for i in self.devices:
                   frame=i[0].process(frame)
 #
@@ -485,6 +515,7 @@ class cls_PilPipeThread(cls_pilthread_generic):
 #           process virtual HP-IL devices 
 #
             else:
+               self.update_framecounter()
                for i in self.devices:
                   frame=i[0].process(frame)
 #
