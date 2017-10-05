@@ -1,3 +1,9 @@
+pyilper (1.5.1~ubuntu1) xenial; urgency=medium
+
+  * reset address if a virtual device is re enabled
+
+ -- trusty <achim@trillian>  Thu, 05 Oct 2017 17:29:27 +0200
+
 pyilper (1.5.0~ubuntu1) xenial; urgency=medium
 
   * new online manual 

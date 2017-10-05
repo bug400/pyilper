@@ -28,21 +28,18 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <!-- Begin content -->
 
-<h2 class="w3-text-teal">Release Notes for pyILPER 1.5.0</h2>
+<h2 class="w3-text-teal">Release Notes for pyILPER 1.5.1</h2>
 
 <ul class="w3-ul">
 
-<li>The PILTERM utility was updated to version 2. You'll find the old version
-as <em>PILTERM1</em> on the PILIMAGE.DAT image.</li>
+<p>If a virtual device is (re) enabled, its HP-IL device address is always reset
+to zero. You must reconfigure the loop each time to access the device.
+<b>This prevents duplicate HP-IL addresses of virtual devices which can cause 
+data corruption of LIF media.</b>
 
-<li>This version needs Qt5.</li>
-
-<li>The font size of the drive directory listing can be configured. The
-row height of the listing is now properly adjusted to the font height.</li>
-
-<li>Improved online manual. The position and size of the manual browser is recorded in the program configuration file.</li>
-
-<li>See the <a class="w3-hover-black" href="Changelog.html">Change Log</a> for a full list of changes.</li>
+<p>The upcoming version 1.6.0 will reset the device address only if
+a HP-IL operation that changed addresses of other devices happened in the
+meantime.</p>
 
 </ul>
 <!-- End content -->

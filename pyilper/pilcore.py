@@ -49,6 +49,8 @@
 # - version - 1.5.0beta1 development
 # 16.03.2017 - jsi
 # - version - 1.5.0 production
+# 05.10.2017 - jsi
+# - version 1.5.1 production
 #
 import platform
 #
@@ -83,7 +85,7 @@ def encode_version(version_string):
 # General constants:
 #
 PRODUCION= True       # Production/Development Version
-VERSION="1.5.0"       # pyILPR version number
+VERSION="1.5.1"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # PIL-Box communication

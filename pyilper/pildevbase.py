@@ -35,6 +35,8 @@
 # 05.03.2016 jsi:
 # - wrong variable name __ptdsi__ corrected
 # - improved getstatus, use accesss lock and return ilstate as text
+# 05.10.2017 jsi:
+# - reset device address if reenabled
 
 
 import threading
@@ -79,6 +81,10 @@ class cls_pildevbase:
 #  set device active/inactive
 #
    def setactive(self, active):
+      if not self.__isactive__ and active:
+         self.__addr__=0
+         self.__addr2nd__=0
+
       self.__isactive__= active
 
 #
