@@ -117,6 +117,13 @@
 # - renamed method queueOutput to putDataToHPIL
 # 30.09.2017 jsi:
 # - added copy and paste support
+# 05.10.2017 jsi:
+# - initial terminal line buffer with TERMINAL_MINIMUM_ROWS on start up
+#   because hidden terminal tabs get their resize event not until they
+#   become visible.
+# - fixes to scrollbar parameter settings
+# 06.10.2017 jsi:
+# - fixed bugs of insert mode
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -698,6 +705,10 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     def setHPTerminal(self,hpterminal):
        self._HPTerminal= hpterminal
 #
+#      initial terminal size
+#
+       self._HPTerminal.resize_rows(TERMINAL_MINIMUM_ROWS)
+#
 #   get cursor type (insert, replace, off)
 #
     def getCursorType(self):
@@ -885,7 +896,7 @@ class HPTerminal:
                                           # by reset screen
                                           # a value of -1 indicates a continuation
                                           # line of a wrapped line
-        self.needs_update=False           # indicator that a screen update is needed
+        self.needsUpdate =False           # indicator that a screen update is needed
                                           # triggered by:
                                           # reconfigure, becomes_visible, 
                                           # scroll_view_up, scroll_view_down, 
@@ -983,6 +994,7 @@ class HPTerminal:
         self.view_y0= self.view_y1-rows
         if self.view_y0<0:
            self.view_y0=0
+           self.view_y1= self.view_y0+rows-1    ## fix
         if self.actual_h >= self.view_h:
            self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
         self.win.scrollbar.setPageStep(self.view_h)
@@ -1082,16 +1094,22 @@ class HPTerminal:
         oldlinelength= self.get_wrapped_linelength(y)
         if oldlinelength == self.w*2:
            return
+        newlinelength= oldlinelength+1
+        self.set_wrapped_linelength(y,newlinelength)
         if wx  < oldlinelength:
-           newlinelength= oldlinelength+1
-           self.set_wrapped_linelength(y,newlinelength)
 #
 #          move characters in wrapped part, add wrapped part if needed
 #
            if self.get_wrapped_linelength(y) > self.w:
               if oldlinelength== self.w:
+                 sav_cy= self.cy
                  self.cy=self.add_bufferline(self.cy)
                  self.add_wrapped_part(self.cy)
+#
+#                reset cy if cursor was not at end of display row
+#
+                 if sav_cy != self.w-1:
+                    self.cy= sav_cy
                  y=self.cy
               self.poke(y+1,1,self.peek(y+1, 0, y + 2, self.w))
               self.poke(y+1,0,self.peek(y,self.w-1,y+1,self.w))
@@ -1178,7 +1196,7 @@ class HPTerminal:
            self.win.scrollbar.setMaximum(0)
         else:
            self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
-           self.win.scrollbar.setValue(self.actual_h)
+           self.win.scrollbar.setValue(self.actual_h-self.view_h+1) ## fix
 #
 #   Cursor functions, up and down
 #
@@ -1209,9 +1227,12 @@ class HPTerminal:
         self.cx= self.cx +1
         if self.cx == self.w:
            self.cx=0
-           if self.get_wrapped_linelength(self.cy)== self.w and not self.is_wrapped(self.cy):
-              self.cy=self.add_bufferline(self.cy)
-              self.add_wrapped_part(self.cy)
+           if self.is_wrapped(self.cy):
+              self.cy+=1
+           else:
+              if self.get_wrapped_linelength(self.cy) == self.w:
+                 self.cy=self.add_bufferline(self.cy)
+                 self.add_wrapped_part(self.cy)
 
     def cursor_set_x(self, x):
         self.cx = max(0, x)
@@ -1330,10 +1351,10 @@ class HPTerminal:
 #   process terminal output queue and refresh display
 #        
     def process_queue(self):
-       items=[]
 #
 #      get items from terminal input queue
 #
+       items=[]
        self.termqueue_lock.acquire()
        while True:
           try:
