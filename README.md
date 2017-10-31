@@ -54,7 +54,7 @@ Features
 Compatibility
 -------------
 
-pyILPER has been successful tested with LINUX, Windows 10 and Mac OS.
+pyILPER has been successful tested with LINUX, Windows 10 and mac OS.
 
 
 Installation
@@ -63,7 +63,7 @@ Installation
 pyILPER requires the Python interpreter and the Qt framework installed. 
 Thanks to the [Anaconda Python distribution system](https://www.continuum.io/) 
 pyILPER and the required software components can be easily installed on 
-Linux, Windows and Mac OS.
+Linux, Windows and mac OS.
 
 See the [Installation Instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md) for details.
 

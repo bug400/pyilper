@@ -33,7 +33,7 @@ ANACONDA. See the last chapter of this manual.
 Windows requires the installation of the FTDI USB serial driver first.
 See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
-More recent Mac OS versions already provide a USB serial driver for the
+More recent mac OS versions already provide a USB serial driver for the
 PIL-Box.  By experience you get better results if you use the original FTDI driver. 
 See the installation instructions for that driver how to install and how to 
 disable the Apple driver.
@@ -58,13 +58,19 @@ administrator privileges are needed.
 
 Note: for the ANACONDA platform pyILPER is only available for Python 3.6.
 
-The following instructions apply to Linux, Windows and Mac OS:
+The following instructions apply to Linux, Windows and mac OS:
 
 Follow the [Quick Install Guide](http://conda.pydata.org/docs/install/quick.html)
-and install Miniconda first. Note: If you install Miniconda the first time
+and install Miniconda first. 
+
+Note for Windows: Do not instruct the installer to change the PATH. Instead use
+always the Anaconda Prompt which is available from the start menu.
+
+Note for Linux and mac OS: If you install Miniconda the first time
 then let the installer modify the PATH variable of your environment.
 
-Reopen a new terminal window and type:
+Reopen a new terminal window (Linux, mac OS) or Anaconda Prompt (Windows) 
+and type:
 
      conda update conda
      conda config --add channels bug400
@@ -76,13 +82,13 @@ To update pyILPER and the Python runtime type:
 
      conda update --all
 
-in a terminal window.
+in a terminal window (Linux and mac OS) or Anaconda Prompt (Windows).
 
 To start pyILPER type:
 
      pyilper
 
-in a terminal window.
+in a terminal window (Linux and mac OS) or Anaconda Prompt (Windows).
 
 You should issue occasionally:
 
@@ -116,7 +122,7 @@ the dialout group to access the device.
 On Windows the device is COMn. If you are uncertain, check the COM ports
 in the device manager. 
 
-On Mac OS the device name is usually /dev/tty.usbserial-FTDxxxx.
+On mac OS the device name is usually /dev/tty.usbserial-FTDxxxx.
 
 pyILPER tries to determine the baud rate of the PIL-BOX serial device.
 If that does not work, set the baud rate manually to the baud rate the
