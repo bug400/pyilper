@@ -323,8 +323,9 @@
 # - register pildevice is now method of commobject
 # 20.09.2017 jsi
 # - make directory font size reconfigurable on runtime
+# 30.10.2017 jsi 
+# - bugfix: close file in getMediumInfo
 #
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
 import threading
@@ -757,9 +758,13 @@ class cls_tabdrive(cls_tabgeneric):
             fd= os.open(filename,os.O_RDONLY | os.O_BINARY)
          else:
             fd= os.open(filename,os.O_RDONLY)
-         b=os.read(fd,256)
       except OSError:
          return [1,0,0,0]   # file does not exist or cannot be opened
+      try:
+         b=os.read(fd,256)
+         os.close(fd)
+      except OSError:
+         return [1,0,0,0]   # file read error
       if len(b) < 256:
          return [2,0,0,0]   # not lif type 1 file
 #
