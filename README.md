@@ -9,7 +9,7 @@ Index
 * [Description](#description)
 * [Features](#features)
 * [Compatibility](#compatibility)
-* [Installation] (#installation)
+* [Installation](#installation)
 * [License](#license)
 * [Acknowledgements](#acknowledgements)
 
