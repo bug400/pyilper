@@ -31,6 +31,9 @@
 #   fine day)
 # 22.09.2017 jsi
 # - fixed incorrect calculation of timeout
+# 31.10.2107 cg
+# - for WMware 12 compatibility reasons changed pipe type from message to byte
+# - close event handle on disconnect
 #
 import win32event
 import win32pipe
@@ -77,8 +80,8 @@ class cls_pilwinpipe:
                              win32con.PIPE_ACCESS_DUPLEX 
                              | win32con.FILE_FLAG_OVERLAPPED 
                              ,
-                             win32con.PIPE_TYPE_MESSAGE |
-                             win32con.PIPE_READMODE_MESSAGE ,
+                             win32con.PIPE_TYPE_BYTE |
+                             win32con.PIPE_READMODE_BYTE ,
                              1,
                              BUFSIZE,
                              BUFSIZE,
@@ -96,6 +99,7 @@ class cls_pilwinpipe:
    def close(self):
       self.cleanupIO()
       win32api.CloseHandle(self.__pipe__)
+      win32api.CloseHandle(self.__event__)
 #     print("Handle closed")
 #
 #  do clean up, cancel pending i/o, flush buffers and disconnect pipe

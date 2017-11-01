@@ -27,6 +27,8 @@
 # - minor layout changes
 # - added static method to obtain pdf output file name
 # - added textItem class
+# 01.11.2017 - jsi
+# - update page number
 #
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 from .pilcore import *
@@ -133,6 +135,8 @@ class cls_pdfprinter(QtCore.QObject):
                self.pdfscene.removeItem(self.pdfitems[l])
                del self.pdfitems[-1]
             self.pageno+=1
+            if self.pagenumbering:
+               self.pagenumberitem.setText("Page "+str(self.pageno))
             self.anzitems=0
             self.column=0
             self.row=0
