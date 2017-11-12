@@ -69,6 +69,8 @@
 # - timeout constants for TCP, socket and pipe communication added
 # 01.10.2017 jsi
 # - 1.6.0 beta1
+# 12.11.2017 jsi
+# - 1.6.0 beta3
 #
 import platform
 #
@@ -77,7 +79,7 @@ import platform
 # General constants:
 #
 PRODUCTION= False     # Production/Development Version
-VERSION="1.6.0b2"       # pyILPR version number
+VERSION="1.6.0b3"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Communication modes and classes
@@ -85,7 +87,6 @@ CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 MODE_PILBOX=0         # connect to PIL-Box
 MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
 MODE_SOCKET=2         # conect via Unix domain socket
-MODE_PIPE= 3          # connect via Windows named pipe
 
 #
 # PIL-Box communication

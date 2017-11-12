@@ -28,8 +28,8 @@
 # - added scramble HP-41 rom to HEPAX sdata file preprocessing option
 # - refactoring
 # 05.01.2016 - jsi
-# - replaced process pipelines with temporary files to catch error conditions more
-#   reliable
+# - replaced process pipelines with temporary files to catch error conditions 
+#   more reliable
 # - added viewing LEX file contents
 # - decode output of textfiles in HP-ROMAN8 character set
 # 08.01.2016 - jsi
@@ -66,7 +66,8 @@
 # 11.07.2016 jsi
 # - use functions from pilcore.py for platform detection
 # 27.08.2016 jsi
-# - removed duplicate dialog warning for overwriting existing file in  cls_lifexport
+# - removed duplicate dialog warning for overwriting existing file in  
+#   cls_lifexport
 # 01.10.2016 jsi
 # - plotter rom added to xrom dialog
 # 22.08.2017 jsi
@@ -76,15 +77,23 @@
 # - moved get_pdfFilename to cls_pdfprinter
 # 16.08.2017 jsi
 # - used barrconv instead of stringconv. There is no unicode exception any more.
+# 28.10.2017 jsi
+# - detection of lifutils extended and improved
+# 11.11.2017 jsi:
+# - Eramco MLDL-OS packed rom file pre- and postprocessing implemented
 #
 import subprocess
 import tempfile
 import os
+import pathlib
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .lifcore import *
 from .pilcharconv import barrconv
 from .pilcore import isWINDOWS, FONT, decode_version, PDF_ORIENTATION_PORTRAIT
 from .pilpdf import cls_pdfprinter
+from .pilconfig import PILCONFIG
+if isWINDOWS():
+   import winreg
 
 PDF_MARGINS=100
 BARCODE_HEIGHT=100
@@ -97,22 +106,93 @@ BARCODE_SPACING= 5
 def trunc_message(msg):
    temp= msg.decode()
    return (temp[:75] + '.. (truncated)') if len(temp) > 150 else temp
-
 #
-# check if lifutils are installed, return if required version found
+# get lif version if 0 is returned then lifversion was not found
 #
-def check_lifutils():
-   required_version_installed=False
-   installed_version=0
+def get_lifversion(cmd):
+   retval=0
    try:
-      result=subprocess.check_output("lifversion")
-      installed_version=int(result.decode())
-      if int(installed_version) >= LIFUTILS_REQUIRED_VERSION:
-         required_version_installed=True
+      result=subprocess.check_output(cmd)
+      retval=int(result.decode())
    except OSError as e:
       pass
    except subprocess.CalledProcessError as exp:
       pass
+   return retval
+#
+# check if lifutils are installed, return if required version found
+#
+def check_lifutils():
+   set_lifutils_path("")
+   required_version_installed=False
+   installed_version= 0
+#
+#  check if we have a configured path to lifversion
+#
+   lifversionpath=PILCONFIG.get("pyilper","lifutilspath")
+   if lifversionpath != "":
+      installed_version=get_lifversion(lifversionpath)
+#
+#  not found, check if we have lifversion in the path
+#
+   if installed_version == 0:
+      installed_version=get_lifversion("lifversion")
+#
+#  not found, use well known default locations
+#
+   if installed_version == 0:
+#
+#     Windows: query Registry to get install location from uninstaller info
+#     local user installation preceeds system wide installation
+#     Note: this requires at least lifutils version 1.7.7 (nsis package build)
+#
+      if isWINDOWS():
+         path=""
+         try:
+            hkey=winreg.OpenKey(winreg.HKEY_CURRENT_USER,r"Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\"+LIFUTILS_UUID)
+            path=winreg.QueryValueEx(hkey,"InstallLocation")[0]
+            hkey.Close()
+         except OSError as e:
+            pass
+         if path=="":
+            try:
+               hkey=winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r"Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\"+LIFUTILS_UUID)
+               path=winreg.QueryValueEx(hkey,"InstallLocation")[0]
+               hkey.Close()
+            except OSError as e:
+               pass
+         if path!="":
+            p=pathlib.Path(path)
+            p=p / "lifversion"
+            lifversionpath=str(p)
+            installed_version=get_lifversion(lifversionpath)
+      else:
+#
+#      Linux / mac OS: try /usr/ or /usr/local
+#
+         lifversionpath="/usr/bin/lifversion"
+         installed_version=get_lifversion(lifversionpath)
+         if installed_version == 0:
+            lifversionpath="/usr/local/bin/lifversion"
+            installed_version=get_lifversion(lifversionpath)
+#
+#  lifutils path found, set lifutils_path as prefix for calling the 
+#  executables and set LIFUTILSXROMDIR as environment variable
+#
+   if installed_version != 0 and lifversionpath !="" :
+      p= pathlib.Path(lifversionpath)
+      set_lifutils_path(str(p.parent))
+      if isWINDOWS():
+         xromdir=p.parent / "xroms"
+      else:
+         xromdir=p.parents[1] / "share" / "lifutils" / "xroms"
+      if xromdir.is_dir():
+         os.environ["LIFUTILSXROMDIR"]=str(xromdir)
+#
+#  check if we have the required version
+#
+   if installed_version >= LIFUTILS_REQUIRED_VERSION:
+      required_version_installed=True
    return required_version_installed, installed_version
 #
 # exec single command
@@ -283,7 +363,7 @@ class cls_lifpack(QtWidgets.QDialog):
       d=cls_lifpack()
       reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to pack the LIF image file', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       if reply == QtWidgets.QMessageBox.Yes:
-         exec_single(d,["lifpack",lifimagefile])
+         exec_single(d,[add_path("lifpack"),lifimagefile])
 #
 # custom class for text item
 #
@@ -395,10 +475,10 @@ class cls_lifbarcode(QtWidgets.QDialog):
 #     generate binary barcode data from lifutils prog41bar or sdatabar
 #
       if ft== 0xE080:
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],["prog41bar"],"")
+         output=exec_double_export(d,[add_path("lifget"),"-r",lifimagefile,liffilename],[add_path("prog41bar")],"")
          title="Barcodes for HP-41 program file: "+liffilename
       else:
-         output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],["sdatabar"],"")
+         output=exec_double_export(d,[add_path("lifget"),"-r",lifimagefile,liffilename],[add_path("sdatabar")],"")
          title="Barcodes for HP-41 data file: "+liffilename
       if output is None:
          return
@@ -444,7 +524,7 @@ class cls_lifpurge(QtWidgets.QDialog):
       d=cls_lifpurge()
       reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to purge '+liffile, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       if reply == QtWidgets.QMessageBox.Yes:
-         exec_single(d,["lifpurge",lifimagefile, liffile])
+         exec_single(d,[add_path("lifpurge"),lifimagefile, liffile])
 
 #
 # rename file dialog
@@ -491,7 +571,7 @@ class cls_lifrename (QtWidgets.QDialog):
    def do_ok(self):
       newfilename=self.leditFileName.text()
       if newfilename != "":
-         exec_single(self,["lifrename",self.lifimagefile,self.oldfilename,newfilename])
+         exec_single(self,[add_path("lifrename"),self.lifimagefile,self.oldfilename,newfilename])
       super().accept()
 
 #
@@ -530,7 +610,7 @@ class cls_lifexport (QtWidgets.QDialog):
       self.gBox1=QtWidgets.QGroupBox("Postprocessing options")
       self.radio1= QtWidgets.QRadioButton("convert LIF-Text to ASCII")
       self.radio1.setEnabled(False)
-      self.radio2= QtWidgets.QRadioButton("descramble HP41 ROM file")
+      self.radio2= QtWidgets.QRadioButton("unpack Eramco MLDL-OS ROM file")
       self.radio2.setEnabled(False)
       self.radio3= QtWidgets.QRadioButton("unpack HEPAX HP41 SDATA ROM file")
       self.radio3.setEnabled(False)
@@ -541,7 +621,7 @@ class cls_lifexport (QtWidgets.QDialog):
          self.radio1.setEnabled(True)
          self.radio1.setChecked(True)
          self.outputextension=".txt"
-      elif self.liffiletype== "ROM41":
+      elif self.liffiletype== "X-M41":
          self.radio2.setEnabled(True)
          self.radio2.setChecked(True)
          self.outputextension=".rom"
@@ -626,15 +706,15 @@ class cls_lifexport (QtWidgets.QDialog):
       if self.outputfile != "":
 
          if self.radio1.isChecked():
-            exec_double_export(self,["lifget","-r",self.lifimagefile,self.liffilename],"liftext",self.outputfile)
+            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("liftext"),self.outputfile)
          elif self.radio2.isChecked():
-            exec_double_export(self,["lifget","-r",self.lifimagefile,self.liffilename],"rom41",self.outputfile)
+            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("er41rom"),self.outputfile)
          elif self.radio3.isChecked():
-            exec_double_export(self,["lifget","-r",self.lifimagefile,self.liffilename],"hx41rom",self.outputfile)
+            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("hx41rom"),self.outputfile)
          elif self.radio4.isChecked():
-            exec_single(self,["lifget","-r",self.lifimagefile,self.liffilename,self.outputfile])
+            exec_single(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename,self.outputfile])
          elif self.radio5.isChecked():
-            exec_single(self,["lifget",self.lifimagefile,self.liffilename,self.outputfile])
+            exec_single(self,[add_path("lifget"),self.lifimagefile,self.liffilename,self.outputfile])
       super().accept()
 #
 #  cancel: do nothing
@@ -678,9 +758,9 @@ class cls_liflabel (QtWidgets.QDialog):
    def do_ok(self):
       newlabel=self.leditLabel.text()
       if newlabel != "":
-         exec_single(self,["liflabel",self.lifimagefile, newlabel])
+         exec_single(self,[add_path("liflabel"),self.lifimagefile, newlabel])
       else:
-         exec_single(self,["liflabel","-c",self.lifimagefile])
+         exec_single(self,[add_path("liflabel"),"-c",self.lifimagefile])
       super().accept()
 
    def do_cancel(self):
@@ -721,19 +801,22 @@ class cls_lifimport (QtWidgets.QDialog):
       self.bGroup=QtWidgets.QButtonGroup()
       self.radio1= QtWidgets.QRadioButton("convert from ASCII to LIF-Text")
       self.radio2= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
-      self.radio3= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
-      self.radio4= QtWidgets.QRadioButton("None")
-      self.radio4.setChecked(True)
+      self.radio3= QtWidgets.QRadioButton("convert HP-41 rom file to XM-41 file (Eramco MLDL-OS")
+      self.radio4= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
+      self.radio5= QtWidgets.QRadioButton("None")
+      self.radio5.setChecked(True)
       self.bGroup.addButton(self.radio1) 
       self.bGroup.addButton(self.radio2)
       self.bGroup.addButton(self.radio3)
       self.bGroup.addButton(self.radio4)
+      self.bGroup.addButton(self.radio5)
       self.bGroup.buttonClicked.connect(self.do_butclicked)
 
       self.vbox=QtWidgets.QVBoxLayout()
       self.vbox.addWidget(self.radio1)
       self.vbox.addWidget(self.radio2)
       self.vbox.addWidget(self.radio3)
+      self.vbox.addWidget(self.radio4)
 
       self.hbox2=QtWidgets.QHBoxLayout()
       self.lbl=QtWidgets.QLabel("LIF Filename:")
@@ -750,7 +833,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.gBox1.setLayout(self.vbox)
       self.gBox1.setEnabled(False)
       self.vlayout.addWidget(self.gBox1)
-      self.vbox.addWidget(self.radio4)
+      self.vbox.addWidget(self.radio5)
       self.vbox.addStretch(1)
 
       self.buttonBox = QtWidgets.QDialogButtonBox(self)
@@ -793,7 +876,7 @@ class cls_lifimport (QtWidgets.QDialog):
 #  any radio button clicked, enable/disable lif filename entry, check ok button
 #
    def do_butclicked(self,id):
-      if id== self.radio1 or id==self.radio2 or id==self.radio3:
+      if id== self.radio1 or id==self.radio2 or id==self.radio3 or id==self.radio4:
          self.leditFileName.setEnabled(True)
       else:
          self.leditFileName.setEnabled(False)
@@ -804,9 +887,9 @@ class cls_lifimport (QtWidgets.QDialog):
 #
    def do_checkenable(self):
       self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-      if (self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked()) and self.leditFileName.text() != "":
+      if (self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked() or self.radio4.isChecked()) and self.leditFileName.text() != "":
          self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
-      if self.radio4.isChecked():
+      if self.radio5.isChecked():
          self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       return
 
@@ -815,17 +898,19 @@ class cls_lifimport (QtWidgets.QDialog):
 #
    def do_ok(self):
       if self.inputfile != "":
-         if self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked():
+         if self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked() or self.radio4.isChecked():
             self.liffilename=self.leditFileName.text()
             if self.radio1.isChecked():
-               exec_double_import(self,["textlif",self.liffilename],["lifput",self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("textlif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radio2.isChecked():
-               exec_double_import(self,["rom41hx",self.liffilename],["lifput",self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("rom41hx"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radio3.isChecked():
-               exec_double_import(self,["raw41lif",self.liffilename],["lifput",self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("rom41er"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+            elif self.radio4.isChecked():
+               exec_double_import(self,[add_path("raw41lif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
          else:
             if  cls_chk_import.exec(None, self.inputfile):
-               exec_single(self,["lifput",self.lifimagefile,self.inputfile])
+               exec_single(self,[add_path("lifput"),self.lifimagefile,self.inputfile])
       super().accept()
 
 #
@@ -943,7 +1028,7 @@ class cls_chkxrom(QtWidgets.QDialog):
 
    def __init__(self,parent=None):
       super().__init__()
-      self.call=["decomp41"]
+      self.call=[add_path("decomp41")]
 
       self.setWindowTitle("Check ROM Modules")
       self.vlayout= QtWidgets.QVBoxLayout()
@@ -1110,7 +1195,9 @@ class cls_lifview(QtWidgets.QDialog):
 #
       if call == "decomp41":
          call= cls_chkxrom.exec()
-      output=exec_double_export(d,["lifget","-r",lifimagefile,liffilename],call,"")
+      else:
+         call= add_path(call)
+      output=exec_double_export(d,[add_path("lifget"),"-r",lifimagefile,liffilename],call,"")
 #
 # convert and show the file content
 #
@@ -1282,9 +1369,9 @@ class cls_lifinit (QtWidgets.QDialog):
             reply=QtWidgets.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.lifimagefile,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
             if reply== QtWidgets.QMessageBox.Cancel:
                return
-         exec_single(self,["lifinit","-m",self.mt,self.lifimagefile,self.leditDirSize.text()])
+         exec_single(self,[add_path("lifinit"),"-m",self.mt,self.lifimagefile,self.leditDirSize.text()])
          if self.leditLabel.text() != "":
-            exec_single(self,["liflabel",self.lifimagefile,self.leditLabel.text()])
+            exec_single(self,[add_path("liflabel"),self.lifimagefile,self.leditLabel.text()])
       super().accept()
 
 #
@@ -1424,7 +1511,7 @@ class cls_liffix (QtWidgets.QDialog):
 #
    def do_ok(self):
       if self.lifimagefile != "":
-         exec_single(self,["liffix","-m",self.mt,self.lifimagefile])
+         exec_single(self,[add_path("liffix"),"-m",self.mt,self.lifimagefile])
       super().accept()
 #
 #  cancel

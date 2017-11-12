@@ -323,6 +323,8 @@
 # - register pildevice is now method of commobject
 # 20.09.2017 jsi
 # - make directory font size reconfigurable on runtime
+# 28.10.2017 jsi
+# - lifutils_installed is now variable of cls_pyilper
 # 30.10.2017 jsi 
 # - bugfix: close file in getMediumInfo
 #
@@ -549,7 +551,7 @@ class cls_tabdrive(cls_tabgeneric):
          self.tBut.setToolTip("To use this menu, please disable the device first")
       else:
          self.tBut.setToolTip("")
-         if self.filename != "" and self.parent.ui.lifutils_installed:
+         if self.filename != "" and self.parent.lifutils_installed:
             self.tBut.setEnabled(True)
             self.comboCharset.setEnabled(True)
 #
@@ -819,7 +821,7 @@ class DirTableView(QtWidgets.QTableView):
         if self.parent.parent.active:
            event.accept()
            return
-        if not self.parent.parent.parent.ui.lifutils_installed:
+        if not self.parent.parent.parent.lifutils_installed:
            event.accept()
            return
         if self.selectionModel().selection().indexes():

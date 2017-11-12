@@ -22,20 +22,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# pilsocket object class (UNIX domain socket) ------------------------------
+# tcpip single socket communication object class  -----------------------------
 #
+# Initial version derived from ILPER 1.43
 #
 # Changelog
-# 25.08.2017 jsi
-# - first version
-# 07.09.2017 jsi
-# - read timeout as parameter, moved process(), sendFrame() and device list handling
-#   code to thread object
-#
 
 import select
 import socket
-import os
 
 class SocketError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -47,80 +41,87 @@ class SocketError(Exception):
 
 class cls_pilsocket:
 
-   def __init__(self,socketname):
-      self.__socketname__= socketname      # name of socket
-      self.__socket__= None                # socket
-      self.__connection__=None             # connection
-      self.__connected__= False
-      self.__lasth__= 0
-      self.__serverlist__= []
+   def __init__(self,port):
+      self.__port__=port       # port for input connection
+
+      self.__devices__ = []        # list of virtual devices
+
+      self.__serverlist__ = []
       self.__clientlist__= []
+      self.__outsocket__= None
+      self.__inconnected__= False
 
    def isConnected(self):
-      return self.__connected__ 
+      return self.__inconnected__
+
 #
-#  Connect to socket
+#  Connect to Network
 #
    def open(self):
 #
-#     delete existing socket, create socket, bind and listen
+#     open network connections
 #
+      host= None
       self.__serverlist__.clear()
-      if os.path.exists(self.__socketname__):
-         os.unlink(self.__socketname__)
-      try:
-         self.__socket__= socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-      except OSError as e:
-         raise SocketError("cannot create socket",e.strerror)
-      try:
-         self.__socket__.bind(self.__socketname__)
-      except OSError as e:
-         raise SocketError("cannot bind socket",e.strerror)
-      try:
-         self.__socket__.listen(1)
-      except OSError as e:
-         raise SocketError("cannot listen for incoming connections",e.strerror)
-      self.__serverlist__.append(self.__socket__)
-
+      self.__clientlist__.clear()
+      for res in socket.getaddrinfo(host, self.__port__, socket.AF_UNSPEC,
+                              socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
+         af, socktype, proto, canonname, sa = res
+         try:
+            s = socket.socket(af, socktype, proto)
+         except OSError as msg:
+            s = None
+            continue
+         try:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(sa)
+            s.listen(1)
+            self.__serverlist__.append(s)
+         except OSError as msg:
+            s.close()
+            continue
+      if len(self.__serverlist__) is 0:
+         raise SocketError("cannot bind to port","")
 #
-#  Disconnect from socket
+#  Disconnect from Network
 #
    def close(self):
-      self.__connected__= False
-      self.__connection__.close()
+      for s in self.__clientlist__:
+         s.close()
+      for s in self.__serverlist__:
+         s.close()
+
 #
-#  Read byte from socket with timeout, handle connect to server socket
+#  Read HP-IL frame from PIL-Box (1 byte), handle connect to server socket
 #
    def read(self,timeout):
-#
-      readable,writable,errored=select.select(self.__serverlist__+self.__clientlist__,[],[],timeout)
+      readable,writable,errored=select.select(self.__serverlist__ + self.__clientlist__,[],[],timeout)
       for s in readable:
-         if s== self.__socket__ and not self.__connected__ > 0:
-           self.__connection__,addr= s.accept()
-           self.__connected__= True
-           self.__clientlist__.append(self.__connection__)
-         if self.__connected__ and s== self.__connection__:
-            bytrx= self.__connection__.recv(1)
+         if self.__serverlist__.count(s) > 0:
+            cs,addr = s.accept()
+            self.__clientlist__.append(cs)
+            self.__inconnected__= True
+         else:
+            bytrx = s.recv(1)
             if bytrx:
-               return(bytrx)
+               return (bytrx)
             else:
-               self.__connection__.close()
-               self.__clientlist__.remove(self.__connection__)
-               self.__connected__= False
-               self.__connection__= None
+               self.__clientlist__.remove(s)
+               s.close()
+               self.__inconnected__= False
       return None
 #
 # write bytes to the socket
 #
    def write(self,lbyt,hbyt=None):
-      if self.__connection__ is None:
-         self.__connected__= False
+      if self.__inconnected__ == False:
          raise SocketError("cannot send data: ", " no connection")
       if hbyt is None:
          buf=bytearray([lbyt])
       else:
          buf=bytearray([lbyt,hbyt])
       try:
-         self.__connection__.sendall(buf)
+         self.__clientlist__[0].sendall(buf) ## correct ?
       except OSError as e:
          raise SocketError("cannot send data:",e.strerror)
+

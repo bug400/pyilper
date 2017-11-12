@@ -61,9 +61,9 @@ The device provides high quality output to a PDF file. Add this device with the
 <li>If a virtual device is reenabled again, its HP-IL address is reset
 to zero if any HP-IL operation that changed addresses of other devices 
 (AAU, AAD, AEP or AES) happened in the meantime. You must reconfigure
-the loop to access the device again. <b>This prevents duplicate HP-IL
-addresses of virtual devices which can cause data corruption of LIF media
-</b>.</li>
+the loop (run pilterm) to access the device again. <b>This prevents 
+duplicate HP-IL addresses of virtual devices which can cause data 
+corruption of LIF media</b>.</li>
 
 <li>The paper size option was moved from the plotter configuration to the
 <em>pyILPER</em> configuration in the file menu. This parameter now controls
@@ -78,6 +78,8 @@ displayed. The minimum number of lines of the scroll up buffer is 24.</li>
 <li>The <em>terminal size</em> configuration parameter was replaced by the
 <em>terminal width</em> parameter which specifies the number of columns
 (80 or 120). <b>Reconfiguration required!</b></li>
+
+<li><em>pyILPER</em> needs the updated version 1.7.7 of the <em>LIFUTILS</em>. Previous installed versions of the <em>LIFUTILS</em> must be updated.</li>
 </ul>
 <p>See the <a class="w3-hover-black" href="changelog.html">Change Log</a> for a full list of changes.</p>
 

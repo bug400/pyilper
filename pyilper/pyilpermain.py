@@ -141,6 +141,12 @@
 # - refactoring of thread classes
 # 20.09.2017 jsi:
 # - configuration of tab parameters at runtime
+# 28.10.2017 jsi:
+# - detection of lifutils now in cls_pyilper
+# 12.11.2017 jsi:
+# - removed configuration parameters: winpipename and socketname
+# - introduced configuration parameter: serverport
+# - remove MODE_PIPE communication
 #
 import os
 import sys
@@ -150,13 +156,14 @@ import shutil
 import pyilper
 import re
 import argparse
+import time
 from PyQt5 import QtCore, QtWidgets
 from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilcore import *
 from .pilconfig import  PilConfigError, PILCONFIG
 from .penconfig import  PenConfigError, PENCONFIG
-from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThread, cls_PilPipeThread, PilThreadError
-from .lifexec import cls_lifinit, cls_liffix, cls_installcheck
+from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThread, PilThreadError
+from .lifexec import cls_lifinit, cls_liffix, cls_installcheck, check_lifutils
 from .pilhp82162a import cls_tabhp82162a
 from .pilplotter import cls_tabplotter, cls_PenConfigWindow
 from .pildrive import cls_tabdrive
@@ -167,7 +174,7 @@ from .pilterminal import cls_tabterminal
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 
-COMMTHREAD_CLASSES={MODE_PILBOX:cls_PilBoxThread,MODE_TCPIP:cls_PilTcpIpThread,MODE_SOCKET:cls_PilSocketThread,MODE_PIPE:cls_PilPipeThread}
+COMMTHREAD_CLASSES={MODE_PILBOX:cls_PilBoxThread,MODE_TCPIP:cls_PilTcpIpThread,MODE_SOCKET:cls_PilSocketThread}
 
 TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a}
 
@@ -197,6 +204,7 @@ class cls_pyilper(QtCore.QObject):
       self.helpwin= None
       self.aboutwin=None
       self.devstatuswin=None
+      self.lifutils_installed= False
       self.message=""
       self.msgTimer=QtCore.QTimer()
       self.msgTimer.timeout.connect(self.show_refresh_message)
@@ -249,12 +257,12 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
-         PILCONFIG.get(self.name,"socketname","/tmp/pilsocket")
-         PILCONFIG.get(self.name,"winpipename","\\\\.\\pipe\\pilpipe")
+         PILCONFIG.get(self.name,"serverport",59999)
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
          PILCONFIG.get(self.name,"papersize",0)
+         PILCONFIG.get(self.name,"lifutilspath","")
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
@@ -266,6 +274,12 @@ class cls_pyilper(QtCore.QObject):
       except PenConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
+#
+#     check lifutils
+#
+      self.lifutils_installed= check_lifutils()
+      if self.lifutils_installed:
+         self.ui.enableLIFControls()
 #
 #     determine if we run a new version of pyILPER (or for the first time)
 #
@@ -406,6 +420,7 @@ class cls_pyilper(QtCore.QObject):
 #  clean up from thread crash
 #
    def do_crash_cleanup(self):
+      time.sleep(1)
       self.disable()
 
 #

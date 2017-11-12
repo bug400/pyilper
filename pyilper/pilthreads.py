@@ -32,17 +32,17 @@
 # 05.10.2017 jsi
 # - added global frame counter and store counter of most recent fraame that
 #   addressed a device
+# 12.11.2017 jsi
+# - removed PipPipeThread
+# - raise PilThreadError instead of SocketError in cls_PilSocketThread
+# - set self.running= False on thread exit
 #
 from PyQt5 import QtCore
 from .pilconfig import PILCONFIG
 from .pilbox import cls_pilbox, PilBoxError
 from .piltcpip import cls_piltcpip, TcpIpError
-from .pilcore import isWINDOWS, isLINUX, isMACOS, assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK, COMTMOUTWRITE
-if isLINUX() or isMACOS():
-   from .pilsocket import cls_pilsocket, SocketError
-if isWINDOWS():
-   from .pilwinpipe import cls_pilwinpipe, WinPipeError
-
+from .pilcore import assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK
+from .pilsocket import cls_pilsocket, SocketError
 #
 class PilThreadError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -284,6 +284,7 @@ class cls_PilBoxThread(cls_pilthread_generic):
       except PilBoxError as e:
          self.send_message('PIL-Box disconnected after error. '+e.msg+': '+e.add_msg)
          self.signal_crash()
+      self.running=False
 
 #
 # HP-IL over TCP-IP communication thread (see http://hp.giesselink.com/hpil.htm)
@@ -354,8 +355,9 @@ class cls_PilTcpIpThread(cls_pilthread_generic):
          self.send_message('disconnected after error. '+e.msg+': '+e.add_msg)
          self.send_message(e.msg)
          self.signal_crash()
+      self.running=False
 #
-# Unix/Mac OS domain socket communication thread with vmware or virtualbox serial port
+# TCP/IP socket communication thread with DOSBox or virtualbox serial port
 #
 class cls_PilSocketThread(cls_pilthread_generic):
 
@@ -364,7 +366,7 @@ class cls_PilSocketThread(cls_pilthread_generic):
 
    def enable(self):
       self.send_message("Not connected to socket")
-      socket_name=PILCONFIG.get("pyilper","socketname")
+      socket_name=PILCONFIG.get("pyilper","serverport")
       try:
          self.commobject= cls_pilsocket(socket_name)
          self.commobject.open()
@@ -438,9 +440,9 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #
                b= self.commobject.read(COMTMOUTACK)
                if b is None:
-                  raise SocketError("cannot get acknowledge: ","timeout")
+                  raise PilThreadError("cannot get acknowledge: ","timeout")
                if ord(b)!= 0x0D:
-                  raise SocketError("cannot get acknowledge: ","unexpected value")
+                  raise PilThreadError("cannot get acknowledge: ","unexpected value")
 #
 #        otherwise send only low part
 #
@@ -449,100 +451,4 @@ class cls_PilSocketThread(cls_pilthread_generic):
       except SocketError as e:
          self.send_message('socket disconnected after error. '+e.msg+': '+e.add_msg)
          self.signal_crash()
-#
-# Windows named pipe communication thread with vmware or virtualbox (to do)
-#
-class cls_PilPipeThread(cls_pilthread_generic):
-
-   def __init__(self, parent):
-      super().__init__(parent)
-
-   def enable(self):
-      self.pipe_name=PILCONFIG.get("pyilper","winpipename")
-      self.send_message("Not connected to named pipe")
-      try:
-         self.commobject= cls_pilwinpipe(self.pipe_name)
-         self.commobject.open()
-      except WinPipeError as e:
-         self.commobject.close()
-         self.commobject=None
-         raise PilThreadError(e.msg, e.add_msg)
-      return
-#
-#  thread execution 
-#         
-   def run(self):
-#
-      try:
-#
-#        Thread main loop    
-#
-         while True:
-            if self.check_pause_stop():
-               continue
-            if self.commobject.isConnected():
-               self.send_message('client connected')
-            else:
-               self.send_message('waiting for client')
-#
-#           read byte from pipe
-#
-            ret=self.commobject.read(COMTMOUTREAD)
-            if ret is None:
-               continue
-
-            byt=ord(ret)
-            if (byt & 0xE0) == 0x20:
-#
-#              got high byte, save it, send ack and continue
-#
-               self.__lasth__ = byt & 0xFF
-#
-#              send acknowledge
-#
-               self.commobject.write(0x0d,COMTMOUTWRITE)
-               continue
-#
-#           low byte, assemble frame according to 7- or 8 bit format
-#
-            frame = assemble_frame(self.__lasth__,byt)
-#
-#           send acknowledge if pil box command
-#
-            if frame & 0x794 == 0x494:
-               frame= frame & 0x3F
-#
-#           process virtual HP-IL devices 
-#
-            else:
-               self.update_framecounter()
-               for i in self.devices:
-                  frame=i[0].process(frame)
-#
-#           send frame
-#
-            hbyt, lbyt= disassemble_frame(frame)
-
-            if  hbyt != self.__lasth__:
-#
-#              send high part if different from last one
-#
-               self.__lasth__ = hbyt
-               self.commobject.write(hbyt,COMTMOUTWRITE)
-#
-#              read acknowledge
-#
-               b= self.commobject.read(COMTMOUTACK)
-               if b is None:
-                  raise WinPipeError("cannot get acknowledge: ","timeout")
-               if ord(b)!= 0x0D:
-                  raise WinPipeError("cannot get acknowledge: ","unexpected value")
-#
-#        otherwise send only low part
-#
-            self.commobject.write(lbyt,COMTMOUTWRITE)
-
-
-      except WinPipeError as e:
-         self.send_message('socket disconnected after error. '+e.msg+': '+e.add_msg)
-         self.signal_crash()
+      self.running=False

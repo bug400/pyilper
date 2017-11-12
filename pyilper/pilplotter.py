@@ -71,6 +71,8 @@
 # - block multiple calls of start_digi
 # 02.10.2017 jsi
 # - fixed crash on cursor restore if digitizing mode was stopped twice
+# 30.10.2017 jsi
+# - LIFUTILS path handling added
 
 import sys
 import subprocess
@@ -84,6 +86,7 @@ from .penconfig import PENCONFIG
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
 from .pilpdf import cls_pdfprinter
+from .lifcore import add_path
 
 #
 # constants --------------------------------------------------------------
@@ -1495,7 +1498,7 @@ class cls_HP7470(QtCore.QObject):
    def enable(self):
 #     progpath=os.path.join(os.path.dirname(pyilper.__file__),"emu7470","emu7470")
 #     progpath=re.sub("//","/",progpath,1)
-      progpath="emu7470"
+      progpath=add_path("emu7470")
 
       try:
          if isWINDOWS():

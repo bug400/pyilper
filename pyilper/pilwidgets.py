@@ -148,6 +148,13 @@
 # - changes of the pyILPER configuration dialog. Determine which changes need a
 #   restart of the communication and wich need a restart of the application.
 #   Issue appropriate messages. 
+# 30.10.2017 jsi
+# - added configuration of lifutils path
+# - removed deprecated constant QFileDialog.DirectoryOnly
+# 12.11.2017 jsi
+# - removed editing of parameters winpipe and socketname
+# - added editing of parameter serverport
+# - two column layout of config window
 #
 import os
 import glob
@@ -156,7 +163,6 @@ import re
 import sys
 import pyilper
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .lifexec import check_lifutils
 HAS_WEBKIT=False
 HAS_WEBENGINE=False
 try:
@@ -617,8 +623,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__idyframe__= PILCONFIG.get(self.__name__,"idyframe")
       self.__remotehost__= PILCONFIG.get(self.__name__,"remotehost")
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
-      self.__socketname__= PILCONFIG.get(self.__name__,"socketname")
-      self.__winpipename__= PILCONFIG.get(self.__name__,"winpipename")
+      self.__serverport__= PILCONFIG.get(self.__name__,"serverport")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
       self.__termsize__= PILCONFIG.get(self.__name__,"terminalwidth")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
@@ -626,11 +631,17 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__termcharsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
       self.__dircharsize__=PILCONFIG.get(self.__name__,"directorycharsize")
       self.__papersize__=PILCONFIG.get(self.__name__,"papersize")
- 
+      self.__lifutilspath__=PILCONFIG.get(self.__name__,"lifutilspath")
 
       self.setWindowTitle("pyILPER configuration")
       self.vbox0= QtWidgets.QVBoxLayout()
       self.setLayout(self.vbox0)
+      self.hbox0= QtWidgets.QHBoxLayout()
+      self.vbox0.addLayout(self.hbox0)
+      self.vbox1= QtWidgets.QVBoxLayout()
+      self.vbox2= QtWidgets.QVBoxLayout()
+      self.hbox0.addLayout(self.vbox1)
+      self.hbox0.addLayout(self.vbox2)
 
 #
 #     Group box with radio buttons for communication typ
@@ -719,28 +730,20 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.edtRemotePort.setText(str(self.__remoteport__))
       self.edtRemotePort.setValidator(self.intvalidator)
       self.vboxgbox.addLayout(self.glayout)
-      self.vbox0.addWidget(self.gbox)
+      self.vbox1.addWidget(self.gbox)
 #
-#     Section Unix Domain Socket/Named Pipe
+#     Section TCP/IP server port
 #
-      self.radbutSocketPipe = QtWidgets.QRadioButton(self.gbox)
-      if isWINDOWS():
-         self.radbutSocketPipe.setText("Windows named pipe (experimental)")
-      else:
-         self.radbutSocketPipe.setText("Unix domain socket (experimental)")
-      self.radbutSocketPipe.clicked.connect(self.setCheckBoxes)
-      self.vboxgbox.addWidget(self.radbutSocketPipe)
+      self.radbutServerport = QtWidgets.QRadioButton(self.gbox)
+      self.radbutServerport.setText("TCP/IP socket Server (experimental)")
+      self.radbutServerport.clicked.connect(self.setCheckBoxes)
+      self.vboxgbox.addWidget(self.radbutServerport)
       self.splayout=QtWidgets.QGridLayout()
-      if isWINDOWS():
-         self.splayout.addWidget(QtWidgets.QLabel("Windows named pipe:"),0,0)
-      else:
-         self.splayout.addWidget(QtWidgets.QLabel("Unix Domain socket:"),0,0)
-      self.edtSocketPipe=QtWidgets.QLineEdit()
-      self.splayout.addWidget(self.edtSocketPipe,0,1)
-      if isWINDOWS():
-         self.edtSocketPipe.setText(self.__winpipename__)
-      else:
-         self.edtSocketPipe.setText(self.__socketname__)
+      self.splayout.addWidget(QtWidgets.QLabel("Server port:"),0,0)
+      self.edtServerport=QtWidgets.QLineEdit()
+      self.edtServerport.setValidator(self.intvalidator)
+      self.splayout.addWidget(self.edtServerport,0,1)
+      self.edtServerport.setText(str(self.__serverport__))
       self.vboxgbox.addLayout(self.splayout)
 
 #
@@ -751,7 +754,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       elif self.__mode__==1:
          self.radbutTCPIP.setChecked(True)
       else:
-         self.radbutSocketPipe.setChecked(True)
+         self.radbutServerport.setChecked(True)
       self.setCheckBoxes()
 #
 #     Section Working Directory
@@ -773,9 +776,40 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.butwdir.pressed.connect(self.do_config_Workdir)
       self.hboxwdir.addWidget(self.butwdir)
       self.vboxgboxw.addLayout(self.hboxwdir)
-      self.vbox0.addWidget(self.gboxw)
+      self.vbox1.addWidget(self.gboxw)
+      self.vbox1.addStretch(1)
 #
-#     Section Terminal configuration: size, scroll up buffer, color scheme, font size
+#     section lifutils path
+#
+      self.gboxlifpath = QtWidgets.QGroupBox()
+      self.gboxlifpath.setFlat(True)
+      self.gboxlifpath.setTitle("Custom LIFUTILS location")
+      self.vboxgboxlifpath= QtWidgets.QVBoxLayout()
+      self.gboxlifpath.setLayout(self.vboxgboxlifpath)
+      self.hboxlifpath= QtWidgets.QHBoxLayout()
+      self.lbltxt7=QtWidgets.QLabel("Path to lifversion program: ")
+      self.hboxlifpath.addWidget(self.lbltxt7)
+      self.lbllifpath=QtWidgets.QLabel()
+      self.lbllifpath.setText(self.__lifutilspath__)
+      self.hboxlifpath.addWidget(self.lbllifpath)
+      self.hboxlifpath.addStretch(1)
+
+      self.vboxlifbut= QtWidgets.QVBoxLayout()
+      self.butlifpathchange=QtWidgets.QPushButton()
+      self.butlifpathchange.setText("change")
+      self.butlifpathchange.pressed.connect(self.do_config_lifutilspath_change)
+      self.butlifpathclear=QtWidgets.QPushButton()
+      self.butlifpathclear.setText("clear")
+      self.butlifpathclear.pressed.connect(self.do_config_lifutilspath_clear)
+      self.vboxlifbut.addWidget(self.butlifpathchange)
+      self.vboxlifbut.addWidget(self.butlifpathclear)
+
+      self.hboxlifpath.addLayout(self.vboxlifbut)
+      self.vboxgboxlifpath.addLayout(self.hboxlifpath)
+      self.vbox2.addWidget(self.gboxlifpath)
+#
+#     Section Terminal configuration: size, scroll up buffer, color scheme, 
+#     font size
 #
       self.gboxt= QtWidgets.QGroupBox()
       self.gboxt.setFlat(True)
@@ -813,7 +847,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridt.addWidget(self.spinTermCharsize,4,1)
 
       self.gboxt.setLayout(self.gridt)
-      self.vbox0.addWidget(self.gboxt)
+      self.vbox2.addWidget(self.gboxt)
 #
 #     Section Directory listing configuration: font size
 #
@@ -830,13 +864,13 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridd.addWidget(self.spinDirCharsize,0,1)
 
       self.gboxd.setLayout(self.gridd)
-      self.vbox0.addWidget(self.gboxd)
+      self.vbox2.addWidget(self.gboxd)
 #
 #     Section Papersize
 #
       self.gboxps= QtWidgets.QGroupBox()
       self.gboxps.setFlat(True)
-      self.gboxps.setTitle("Set Papersize")
+      self.gboxps.setTitle("Papersize (Plotter and PDF output)")
       self.gridps=QtWidgets.QGridLayout()
       self.gridps.setSpacing(3)
 
@@ -847,8 +881,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.combops.setCurrentIndex(self.__papersize__)
       self.gridps.addWidget(self.combops,1,1)
       self.gboxps.setLayout(self.gridps)
-      self.vbox0.addWidget(self.gboxps)
-
+      self.vbox2.addWidget(self.gboxps)
 #
 #     add ok/cancel buttons
 #
@@ -871,7 +904,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          self.edtRemoteHost.setEnabled(False)
          self.edtRemotePort.setEnabled(False)
          self.cbIdyFrame.setEnabled(True)
-         self.edtSocketPipe.setEnabled(False)
+         self.edtServerport.setEnabled(False)
          self.comboBaud.setEnabled(True)
       elif self.radbutTCPIP.isChecked():
          self.__mode__=1
@@ -880,19 +913,16 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          self.edtRemoteHost.setEnabled(True)
          self.edtRemotePort.setEnabled(True)
          self.cbIdyFrame.setEnabled(True)
-         self.edtSocketPipe.setEnabled(False)
+         self.edtServerport.setEnabled(False)
          self.comboBaud.setEnabled(False)
-      elif self.radbutSocketPipe.isChecked():
-         if isWINDOWS():
-            self.__mode__=3
-         else:
-            self.__mode__=2
+      elif self.radbutServerport.isChecked():
+         self.__mode__=2
          self.butTty.setEnabled(False)
          self.edtPort.setEnabled(False)
          self.edtRemoteHost.setEnabled(False)
          self.edtRemotePort.setEnabled(False)
          self.cbIdyFrame.setEnabled(False)
-         self.edtSocketPipe.setEnabled(True)
+         self.edtServerport.setEnabled(True)
          self.comboBaud.setEnabled(False)
 
    def do_config_Interface(self):
@@ -906,8 +936,8 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select pyILPER working directory")
       dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
-#     dialog.setDirectory(os.path.expanduser('~'))
+      dialog.setFileMode(QtWidgets.QFileDialog.Directory)
+      dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly,True)
       if dialog.exec():
          return dialog.selectedFiles() 
 
@@ -920,6 +950,25 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          return
       self.__workdir__= flist[0]
       self.lblwdir.setText(self.__workdir__)
+
+   def getLifutilsDirName(self):
+      dialog=QtWidgets.QFileDialog()
+      dialog.setWindowTitle("Select Path to lifversion executable")
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+      if dialog.exec():
+         return dialog.selectedFiles() 
+
+   def do_config_lifutilspath_clear(self):
+      self.__lifutilspath__= ""
+      self.lbllifpath.setText(self.__lifutilspath__)
+
+   def do_config_lifutilspath_change(self):
+      flist=self.getLifutilsDirName()
+      if flist is None:
+         return
+      self.__lifutilspath__= flist[0]
+      self.lbllifpath.setText(self.__lifutilspath__)
 #
 #     check if configuration parameter was changed
 #
@@ -941,10 +990,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__needs_reconnect__ |= self.check_param("idyframe",self.__idyframe__)
       self.__needs_reconnect__ |= self.check_param("port", int(self.edtPort.text()))
       self.__needs_reconnect__ |= self.check_param("remotehost", self.edtRemoteHost.text())
-      if isLINUX() or isMACOS():
-         self.__needs_reconnect__ |= self.check_param("socketname", self.edtSocketPipe.text())
-      if isWINDOWS():
-         self.__needs_reconnect__ |= self.check_param("winpipename", self.edtSocketPipe.text())
+      self.__needs_reconnect__ |= self.check_param("serverport", int(self.edtServerport.text()))
       self.__needs_reconnect__ |= self.check_param("workdir", self.lblwdir.text())
 #
 #     we need to reconnect, so get confirmation
@@ -960,8 +1006,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          msgbox.setWindowTitle("Warning")
          reply=msgbox.exec()
          PILCONFIG.put("pyilper","show_msg_commparams_changed",cb.checkState()!=QtCore.Qt.Checked)
-        
-
 #
 #    not confirmed, cancel everything
 #
@@ -977,10 +1021,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"port", int(self.edtPort.text()))
       PILCONFIG.put(self.__name__,"remotehost", self.edtRemoteHost.text())
       PILCONFIG.put(self.__name__,"remoteport", int(self.edtRemotePort.text()))
-      if isLINUX() or isMACOS():
-         PILCONFIG.put(self.__name__,"socketname", self.edtSocketPipe.text())
-      if isWINDOWS():
-         PILCONFIG.put(self.__name__,"winpipename", self.edtSocketPipe.text())
+      PILCONFIG.put(self.__name__,"serverport", int(self.edtServerport.text()))
       PILCONFIG.put(self.__name__,"workdir", self.lblwdir.text())
 #
 #     these parameters require a reconfiguration 
@@ -996,12 +1037,13 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__needs_restart__= False
       self.__needs_restart__ |= self.check_param("papersize",self.combops.currentIndex())
       self.__needs_restart__ |= self.check_param("scrollupbuffersize", self.spinScrollBufferSize.value())
+      self.__needs_restart__ |= self.check_param("lifutilspath",self.lbllifpath.text())
 #
 #     some parameters need a restart of the application, inform user
 #
       if self.__needs_restart__ and PILCONFIG.get("pyilper","show_msg_restartparams_changed",True):
          msgbox= QtWidgets.QMessageBox()
-         msgbox.setText("Changes of the papersize or the scrollup buffer size require a restart of pyILPER for take the changes to effect.")
+         msgbox.setText("Changes of the papersize, the scrollup buffer size or the lifutils path require a restart of pyILPER for take the changes to effect.")
          msgbox.setIcon(QtWidgets.QMessageBox.Information)
          msgbox.setStandardButtons(QtWidgets.QMessageBox.Ok)
          msgbox.setDefaultButton(QtWidgets.QMessageBox.Ok)
@@ -1019,6 +1061,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"terminalcharsize",self.spinTermCharsize.value())
       PILCONFIG.put(self.__name__,"directorycharsize",self.spinDirCharsize.value())
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
+      PILCONFIG.put(self.__name__,"lifutilspath",self.lbllifpath.text())
       super().accept()
 
    def do_cancel(self):
@@ -1382,10 +1425,6 @@ class cls_ui(QtWidgets.QMainWindow):
       else:
          self.setWindowTitle("pyILPER "+version+" Instance: "+instance)
 #
-#     check if lifutils are installed
-#
-      self.lifutils_installed= check_lifutils()[0]
-#
 #     signals
 #
       self.sig_crash= parent.sig_crash
@@ -1412,9 +1451,8 @@ class cls_ui(QtWidgets.QMainWindow):
       self.actionDevStatus=self.menuUtil.addAction("Virtual HP-IL device status")
       self.actionCopyPilimage=self.menuUtil.addAction("Copy PILIMAGE.DAT to workdir")
       self.actionInstallCheck=self.menuUtil.addAction("Check LIFUTILS installation")
-      if not self.lifutils_installed:
-         self.actionInit.setEnabled(False)
-         self.actionFix.setEnabled(False)
+      self.actionInit.setEnabled(False)
+      self.actionFix.setEnabled(False)
 
       self.actionAbout=self.menuHelp.addAction("About")
       self.actionHelp=self.menuHelp.addAction("Manual")
@@ -1426,7 +1464,6 @@ class cls_ui(QtWidgets.QMainWindow):
 
       self.tabs=QtWidgets.QTabWidget()
       self.vbox= QtWidgets.QVBoxLayout()
-#     self.vbox.addWidget(self.tabs,1)
       self.vbox.addWidget(self.tabs)
       self.centralwidget.setLayout(self.vbox)
 #
@@ -1454,3 +1491,9 @@ class cls_ui(QtWidgets.QMainWindow):
    def closeEvent(self,evnt):
       evnt.accept()
       self.sig_quit.emit()
+#
+# enable controls that require lifutils
+#
+   def enableLIFControls(self):
+      self.actionInit.setEnabled(True)
+      self.actionFix.setEnabled(True)

@@ -63,6 +63,22 @@ virtual HP-IL device in the loop.
 <p>This is the location of the log files for scope and the printer output 
 (q.v.). Default is the $HOME directory of the current user.</p>
 
+<h4 class="w3-text-teal">Custom LIFUTILS location</h4>
+
+<p><em>pyILPER</em> checks for <em>LIFUTILS</em> installations in the following 
+order:</p>
+
+<ul class="w3-ul">
+<li>They are installed at the custom <em>LIFUTILS</em> location.</li>
+<li>They can be called because the <em>PATH</em> environment variable is set 
+respectively.</li>
+<li>They are installed at the default location /usr (Linux) or /usr/local (mac 
+OS) or the location can be found in the Windows registry.</li>
+</ul>
+
+<p>Therefore the custom installation location must only be specified if the
+<em>LIFUTILS</em> were installed in a non standard way.</p>
+
 <h4 class="w3-text-teal">Configuration of the terminal, scope and printer display</h4>
 <p>You can set the number of columns (80 or 120), the color
 scheme (white, amber, green), the maximum number of lines in the scroll up buffer
