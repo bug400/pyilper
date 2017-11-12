@@ -37,7 +37,16 @@
 # - set required version of lifutils to 1.7.6
 # 01.12.2016 jsi
 # - use wcat41 instead of wall to display wall files
+# 28.10.2017 jsi
+# - lifutils UUID constant added
+# 30.10.2017 jsi
+# - LIFUTILS_PATH module variable and functions added
+# 11.11.2017 jsi
+# - set required version of lifutils to 1.7.7
 #
+# core constants and functions to handle lif image files
+#
+import pathlib
 
 #
 # core constants and functions to handle lif image files
@@ -49,8 +58,34 @@ dict_finfo_name={"TEXT":0x0001,"D-LEX":0x00FF,"WAXM41":0xE020,"XM41":0xE030,"ALL
 #
 # Minimum Version number of LIFUTILS
 #
-LIFUTILS_REQUIRED_VERSION=10706
+LIFUTILS_REQUIRED_VERSION=10707
 #
+# GUID of a lifutils > 1.7.7 windows installation
+#
+LIFUTILS_UUID="{0C786F40-D1C6-4681-9B1D-AFC920428192}"
+#
+# current path to lifutils programs
+#
+LIFUTILS_PATH=""
+#
+# set/get current path to lifutils programs
+def set_lifutils_path(path):
+   global LIFUTILS_PATH
+   LIFUTILS_PATH=path
+
+def get_lifutils_path():
+   return LIFUTILS_PATH
+#
+#  add LIFUTILS_PATH to program
+#
+def add_path(cmd):
+   lifutils_path= get_lifutils_path()
+   if lifutils_path !="":
+      p=pathlib.Path(lifutils_path) / cmd
+      cmd= str(p)
+   return(cmd)
+
+
 # get numeric filetype for a file file type name
 #
 def get_finfo_name(ftype_name):
