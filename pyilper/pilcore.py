@@ -71,6 +71,8 @@
 # - 1.6.0 beta1
 # 12.11.2017 jsi
 # - 1.6.0 beta3
+# 13.11.2017 jsi
+# - make USE8BITS change depending on data returned by the PIL-Box
 #
 import platform
 #
@@ -210,9 +212,12 @@ def encode_version(version_string):
 #  assemble frame from low and high byte according to 7- oder 8-bit format
 #
 def assemble_frame(hbyt,lbyt):
+   global USE8BITS
    if( lbyt & 0x80 ):
+      USE8BITS= True
       return ((hbyt & 0x1E) << 6) + (lbyt & 0x7F)
    else:
+      USE8BITS= False
       return ((hbyt & 0x1F) << 6) + (lbyt & 0x3F)
 #
 #  disassemble frame from low and high byte according to 7- oder 8-bit format

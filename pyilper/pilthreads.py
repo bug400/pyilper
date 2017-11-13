@@ -36,6 +36,11 @@
 # - removed PipPipeThread
 # - raise PilThreadError instead of SocketError in cls_PilSocketThread
 # - set self.running= False on thread exit
+# 13.11.2017 cg
+# - made code more robust against illegal ACK in the pil box and pil box
+#   simulation interface when receiving byte data from the pil box
+# - removed ACK in pil box simulation after receiving a high byte
+# - fixed detection and acknowledge of a pil box command
 #
 from PyQt5 import QtCore
 from .pilconfig import PILCONFIG
@@ -233,18 +238,22 @@ class cls_PilBoxThread(cls_pilthread_generic):
                continue
             byt=ord(ret)
 #
-#           process byte read from the PIL-Box
+#           process byte read from the PIL-Box, is not a low byte
 #
-            if (byt & 0xE0) == 0x20:
+            if (byt & 0xC0) == 0x00:
 #
-#              high byte, save it
+#              check for high byte, else ignore
 #
-               self.__lasth__ = byt & 0xFF
+               if (byt & 0x20) != 0:
 #
-#              send acknowledge only at 9600 baud connection
+#                 got high byte, save it
 #
-               if self.__baudrate__ == 9600:
-                  self.commobject.write(0x0d)
+                  self.__lasth__ = byt & 0xFF
+#
+#                 send acknowledge only at 9600 baud connection
+#
+                  if self.__baudrate__ == 9600:
+                     self.commobject.write(0x0d)
                continue
 #
 #           low byte, build frame 
@@ -399,15 +408,18 @@ class cls_PilSocketThread(cls_pilthread_generic):
                continue
       
             byt=ord(ret)
-            if (byt & 0xE0) == 0x20:
 #
-#              got high byte, save it, send ack and continue
+#           is not a low byte
 #
-               self.__lasth__ = byt & 0xFF
+            if (byt & 0xC0) == 0x00:
 #
-#              send acknowledge
+#              check for high byte, else ignore
 #
-               self.commobject.write(0x0d)
+               if (byt & 0x20) != 0:
+#
+#                 got high byte, save it and continue
+#
+                  self.__lasth__ = byt & 0xFF
                continue
 #
 #           low byte, assemble frame according to 7- oder 8 bit format
@@ -416,8 +428,11 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #
 #           send acknowledge if we received a pil box command
 #
-            if frame & 0x794 == 0x494:
-               frame= frame & 0x3F
+            if frame & 0x7F4 == 0x494:
+#
+#              send only original low byte as acknowledge
+#
+               lbyt = byt
 #
 #           process virtual HP-IL devices 
 #
@@ -426,23 +441,24 @@ class cls_PilSocketThread(cls_pilthread_generic):
                for i in self.devices:
                   frame=i[0].process(frame)
 #
-#           disassemble frame
+#              disassemble answer frame
 #
-            hbyt, lbyt= disassemble_frame(frame)
-            if  hbyt != self.__lasth__:
+               hbyt, lbyt= disassemble_frame(frame)
+
+               if  hbyt != self.__lasth__:
 #
-#              send high part if different from last one
+#                 send high part if different from last one
 #
-               self.__lasth__ = hbyt
-               self.commobject.write(hbyt)
+                  self.__lasth__ = hbyt
+                  self.commobject.write(hbyt)
 #
-#              read acknowledge
+#                 read acknowledge
 #
-               b= self.commobject.read(COMTMOUTACK)
-               if b is None:
-                  raise PilThreadError("cannot get acknowledge: ","timeout")
-               if ord(b)!= 0x0D:
-                  raise PilThreadError("cannot get acknowledge: ","unexpected value")
+                  b= self.commobject.read(COMTMOUTACK)
+                  if b is None:
+                     raise PilThreadError("cannot get acknowledge: ","timeout")
+                  if ord(b)!= 0x0D:
+                     raise PilThreadError("cannot get acknowledge: ","unexpected value")
 #
 #        otherwise send only low part
 #
