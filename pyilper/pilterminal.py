@@ -37,6 +37,8 @@ from .pildevbase import cls_pildevbase
 # - register pildevice is now method of commobject
 # 14.09.2017 jsi
 # - refactoring, keyboard input is disabled if device not active
+# 17.11.2017 jsi
+# - moved reconfigure method to cls_tabtermgeneric
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -65,12 +67,6 @@ class cls_tabterminal(cls_tabtermgeneric):
          self.guiobject.enable_keyboard()
       else:
          self.guiobject.disable_keyboard()
-#
-#     reconfigure
-#
-   def reconfigure(self):
-      self.guiobject.reconfigure()
-
 #
 # HP-IL virtual terminal object class ---------------------------------------
 #

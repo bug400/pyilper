@@ -155,6 +155,8 @@
 # - removed editing of parameters winpipe and socketname
 # - added editing of parameter serverport
 # - two column layout of config window
+# 17.11.2017 jsi
+# - added missing reconfigure method to cls_tabtermgeneric
 #
 import os
 import glob
@@ -394,6 +396,12 @@ class cls_tabtermgeneric(cls_tabgeneric):
    def becomes_invisible(self):
       self.guiobject.becomes_invisible()
       return
+
+#     reconfigure
+#
+   def reconfigure(self):
+      self.guiobject.reconfigure()
+
 #
 # Help Dialog class ----------------------------------------------------------
 #

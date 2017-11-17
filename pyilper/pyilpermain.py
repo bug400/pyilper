@@ -147,6 +147,8 @@
 # - removed configuration parameters: winpipename and socketname
 # - introduced configuration parameter: serverport
 # - remove MODE_PIPE communication
+# 17.11.2017 jsi:
+# - put drive tabs at the end in the default configuration
 #
 import os
 import sys
@@ -258,7 +260,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
          PILCONFIG.get(self.name,"serverport",59999)
-         PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"]])
+         PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
          PILCONFIG.get(self.name,"papersize",0)

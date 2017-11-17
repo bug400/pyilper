@@ -57,7 +57,7 @@ is initialized with the standard capacity of the current device type</p>
 Apply the HP9114B drive type if you use software that requires compatibility 
 with that device. Use the HP82161A drive type if the controller is a HP-41.</p>
 
-<p>Note: the HP-41 can only access the first 130 bytes of
+<p>Note: the HP-41 can only access the first 130K bytes of
 larger disk media.</p>
 
 <p>Note: <em>pyILPER</em> requires a valid LIF header when mounting existing LIF 
@@ -76,6 +76,8 @@ Otherwise the image file may become corrupted. </p>
 
 <p>If a LIF image medium is initialized by a HP-41 HP-IL module or an early
 HP-71B HP-IL module <em>pyILPER</em> fixes wrong or missing header information.</p>
+
+<p><b>Warning:</b>Be extremely careful with <em>PRINTER IS, DISPLAY IS</em> and <em>KEYBOARD IS</em> statements and enabling or disabling virtual or real devices. See the caveat below.</p>
 
 <h3 class="w3-text-teal">Device Controls</h3>
 
@@ -134,6 +136,19 @@ enabled check box unchecked) in order to use the file management functions.</p>
 contain letters and digits. Unfortunately, the HP-41 IL-Module is less strict 
 and file names may contain other characters. You can rename these files 
 to proper LIF file names.</p>
+
+<h3 class="w3-text-teal">Caveat</h3>
+
+<p>Before adding or (reenabling) a virtual drive be sure to reset any
+<em>DISPLAY IS, PRINTER IS</em> or <em>KEYBOARD IS</em> assignments before
+issuing a <em>RESTORE IO</em> to assign a new address to the new virtual
+drive. At the worst the virtual drive might become the current display, printer
+or keyboard device which can result in data corruption.</p>
+
+<p>If you notice any strange things, e.g. the calculator beeps and displays 
+confused characters shut down <em>pyILPER</em> immediately! Then reset
+all device assignments and start <em>pyILPER</em> again.</p>
+
 <!-- End content -->
 
 </div>

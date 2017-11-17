@@ -58,18 +58,27 @@ The device provides high quality output to a PDF file. Add this device with the
 <h3 class="w3-text-teal">Changes and incompatibilities</h3>
 
 <ul class="w3-ul">
-<li>If a virtual device is reenabled again, its HP-IL address is reset
+<li>If a virtual device is re enabled again, its HP-IL address is reset
 to zero if any HP-IL operation that changed addresses of other devices 
 (AAU, AAD, AEP or AES) happened in the meantime. You must reconfigure
-the loop (run pilterm) to access the device again. <b>This prevents 
+the loop (run <em>PILTERM</em>) to access the device again. <b>This prevents 
 duplicate HP-IL addresses of virtual devices which can cause data 
 corruption of LIF media</b>.</li>
+
+<li>The <em>PILTERM</em> utility was updated to version 2.1. This version
+deassigns any <em>DISPLAY IS, PRINTER IS</em> and <em>KEYBOARD IS</em>
+assignments before issuing a <em>RESTORE IO</em> to avoid possible data 
+corruptions (see <a class="w3-hover-black" href="drive.html">the caveat section here</a>. All users are encouraged to update to this version. <b>This
+prevents assignments of the display, printer or keyboard device to a
+virtual drive which can cause data corruption of LIF media.</b></li>
+
+<li>For this reason the default <em>pyILPER</em> configurations now puts the virtual drive tabs at the end of the tab menu and therefore at the end of the 
+virtual device chain.</li>
 
 <li>The paper size option was moved from the plotter configuration to the
 <em>pyILPER</em> configuration in the file menu. This parameter now controls
 the medium size of all PDF output as well as important plotter settings. 
-The default for this parameter is A4. <b>Reconfiguration required if letter format
-is used!</b></li>
+The default for this parameter is A4. <b>Reconfiguration required if the letter format is used!</b></li>
 
 <li>The way to disable scrolling changed as well. Set the scroll up buffer size
 to the favored number of lines. Then resize the main window until all lines are
@@ -81,6 +90,7 @@ displayed. The minimum number of lines of the scroll up buffer is 24.</li>
 
 <li><em>pyILPER</em> needs the updated version 1.7.7 of the <em>LIFUTILS</em>. Previous installed versions of the <em>LIFUTILS</em> must be updated.</li>
 </ul>
+
 <p>See the <a class="w3-hover-black" href="changelog.html">Change Log</a> for a full list of changes.</p>
 
 <!-- End content -->

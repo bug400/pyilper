@@ -139,25 +139,25 @@ is displayed without overbar.  </li>
 <h3 class="w3-text-teal">PILTERM Basic Program for the HP-71B</h3>
 
 <code>
-10 REM PILTERM V 2.0 - set up printer, keyboard and display for pyILPER<br>
-20 RESET HPIL @ RESTORE IO @ CLEAR<br>
-30 D=DEVADDR("PILTERM")<br>
-40 P=DEVADDR("PRINTER")<br>
-50 DISPLAY IS * @ PRINTER IS * @ DELAY .5,.125<br>
-60 IF POS(VER$,"KBD") THEN RESET ESCAPE @ KEYBOARD IS *<br>
+10 REM PILTERM V 2.1 - set up printer, keyboard and display for pyILPER<br>
+20 DISPLAY IS * @ PRINTER IS * @ DELAY .5,.125<br>
+30 IF POS(VER$,"KBD") THEN RESET ESCAPE @ KEYBOARD IS *<br>
+40 RESET HPIL @ RESTORE IO @ CLEAR<br>
+50 D=DEVADDR("PILTERM")<br>
+60 P=DEVADDR("PRINTER")<br>
 70 IF D&gt;0 THEN DISPLAY IS :D @ DELAY 0,INF<br>
 80 DISP "Assigning: ";<br>
 90 IF D&gt;0 THEN DISP "display.. ";<br>
 100 IF P&gt;0 THEN PRINTER IS :P @ DISP "printer.. ";<br>
-110 IF D<0 OR POS(VER$,"KBD")=0 THEN GOTO 180<br>
+110 IF D&lt;0 OR POS(VER$,"KBD")=0 THEN GOTO 180<br>
 120 CFLAG -23<br>
 130 ESCAPE 'A',50 @ ESCAPE 'B',47 @ ESCAPE 'C',48 @ ESCAPE 'D',51<br>
 140 ESCAPE 'E',159 @ ESCAPE 'F',160 @ ESCAPE 'G',104 @ ESCAPE 'H',105 @ ESCAPE 'I',107<br>
 150 ESCAPE 'J',162 @ ESCAPE 'K',163 @ ESCAPE 'L',43 @ ESCAPE 'M',46 @ ESCAPE 'N',150<br>
 160 ESCAPE 'O',106 @ ESCAPE 'P',102 @ ESCAPE 'Q',103 @ ESCAPE 'R',38<br>
 170 KEYBOARD IS :D @ DISP "keyboard.. ";<br>
-180 DISP "done" @ END
-</code>
+180 DISP "done" @ END<br>
+</code><br>
 <!-- End content -->
 </div>
 </div>
