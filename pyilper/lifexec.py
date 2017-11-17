@@ -279,6 +279,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
 #
 def exec_double_export(parent,cmd1,cmd2,outputfile):
    tmpfile=None
+   print("exporting...")
    try:
       fd=None
       if outputfile != "":
@@ -801,7 +802,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.bGroup=QtWidgets.QButtonGroup()
       self.radio1= QtWidgets.QRadioButton("convert from ASCII to LIF-Text")
       self.radio2= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
-      self.radio3= QtWidgets.QRadioButton("convert HP-41 rom file to XM-41 file (Eramco MLDL-OS")
+      self.radio3= QtWidgets.QRadioButton("convert HP-41 rom file to XM-41 file (Eramco MLDL-OS)")
       self.radio4= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
       self.radio5= QtWidgets.QRadioButton("None")
       self.radio5.setChecked(True)
