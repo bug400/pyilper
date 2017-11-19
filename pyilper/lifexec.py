@@ -279,7 +279,6 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
 #
 def exec_double_export(parent,cmd1,cmd2,outputfile):
    tmpfile=None
-   print("exporting...")
    try:
       fd=None
       if outputfile != "":
