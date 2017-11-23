@@ -2,7 +2,7 @@ Source: pyilper
 Section: kde
 Priority: optional
 Maintainer: Joachim Siebold <bug400@gmx.de>
-Build-Depends: debhelper (>= 8), python3, python3-pyqt5, python3-serial
+Build-Depends: debhelper (>= 9), python3, python3-pyqt5, python3-serial
 Standards-Version: 3.9.2
 
 Package: pyilper
