@@ -51,13 +51,23 @@ HP82162A with the HP-41C.</p>
 
 
 <h4 class="w3-text-teal">HP-IL over TCP/IP checkbox</h4>
-<p>Check this box to use virtual HP-IL over TCP/IP. The configuration 
-parameters are:</p>
+<p>Check this box to use 
+<a class="w3-hover-black" href="http://hp.giesselink.com/hpil.htm">virtual HP-IL over TCP/IP</a>. The configuration parameters are:</p>
 <ul class="w3-ul">
 <li>Port: the port to which the previous HP-IL device must connect</li>
 <li>Remote Host, remote Port: the host and the port of the next
 virtual HP-IL device in the loop.
 </ul>
+
+<h4 class="w3-text-teal">TCP/IP socket server (PIL-Box emulator)</h4>
+<p>Check this box to emulate a PIL-Box by means of a TCP/IP socket server. 
+This allows for the connection of 
+<a class="w3-hover-black" href="http://www.jeffcalc.hp41.eu/index.html">J-F Garniers DOS calculator emulators</a> to pyILPER. The emulators must run in an appropriate virtual machine (e.g. VirtualBox or DOSBox) that allows the redirection 
+of the serial port communication to a TCP/IP socket server. The server 
+port must match the serial port redirection configuration of the virtual 
+machine.</p>
+<p>Note: you must first start <em>pyILPER</em> (server) and then the virtual machine (client).</p>
+
 
 <h4 class="w3-text-teal">Configuration of the working directory</h4>
 <p>This is the location of the log files for scope and the printer output 

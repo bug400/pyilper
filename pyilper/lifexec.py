@@ -81,6 +81,7 @@
 # - detection of lifutils extended and improved
 # 11.11.2017 jsi:
 # - Eramco MLDL-OS packed rom file pre- and postprocessing implemented
+# 21.11.2017 added -r 0 option to textlif to add HP-41 implementation specific bytes
 #
 import subprocess
 import tempfile
@@ -901,7 +902,7 @@ class cls_lifimport (QtWidgets.QDialog):
          if self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked() or self.radio4.isChecked():
             self.liffilename=self.leditFileName.text()
             if self.radio1.isChecked():
-               exec_double_import(self,[add_path("textlif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("textlif"),"-r 0",self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radio2.isChecked():
                exec_double_import(self,[add_path("rom41hx"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radio3.isChecked():

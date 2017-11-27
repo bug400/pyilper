@@ -157,6 +157,8 @@
 # - two column layout of config window
 # 17.11.2017 jsi
 # - added missing reconfigure method to cls_tabtermgeneric
+# 22.11.2017 jsi
+# - renamed header of socket server configuration
 #
 import os
 import glob
@@ -743,7 +745,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #     Section TCP/IP server port
 #
       self.radbutServerport = QtWidgets.QRadioButton(self.gbox)
-      self.radbutServerport.setText("TCP/IP socket Server (experimental)")
+      self.radbutServerport.setText("TCP/IP socket Server (PIL-Box emulator)")
       self.radbutServerport.clicked.connect(self.setCheckBoxes)
       self.vboxgbox.addWidget(self.radbutServerport)
       self.splayout=QtWidgets.QGridLayout()

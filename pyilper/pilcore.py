@@ -73,6 +73,8 @@
 # - 1.6.0 beta3
 # 13.11.2017 jsi
 # - make USE8BITS change depending on data returned by the PIL-Box
+# 27.11.2017 jsi
+# - version 1.6.0 production
 #
 import platform
 #
@@ -80,8 +82,8 @@ import platform
 #
 # General constants:
 #
-PRODUCTION= False     # Production/Development Version
-VERSION="1.6.0b3"       # pyILPR version number
+PRODUCTION= True      # Production/Development Version
+VERSION="1.6.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Communication modes and classes
