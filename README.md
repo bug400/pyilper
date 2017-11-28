@@ -42,6 +42,7 @@ Features
 * Virtual printer emulating the HP-71B, HP-41C and ROMAN-8 character sets
 * Terminal emulator with keyboard support (HP-71B only). Requires at least version 1.6 of the PIL-Box firmware
 * Virtual plotter emulating the HP 7470A HP-IL plotter
+* Virtual printer emualting the HP HP82162A thermal printer
 * HP-IL scope
 * The number of virtual devices is configurable
 * The output of the scope or the virtual printer(s) is logged to file(s)
