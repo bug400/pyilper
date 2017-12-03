@@ -52,11 +52,26 @@ must be installed. See the [Installation Instructions] (https://github.com/bug40
 Installation with the ANACONDA platform
 ---------------------------------------
 
+Anaconda is a Python distribution widely used in Data Science applications.
+It provides an Python environment that is easy to install and maintain
+on Windows, mac OS and Linux. The Anaconda cloud gives access to more than
+1000 Python applications.
+
+The Anaconda distribution installs more then 150 Python packages on your
+computer which are not needed to run pyILPER. Therefore it is recommended
+to use the Miniconda installer instead which only provides Python and the
+Anaconda package manager.
+
 You need approximately 700MB free disk space for pyILPER and the Python 
 runtime environment. Everything is installed as a local user and thus no 
 administrator privileges are needed. 
 
-Note: for the ANACONDA platform pyILPER is only available for Python 3.6.
+Note: for the Anaconda/Miniconda platform pyILPER is only available for 
+Python 3.6.
+
+Note for Windows users: Due to recent changes in the Anaconda installation
+environment it is strongly encouraged to do a clean reinstall of the
+Anaconda/Miniconda environment.
 
 The following instructions apply to Linux, Windows and mac OS:
 
