@@ -69,7 +69,7 @@ administrator privileges are needed.
 Note: for the Anaconda/Miniconda platform pyILPER is only available for 
 Python 3.6.
 
-Note for Windows users: Due to recent changes in the Anaconda installation
+**Note for Windows users**: Due to recent changes in the Anaconda installation
 environment it is strongly encouraged to do a clean reinstall of the
 Anaconda/Miniconda environment.
 
