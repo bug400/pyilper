@@ -159,6 +159,8 @@
 # - added missing reconfigure method to cls_tabtermgeneric
 # 22.11.2017 jsi
 # - renamed header of socket server configuration
+# 01.12.2017 jsi
+# - added HP82162A thermal printer display pixelsize configuration
 #
 import os
 import glob
@@ -642,6 +644,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__dircharsize__=PILCONFIG.get(self.__name__,"directorycharsize")
       self.__papersize__=PILCONFIG.get(self.__name__,"papersize")
       self.__lifutilspath__=PILCONFIG.get(self.__name__,"lifutilspath")
+      self.__hp82162a_pixelsize__=PILCONFIG.get(self.__name__,"hp82162a_pixelsize")
 
       self.setWindowTitle("pyILPER configuration")
       self.vbox0= QtWidgets.QVBoxLayout()
@@ -859,6 +862,24 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gboxt.setLayout(self.gridt)
       self.vbox2.addWidget(self.gboxt)
 #
+#     HP82162A thermal printer settings
+#
+      self.gbox82162a= QtWidgets.QGroupBox()
+      self.gbox82162a.setFlat(True)
+      self.gbox82162a.setTitle("HP82162A Settings")
+      self.grid82162a= QtWidgets.QGridLayout()
+      self.grid82162a.setSpacing(3)
+      self.grid82162a.addWidget(QtWidgets.QLabel("Pixel size"),0,0)
+
+      self.spinHP82162APixelsize=QtWidgets.QSpinBox()
+      self.spinHP82162APixelsize.setMinimum(1)
+      self.spinHP82162APixelsize.setMaximum(2)
+      self.spinHP82162APixelsize.setValue(self.__hp82162a_pixelsize__)
+      self.grid82162a.addWidget(self.spinHP82162APixelsize,0,1)
+
+      self.gbox82162a.setLayout(self.grid82162a)
+      self.vbox2.addWidget(self.gbox82162a)
+#
 #     Section Directory listing configuration: font size
 #
       self.gboxd= QtWidgets.QGroupBox()
@@ -892,6 +913,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridps.addWidget(self.combops,1,1)
       self.gboxps.setLayout(self.gridps)
       self.vbox2.addWidget(self.gboxps)
+      self.vbox2.addStretch(1)
 #
 #     add ok/cancel buttons
 #
@@ -1041,6 +1063,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__needs_reconfigure__ |= self.check_param("colorscheme", self.comboCol.currentText())
       self.__needs_reconfigure__ |= self.check_param("terminalcharsize",self.spinTermCharsize.value())
       self.__needs_reconfigure__ |= self.check_param("directorycharsize",self.spinDirCharsize.value())
+      self.__needs_reconfigure__ |= self.check_param("hp82162a_pixelsize",self.spinHP82162APixelsize.value())
 #
 #     These parameters need a restart, display message
 #
@@ -1072,6 +1095,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"directorycharsize",self.spinDirCharsize.value())
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
       PILCONFIG.put(self.__name__,"lifutilspath",self.lbllifpath.text())
+      PILCONFIG.put(self.__name__,"hp82162a_pixelsize",self.spinHP82162APixelsize.value())
       super().accept()
 
    def do_cancel(self):

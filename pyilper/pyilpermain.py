@@ -149,6 +149,8 @@
 # - remove MODE_PIPE communication
 # 17.11.2017 jsi:
 # - put drive tabs at the end in the default configuration
+# 05.12.2017 jsi
+# - initialized parameter hp82162a_pixelsize
 #
 import os
 import sys
@@ -265,6 +267,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"helpposition","")
          PILCONFIG.get(self.name,"papersize",0)
          PILCONFIG.get(self.name,"lifutilspath","")
+         PILCONFIG.get(self.name,"hp82162a_pixelsize",1)
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)

@@ -51,6 +51,9 @@
 # - use raw strings in re.findall
 # 24.09.2016 jsi
 # - added mouse wheel scrolling support
+# 02.12.2016 jsi
+# - on the fly reconfiguration of the pixelsize
+# - fix: keep scroll position on resize
 #
 import copy
 import queue
@@ -524,6 +527,12 @@ class cls_tabhp82162a(cls_tabgeneric):
       self.guiobject.becomes_invisible()
       return
 #
+#   reconfigure
+#
+   def reconfigure(self):
+      self.guiobject.reconfigure()
+      return
+#
 # HP82162A widget classes - GUI component of the HP82162A HP-IL printer
 #
 class cls_HP82162AWidget(QtWidgets.QWidget):
@@ -700,7 +709,12 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
          self.printButton.setEnabled(False)
          self.advanceButton.setEnabled(False)
          self.pdfButton.setEnabled(False)
-
+#
+#     reconfigure
+#
+   def reconfigure(self):
+      self.printview.reconfigure()
+      return
 #
 #     action scripts
 #
@@ -881,6 +895,12 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
 
    def becomes_invisible(self):
       return
+#
+#  reconfigure
+#
+   def reconfigure(self):
+      self.hp82162awidget.reconfigure()
+      return
       
 #
 # custom class for hp82162a output  -----------------------------------------
@@ -890,10 +910,13 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
    def __init__(self,parent,pixelsize,pdfpixelsize,papersize,linebuffersize):
       super().__init__()
       self.parent=parent
-      self.pixelsize= pixelsize
+#
+#     initial output window in reconfigure
+#
+      self.pixelsize= -1
+      self.w=-1
+      self.h=-1
       self.pdfpixelsize= pdfpixelsize
-      self.w=PRINTER_WIDTH_CHARS*PRINTER_CHARACTER_WIDTH_PIXELS*pixelsize
-      self.h=PRINTER_CHARACTER_HEIGHT_PIXELS*pixelsize
       self.pdfw=PRINTER_WIDTH_CHARS*PRINTER_CHARACTER_WIDTH_PIXELS*pdfpixelsize
       self.pdfh=PRINTER_CHARACTER_HEIGHT_PIXELS*pdfpixelsize
       self.rows= 0
@@ -906,18 +929,43 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
       self.lb_current= -1
       self.lb_anz=0
       self.lb_position=0
-#
-#     set fixed width
-#
-      self.setFixedWidth(self.w+2*self.pixelsize)
-#
-#     initialize scene
-#
-      self.printscene= cls_hp82162a_scene(self,self.pixelsize,self.w, self.h)
-      self.setScene(self.printscene)
-      self.reset()
 
+      self.printscene=None
       self.pdfprinter=None
+      self.reconfigure()
+#
+#     configure/reconfigure the printview widget, scene and its content
+#
+   def reconfigure(self):
+      tmp=PILCONFIG.get("pyilper","hp82162a_pixelsize")
+#
+#     re/configure the printview widget
+#
+      if tmp != self.pixelsize:
+         self.pixelsize=tmp
+         self.w=PRINTER_WIDTH_CHARS*PRINTER_CHARACTER_WIDTH_PIXELS*self.pixelsize
+         self.h=PRINTER_CHARACTER_HEIGHT_PIXELS*self.pixelsize
+#
+#        set fixed width
+#
+         self.setFixedWidth(self.w+2*self.pixelsize)
+#
+#        initialize scene if not existing
+#
+         if  self.printscene is None:
+            self.printscene= cls_hp82162a_scene(self,self.pixelsize)
+            self.setScene(self.printscene)
+            self.reset()
+#
+#        otherwise reconfigure scene and its content
+#
+         else:
+            self.printscene.reconfigure(self.pixelsize)
+            for i in range(0,self.linebuffersize):
+               if self.lb[i] is not None:
+                  self.lb[i].reconfigure(self.pixelsize)
+            self.do_resize()
+      return
 #
 #      reset output window
 #
@@ -935,14 +983,17 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #  resize event, adjust the scene size, reposition everything and redraw
 #
    def resizeEvent(self,event):
+      self.do_resize()
+
+   def do_resize(self):
       h=self.height()
       self.rows=h // (PRINTER_CHARACTER_HEIGHT_PIXELS*self.pixelsize) 
       self.printscene.set_scenesize(self.rows)
-      self.lb_position=self.lb_current- self.rows+1
-      if self.lb_position < 0:
-         self.lb_position=0
-      self.parent.scrollbar.setMaximum(self.lb_position)
-      self.parent.scrollbar.setValue(self.lb_position)
+      scroll_max=self.lb_current- self.rows+1
+      if scroll_max < 0:
+         scroll_max=0
+      self.parent.scrollbar.setMaximum(scroll_max)
+      self.parent.scrollbar.setPageStep(self.rows)
       self.printscene.update_scene()
       return
 #
@@ -1023,15 +1074,23 @@ class cls_hp82162a_line(QtWidgets.QGraphicsItem):
 
    def __init__(self,line, col_idx, pixelsize):
       super().__init__()
-      self.pixelsize= pixelsize
+      self.pixelsize=-1
+      self.w=-1
+      self.h=-1
+      self.rect= QtCore.QRectF(0,0,1,1)
+      self.col_idx=col_idx
+      self.line=bytes(line[:col_idx])
+      self.reconfigure(pixelsize)
+
+   def reconfigure(self,pixelsize):
+      self.pixelsize=pixelsize
       self.w=PRINTER_WIDTH_CHARS*PRINTER_CHARACTER_WIDTH_PIXELS*pixelsize
       self.h=PRINTER_CHARACTER_HEIGHT_PIXELS*pixelsize
-      self.col_idx=col_idx
       self.rect= QtCore.QRectF(0,0,self.w,self.h)
-      self.line=bytes(line[:col_idx])
 
    def setPos(self,x,y):
       super().setPos(x,y-self.h)
+
 
    def boundingRect(self):
       return self.rect
@@ -1062,14 +1121,22 @@ class cls_hp82162a_line(QtWidgets.QGraphicsItem):
 #
 class cls_hp82162a_scene(QtWidgets.QGraphicsScene):
 
-   def __init__(self,parent,pixelsize,width,height):
+   def __init__(self,parent,pixelsize):
       super().__init__()
-      self.pixelsize=pixelsize
-      self.w= width
-      self.h= height
       self.rows= 0
+      self.w=0
+      self.h=0
       self.parent=parent
       self.si= None
+      self.reconfigure(pixelsize)
+      return
+#
+#  re/configure graphics scene
+#
+   def reconfigure(self,pixelsize):
+      self.pixelsize=pixelsize
+      self.w=PRINTER_WIDTH_CHARS*PRINTER_CHARACTER_WIDTH_PIXELS*pixelsize
+      self.h=PRINTER_CHARACTER_HEIGHT_PIXELS*pixelsize
       return
 #
 #  set or change the size of the scene
@@ -1079,8 +1146,6 @@ class cls_hp82162a_scene(QtWidgets.QGraphicsScene):
       self.rows= rows
       self.si= [None] * rows
       self.setSceneRect(0,0,self.w,self.h*self.rows)
-
-   
 #
 #  clear window and reset
 #

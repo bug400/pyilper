@@ -28,70 +28,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <!-- Begin content -->
 
-<h2 class="w3-text-teal">Release Notes for <em>pyILPER</em> 1.6.0</h2>
-
-<p><em>pyILPER</em> 1.6.0 introduces an emulated HP82162A printer as new devices and includes major improvements of the user interface.</p>
-
-<h3 class="w3-text-teal">New features and enhancements</h3>
-
-<ul class="w3-ul">
-<li>The HP82162A printer is now included as virtual HP-IL device.
-The device provides high quality output to a PDF file. Add this device with the
-<em>Virtual HP-IL device configuration</em> in the file menu.</li>
-
-<li>Resizing the main window of <em>pyILPER</em> now adjusts the number of lines of the printer, scope and drive directory automatically. This also applies to the size of the plotter viewport. The dimensions of the <em>pyILPER</em> main window is restored at start of the application.</li>
-
-<li>Any change of GUI related configuration parameters (font sizes, terminal color scheme, number of columns of the terminal widget) now effects immediately and does not require a restart of the application any more.</li>
-
-<li>The terminal, printer and scope now support copying selected text to the system clipboard. The terminal supports pasting text from the system clipboard.</li>
-<li>Emulation of a PIL-Box by means of a TCP/IP socket server. This allows for the connection of      
-<a class="w3-hover-black" href="http://www.jeffcalc.hp41.eu/index.html">J-F Garniers DOS calculator emulators</a> to pyILPER.</li>
-
-<li>Barcodes of HP-41 program and SDATA files can now be created as PDF files from the context menu of the directory listing.</li>
-
-<li>Terminal, scope and printers got mouse wheel scrolling support. Note: the focus must be in the output window.</li>
-
-<li>A PDF file of the directory listing can now be created from the tool menu of the drive tab.</li>
-
-<li>The scope got an option to display the frames as hex codes.</li>
-
-</ul>
-
-<h3 class="w3-text-teal">Changes and incompatibilities</h3>
-
-<ul class="w3-ul">
-<li>If a virtual device is re enabled again, its HP-IL address is reset
-to zero if any HP-IL operation that changed addresses of other devices 
-(AAU, AAD, AEP or AES) happened in the meantime. You must reconfigure
-the loop (run <em>PILTERM</em>) to access the device again. <b>This prevents 
-duplicate HP-IL addresses of virtual devices which can cause data 
-corruption of LIF media</b>.</li>
-
-<li>The <em>PILTERM</em> utility was updated to version 2.1. This version
-deassigns any <em>DISPLAY IS, PRINTER IS</em> and <em>KEYBOARD IS</em>
-assignments before issuing a <em>RESTORE IO</em> to avoid possible data 
-corruptions (see <a class="w3-hover-black" href="drive.html">the caveat section here</a>. All users are encouraged to update to this version. <b>This
-prevents assignments of the display, printer or keyboard device to a
-virtual drive which can cause data corruption of LIF media.</b></li>
-
-<li>For this reason the default <em>pyILPER</em> configurations now puts the virtual drive tabs at the end of the tab menu and therefore at the end of the 
-virtual device chain.</li>
-
-<li>The paper size option was moved from the plotter configuration to the
-<em>pyILPER</em> configuration in the file menu. This parameter now controls
-the medium size of all PDF output as well as important plotter settings. 
-The default for this parameter is A4. <b>Reconfiguration required if the letter format is used!</b></li>
-
-<li>The way to disable scrolling changed as well. Set the scroll up buffer size
-to the favored number of lines. Then resize the main window until all lines are
-displayed. The minimum number of lines of the scroll up buffer is 24.</li>
-
-<li>The <em>terminal size</em> configuration parameter was replaced by the
-<em>terminal width</em> parameter which specifies the number of columns
-(80 or 120). <b>Reconfiguration required!</b></li>
-
-<li><em>pyILPER</em> needs the updated version 1.7.7 of the <em>LIFUTILS</em>. Previous installed versions of the <em>LIFUTILS</em> must be updated.</li>
-</ul>
+<h2 class="w3-text-teal">Release Notes for <em>pyILPER</em> 1.6.1</h2>
 
 <p>See the <a class="w3-hover-black" href="changelog.html">Change Log</a> for a full list of changes.</p>
 

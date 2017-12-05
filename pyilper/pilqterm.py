@@ -989,16 +989,17 @@ class HPTerminal:
         self.view_h= rows
         if self.view_y1 == -1:
            self.view_y1 = self.view_h-1
-        if self.view_y1 > rows:
-           self.view_y1= rows-1
-        self.view_y0= self.view_y1-rows
-        if self.view_y0<0:
-           self.view_y0=0
-           self.view_y1= self.view_y0+rows-1    ## fix
+        else:
+           self.view_y1= self.view_y0 +rows -1
+#       if self.view_y1 > rows:
+#          self.view_y1= rows-1
+#       self.view_y0= self.view_y1-rows
+#       if self.view_y0<0:
+#          self.view_y0=0
+#          self.view_y1= self.view_y0+rows-1    ## fix
         if self.actual_h >= self.view_h:
            self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
         self.win.scrollbar.setPageStep(self.view_h)
-        self.win.scrollbar.setValue(self.win.scrollbar.maximum())
         self.needsUpdate=True
 #
 #   Low-level terminal functions on terminal line buffer
