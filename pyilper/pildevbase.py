@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# pyILPER 1.4.0 for Linux
+# pyILPER 1.6.1 for Linux
 #
 # An emulator for virtual HP-IL devices for the PIL-Box
 # derived from ILPER 1.4.5 for Windows
@@ -24,12 +24,12 @@
 #
 # HP-IL virtual device base object class ---------------------------------------
 #
-# Derived fom IldevBase.cpp from Christoph Giesselink
+# Derived fom IldevBase.cpp from Christoph Gießelink
 #
 # Changelog
 #
 # 16.02.2016 jsi:
-# - merged new Ildev base class of Christoph Giesselink
+# - merged new Ildev base class of Christoph Gießelink
 # 01.03.2016 cg:
 # - removed EOT response from __outdata__ to implement "no response" feature
 # 05.03.2016 jsi:
@@ -47,6 +47,11 @@
 # 05.10.2017 jsi:
 # - reset device address if device was reactivated an an HP-IL addressing
 #   operation happened in the meantime
+# 18.12.2017 jsi:
+# - check whether the sent and the incoming data byte are identical if a
+#   virtual device is talker. Send ETE if not.
+# - fix a bug in handling the SRQ bit in DOE frames
+# Both changes are courtesy of Christoph Gießelink
 
 
 import threading
@@ -76,6 +81,7 @@ class cls_pildevbase:
                                    # bit 0 or bit 1 set    active takler
                                    # bit 1: SDA, SDI
                                    # bit 0: SST, SDI, SAI, NRD
+      self.__talker_frame__=0      # frame sent as talker
       self.__ptsdi__ = 0           # output pointer for device id
       self.__status_len__=1        # length of device status in bytes
       self.__ptssi__ = 0           # output pointer for hp-il status
@@ -221,13 +227,20 @@ class cls_pildevbase:
 #  manage HPIL data frames, returns the returned frame
 #
    def __do_doe__(self,frame):
+      talker_error= False
 
       if (self.__ilstate__ & 0xC0) == 0x40: # addressed talker?
 
          if (self.__ilstate__ & 0x03) != 0: # active talker?
- 
+
+#           compare last talker frame with actual frame without SRQ bit
+            talker_error = ((frame & 0x6FF) != (self.__talker_frame__ &0x6FF))
+
 #           data (SDA) status (SST) or accessory ID (SDI)
-            if self.__ilstate__ & 0x02 !=0: # talker
+            if (not talker_error) and (self.__ilstate__ & 0x02 !=0): # talker
+
+#              save current SRQ bit
+               SrqBit= frame & 0x100 
 
 #              status (SST) ir accessory ID (SDI)
                if (self.__ilstate__ & 0x01) != 0: 
@@ -249,11 +262,17 @@ class cls_pildevbase:
                      frame= 0x540
                else: # 0x42 active talker (data)
                   frame=self.__outdata__(frame) # SDA
+#              a set SRQ bit doesn't matter on ready class frames
+               frame |= SrqBit
             else: # 0x41 active talker (single byte status)
-               frame= 0x540 # end of SAI or NRD
+               frame= 0x540 # end of SAI or NRD or talker error
 
          if frame == 0x540: # EOT
+#           check for error and set ETE frame
+            if talker_error:
+               frame= 0x541 # ETE
             self.__ilstate__ &= ~ 0x03 # delete active talker
+         self.__talker_frame__= frame
 
       if (self.__ilstate__ & 0xC0)==0x80:  # listener
             self.__indata__(frame)
@@ -330,6 +349,7 @@ class cls_pildevbase:
                frame=self.__outdata__(frame)
                if frame != 0x560: # not sda received data
                   self.__ilstate__= 0x42 # active talker, SDA/SDI
+                  self.__talker_frame__= frame # last talker frame
             elif n == 97: # SST
                 # reset service request bit
                 s= self.__getstatus__()
@@ -340,14 +360,17 @@ class cls_pildevbase:
                 if self.__ptssi__ > 0: # response to status request
                    frame = (self.__getstatus__() >> ((self.__status_len__-self.__ptssi__) * 8)) & 0xFF
                    self.__ilstate__= 0x43 # active talker
+                   self.__talker_frame__= frame # last talker frame
             elif n == 98:  # SDI
                if self.__did__ != "":
                   frame= ord(self.__did__[0])
                   self.__ptsdi__ = 1 # other 2
                   self.__ilstate__= 0x43 # active talker, SDA/SDI, SST/SDI/SAI
+                  self.__talker_frame__= frame
             elif n == 99: # SAI
                   frame= self.__aid__ & 0xFF
                   self.__ilstate__= 0x41 # active talker, SST/SDI/SAI
+                  self.__talker_frame__= frame
       else:
          if n < 0x80 +31: # AAD
             if ((self.__addr__ & 0x80) == 0 and self.__addr2nd__ ==0):
