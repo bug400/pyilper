@@ -151,6 +151,8 @@
 # - put drive tabs at the end in the default configuration
 # 05.12.2017 jsi
 # - initialized parameter hp82162a_pixelsize
+# 27.12.2017 jsi
+# - changes because of new cls_Tabs widget
 #
 import os
 import sys
@@ -202,7 +204,7 @@ class cls_pyilper(QtCore.QObject):
          if args.instance.isalnum():
             self.instance=args.instance
       self.status= STAT_DISABLED
-      self.tabobjects= [ ]
+      self.pilwidgets= [ ]
       self.commobject=None
       self.commthread= None
       self.helpwin= None
@@ -294,6 +296,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     create tab objects, scope is fixed all others are configured by tabconfig
 #
+      active_tab=PILCONFIG.get(self.name,"active_tab")
       self.registerTab(cls_tabscope,"Scope")
       for t in PILCONFIG.get(self.name,"tabconfig"):
          self.registerTab(TAB_CLASSES[t[0]],t[1])
@@ -304,7 +307,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.put(self.name,"tabconfigchanged",False)
          PILCONFIG.put(self.name,"active_tab",0)
          names= [self.name]
-         for obj in self.tabobjects:
+         for obj in self.pilwidgets:
             names.append(obj.name)
          removekeys=[]
          for key in PILCONFIG.getkeys():
@@ -317,11 +320,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     go to last active tab (if tabconfig did not change)
 #
-         self.ui.tabs.setCurrentIndex(PILCONFIG.get(self.name,"active_tab"))
-#
-#     connect callback for tab change to update only the visible tab
-#  
-      self.ui.tabs.currentChanged[int].connect(self.tab_current_changed)
+         self.ui.tabs.setCurrentIndex(active_tab)
 #
 #  move window to last position
 #
@@ -379,22 +378,22 @@ class cls_pyilper(QtCore.QObject):
 #
 #     enable all registered tab objects
 #
-      for obj in self.tabobjects:
+      for obj in self.pilwidgets:
          obj.enable()
 #
 #     register outbound scope
 #
-      self.tabobjects[0].post_enable()
+      self.pilwidgets[0].post_enable()
 #
 #     start emulator thread
 #
       self.commthread.start()
       self.status= STAT_ENABLED
 #
-#     trigger visible tab to enable refreshs
+#     trigger visible virtual device widget to enable refreshs
 #
-      tab= self.ui.tabs.widget(PILCONFIG.get(self.name,"active_tab"))
-      tab.becomes_visible()
+      pilwidget= self.ui.tabs.pilWidget(PILCONFIG.get(self.name,"active_tab"))
+      pilwidget.becomes_visible()
 
 #
 #  shut down application to cold state
@@ -411,7 +410,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     disable all registered tab objects
 #
-      for obj in self.tabobjects:
+      for obj in self.pilwidgets:
          obj.disable()
 
 #
@@ -444,17 +443,7 @@ class cls_pyilper(QtCore.QObject):
    def registerTab(self,classname,name):
       tab= classname(self,name)
       self.ui.tabs.addTab(tab,name)
-      self.tabobjects.append(tab)
-#
-#  callback tab changed
-#
-   def tab_current_changed(self,idx):
-      oldtab= PILCONFIG.get(self.name,"active_tab")
-      if oldtab != idx:
-         self.ui.tabs.widget(oldtab).becomes_invisible()
-         self.ui.tabs.widget(idx).becomes_visible()
-         PILCONFIG.put(self.name,"active_tab",idx)
-
+      self.pilwidgets.append(tab)
 #
 #  callback pyilper configuration, reset the communication only if needed
 #
@@ -478,7 +467,7 @@ class cls_pyilper(QtCore.QObject):
                if self.commthread is not None:
                   if self.commthread.isRunning():
                      self.commthread.halt()
-            for obj in self.tabobjects:
+            for obj in self.pilwidgets:
                obj.reconfigure()
             if self.status== STAT_ENABLED:
                if self.commthread is not None:
@@ -525,7 +514,7 @@ class cls_pyilper(QtCore.QObject):
       self.disable()
       self.enable()
 #
-#  callback exit, store windows position and size
+#  callback exit, store windows position and size, close floating windows
 #
    def do_Exit(self):
       self.disable()
@@ -544,6 +533,7 @@ class cls_pyilper(QtCore.QObject):
       if self.helpwin is not None:
          helpposition=[self.helpwin.pos().x(),self.helpwin.pos().y(),self.helpwin.width(),self.helpwin.height()]
          PILCONFIG.put(self.name,"helpposition",helpposition)
+      self.ui.tabs.closeFloatingWindows()
       try:
          PILCONFIG.save()
       except PilConfigError as e:

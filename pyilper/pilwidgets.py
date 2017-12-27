@@ -161,6 +161,9 @@
 # - renamed header of socket server configuration
 # 01.12.2017 jsi
 # - added HP82162A thermal printer display pixelsize configuration
+# 27.12.2017 jsi
+# - removed central widget
+# - introduced floating virtual devices
 #
 import os
 import glob
@@ -189,6 +192,197 @@ from .pilconfig import PILCONFIG
 from .pilcore import *
 if isWINDOWS():
    import winreg
+
+#
+# custom class float button for tab corner
+#
+class cls_FloatButton(QtWidgets.QPushButton):
+
+   def __init__(self,parent=None):
+      super().__init__(parent)
+      self.button_size=20
+      self.icon=self.style().standardIcon(QtWidgets.QStyle.SP_TitleBarNormalButton)
+      self.pixmap= self.icon.pixmap(self.button_size, self.button_size)
+      self.setFixedSize(self.button_size, self.button_size)
+
+   def paintEvent(self, ev):
+      QtWidgets.QPushButton.paintEvent(self, ev)
+      p = QtGui.QPainter(self)
+      p.drawPixmap(self.button_size-self.pixmap.width(),0,self.pixmap)
+#
+# custom class for floating dialog widget
+#   
+class cls_FloatWindow(QtWidgets.QDialog):
+
+   def __init__(self,parent,position,pilwidget,name):
+      super().__init__()
+      self.parent=parent
+      self.name= name
+      wlayout= QtWidgets.QVBoxLayout()
+      wlayout.addWidget(pilwidget)
+      self.setLayout(wlayout)
+      self.setWindowTitle(name)
+      if position !="":
+         self.move(QtCore.QPoint(position[0],position[1]))
+         if len(position)==4:
+            self.resize(position[2],position[3])
+#
+#   catch close event, dock widget and save position and size
+#
+   def closeEvent(self,e):
+      pos_y=self.pos().y()
+      pos_x=self.pos().x()
+      if pos_x < 50:
+         pos_x=50
+      if pos_y < 50:
+         pos_y=50
+      width= self.width()
+      height= self.height()
+      self.parent.setPosition([pos_x, pos_y, width, height])
+      self.parent.dock()      
+      e.ignore()
+      return
+#
+# custom class dockable tab, handels all docking/undocking stuff
+#
+class cls_DockableTab(QtWidgets.QWidget):
+
+   def __init__(self,tabs,index,pilwidget,name):
+      super().__init__()
+      self.pilwidget=pilwidget
+      self.tabs=tabs
+      self.index=index
+      self.name=name
+      self.vLayout=QtWidgets.QVBoxLayout()
+      self.vLayout.addWidget(self.pilwidget)
+      self.setLayout(self.vLayout)
+      self.window= None
+      self.position= PILCONFIG.get(self.name,"position","")
+      self.is_visible= False
+      self.is_floating= PILCONFIG.get(self.name,"floating",False)
+      if self.is_floating:
+         self.undock()
+#
+#  undock virtual device widget. A floating widget is always "visible"
+#
+   def undock(self):
+      if self.window is None:
+         self.vLayout.removeWidget(self.pilwidget)
+         self.window=cls_FloatWindow(self,self.position,self.pilwidget,self.name)
+         if not self.is_visible:
+            self.pilwidget.becomes_visible()
+         self.window.show()
+         self.window.raise_()
+         self.is_floating= True
+         self.tabs.setTabEnabled(self.index,False)
+      return
+#
+#  dock virtual device widget
+#
+   def dock(self):
+      if not (self.window is None):
+         self.window.layout().removeWidget(self.pilwidget)
+         self.vLayout.addWidget(self.pilwidget)
+         self.window= None
+         self.tabs.setTabEnabled(self.index,True)
+         if not self.is_visible:
+            self.pilwidget.becomes_invisible()
+         self.is_floating= False
+#
+#  check disable dock if widget is floating: setting tab disabled does
+#  not work from the __init__ method
+#
+   def checkDisabled(self):
+      if self.is_floating:
+         self.tabs.setTabEnabled(self.index,False)
+#
+#  tab becomes visible, do not trigger visibility if tab is floating
+#
+   def becomes_visible(self):
+      self.is_visible= True
+      if self.window is None:
+         self.pilwidget.becomes_visible()
+#
+#  tab becomes invisible, do not trigger invisibility if tab is floating
+#
+   def becomes_invisible(self):
+      self.is_visible= False
+      if self.window is None:
+         self.pilwidget.becomes_invisible()
+#
+#  set position and size information, called by floating window on close
+#
+   def setPosition(self,position):
+      self.position=position
+#
+#  force close of floating tab on program exit, preserve the is_floating flag
+#
+   def closeFloatWindow(self):
+      if self.window is not None:
+         self.window.close()
+         self.is_floating= True
+      PILCONFIG.put(self.name,"position",self.position)
+      PILCONFIG.put(self.name,"floating",self.is_floating)
+#
+#  return positon
+#
+   def getPosition(self):
+      return self.position
+#
+#  return if tab is floating
+#
+   def isFloating(self):
+      return self.is_floating
+#
+# custom tab class, hides the dockable tab widget
+#
+class cls_Tabs(QtWidgets.QTabWidget):
+
+   def __init__(self):
+      super().__init__()
+      self.old_index=-1
+      self.floatbutton=cls_FloatButton(self)
+      self.setCornerWidget(self.floatbutton,QtCore.Qt.TopRightCorner)
+      self.floatbutton.clicked.connect(self.do_undock)
+      self.currentChanged[int].connect(self.tab_current_changed)
+#
+#  add virtual device via a dockable tab widget
+#
+   def addTab(self,pilwidget,name):
+      n=self.count()
+      dockable=cls_DockableTab(self,n,pilwidget,name)
+      super().addTab(dockable,name)
+      dockable.checkDisabled()
+#
+#  force close of floating Windows (on program exit)
+#
+   def closeFloatingWindows(self):
+      for j in range(self.count()):
+         dockable=self.widget(j)
+         dockable.closeFloatWindow()
+#
+#  undock virtual device widget triggerd by the undock corner button
+#
+   def do_undock(self):
+      i=self.currentIndex()
+      t=self.widget(i)
+      t.undock()
+      self.setTabEnabled(i,False)
+#
+#  get virtual device widget of tab index i
+#
+   def pilWidget(self,i):
+      t=self.widget(i)
+      return t.pilwidget 
+#
+#  signal handler if tab index changes, handle visible/invisible stuff
+#
+   def tab_current_changed(self,index):
+      if self.old_index >=0:
+         self.widget(self.old_index).becomes_invisible()
+      self.old_index=index
+      self.widget(self.old_index).becomes_visible()
+      PILCONFIG.put("pyilper","active_tab",index)
 
 #
 # Logging check box
@@ -1333,7 +1527,7 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
       self.setLayout(self.vlayout)
       self.__timer__=QtCore.QTimer()
       self.__timer__.timeout.connect(self.do_refresh)
-      self.rows=len(parent.tabobjects)-1
+      self.rows=len(parent.pilwidgets)-1
       self.cols=6
       self.__table__ = QtWidgets.QTableWidget(self.rows,self.cols)  # Table view for dir
       self.__table__.setSortingEnabled(False)  # no sorting
@@ -1493,13 +1687,14 @@ class cls_ui(QtWidgets.QMainWindow):
 #
 #     Central widget (tabs only)
 #
-      self.centralwidget= QtWidgets.QWidget()
-      self.setCentralWidget(self.centralwidget)
+#     self.centralwidget= QtWidgets.QWidget()
+#     self.setCentralWidget(self.centralwidget)
 
-      self.tabs=QtWidgets.QTabWidget()
-      self.vbox= QtWidgets.QVBoxLayout()
-      self.vbox.addWidget(self.tabs)
-      self.centralwidget.setLayout(self.vbox)
+      self.tabs=cls_Tabs()
+#     self.vbox= QtWidgets.QVBoxLayout()
+#     self.vbox.addWidget(self.tabs)
+#     self.centralwidget.setLayout(self.tabs)
+      self.setCentralWidget(self.tabs)
 #
 #     Status bar
 #
