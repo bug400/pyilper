@@ -593,15 +593,20 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         if self._press_pos:
             move_pos = event.pos()
             self._saved_pos= move_pos
-            if move_pos.y() < self._ScrollUpAreaY:
+            if move_pos.y() < self._ScrollUpAreaY and move_pos.y() >=0 :
                 self.set_autoscroll(AUTOSCROLL_UP)
-            elif move_pos.y() > self._ScrollDownAreaY:
+            elif move_pos.y() > self._ScrollDownAreaY and move_pos.y() <=self.height() :
                 self.set_autoscroll(AUTOSCROLL_DOWN)
             else:
                 self.set_autoscroll(AUTOSCROLL_OFF)
            
             if self._HPTerminal.selectionMove(move_pos,self._true_w, self._char_height):
                 self._selectionText= self._HPTerminal.getSelectionText()
+#
+#   Mouse release event, stop autoscroll unconditionally
+#
+    def mouseReleaseEvent(self, event):
+        self.set_autoscroll(AUTOSCROLL_OFF)
 #
 #  autoscroll control function
 #
