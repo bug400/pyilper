@@ -73,6 +73,8 @@
 # - fixed crash on cursor restore if digitizing mode was stopped twice
 # 30.10.2017 jsi
 # - LIFUTILS path handling added
+# 28.12.2017 jsi
+# - fixed bug in parse utility - needless comma removed
 
 import sys
 import subprocess
@@ -746,7 +748,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digiButton.clicked.connect(self.do_enter)
       self.digibutton_state= self.digiButton.isEnabled()
 #
-#     push buttons "P1/p2" - show or alter P1/P2
+#     push buttons "P1/P2" - show or alter P1/P2
 #
       self.p1p2Button= QtWidgets.QPushButton("P1/P2")
       self.p1p2Button.setEnabled(False)
@@ -1749,7 +1751,7 @@ class cls_HP7470(QtCore.QObject):
             return
          if c == " " :
             self.inparam= False
-            self.separator=False
+#           self.separator=False
             return
          if c ==",":
             self.separator=True
