@@ -77,6 +77,8 @@
 # - version 1.6.0 production
 # 04.12.2017 jsi
 # - version 1.6.1 development
+# 28.12.2017
+# - AUTOSCROLL_RATE parameter introduced
 #
 import platform
 #
@@ -119,6 +121,7 @@ NOT_TALKER_SPAN=3     # time (s) a drive must be inactive to be concidered as id
 UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
 CURSOR_BLINK=500                # 500 ms cursor blink rate
 CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
+AUTOSCROLL_RATE=100             # 500 ms cursor blink rate
 
 
 TERMINAL_MINIMUM_ROWS=24        # cant get beyond that

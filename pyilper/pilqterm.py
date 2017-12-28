@@ -124,6 +124,9 @@
 # - fixes to scrollbar parameter settings
 # 06.10.2017 jsi:
 # - fixed bugs of insert mode
+# 28.12.2017 jsi:
+# - fix crash in getSelection if self.move_row/self.move_col is None
+# - introduced autoscroll when moving selection
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -135,12 +138,16 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE
 from .pilconfig import PILCONFIG
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
 CURSOR_OVERWRITE=2
+
+AUTOSCROLL_OFF=0
+AUTOSCROLL_UP=1
+AUTOSCROLL_DOWN=2
 #
 # scrolled terminal widget class ----------------------------------------------------
 #
@@ -430,6 +437,13 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._isVisible= False        # visible state
         self._press_pos= None         # mouse click position
         self._selectionText=""        # text of selection
+        self._scrollUpAreaY=0         # display area that activates scroll up
+        self._scrollDownAreaY=0       # display area that activates scroll down
+        self._saved_pos=None          # saved last cursor move position
+        self._autoscrollMode= AUTOSCROLL_OFF
+        self._autoscrollTimer=QtCore.QTimer()
+        self._autoscrollTimer.setInterval(AUTOSCROLL_RATE)
+        self._autoscrollTimer.timeout.connect(self.do_autoscroll)
 
 #
 #       Initialize graphics view and screne, set view background
@@ -473,6 +487,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         metrics= QtGui.QFontMetrics(self._font)
         self._char_width=metrics.maxWidth()
         self._char_height=metrics.height()
+        self._ScrollUpAreaY= self._char_height
 #
 #       we can't relay that the nth column begins at (n-1)*self._char_width
 #       because of rounding errors, so determine the correct column position
@@ -516,6 +531,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._HPTerminal.resize_rows(rows)
         self._scene.setSceneRect(0,0,self._sizew, self._char_height* rows)
         self.fitInView(0,0,self._sizew, self._char_height* rows)
+        self._ScrollDownAreaY= (self._char_height-1) * rows
 #
 #   context menu event (pops up when right button clicked)
 #
@@ -576,8 +592,36 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     def mouseMoveEvent(self, event):
         if self._press_pos:
             move_pos = event.pos()
+            self._saved_pos= move_pos
+            if move_pos.y() < self._ScrollUpAreaY:
+                self.set_autoscroll(AUTOSCROLL_UP)
+            elif move_pos.y() > self._ScrollDownAreaY:
+                self.set_autoscroll(AUTOSCROLL_DOWN)
+            else:
+                self.set_autoscroll(AUTOSCROLL_OFF)
+           
             if self._HPTerminal.selectionMove(move_pos,self._true_w, self._char_height):
-               self._selectionText= self._HPTerminal.getSelectionText()
+                self._selectionText= self._HPTerminal.getSelectionText()
+#
+#  autoscroll control function
+#
+    def set_autoscroll(self,mode):
+       if mode != self._autoscrollMode:
+          self._autoscrollMode= mode
+          if self._autoscrollMode==AUTOSCROLL_OFF:
+             self._autoscrollTimer.stop()
+          else:
+             self._autoscrollTimer.start()
+#
+#  autoscroll timer function
+#
+    def do_autoscroll(self):
+       if self._autoscrollMode==AUTOSCROLL_DOWN:
+          self._HPTerminal.scroll_view_down()
+       if self._autoscrollMode==AUTOSCROLL_UP:
+          self._HPTerminal.scroll_view_up()
+       if self._HPTerminal.selectionMove(self._saved_pos,self._true_w, self._char_height):
+            self._selectionText= self._HPTerminal.getSelectionText()
 #
 #   Mouse wheel event: scroll
 #
@@ -1577,7 +1621,7 @@ class HPTerminal:
 #
 #      return false if we have an illegal click position
 #
-       if self.move_row is None and self.move_col is None:
+       if self.move_row is None or self.move_col is None:
           return False
        self.showSelection=True
        self.start_row= self.press_row
@@ -1624,6 +1668,8 @@ class HPTerminal:
 #   return screen rows, columns of selection, returns None if outside
 #
     def getSelection(self):
+        if self.move_row is None or self.move_col is None:
+           return (None, None, None, None)
         if self.start_row > self.view_y1 or self.move_row < self.view_y0:
            return (None, None, None, None)
         start_row= self.start_row
