@@ -164,6 +164,10 @@
 # 27.12.2017 jsi
 # - removed central widget
 # - introduced floating virtual devices
+# 04.01.2018 jsi
+# - make buffer_log parameter configurable
+# - do a log buffer flush only if buffer_log is True (Log Checkbox Widget)
+# - reconfigure log checkbox object (cls_tabtermgeneric)
 #
 import os
 import glob
@@ -392,6 +396,10 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
       super().__init__(text)
       self.filename=filename
       self.log= None
+      self.buffer_log= True
+
+   def reconfigure(self):
+      self.buffer_log=PILCONFIG.get("pyilper","buffer_log")
 
    def logOpen(self):
       try:
@@ -428,10 +436,12 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
    def logFlush(self):
       if self.log is None:
          return
+      if self.buffer_log:
+         return
       try:
          self.log.flush()
       except OSError as e:
-         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to log file: "+ e.strerror+". Logging disabled",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot flush to log file: "+ e.strerror+". Logging disabled",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          try:
             self.log.close()
          except OSError:
@@ -538,6 +548,10 @@ class cls_tabtermgeneric(cls_tabgeneric):
          self.comboCharset.setEnabled(False)
          self.guiobject.set_charset(self.charset)
 #
+#     configure
+#
+      self.reconfigure()
+#
 #     catch resize event to redraw the terminal window
 #
    def resizeEvent(self,event):
@@ -594,11 +608,13 @@ class cls_tabtermgeneric(cls_tabgeneric):
    def becomes_invisible(self):
       self.guiobject.becomes_invisible()
       return
-
-#     reconfigure
+#
+#     reconfigure gui object and logging object
 #
    def reconfigure(self):
       self.guiobject.reconfigure()
+      if self.cblog:
+         self.cbLogging.reconfigure()
 
 #
 # Help Dialog class ----------------------------------------------------------
@@ -831,6 +847,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
       self.__serverport__= PILCONFIG.get(self.__name__,"serverport")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
+      self.__buffer_log__= PILCONFIG.get(self.__name__,"buffer_log")
       self.__termsize__= PILCONFIG.get(self.__name__,"terminalwidth")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
       self.__colorscheme__= PILCONFIG.get(self.__name__,"colorscheme")
@@ -984,6 +1001,19 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxwdir.addWidget(self.butwdir)
       self.vboxgboxw.addLayout(self.hboxwdir)
       self.vbox1.addWidget(self.gboxw)
+#
+#     section buffer log files
+#
+      self.gboxlogbuffer= QtWidgets.QGroupBox()
+      self.gboxlogbuffer.setFlat(True)
+      self.gboxlogbuffer.setTitle("Log file buffering")
+      self.vbox1.addWidget(self.gboxlogbuffer)
+      self.cblogbuffer= QtWidgets.QCheckBox("Buffer log files")
+      self.cblogbuffer.setChecked(self.__buffer_log__)
+      self.vboxlogbuffer=QtWidgets.QVBoxLayout()
+      self.vboxlogbuffer.addWidget(self.cblogbuffer)
+      self.gboxlogbuffer.setLayout(self.vboxlogbuffer)
+
       self.vbox1.addStretch(1)
 #
 #     section lifutils path
@@ -1258,6 +1288,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__needs_reconfigure__ |= self.check_param("terminalcharsize",self.spinTermCharsize.value())
       self.__needs_reconfigure__ |= self.check_param("directorycharsize",self.spinDirCharsize.value())
       self.__needs_reconfigure__ |= self.check_param("hp82162a_pixelsize",self.spinHP82162APixelsize.value())
+      self.__needs_reconfigure__ |= self.check_param("buffer_log",self.cblogbuffer.isChecked())
 #
 #     These parameters need a restart, display message
 #
@@ -1282,6 +1313,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
 #     store parameters
 #
+      PILCONFIG.put(self.__name__,"buffer_log", self.cblogbuffer.isChecked())
       PILCONFIG.put(self.__name__,"terminalwidth", int(self.comboTerminalWidth.currentText()))
       PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
       PILCONFIG.put(self.__name__,"colorscheme", self.comboCol.currentText())

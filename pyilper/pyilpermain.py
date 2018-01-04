@@ -153,6 +153,8 @@
 # - initialized parameter hp82162a_pixelsize
 # 27.12.2017 jsi
 # - changes because of new cls_Tabs widget
+# 04.01.2018 jsi
+# - buffer_log parameter introduced
 #
 import os
 import sys
@@ -258,11 +260,12 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"mode",MODE_PILBOX)
          PILCONFIG.get(self.name,"workdir",os.path.expanduser('~'))
          PILCONFIG.get(self.name,"position","")
+         PILCONFIG.get(self.name,"buffer_log",True)
          PILCONFIG.get(self.name,"terminalwidth",80)
          PILCONFIG.get(self.name,"colorscheme","white")
          PILCONFIG.get(self.name,"terminalcharsize",15)
-         PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
+         PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"serverport",59999)
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"]])
          PILCONFIG.get(self.name,"version","0.0.0")

@@ -51,9 +51,12 @@
 # - use raw strings in re.findall
 # 24.09.2016 jsi
 # - added mouse wheel scrolling support
-# 02.12.2016 jsi
+# 02.12.2017 jsi
 # - on the fly reconfiguration of the pixelsize
 # - fix: keep scroll position on resize
+# 04.01.2018 jsi
+# - reconfigure log check box object
+# - flush log buffer 
 #
 import copy
 import queue
@@ -475,6 +478,10 @@ class cls_tabhp82162a(cls_tabgeneric):
 #
       self.pildevice= cls_pilhp82162a(self.guiobject)
       self.guiobject.set_pildevice(self.pildevice)
+#
+#     configure
+#
+      self.reconfigure()
 
    def do_cbLogging(self):
       self.cbLogging.setEnabled(False)
@@ -527,10 +534,11 @@ class cls_tabhp82162a(cls_tabgeneric):
       self.guiobject.becomes_invisible()
       return
 #
-#   reconfigure
+#   reconfigure gui object and logging object
 #
    def reconfigure(self):
       self.guiobject.reconfigure()
+      self.cbLogging.reconfigure()
       return
 #
 # HP82162A widget classes - GUI component of the HP82162A HP-IL printer
@@ -837,6 +845,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       elif cmd== REMOTECMD_LOG:
          self.parent.cbLogging.logWrite(item[1])
+         self.parent.cbLogging.logFlush()
 #
 # custom class for scrolled hp82162a output widget ----------------------------
 #

@@ -34,6 +34,8 @@ from .pildevbase import cls_pildevbase
 # - refactoring: printer tab classes moved to this file
 # 03.09.2017 jsi
 # - register pildevice is now method of commobject
+# 04.01.2018 jsi
+# - flush log after a line feed was encountered
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
@@ -56,6 +58,8 @@ class cls_tabprinter(cls_tabtermgeneric):
       t=ord(s)
       if t !=8 and t != 13:
          self.cbLogging.logWrite(charconv(s,self.charset))
+      if t== 10:
+         self.cbLogging.logFlush()
 #
 #  callback reset terminal
 #

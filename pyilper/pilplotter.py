@@ -75,6 +75,9 @@
 # - LIFUTILS path handling added
 # 28.12.2017 jsi
 # - fixed bug in parse utility - needless comma removed
+# 04.01.2018 jsi
+# - reconfigure log checkbox
+# - flush log buffer
 
 import sys
 import subprocess
@@ -309,6 +312,10 @@ class cls_tabplotter(cls_tabgeneric):
 #
       self.pildevice= cls_pilplotter(self.guiobject,self.papersize)
       self.guiobject.set_pildevice(self.pildevice)
+#
+#     configure
+#
+      self.reconfigure()
 
 
    def do_cbLogging(self):
@@ -368,6 +375,11 @@ class cls_tabplotter(cls_tabgeneric):
    def becomes_invisible(self):
       self.guiobject.becomes_invisible()
       return
+#
+#  reconfigure, only logging object needs reconfigure
+#
+   def reconfigure(self):
+      self.cbLogging.reconfigure()
 
 #
 # Custom class LED widget -------------------------------------------------
@@ -1271,6 +1283,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       elif cmd== CMD_LOG:
          if self.parent.loglevel >= item[1]:
             self.parent.cbLogging.logWrite(item[2])
+            self.parent.cbLogging.logFlush()
      
 #       
 # external plot view window class ------------------------------------------------------
