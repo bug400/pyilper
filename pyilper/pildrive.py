@@ -998,7 +998,7 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 #   reconfigure the font size of the directory list
 #
     def reconfigure(self):
-        self.__font_size__= PILCONFIG.get(self.name,"directorycharsize")
+        self.__font_size__= PILCONFIG.get("pyilper","directorycharsize")
         self.__font__.setPixelSize(self.__font_size__)
         metrics= QtGui.QFontMetrics(self.__font__)
         self.__table__.verticalHeader().setDefaultSectionSize(metrics.height()+1)
