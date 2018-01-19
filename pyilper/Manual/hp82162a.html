@@ -64,8 +64,7 @@ HP82162A printer tab. You have to add this device in the <em>Virtual HP-IL
 device configuration</em> in the file menu.</p>
 
 <p>The paper size setting in the <em>pyILPER</em> configuration controls the
-paper size of the PDF output (see below). Setting the terminal size to
-  80x40 enlarges the HP82162A as well.</p>
+paper size of the PDF output (see below).</p>
 
 <h3 class="w3-text-teal">Device controls</h3>
 
@@ -89,6 +88,12 @@ appended to that file. A time stamp in the file marks the start and the
 end of each logging. The log file is closed automatically on
 program termination. Note: only character information is sent to the log file.
 </li>
+</ul>
+<h3 class="w3-text-teal">Tab configuration menu</h3>
+<ul class="w3-ul">
+<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
+was encountered. This enables watching the log file output but may decrease
+the execution speed of <em>pyILPER</em> considerably.</li>
 </ul>
 <!-- End content -->
 

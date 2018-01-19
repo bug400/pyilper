@@ -165,15 +165,22 @@
 # - removed central widget
 # - introduced floating virtual devices
 # 04.01.2018 jsi
-# - make buffer_log parameter configurable
+# - make buffer_log configurable
 # - do a log buffer flush only if buffer_log is True (Log Checkbox Widget)
 # - reconfigure log checkbox object (cls_tabtermgeneric)
+# 16.01.2018 jsi
+# - added class for cascading configuration menus
+# - cls_tabgeneric and cls_tabtermgeneric rewritten, implemented new
+#   device tab/window configuration
+# - removed configuration of terminal width and terminal color scheme
+#   from cls_PilConfigWindow
 #
 import os
 import glob
 import datetime
 import re
 import sys
+import functools
 import pyilper
 from PyQt5 import QtCore, QtGui, QtWidgets
 HAS_WEBKIT=False
@@ -198,7 +205,99 @@ if isWINDOWS():
    import winreg
 
 #
-# custom class float button for tab corner
+# class for cascading config menus
+#
+class cls_config_tool_button(QtWidgets.QToolButton):
+
+   config_changed_signal= QtCore.pyqtSignal()
+
+   def __init__(self,name,text):
+      super().__init__()
+      self.name= name
+      self.menu= QtWidgets.QMenu()
+      self.setText(text)
+      self.setMenu(self.menu)
+      self.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+      self.options= []
+      self.menu.aboutToShow.connect(self.do_before_show_menu)
+      self.config_changed=None
+
+
+   def add_option(self,option_text, option_name, option_type, option_choices):
+      n=len(self.options)
+      submenu=QtWidgets.QMenu(option_text,parent=self.menu)
+      self.menu.addMenu(submenu)
+      submenu.aboutToShow.connect(functools.partial(self.do_before_show_submenu,n))
+      k=0
+      option_actions=[]
+      for choice in option_choices:
+         if option_type== T_BOOLEAN:
+            if choice== True:
+               choice="On"
+            else:
+               choice="Off"
+         if option_type== T_INTEGER:
+            choice= str(choice)
+         action= submenu.addAction(choice)
+         option_actions.append(action)
+         action.triggered.connect(functools.partial(self. do_choice_submenu,n,k))
+         k+=1
+      self.options.append([option_name, option_type, option_choices, option_actions])
+#
+#  clears the variable which contains the changed option
+#
+   def do_before_show_menu(self):
+      self.config_changed=None
+#
+#  returns the name of the changed option or None
+#
+   def get_changed_option_name(self):
+      if self.config_changed==None:
+         return None
+      else:
+         return self.options[self.config_changed][0]
+#
+#  Action: get the value of the selected choice
+#
+   def do_choice_submenu(self,n,k):
+      v=self.options[n][2][k]
+      option_type=self.options[n][1]
+      
+#     self.do_enable_disable(n,v)
+      self.config_changed=n
+#     store parameter value
+      if option_type== T_INTEGER:
+         option_value= int(v)
+      elif option_type== T_BOOLEAN:
+            option_value= v
+      elif option_type== T_STRING:
+         option_value=k
+      PILCONFIG.put(self.name, self.options[n][0],option_value)
+      self.config_changed_signal.emit()
+#
+#  Action: disable the current option value in the choices
+#      
+   def do_before_show_submenu(self,n):
+      option_type=self.options[n][1]
+
+#     get parameter value
+      option_value=PILCONFIG.get(self.name,self.options[n][0])
+      if option_type== T_STRING:
+         option_value= self.options[n][2][option_value]
+      self.do_enable_disable(n,option_value)
+     
+
+   def do_enable_disable(self,n,option_value):
+      k=0
+      for choice in self.options[n][2]:
+         if choice== option_value:
+            self.options[n][3][k].setEnabled(False)
+         else:
+            self.options[n][3][k].setEnabled(True)
+         k+=1
+
+#
+# custom class float button for tab corner -----------------------------------
 #
 class cls_FloatButton(QtWidgets.QPushButton):
 
@@ -214,7 +313,7 @@ class cls_FloatButton(QtWidgets.QPushButton):
       p = QtGui.QPainter(self)
       p.drawPixmap(self.button_size-self.pixmap.width(),0,self.pixmap)
 #
-# custom class for floating dialog widget
+# custom class for floating dialog widget ------------------------------------
 #   
 class cls_FloatWindow(QtWidgets.QDialog):
 
@@ -247,7 +346,7 @@ class cls_FloatWindow(QtWidgets.QDialog):
       e.ignore()
       return
 #
-# custom class dockable tab, handels all docking/undocking stuff
+# custom class dockable tab, handels all docking/undocking stuff -------------
 #
 class cls_DockableTab(QtWidgets.QWidget):
 
@@ -338,7 +437,7 @@ class cls_DockableTab(QtWidgets.QWidget):
    def isFloating(self):
       return self.is_floating
 #
-# custom tab class, hides the dockable tab widget
+# custom tab class, hides the dockable tab widget ----------------------------
 #
 class cls_Tabs(QtWidgets.QTabWidget):
 
@@ -389,17 +488,18 @@ class cls_Tabs(QtWidgets.QTabWidget):
       PILCONFIG.put("pyilper","active_tab",index)
 
 #
-# Logging check box
+# Logging check box class --------------------------------------------------
 #
 class LogCheckboxWidget(QtWidgets.QCheckBox):
-   def __init__(self,text,filename):
-      super().__init__(text)
-      self.filename=filename
+   def __init__(self,name):
+      super().__init__("Log "+name)
+      self.name=name
+      self.filename=self.name+".log"
       self.log= None
-      self.buffer_log= True
+      self.buffer_log=PILCONFIG.get(self.name,"buffer_log",True)
 
-   def reconfigure(self):
-      self.buffer_log=PILCONFIG.get("pyilper","buffer_log")
+   def set_buffering(self,buffer_log):
+      self.buffer_log= buffer_log
 
    def logOpen(self):
       try:
@@ -447,14 +547,12 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
          except OSError:
             pass
          self.log = None
-
 #
-# abstract class
+# abstract generic tab class -------------------------------------------------
 #
 class cls_tabgeneric(QtWidgets.QWidget):
 
    def __init__(self,parent,name):
-
       super().__init__()
       self.name= name
       self.active= PILCONFIG.get(self.name,"active",False)
@@ -465,99 +563,124 @@ class cls_tabgeneric(QtWidgets.QWidget):
       self.font_height=0
       self.width= 0
       self.height= 0
+      self.guiobject= None
+      self.cbLogging= None
+      self.logging= False
+      self.pildevice=None
+      self.widget_index=1
+      self.cBut= None
+#
+#     Build basic layout
+#
+      self.vbox= QtWidgets.QVBoxLayout()
+      self.setLayout(self.vbox)
+#
+#     hbox1: container of GUI Object
+#
+      self.hbox1=QtWidgets.QHBoxLayout()
+      self.hbox1.setContentsMargins(10,10,10,10)
+#
+#     hbox2: container of control widgets
+# 
+      self.hbox2= QtWidgets.QHBoxLayout()
+      self.hbox2.setContentsMargins(10,3,10,3)
 
       self.cbActive= QtWidgets.QCheckBox('Device enabled')
       self.cbActive.setChecked(self.active)
       self.cbActive.setEnabled(False)
       self.cbActive.stateChanged.connect(self.do_cbActive)
 
-   def disable(self):
-      self.cbActive.setEnabled(False)
+      self.hbox2.addWidget(self.cbActive)
+      self.hbox2.addStretch(1)
 
+      self.vbox.addLayout(self.hbox1)
+      self.vbox.addLayout(self.hbox2)
+#
+#  add the gui object to hbox1
+#
+   def add_guiobject(self,guiobject):
+      self.guiobject= guiobject
+      self.hbox1.addWidget(self.guiobject)
+#
+#  insert a control widget
+#
+   def add_controlwidget(self,widget):
+      self.hbox2.insertWidget(self.widget_index,widget)
+      self.widget_index+=1
+#
+#  add a config cascading menu: always at the end of the control box
+#
+   def add_configwidget(self):
+      self.cBut= cls_config_tool_button(self.name,"Configuration")
+      self.hbox2.addWidget(self.cBut)
+#
+#  insert the cbLogging widget in hbox2 after the cbActive Widget
+#
+   def add_logging(self):
+      self.cbLogging= LogCheckboxWidget(self.name)
+      self.hbox2.insertWidget(1,self.cbLogging)
+      self.logging= PILCONFIG.get(self.name,"logging",False)
+      self.cbLogging.setChecked(self.logging)
+      self.cbLogging.setEnabled(False)
+      self.cbLogging.stateChanged.connect(self.do_cbLogging)
+      self.widget_index+=1
+#
+#  if config button present, then add log buffer option
+#
+      if self.cBut is not None:
+         self.cBut.add_option("Log buffering","buffer_log",T_BOOLEAN,[True,False])
+#
+#  insert a status widget
+#
+   def add_statuswidget(self,statuswidget):
+      self.hbox2.insertWidget(self.widget_index,statuswidget)
+      self.hbox2.insertStretch(self.widget_index,1)
+#
+#  tab config changed, handle buffer_log change
+#
+   def do_tabconfig_changed(self):
+     param= self.cBut.get_changed_option_name()
+     if param== "buffer_log":
+         self.cbLogging.set_buffering(PILCONFIG.get(self.name,"buffer_log"))
+#
+#  reconfigure, nothing to do here
+#
+   def reconfigure(self):
+      return
+# 
+#  disable tab
+#
+   def disable(self):
+      if self.cbLogging is not None:
+         if self.logging:
+            self.cbLogging.logClose()
+         self.cbLogging.setEnabled(False)
+      self.cbActive.setEnabled(False)
+#
+#  enable tab
+#
    def enable(self):
       self.cbActive.setEnabled(True)
-
+      if self.cbLogging is not None:
+         if self.logging:
+            self.cbLogging.logOpen()
+         self.cbLogging.setEnabled(True)
+#
+#  toggle active/inactive
+#
    def toggle_active(self):
       return
-
+#
+#  action: toogle active checkbox
+#
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
       PILCONFIG.put(self.name,"active",self.active)
       self.pildevice.setactive(self.active)
       self.toggle_active()
-
-   def reconfigure(self):
-      return
 #
-# generic terminal tab widget --------------------------------------------------
+#  action: toggle log checkbox
 #
-class cls_tabtermgeneric(cls_tabgeneric):
-
-   def __init__(self,parent,name,cblog,cbcharset):
-      super().__init__(parent,name)
-      self.cblog= cblog
-      self.cbcharset= cbcharset
-      self.kbd_delay=False
-
-      if self.cblog:
-         self.logging= PILCONFIG.get(self.name,"logging",False)
-      if self.cbcharset:
-         self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
-
-#
-#     Build GUI 
-#
-      self.guiobject=QScrolledTerminalWidget(self)
-
-      self.hbox1= QtWidgets.QHBoxLayout()
-      self.hbox1.addStretch(1)
-      self.hbox1.addWidget(self.guiobject)
-      self.hbox1.setContentsMargins(10,10,10,10)
-      self.hbox1.addStretch(1)
-      self.hbox2= QtWidgets.QHBoxLayout()
-      self.hbox2.addWidget(self.cbActive)
-      if self.cblog:
-         self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
-         self.hbox2.addWidget(self.cbLogging)
-      if self.cbcharset:
-         self.lbltxtc=QtWidgets.QLabel("Charset ")
-         self.comboCharset=QtWidgets.QComboBox()
-         for txt in charsets:
-            self.comboCharset.addItem(txt)
-         self.hbox2.addWidget(self.lbltxtc)
-         self.hbox2.addWidget(self.comboCharset)
-      self.hbox2.setContentsMargins(10,3,10,3)
-      self.hbox2.addStretch(1)
-      self.vbox= QtWidgets.QVBoxLayout()
-      self.vbox.addLayout(self.hbox1)
-      self.vbox.addLayout(self.hbox2)
-      self.setLayout(self.vbox)
-#
-#     initialize logging checkbox
-#
-      if self.cblog:
-         self.cbLogging.setChecked(self.logging)
-         self.cbLogging.setEnabled(False)
-         self.cbLogging.stateChanged.connect(self.do_cbLogging)
-#
-#     initialize charset combo box
-#
-      if self.cbcharset:
-         self.comboCharset.activated[str].connect(self.do_changeCharset)
-         self.comboCharset.setCurrentIndex(self.charset)
-         self.comboCharset.setEnabled(False)
-         self.guiobject.set_charset(self.charset)
-#
-#     configure
-#
-      self.reconfigure()
-#
-#     catch resize event to redraw the terminal window
-#
-   def resizeEvent(self,event):
-      self.guiobject.redraw()
-
-
    def do_cbLogging(self):
       self.cbLogging.setEnabled(False)
       self.logging= self.cbLogging.isChecked()
@@ -569,33 +692,76 @@ class cls_tabtermgeneric(cls_tabgeneric):
       PILCONFIG.put(self.name,"logging",self.logging)
       self.pildevice.setlocked(False)
       self.cbLogging.setEnabled(True)
+#
+# generic terminal tab widget ------------------------------------------------
+#
+class cls_tabtermgeneric(cls_tabgeneric):
 
-   def do_changeCharset(self,text):
-      self.charset=self.comboCharset.findText(text)
-      PILCONFIG.put(self.name,'charset',self.charset)
-      self.pildevice.setlocked(True)
-      self.guiobject.set_charset(self.charset)
-      self.pildevice.setlocked(False)
+   def __init__(self,parent,name):
+      super().__init__(parent,name)
+      self.kbd_delay=False
+#
+#     init local configuration parameters
+#
+      self.terminalwidth= PILCONFIG.get(self.name,"terminalwidth",80)
+      self.colorscheme= PILCONFIG.get(self.name,"colorscheme",COLOR_SCHEME_WHITE)
+#
+#     Build GUI 
+#
+      self.guiobject=QScrolledTerminalWidget(self,self.name)
+#
+#     add guiobject to tab
+#
+      self.add_guiobject(self.guiobject)
+#
+#     add tab config widget
+#
+      self.add_configwidget()
+#
+#     add basic terminal config options to cascading menu
+#
+      self.cBut.add_option("Terminal width","terminalwidth",T_INTEGER,[80,120])
+      self.cBut.add_option("Color scheme","colorscheme",T_STRING,color_scheme_names)
 
+      self.statuswidget=QtWidgets.QLabel("")
+      self.statuswidget.setText("Display size :")
+      self.add_statuswidget(self.statuswidget)
+#
+#  handle changes of tab configuration
+#
+   def do_tabconfig_changed(self):
+      param= self.cBut.get_changed_option_name()
+      if param=="terminalwidth":
+         self.guiobject.reconfigure()
+      elif param=="colorscheme":
+         self.guiobject.reconfigure()
+      super().do_tabconfig_changed()
+#
+#  reconfigure tab: reconfigure gui object
+#
+   def reconfigure(self):
+      self.guiobject.reconfigure()
+      super().reconfigure()
+#
+#     catch resize event to redraw the terminal window
+#
+   def resizeEvent(self,event):
+      self.guiobject.redraw()
+#
+#     update status widget
+#
+   def update_status(self,rows,cols):
+      self.statuswidget.setText("Display size: {:d}x{:d}".format(rows,cols))
+#
+#     enable/disable
+#
    def enable(self):
       super().enable()
-      if self.cblog:
-         self.cbLogging.setEnabled(True)
-         if self.logging:
-            self.cbLogging.logOpen()
-      if self.cbcharset:
-         self.comboCharset.setEnabled(True)
       self.guiobject.enable()
 
    def disable(self):
       super().disable()
       self.guiobject.disable()
-      if self.cblog:
-         if self.logging:
-            self.cbLogging.logClose()
-         self.cbLogging.setEnabled(False)
-      if self.cbcharset:
-         self.comboCharset.setEnabled(False)
 #
 #  becomes visible, refresh content, activate update and blink
 #
@@ -608,14 +774,6 @@ class cls_tabtermgeneric(cls_tabgeneric):
    def becomes_invisible(self):
       self.guiobject.becomes_invisible()
       return
-#
-#     reconfigure gui object and logging object
-#
-   def reconfigure(self):
-      self.guiobject.reconfigure()
-      if self.cblog:
-         self.cbLogging.reconfigure()
-
 #
 # Help Dialog class ----------------------------------------------------------
 #
@@ -677,7 +835,7 @@ class cls_HelpWindow(QtWidgets.QDialog):
       docpath=re.sub("//","/",docpath,1)
       self.view.load(QtCore.QUrl.fromLocalFile(docpath))
 #
-# Release Info Dialog class --------------------------------------------------------
+# Release Info Dialog class --------------------------------------------------
 #
 class cls_ReleaseWindow(QtWidgets.QDialog):
 
@@ -730,9 +888,8 @@ class cls_AboutWindow(QtWidgets.QDialog):
 
    def do_exit(self):
       self.hide()
-
 #
-# Get TTy  Dialog class -------------------------------------------------------
+# Get TTy  Dialog class ------------------------------------------------------
 #
 
 class cls_TtyWindow(QtWidgets.QDialog):
@@ -828,7 +985,9 @@ class cls_TtyWindow(QtWidgets.QDialog):
          return dialog.getDevice()
       else:
          return ""
-
+#
+# Main pyILPER configuration dialog ------------------------------------------
+#
 class cls_PilConfigWindow(QtWidgets.QDialog):
 
    def __init__(self,parent): 
@@ -847,10 +1006,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
       self.__serverport__= PILCONFIG.get(self.__name__,"serverport")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
-      self.__buffer_log__= PILCONFIG.get(self.__name__,"buffer_log")
-      self.__termsize__= PILCONFIG.get(self.__name__,"terminalwidth")
       self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
-      self.__colorscheme__= PILCONFIG.get(self.__name__,"colorscheme")
       self.__termcharsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
       self.__dircharsize__=PILCONFIG.get(self.__name__,"directorycharsize")
       self.__papersize__=PILCONFIG.get(self.__name__,"papersize")
@@ -1001,18 +1157,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hboxwdir.addWidget(self.butwdir)
       self.vboxgboxw.addLayout(self.hboxwdir)
       self.vbox1.addWidget(self.gboxw)
-#
-#     section buffer log files
-#
-      self.gboxlogbuffer= QtWidgets.QGroupBox()
-      self.gboxlogbuffer.setFlat(True)
-      self.gboxlogbuffer.setTitle("Log file buffering")
-      self.vbox1.addWidget(self.gboxlogbuffer)
-      self.cblogbuffer= QtWidgets.QCheckBox("Buffer log files")
-      self.cblogbuffer.setChecked(self.__buffer_log__)
-      self.vboxlogbuffer=QtWidgets.QVBoxLayout()
-      self.vboxlogbuffer.addWidget(self.cblogbuffer)
-      self.gboxlogbuffer.setLayout(self.vboxlogbuffer)
 
       self.vbox1.addStretch(1)
 #
@@ -1045,43 +1189,27 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.vboxgboxlifpath.addLayout(self.hboxlifpath)
       self.vbox2.addWidget(self.gboxlifpath)
 #
-#     Section Terminal configuration: size, scroll up buffer, color scheme, 
-#     font size
+#     Section Terminal configuration:  scroll up buffer, font size
 #
       self.gboxt= QtWidgets.QGroupBox()
       self.gboxt.setFlat(True)
       self.gboxt.setTitle("Terminal Settings")
       self.gridt= QtWidgets.QGridLayout()
       self.gridt.setSpacing(3)
-      self.gridt.addWidget(QtWidgets.QLabel("Terminal width"),1,0)
-      self.gridt.addWidget(QtWidgets.QLabel("Scroll up buffer size"),2,0)
-      self.gridt.addWidget(QtWidgets.QLabel("Color Scheme"),3,0)
-      self.gridt.addWidget(QtWidgets.QLabel("Font Size"),4,0)
-
-      self.comboTerminalWidth=QtWidgets.QComboBox()
-      self.comboTerminalWidth.addItem("80")
-      self.comboTerminalWidth.addItem("120") 
-      self.gridt.addWidget(self.comboTerminalWidth,1,1)
-      self.comboTerminalWidth.setCurrentIndex(self.comboTerminalWidth.findText(str(self.__termsize__)))
+      self.gridt.addWidget(QtWidgets.QLabel("Scroll up buffer size"),1,0)
+      self.gridt.addWidget(QtWidgets.QLabel("Font Size"),2,0)
 
       self.spinScrollBufferSize=QtWidgets.QSpinBox()
       self.spinScrollBufferSize.setMinimum(TERMINAL_MINIMUM_ROWS)
-      self.spinScrollBufferSize.setMaximum(9999)
+      self.spinScrollBufferSize.setMaximum(10000)
       self.spinScrollBufferSize.setValue(self.__scrollupbuffersize__)
-      self.gridt.addWidget(self.spinScrollBufferSize,2,1)
-
-      self.comboCol=QtWidgets.QComboBox()
-      self.comboCol.addItem("white")
-      self.comboCol.addItem("amber")
-      self.comboCol.addItem("green") 
-      self.gridt.addWidget(self.comboCol,3,1)
-      self.comboCol.setCurrentIndex(self.comboCol.findText(self.__colorscheme__))
+      self.gridt.addWidget(self.spinScrollBufferSize,1,1)
 
       self.spinTermCharsize=QtWidgets.QSpinBox()
       self.spinTermCharsize.setMinimum(15)
       self.spinTermCharsize.setMaximum(20)
       self.spinTermCharsize.setValue(self.__termcharsize__)
-      self.gridt.addWidget(self.spinTermCharsize,4,1)
+      self.gridt.addWidget(self.spinTermCharsize,2,1)
 
       self.gboxt.setLayout(self.gridt)
       self.vbox2.addWidget(self.gboxt)
@@ -1283,12 +1411,9 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #     these parameters require a reconfiguration 
 #
       self.__needs_reconfigure__= False
-      self.__needs_reconfigure__ |= self.check_param("terminalwidth", int(self.comboTerminalWidth.currentText()))
-      self.__needs_reconfigure__ |= self.check_param("colorscheme", self.comboCol.currentText())
       self.__needs_reconfigure__ |= self.check_param("terminalcharsize",self.spinTermCharsize.value())
       self.__needs_reconfigure__ |= self.check_param("directorycharsize",self.spinDirCharsize.value())
       self.__needs_reconfigure__ |= self.check_param("hp82162a_pixelsize",self.spinHP82162APixelsize.value())
-      self.__needs_reconfigure__ |= self.check_param("buffer_log",self.cblogbuffer.isChecked())
 #
 #     These parameters need a restart, display message
 #
@@ -1313,10 +1438,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
 #     store parameters
 #
-      PILCONFIG.put(self.__name__,"buffer_log", self.cblogbuffer.isChecked())
-      PILCONFIG.put(self.__name__,"terminalwidth", int(self.comboTerminalWidth.currentText()))
       PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
-      PILCONFIG.put(self.__name__,"colorscheme", self.comboCol.currentText())
       PILCONFIG.put(self.__name__,"terminalcharsize",self.spinTermCharsize.value())
       PILCONFIG.put(self.__name__,"directorycharsize",self.spinDirCharsize.value())
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
@@ -1340,9 +1462,8 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          return True, reconnect, reconfigure
       else:
          return False, False, False
-
 #
-# HP-IL virtual device  configuration class -----------------------------------
+# HP-IL virtual device  configuration class ----------------------------------
 #
 
 class cls_DeviceConfigWindow(QtWidgets.QDialog):
@@ -1459,7 +1580,7 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
       else:
          return False
 #
-# validator checks for valid device name
+# validator checks for valid device name -------------------------------------
 #
 class cls_Device_validator(QtGui.QValidator):
 
@@ -1469,7 +1590,7 @@ class cls_Device_validator(QtGui.QValidator):
       result=self.validator.validate(string,pos)
       return result[0], result[1], result[2]
 #
-# Add virtual device dialog class ---------------------------------------------
+# Add virtual device dialog class --------------------------------------------
 #
 class cls_AddDeviceWindow(QtWidgets.QDialog):
 
@@ -1546,9 +1667,8 @@ class cls_AddDeviceWindow(QtWidgets.QDialog):
       else:
          return ""
 #
-# HP-IL device Status Dialog class ---------------------------------------------
+# HP-IL device Status Dialog class -------------------------------------------
 #
-
 class cls_DevStatusWindow(QtWidgets.QDialog):
 
    def __init__(self,parent):
@@ -1647,34 +1767,8 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
          self.__items__[row,3].setText("{0:x}".format(addr& 0xF))
          self.__items__[row,4].setText("{0:x}".format(addr2nd &0xF))
          self.__items__[row,5].setText("{0:s}".format(hpilstatus))
-# 
-# Error message Dialog Class --------------------------------------------------
 #
-class cls_PilMessageBox(QtWidgets.QMessageBox):
-   def __init__(self):
-      super().__init__()
-      self.setSizeGripEnabled(True)
-
-   def event(self, e):
-      result = QtWidgets.QMessageBox.event(self, e)
-
-      self.setMinimumHeight(0)
-      self.setMaximumHeight(16777215)
-      self.setMinimumWidth(0)
-      self.setMaximumWidth(16777215)
-      self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-      textEdit = self.findChild(QtWidgets.QTextEdit)
-      if textEdit is not None:
-         textEdit.setMinimumHeight(0)
-         textEdit.setMaximumHeight(16777215)
-         textEdit.setMinimumWidth(0)
-         textEdit.setMaximumWidth(16777215)
-         textEdit.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-      return result
-
-#
-# Main Window user interface -----------------------------------------------
+# Main Window user interface class -------------------------------------------
 #
 class cls_ui(QtWidgets.QMainWindow):
 
@@ -1717,15 +1811,7 @@ class cls_ui(QtWidgets.QMainWindow):
       self.actionAbout=self.menuHelp.addAction("About")
       self.actionHelp=self.menuHelp.addAction("Manual")
 #
-#     Central widget (tabs only)
-#
-#     self.centralwidget= QtWidgets.QWidget()
-#     self.setCentralWidget(self.centralwidget)
-
       self.tabs=cls_Tabs()
-#     self.vbox= QtWidgets.QVBoxLayout()
-#     self.vbox.addWidget(self.tabs)
-#     self.centralwidget.setLayout(self.tabs)
       self.setCentralWidget(self.tabs)
 #
 #     Status bar

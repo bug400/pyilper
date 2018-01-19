@@ -57,6 +57,8 @@
 # 04.01.2018 jsi
 # - reconfigure log check box object
 # - flush log buffer 
+# 16.01.2018 jsi
+# - adapt to cls_tabgeneric, implemented cascading config menu
 #
 import copy
 import queue
@@ -69,6 +71,7 @@ from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
 from .pilpdf import cls_pdfprinter
+from .pilcore import T_INTEGER, HP82162A_LINEBUFFERSIZE
 
 #
 # constants --------------------------------------------------------------
@@ -443,57 +446,44 @@ class cls_tabhp82162a(cls_tabgeneric):
    def __init__(self,parent,name):
       super().__init__(parent,name)
       self.name=name
-      self.logging= PILCONFIG.get(self.name,"logging",False)
+#
+#     this parameter is global
+#
       self.papersize=PILCONFIG.get("pyilper","papersize")
 #
 #     create Printer GUI object
 #
       self.guiobject=cls_HP82162AWidget(self,self.name,self.papersize)
 #
-#     Build gui of tab
+#     add gui object 
 #
-      self.hbox1= QtWidgets.QHBoxLayout()
-      self.hbox1.addStretch(1)
-      self.hbox1.addWidget(self.guiobject)
-      self.hbox1.addStretch(1)
-      self.hbox1.setContentsMargins(10,10,10,10)
-      self.hbox2= QtWidgets.QHBoxLayout()
-      self.hbox2.addWidget(self.cbActive)
-
-      self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
-      self.hbox2.addWidget(self.cbLogging)
-      self.hbox2.addStretch(1)
-
-      self.hbox2.setContentsMargins(10,3,10,3)
-      self.vbox= QtWidgets.QVBoxLayout()
-      self.vbox.addLayout(self.hbox1)
-      self.vbox.addLayout(self.hbox2)
-      self.setLayout(self.vbox)
-
-      self.cbLogging.setChecked(self.logging)
-      self.cbLogging.setEnabled(False)
-      self.cbLogging.stateChanged.connect(self.do_cbLogging)
+      self.add_guiobject(self.guiobject)
+#
+#     add cascading config menu
+#
+      self.add_configwidget()
+#
+#     add logging control widget
+#
+      self.add_logging()
 #
 #     create IL-Interface object, notify printer processor object
 #
       self.pildevice= cls_pilhp82162a(self.guiobject)
       self.guiobject.set_pildevice(self.pildevice)
+      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
-#     configure
+#  handle changes of tab config options
 #
-      self.reconfigure()
-
-   def do_cbLogging(self):
-      self.cbLogging.setEnabled(False)
-      self.logging= self.cbLogging.isChecked()
-      self.pildevice.setlocked(True)
-      if self.logging:
-         self.cbLogging.logOpen()
-      else:
-         self.cbLogging.logClose()
-      PILCONFIG.put(self.name,"logging",self.logging)
-      self.pildevice.setlocked(False)
-      self.cbLogging.setEnabled(True)
+   def do_tabconfig_changed(self):
+      self.loglevel= PILCONFIG.get(self.name,"loglevel",0)
+      self.guiobject.reconfigure()
+      super().do_tabconfig_changed()
+#
+#  reconfigure: reconfigure the gui object
+#
+   def reconfigure(self):
+      self.guiobject.reconfigure()
 #
 #  enable pildevice and gui object
 #
@@ -501,9 +491,6 @@ class cls_tabhp82162a(cls_tabgeneric):
       super().enable()
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(self.active)
-      self.cbLogging.setEnabled(True)
-      if self.logging:
-         self.cbLogging.logOpen()
       self.pildevice.enable()
       self.guiobject.enable()
 #
@@ -512,14 +499,12 @@ class cls_tabhp82162a(cls_tabgeneric):
    def disable(self):
       self.pildevice.disable()
       self.guiobject.disable()
-      if self.logging:
-         self.cbLogging.logClose()
-      self.cbLogging.setEnabled(False)
       super().disable()
 #
 #  active/inactive: enable/disable GUI controls
 #
    def toggle_active(self):
+      super().toggle_active()
       self.guiobject.toggle_active()
 #
 #  becomes visible, refresh content, activate update
@@ -534,12 +519,6 @@ class cls_tabhp82162a(cls_tabgeneric):
       self.guiobject.becomes_invisible()
       return
 #
-#   reconfigure gui object and logging object
-#
-   def reconfigure(self):
-      self.guiobject.reconfigure()
-      self.cbLogging.reconfigure()
-      return
 #
 # HP82162A widget classes - GUI component of the HP82162A HP-IL printer
 #
@@ -555,13 +534,14 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     configuration
 #
       self.pdfpixelsize=3
-      self.pixelsize=PILCONFIG.get("pyilper","hp82162a_pixelsize",1)
-      self.linebuffersize=PILCONFIG.get("pyilper","linebuffersize",2000)
+      self.pixelsize=PILCONFIG.get("pyilper","hp82162a_pixelsize")
+      self.linebuffersize=HP82162A_LINEBUFFERSIZE
       self.printer_modeswitch= PILCONFIG.get(self.name,"modeswitch",MODESWITCH_MAN)
 #
 #     create user interface of printer widget
 #
       self.hbox=QtWidgets.QHBoxLayout()
+      self.hbox.addStretch(1)
 #
 #     scrolled printer view
 #
@@ -861,7 +841,7 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
       
       self.hbox= QtWidgets.QHBoxLayout()
       self.scrollbar= QtWidgets.QScrollBar()
-      self.hp82162awidget= cls_HP82162aView(self,pixelsize,pdfpixelsize,papersize,linebuffersize)
+      self.hp82162awidget= cls_HP82162aView(self,self.name,pixelsize,pdfpixelsize,papersize,linebuffersize)
       self.hp82162awidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hp82162awidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
       self.hbox.addWidget(self.hp82162awidget)
@@ -916,9 +896,10 @@ class cls_ScrolledHP82162AView(QtWidgets.QWidget):
 #
 class cls_HP82162aView(QtWidgets.QGraphicsView):
 
-   def __init__(self,parent,pixelsize,pdfpixelsize,papersize,linebuffersize):
+   def __init__(self,parent,name,pixelsize,pdfpixelsize,papersize,linebuffersize):
       super().__init__()
       self.parent=parent
+      self.name= name
 #
 #     initial output window in reconfigure
 #

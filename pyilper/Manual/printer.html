@@ -48,20 +48,27 @@ Character mapping can be configured.<p>
 
 <h3 class="w3-text-teal">Device controls</h3>
 
-<p>The printer tab has the following controls:</p>
-
 <ul class="w3-ul">
 <li><em>Device enabled</em> checkbox: If checked, the virtual HP-IL printer is
 available and can be used as HP-IL device. The HP-IL loop must
 always be reconfigured after activation or deactivation.
 </li>
 <li><em>Log Printer</em> checkbox: Activates writing printer output to the file
-<em>Devicename.log</em> in the <em>pyILPR</em> working directory. Output is always 
-appended to that file. A time stamp in the file marks the start and the
+<em>Devicename.log</em> in the <em>pyILPR</em> working directory. Output is 
+always appended to that file. A time stamp in the file marks the start and the
 end of each logging. The log file is closed automatically on
-program termination.
-</li>
-<li><em>Charset combobox</em>: select the character set that is emulated.
+program termination.</li>
+</ul>
+
+<h3 class="w3-text-teal">Tab configuration menu</h3>
+<ul class="w3-ul">
+<li><em>Terminal width</em>: Switches between a 80 column and a 120 column
+output Note: toggling this option will clear the display.</li>
+<li><em>Color scheme</em>: choose a black, amber or green color scheme.</li>
+<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
+was encountered. This enables watching the log file output but may decrease
+the execution speed of <em>pyILPER</em> considerably.</li>
+<li><em>Character set</em>: select the character set that is emulated.
 For details of character mapping see the documentation of the
 terminal tab.</li>
 </ul>

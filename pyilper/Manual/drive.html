@@ -93,19 +93,25 @@ opened by <em>pyILPER</em> during HP-IL read or write operations. </li>
 emulated (see above). The LIF image file must be reopened after the 
 drive type was changed.</li>
 
-<li><em>Device enabled</em> check box: If checked, the virtual HP-IL drive is
+<li><em>Device enabled</em>: If checked, the virtual HP-IL drive is
 available and can be used as HP-IL device. The HP-IL loop must
 always be reconfigured after this box has been checked or unchecked. </li>
 </ul>
 
-<h3 class="w3-text-teal">File management controls</h3>
+<h3 class="w3-text-teal">Tab configuration menu</h3>
+<ul class="w3-ul">
+<li><em>Character set</em>: select the character set that is used for
+the <em>view</em> file management function (see below).
+For details of character mapping see the documentation of the
+terminal tab.</li>
+
+
+<h3 class="w3-text-teal">File management Functions</h3>
 
 <p>If <em>pyILPER</em> detects a compatible version of  the
 <a class="w3-hover-black" href=https://github.com/bug400/lifutils/releases>LIFUTILS</a>
 (at least Version 1.7.7 is required) at launch the drive tab enables 
-the following controls:</p>
-
-<p><em>Tools</em> drop down menu at the bottom of the tab:</p>
+the following buttons:</p>
 
 <ul class="w3-ul">
 <li><em>Pack</em> the mounted LIF image file (very fast!)</li>
@@ -123,7 +129,7 @@ image file</li>
 <li><em>Export</em> the selected file to the local file system</li>
 <li><em>View</em> the contents or summary information of the selected file. 
 Note: this entry is only available for certain file types. To view text files 
-the proper character set can be selected with the combo box at the bottom of 
+the proper character set must be configured in the configuration menu. 
 the tab.</li>
 <li><em>Barcode</em> output for HP-41 program and SDATA files into a 
 PDF file.</li>

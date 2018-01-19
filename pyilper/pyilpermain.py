@@ -153,8 +153,9 @@
 # - initialized parameter hp82162a_pixelsize
 # 27.12.2017 jsi
 # - changes because of new cls_Tabs widget
-# 04.01.2018 jsi
-# - buffer_log parameter introduced
+# 17.01.2018 jsi
+# - remove global parameters for terminal width and color scheme which
+#   are now tab specific. 
 #
 import os
 import sys
@@ -260,19 +261,17 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"mode",MODE_PILBOX)
          PILCONFIG.get(self.name,"workdir",os.path.expanduser('~'))
          PILCONFIG.get(self.name,"position","")
-         PILCONFIG.get(self.name,"buffer_log",True)
-         PILCONFIG.get(self.name,"terminalwidth",80)
-         PILCONFIG.get(self.name,"colorscheme","white")
-         PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"scrollupbuffersize",1000)
-         PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"serverport",59999)
          PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
          PILCONFIG.get(self.name,"papersize",0)
          PILCONFIG.get(self.name,"lifutilspath","")
+         PILCONFIG.get(self.name,"terminalcharsize",15)
+         PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"hp82162a_pixelsize",1)
+
          PILCONFIG.save()
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
@@ -451,7 +450,7 @@ class cls_pyilper(QtCore.QObject):
 #  callback pyilper configuration, reset the communication only if needed
 #
    def do_pyilperConfig(self):
-      (accept, needs_reconnect, needs_reconfigure)= cls_PilConfigWindow.getPilConfig(self) 
+      (accept, needs_reconnect, needs_reconfigure)= cls_PilConfigWindow.getPilConfig(self)
       if accept:
          if needs_reconnect:
             self.disable()
@@ -475,7 +474,6 @@ class cls_pyilper(QtCore.QObject):
             if self.status== STAT_ENABLED:
                if self.commthread is not None:
                   self.commthread.resume()
-
 #
 #  callback HP-IL device config
 #

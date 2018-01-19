@@ -149,23 +149,25 @@ AUTOSCROLL_OFF=0
 AUTOSCROLL_UP=1
 AUTOSCROLL_DOWN=2
 #
-# scrolled terminal widget class ----------------------------------------------------
+# scrolled terminal widget class ---------------------------------------------
 #
 class QScrolledTerminalWidget(QtWidgets.QWidget):
 
-    def __init__(self,parent):
+    def __init__(self,parent,name):
         super().__init__(parent)
         self.pildevice= None
+        self.name= name
+        self.tabwidget=parent
 #
 #       create terminal window and scrollbar
 #
         self.hbox= QtWidgets.QHBoxLayout()
-        self.terminalwidget= QTerminalWidget(self)
+        self.terminalwidget= QTerminalWidget(self,self.name,self.tabwidget)
         self.hbox.addWidget(self.terminalwidget)
         self.scrollbar= QtWidgets.QScrollBar()
         self.hbox.addWidget(self.scrollbar)
         self.setLayout(self.hbox)
-        self.HPTerminal= HPTerminal(self)
+        self.HPTerminal= HPTerminal(self,self.name)
         self.terminalwidget.setHPTerminal(self.HPTerminal)
 #
 #       initialize scrollbar
@@ -252,6 +254,11 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
     def get_cols(self):
       return self.terminalwidget.get_cols()
+#
+#   get actual number of rows
+#
+    def get_rows(self):
+      return self.terminalwidget.get_rows()
 #
 #  Select area custom class ---------------------------------------------
 #
@@ -373,7 +380,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 
 # color scheme: normal_foreground, normal_background, inverse_foreground, inverse_background, cursor_color
 
-    color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
+#   color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
 
     color_schemes= [
        [ QtGui.QColor("#000"),QtGui.QColor("#fff"), QtGui.QColor(0xff,0xff, 0xff,0xc0) ],
@@ -412,14 +419,17 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     }
 
 
-    def __init__(self,parent):
+    def __init__(self,parent,name,tabwidget):
         super().__init__(parent)
 #
 #       initialize Variables
 #
+        self._name= name              # name of tab
+        self._tabwidget=tabwidget     # widget of tab
         self._cols=  -1               # terminal config, initialized in reconfigure
+        self._rows=  -1               # rows, calculated at resize event
         self._font_size=size= -1      # dto
-        self._colorscheme= -1         # dto
+        self._color_scheme_index= -1  # dto
         self._scrollupbuffersize= -1  # dto
         self._HPTerminal= None        # backend object,set by setHPterminal
         self._screen = []             # frontend screen buffer
@@ -472,8 +482,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #       get current configuration
 #
-        self._cols=PILCONFIG.get("pyilper","terminalwidth")
-        self._colorscheme=PILCONFIG.get("pyilper","colorscheme")
+        self._cols=PILCONFIG.get(self._name,"terminalwidth")
+        self._color_scheme_index=PILCONFIG.get(self._name,"colorscheme")
         self._font_size=PILCONFIG.get("pyilper","terminalcharsize")
         self._scrollupbuffersize=PILCONFIG.get("pyilper","scrollupbuffersize")
         if self._scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
@@ -512,7 +522,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #       initialize selected color scheme
 #
-        self._color_scheme=self.color_schemes[self.color_scheme_names[self._colorscheme]]
+#       self._color_scheme=self.color_schemes[self.color_scheme_names[self._colorscheme]]
+        self._color_scheme=self.color_schemes[self._color_scheme_index]
         self._cursor_color=self._color_scheme[2]
         self.setBackgroundBrush(QtGui.QBrush(self._color_scheme[0]))
         return
@@ -532,6 +543,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._scene.setSceneRect(0,0,self._sizew, self._char_height* rows)
         self.fitInView(0,0,self._sizew, self._char_height* rows)
         self._ScrollDownAreaY= (self._char_height-1) * rows
+        self._rows= rows
+        self._tabwidget.update_status(rows,self._cols)
 #
 #   context menu event (pops up when right button clicked)
 #
@@ -778,6 +791,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     def get_cols(self):
        return (self._cols)
 #
+#   get actual number of rows
+#
+    def get_rows(self):
+       return (self._rows)
+#
 #   tab becomes invisible, stop cursor blink, set self._isVisible to false to disable
 #   updates of the graphics scene
 #   
@@ -913,7 +931,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 class HPTerminal:
 
-    def __init__(self, win):
+    def __init__(self, win, name):
+        self.name=name                    # name of tab
         self.w = -1                       # terminal/buffer width (characters)
         self.h =  -1                      # buffer size (lines)
                                           # both variables are initialized in
@@ -976,7 +995,7 @@ class HPTerminal:
        self.h = PILCONFIG.get("pyilper","scrollupbuffersize")
        if self.h < TERMINAL_MINIMUM_ROWS:
           self.h= TERMINAL_MINIMUM_ROWS
-       w=PILCONFIG.get("pyilper","terminalwidth")
+       w=PILCONFIG.get(self.name,"terminalwidth")
        if w != self.w:
           self.w= w
           self.reset_hard()

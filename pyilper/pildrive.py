@@ -327,6 +327,12 @@
 # - lifutils_installed is now variable of cls_pyilper
 # 30.10.2017 jsi 
 # - bugfix: close file in getMediumInfo
+# 08.01.2018 jsi
+# - change tool menu button behaviour to InstantPopup
+# 16.01.2018 jsi
+# - refactoring: adapt cls_tabdrive to cls_tabgeneric, create new 
+#   cls_DriveWidget class. Remove tool menu button in favour of push buttons
+# - implemented cascading configuration menu
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -342,8 +348,71 @@ from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
 from .pilpdf import cls_pdfprinter,cls_textItem
 
-
 class cls_tabdrive(cls_tabgeneric):
+   
+   def __init__(self,parent,name):
+      super().__init__(parent,name)
+      self.name= name
+#
+#     Set default values
+#
+      self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
+#
+#     create drive GUI object
+#
+      self.guiobject= cls_DriveWidget(self,self.name)
+#
+#     add gui object to tab
+#
+      self.add_guiobject(self.guiobject)
+#
+#     add cascading config menu and option(s)
+#
+      self.add_configwidget()
+      self.cBut.add_option("Character set","charset",T_STRING,charsets)
+#
+#     create HPIL-device, notify object to drive gui object
+#
+      self.pildevice= cls_pildrive(isWINDOWS())
+      self.guiobject.set_pildevice(self.pildevice)
+      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
+#
+#  handle changes of tab config options
+#
+   def do_tabconfig_changed(self):
+      self.guiobject.reconfigure()
+      super().do_tabconfig_changed()
+#
+#     enable/disable
+#
+   def enable(self):
+      super().enable()
+      self.parent.commthread.register(self.pildevice,self.name)
+      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
+      self.pildevice.enable()
+      self.guiobject.enable()
+
+   def disable(self):
+      self.pildevice.disable()
+      self.guiobject.disable()
+      super().disable()
+#
+   def toggle_active(self):
+      self.guiobject.toggle_active()
+#
+#  becomes visible, activate update timer
+#
+   def becomes_visible(self):
+      self.guiobject.becomes_visible()
+#
+#  becomes invisible, deactivate update timer
+#
+   def becomes_invisible(self):
+      self.guiobject.becomes_invisible()
+#
+#  Drive widget class --------------------------------------------------------
+#
+class cls_DriveWidget(QtWidgets.QWidget): 
 
    DEV_CASS=0
    DEV_DISK=1
@@ -376,17 +445,22 @@ class cls_tabdrive(cls_tabgeneric):
    
    
    def __init__(self,parent,name):
-      super().__init__(parent,name)
+      super().__init__()
+#
+#     Set default values
+#
+      self.name=name
+      self.parent=parent
 #
 #     Set default values
 #
       self.filename= PILCONFIG.get(self.name,"filename","")
       self.drivetype= PILCONFIG.get(self.name,"drivetype",self.DEV_HDRIVE1)
-      self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
       self.papersize=PILCONFIG.get("pyilper","papersize")
+      self.pildevice=None
 
 #
-#     Build GUI 
+#     Header with file name and volume information
 #
       self.hbox1= QtWidgets.QHBoxLayout()
       self.lbltxt1=QtWidgets.QLabel("LIF Image File: ")
@@ -397,8 +471,12 @@ class cls_tabdrive(cls_tabgeneric):
       self.hbox1.addWidget(self.lblFilename)
       self.hbox1.addStretch(1)
       self.hbox1.addWidget(self.butFilename)
-      self.hbox1.setContentsMargins(15,10,10,5)
+#     self.hbox1.setContentsMargins(15,10,10,5)
+      self.hbox1.setContentsMargins(0,0,0,0)
 
+#
+#     drive type group box
+#
       self.gbox = QtWidgets.QGroupBox()
       self.gbox.setFlat(True)
       self.gbox.setTitle("Drive Type")
@@ -416,52 +494,40 @@ class cls_tabdrive(cls_tabgeneric):
       self.gbox_buttonlist=[self.radbutCass, self.radbutDisk, self.radbutHdrive1]
       self.vbox3= QtWidgets.QVBoxLayout()
       self.vbox3.addWidget(self.gbox)
-      self.vbox3.addStretch(1)
 
+#
+#     Initialize file management tool buttons
+#
+      self.butPack= QtWidgets.QPushButton("Pack")
+      self.butPack.setEnabled(False)
+      self.vbox3.addWidget(self.butPack)
+      self.butImport= QtWidgets.QPushButton("Import")
+      self.butImport.setEnabled(False)
+      self.vbox3.addWidget(self.butImport)
+      self.butLabel= QtWidgets.QPushButton("Label")
+      self.butLabel.setEnabled(False)
+      self.vbox3.addWidget(self.butLabel)
+      self.butDirList= QtWidgets.QPushButton("Directory Listing")
+      self.butDirList.setEnabled(False)
+      self.vbox3.addWidget(self.butDirList)
+      self.vbox3.addStretch(1)
+#
+#     directory widget
+#
       self.vbox1= QtWidgets.QVBoxLayout()
-      self.lifdir=cls_LifDirWidget(self,10,FONT,self.papersize)
+      self.lifdir=cls_LifDirWidget(self,self.name,10,FONT,self.papersize)
       self.vbox1.addWidget(self.lifdir)
 
       self.hbox2= QtWidgets.QHBoxLayout()
       self.hbox2.addLayout(self.vbox1)
       self.hbox2.addLayout(self.vbox3)
-      self.hbox2.setContentsMargins(10,3,10,3)
+#     self.hbox2.setContentsMargins(10,3,10,3)
+      self.hbox2.setContentsMargins(0,0,0,0)
 
-      self.hbox3= QtWidgets.QHBoxLayout()
-      self.hbox3.addWidget(self.cbActive)
-      self.hbox3.setContentsMargins(10,3,10,3)
 #
-#     Initialize file management tool bar
-#
-      self.tBar= QtWidgets.QToolBar()
-      self.tBut= QtWidgets.QToolButton(self.tBar)
-      self.menu= QtWidgets.QMenu(self.tBut)
-      self.tBut.setMenu(self.menu)
-      self.tBut.setPopupMode(QtWidgets.QToolButton.MenuButtonPopup)
-      self.actPack= self.menu.addAction("Pack")
-      self.actImport= self.menu.addAction("Import")
-      self.actLabel=self.menu.addAction("Label")
-      self.actDirList=self.menu.addAction("Directory Listing")
-      self.tBut.setText("Tools")
-      self.tBut.setEnabled(False)
-      self.hbox3.addWidget(self.tBut)
-#
-#     Initialize charset combo box
-#
-      self.lbltxtc=QtWidgets.QLabel("Charset ")
-      self.comboCharset=QtWidgets.QComboBox()
-      for txt in charsets:
-         self.comboCharset.addItem(txt)
-      self.hbox3.addWidget(self.lbltxtc)
-      self.hbox3.addWidget(self.comboCharset)
-      self.comboCharset.setEnabled(False)
-
-      self.hbox3.addStretch(1)
-
       self.vbox= QtWidgets.QVBoxLayout()
       self.vbox.addLayout(self.hbox1)
       self.vbox.addLayout(self.hbox2)
-      self.vbox.addLayout(self.hbox3)
       self.setLayout(self.vbox)
 #
 #     basic initialization
@@ -473,8 +539,6 @@ class cls_tabdrive(cls_tabgeneric):
          w.setEnabled(False)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
-      self.comboCharset.setCurrentIndex(self.charset)
-
 #
 #     connect actions
 #   
@@ -482,16 +546,11 @@ class cls_tabdrive(cls_tabgeneric):
       self.radbutDisk.clicked.connect(self.do_drivetypeChanged)
       self.radbutHdrive1.clicked.connect(self.do_drivetypeChanged)
       self.butFilename.clicked.connect(self.do_filenameChanged)
-      self.actPack.triggered.connect(self.do_pack)
-      self.actImport.triggered.connect(self.do_import)
-      self.actLabel.triggered.connect(self.do_label)
-      self.actDirList.triggered.connect(self.do_dirlist)
-      self.comboCharset.activated[str].connect(self.do_changeCharset)
 #
-#     create HPIL-device
-#
-      self.pildevice= cls_pildrive(isWINDOWS())
-
+      self.butPack.clicked.connect(self.do_pack)
+      self.butImport.clicked.connect(self.do_import)
+      self.butLabel.clicked.connect(self.do_label)
+      self.butDirList.clicked.connect(self.do_dirlist)
 #
 #     refresh timer
 #
@@ -503,18 +562,19 @@ class cls_tabdrive(cls_tabgeneric):
 #
       self.toggle_controls()
 #
+#     set HP-IL device
+#
+   def set_pildevice(self,pildevice):
+      self.pildevice= pildevice
+#
 #     reconfigure
 #
    def reconfigure(self):
       self.lifdir.reconfigure()
-
 #
 #     enable/disable
 #
    def enable(self):
-      super().enable()
-      self.parent.commthread.register(self.pildevice,self.name)
-      self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
       did,aid= self.deviceinfo[self.drivetype]
       self.pildevice.setdevice(did,aid)
       status, tracks, surfaces, blocks= self.lifMediumCheck(self.filename,True)
@@ -530,8 +590,7 @@ class cls_tabdrive(cls_tabgeneric):
       self.lifdir.setFileName(self.filename)
 
    def disable(self):
-      super().disable()
-#     self.timer.stop()
+      return
 #
 #  enable/disable lif image file controls:
 #  - change drive type
@@ -545,15 +604,17 @@ class cls_tabdrive(cls_tabgeneric):
       self.butFilename.setEnabled(True)
       for w in self.gbox_buttonlist:
          w.setEnabled(True)
-      if self.active:
-         self.tBut.setEnabled(False)
-         self.comboCharset.setEnabled(False)
-         self.tBut.setToolTip("To use this menu, please disable the device first")
+      if self.parent.active:
+         self.butPack.setEnabled(False)
+         self.butImport.setEnabled(False)
+         self.butLabel.setEnabled(False)
+         self.butDirList.setEnabled(False)
       else:
-         self.tBut.setToolTip("")
-         if self.filename != "" and self.parent.lifutils_installed:
-            self.tBut.setEnabled(True)
-            self.comboCharset.setEnabled(True)
+         if self.filename != "" and self.parent.parent.lifutils_installed:
+            self.butPack.setEnabled(True)
+            self.butImport.setEnabled(True)
+            self.butLabel.setEnabled(True)
+            self.butDirList.setEnabled(True)
 #
 #  set drive type checked
 #
@@ -580,10 +641,6 @@ class cls_tabdrive(cls_tabgeneric):
 #
 #  Callbacks
 #
-   def do_changeCharset(self,text):
-      self.charset=self.comboCharset.findText(text)
-      PILCONFIG.put(self.name,'charset',self.charset)
-
    def do_filenameChanged(self):
       flist= self.get_lifFilename()
       if flist is None:
@@ -818,10 +875,10 @@ class DirTableView(QtWidgets.QTableView):
 #       context menu
 #
     def contextMenuEvent(self, event):
-        if self.parent.parent.active:
+        if self.parent.parent.parent.active:
            event.accept()
            return
-        if not self.parent.parent.parent.lifutils_installed:
+        if not self.parent.parent.parent.parent.lifutils_installed:
            event.accept()
            return
         if self.selectionModel().selection().indexes():
@@ -856,7 +913,7 @@ class DirTableView(QtWidgets.QTableView):
                event.accept()
                return
             workdir=PILCONFIG.get('pyilper','workdir')
-            charset=self.parent.parent.charset
+            charset=PILCONFIG.get(self.parent.parent.name,"charset")
             if action ==exportAction:
                 cls_lifexport.exec(imagefile,liffilename,liffiletype,workdir)
             elif action== purgeAction:
@@ -873,9 +930,10 @@ class DirTableView(QtWidgets.QTableView):
 
 class cls_LifDirWidget(QtWidgets.QWidget):
 
-    def __init__(self,parent,rows,font_name,papersize):
+    def __init__(self,parent,name,rows,font_name,papersize):
         super().__init__(parent)
         self.parent=parent
+        self.name=name
         self.__papersize__=papersize
         self.__font_name__= font_name
         self.__font_size__= 13
@@ -940,7 +998,7 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 #   reconfigure the font size of the directory list
 #
     def reconfigure(self):
-        self.__font_size__= PILCONFIG.get("pyilper","directorycharsize")
+        self.__font_size__= PILCONFIG.get(self.name,"directorycharsize")
         self.__font__.setPixelSize(self.__font_size__)
         metrics= QtGui.QFontMetrics(self.__font__)
         self.__table__.verticalHeader().setDefaultSectionSize(metrics.height()+1)
@@ -1137,6 +1195,14 @@ class cls_pildrive(cls_pildevbase):
 # public ------------
 #
 
+#
+# enable/disable (do nothing)
+#
+   def enable(self):
+      return
+
+   def disable(self):
+      return
 #
 #  was image modified since last timestamp
 #

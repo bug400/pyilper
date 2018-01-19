@@ -52,6 +52,8 @@
 #   virtual device is talker. Send ETE if not.
 # - fix a bug in handling the SRQ bit in DOE frames
 # Both changes are courtesy of Christoph Gießelink
+# 16.01.2018 jsi:
+# - adapted to new local config parameters for color scheme and terminal width
 
 
 import threading

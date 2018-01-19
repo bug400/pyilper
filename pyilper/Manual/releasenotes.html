@@ -28,22 +28,43 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <!-- Begin content -->
 
-<h2 class="w3-text-teal">Release Notes for <em>pyILPER</em> 1.6.1</h2>
+<h2 class="w3-text-teal">Release Notes for <em>pyILPER</em> 1.7.0</h2>
 <ul class="w3-ul">
 
-<li>Pixel size of HP82162A display is now configurable.</li>
-
-<li>Terminal, Printer, Scope and HP82162A keep now their scroll position on resize.</li>
 <li>The tabbed virtual HP-IL devices can be undocked and moved to
 floating, resizeable windows by pressing the undock button at the right
 corner of the tab bar. Clicking the close button of a floating window
 docks the virtual device into the tab again.
 </li>
-<li>The selection feature of the Terminal, Printer and Scope now supports autosc
-rolling.</li>
-<li>A new configuration option allows to control whether log output is
-flushed to disk after an end of line was encountered. Turning buffering off will slow down the program considerably.</li>
 
+<li> The configuration of a device tab/window is now implemented by
+cascading menus which can be called with the <em>Configuration</em> button
+in the bottom right corner. To clean up the user interface
+all configuration options with the exception of enable/disable device or 
+logging on/off were moved to the cascading menu.
+Global parameters which affect all device windows or tabs in question are 
+configured in the <em>pyILPER</em> configuration dialog as before.</li>
+
+<li>The number of terminal columns and the color scheme are now configured
+individually in the configuration menu of the device tab/window.</li>
+
+<li>A new configuration option allows to control whether log output is
+flushed to disk after an end of line was encountered. Turning buffering off 
+will slow down the program considerably. This option can be configured individually for each device tab/window that supports logging.</li>
+
+<li>Pixel size of HP82162A display is now configurable in the 
+<em>pyILPER</em> main configuration dialog.</li>
+
+<li>Terminal, printer, scope and HP82162A keep now their scroll position on resize.</li>
+
+<li>The selection feature of the Terminal, Printer and Scope now supports 
+autoscrolling.</li>
+
+<li>Scope, printer and terminal tab/window got a display size indicator.</li>
+
+<li>The file management functions of the drive tab/window are now accessible
+by push buttons. Note: These buttons are only accessilbe if the 
+<em>LIFUTILS</em> are installed and the drive is <b>disabled</b>.</li>
 </ul>
 <p>See the <a class="w3-hover-black" href="changelog.html">Change Log</a> for a full list of changes.</p>
 

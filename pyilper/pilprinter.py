@@ -26,6 +26,8 @@ from .pilconfig import PILCONFIG
 from .pilcharconv import charconv
 from .pilwidgets import cls_tabtermgeneric
 from .pildevbase import cls_pildevbase
+from .pilcharconv import CHARSET_HP71, charsets
+from .pilcore import T_STRING
 #
 # Generic printer tab classes -------------------------------------------------
 #
@@ -36,20 +38,42 @@ from .pildevbase import cls_pildevbase
 # - register pildevice is now method of commobject
 # 04.01.2018 jsi
 # - flush log after a line feed was encountered
+# 16.01.2018 jsi
+# - adapted to cls_tabtermgeneric, implemented cascading config menu
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
-      super().__init__(parent,name,True,True)
-      self.hbox2.addStretch(1)
+      super().__init__(parent,name)
+#
+#     init local configuration parameters
+#
+      self.charset=PILCONFIG.get(self.name,"charset",CHARSET_HP71)
+#
+#     add logging
+#
+      self.add_logging()
+#
+#     add printer config options to cascading menu
+#
+      self.cBut.add_option("Character set","charset",T_STRING,charsets)
+#
+#     create HP-IL device and let the GUI object know it
+#
       self.pildevice= cls_pilprinter(self,self.guiobject)
       self.guiobject.set_pildevice(self.pildevice)
+
+      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
+#
+#  handle changes of the character set
+#
+   def do_tabconfig_changed(self):
+      super().do_tabconfig_changed()
 
    def enable(self):
       super().enable()
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
-
 #
 #   output a character to the terminal and perform logging
 #

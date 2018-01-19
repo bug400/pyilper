@@ -77,8 +77,13 @@
 # - version 1.6.0 production
 # 04.12.2017 jsi
 # - version 1.6.1 development
-# 28.12.2017
+# 28.12.2017 jsi
 # - AUTOSCROLL_RATE parameter introduced
+# 16.01.2018 jsi
+# - added config type parameters for cls_config_tool_button
+# 17.01.2018 jsi
+# - added color scheme constants
+# - changed version to 1.7.0 because of major enhancements of the GUI
 #
 import platform
 #
@@ -87,8 +92,16 @@ import platform
 # General constants:
 #
 PRODUCTION= False     # Production/Development Version
-VERSION="1.6.1"       # pyILPR version number
+VERSION="1.7.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
+
+#
+# Config type parameters for cls_config_tool_button
+#
+T_BOOLEAN=1
+T_STRING=2
+T_INTEGER=3
+
 #
 # Communication modes and classes
 #
@@ -122,9 +135,11 @@ UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
 CURSOR_BLINK=500                # 500 ms cursor blink rate
 CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
 AUTOSCROLL_RATE=100             # 500 ms cursor blink rate
-
-
 TERMINAL_MINIMUM_ROWS=24        # cant get beyond that
+COLOR_SCHEME_WHITE=0
+COLOR_SCHEME_GREEN=1
+COLOR_SCHEME_AMBER=2
+color_scheme_names= ["white","amber","green"]
 
 #
 # predefined baudrates
@@ -138,6 +153,11 @@ BAUDRATES= [ ["Auto", 0], ["9600", 9600 ] , [ "115200", 115200 ], ["230400", 230
 # plotter tab, required version of emu7470
 #
 EMU7470_VERSION=900
+
+#
+# thermal printer tab
+#
+HP82162A_LINEBUFFERSIZE=2000
 
 #
 # if Development Version append string to VERSION and "d" to config file name

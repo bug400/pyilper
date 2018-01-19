@@ -85,14 +85,21 @@ that file. A time stamp in the file marks the start and the
 end of each logging. The log file is closed automatically on
 program termination.
 </li>
-<li><em>Log level</em> combobox: the extent of logging can be configured here.
-</li>
 </ul>
 
 <p>A yellow error led indicates a HPGL-Error. Use the status button to
 obtain information about the error code and additional diagnostics. If the
 error led is red then the external plotter emulator program <em>emu7470</em> 
 could not be started or had crashed.</p>
+
+<h3 class="w3-text-teal">Tab configuration menu</h3>
+<ul class="w3-ul">
+<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
+was encountered. This enables watching the log file output but may decrease
+the execution speed of <em>pyILPER</em> considerably.</li>
+<li><em>Log level</em>: the extent of logging can be configured here.
+</li>
+
 
 <h3 class="w3-text-teal">Digitizing</h3>
 

@@ -37,7 +37,6 @@ The output of the scope can be logged to a file. Selected text can be copied
 to the system clipboard.</p>
 
 <h3 class="w3-text-teal">Device controls</h3>
-<p>The scope tab has the following controls:</p>
 <ul class="w3-ul">
 <li><em>Device enabled</em> checkbox: If checked the frames are logged to the 
 display and the log file (if activated). As the scope is no addressable
@@ -45,25 +44,31 @@ HP-IL device the HP-IL loop must not be reconfigured after the scope
 has been activated or deactivated.
 </li>
 <li><em>Log Scope</em> checkbox: Activates writing the output of the scope to 
-the file <em>Scope.log</em> in the <em>pyILPR</em> working directory. Output is always 
-appended to that file. A time stamp in the file marks the start and the
-end of each logging. The log file is closed automatically on
-program termination. The scope log file is written unbuffered.</li>
+the file <em>Scope.log</em> in the <em>pyILPR</em> working directory. Output 
+is always appended to that file. A time stamp in the file marks the start 
+and the end of each logging. The log file is closed automatically on
+program termination.</li>
+</ul>
 
-<li><em>Show IDY frames</em> checkbox: Activates the output of IDY frames. 
+<h3 class="w3-text-teal">Tab configuration menu</h3>
+<ul class="w3-ul">
+<li><em>Terminal width</em>: Switches between a 80 column and a 120 column 
+output Note: toggling this option will clear the display.</li>
+<li><em>Color scheme</em>: choose a black, amber or green color scheme.</li>
+<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
+was encountered. This enables watching the log file output but may decrease
+the execution speed of <em>pyILPER</em> considerably.</li>
+<li><em>Show IDY frames</em>: Activates the output of IDY frames. 
 This option is only useful, if firmware version 1.6 is installed on the PIL-Box.</li>
-
-<li><em>Display mode</em> combobox: adjusts the output of frames to: show
-mnemonic only, show hex code only, show mnemonic and hex code.</li>
-
-<li><em>Log mode</em> combobox: selects if inbound traffic (uppercase letters), 
-outbound traffic (lowercase letters) or inbound/outbound traffic is logged. 
-Inbound traffic shows the HP-IL frames before they are processed by the 
-<em>pyILPER</em> virtual devices.  Outbound traffic shows the frames after being 
-processed by the <em>pyILPER</em> virtual devices.</li>
+<li><em>Display mode</em>: adjusts the output of frames to: show
+mnemonic only, show hex code only or show both mnemonic and hex code.</li>
+<li><em>Log mode</em>: selects if inbound traffic (uppercase letters), 
+outbound traffic (lowercase letters) or both inbound/outbound traffic is 
+logged.  Inbound traffic shows the HP-IL frames before they are processed 
+by the <em>pyILPER</em> virtual devices.  Outbound traffic shows the frames 
+after being processed by the <em>pyILPER</em> virtual devices.</li>
 </ul>
 <!-- End content -->
-
 </div>
 </div>
   <footer id="myFooter">

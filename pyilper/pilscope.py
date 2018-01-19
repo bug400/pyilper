@@ -27,6 +27,7 @@ from PyQt5 import  QtWidgets
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric
 from .pildevbase import cls_pildevbase
+from .pilcore import *
 
 #
 # Scope tab object classes ----------------------------------------------------
@@ -54,6 +55,8 @@ from .pildevbase import cls_pildevbase
 # - extended options to display frames (mnemonic only, hex only, mnemonic and hex)
 # 04.10.2017 jsi
 # - display mode of scopes not initialized properly on program start
+# 16.01.2018 jsi
+# - adapted to cls_tabtermgeneric, implemented new cascading config menu
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -67,51 +70,64 @@ display_mode= ["Mnemonic","Hex","Both"]
 class cls_tabscope(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
-      super().__init__(parent,name,True,False)
-      self.showIdy= PILCONFIG.get(self.name,"showidy",False)
-      self.cbShowIdy= QtWidgets.QCheckBox("Show IDY frames")
-      self.cbShowIdy.setChecked(self.showIdy)
-      self.cbShowIdy.setEnabled(False)
-      self.cbShowIdy.stateChanged.connect(self.do_show_idy)
-      self.hbox2.addWidget(self.cbShowIdy)
-
-      self.displayMode= PILCONFIG.get(self.name,"displaymode",DISPLAY_MNEMONIC)
-      self.lbltxtc=QtWidgets.QLabel("Display mode ")
-      self.comboDisplayMode=QtWidgets.QComboBox()
-      for txt in display_mode:
-         self.comboDisplayMode.addItem(txt)
-         self.hbox2.addWidget(self.lbltxtc)
-         self.hbox2.addWidget(self.comboDisplayMode)
-      self.comboDisplayMode.activated[str].connect(self.do_changeDisplayMode)
-      self.comboDisplayMode.setCurrentIndex(self.displayMode)
-      self.comboDisplayMode.setEnabled(False)
-
-      self.logMode= PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
-      self.lbltxtc=QtWidgets.QLabel("Log mode ")
-      self.comboLogMode=QtWidgets.QComboBox()
-      for txt in log_mode:
-         self.comboLogMode.addItem(txt)
-         self.hbox2.addWidget(self.lbltxtc)
-         self.hbox2.addWidget(self.comboLogMode)
-      self.comboLogMode.activated[str].connect(self.do_changeLogMode)
-      self.comboLogMode.setCurrentIndex(self.logMode)
-      self.comboLogMode.setEnabled(False)
-
-      self.hbox2.addStretch(1)
+      super().__init__(parent,name)
       self.scope_charpos=0
+#
+#     init local config parameters
+#
+      self.showIdy= PILCONFIG.get(self.name,"showidy",False)
+      self.displayMode= PILCONFIG.get(self.name,"displaymode",DISPLAY_MNEMONIC)
+      self.logMode=PILCONFIG.get(self.name,"logmode",LOG_INBOUND)
+#
+#     add logging 
+#
+      self.add_logging()
+#
+#     add scope config options to cascading menu
+#
+      self.cBut.add_option("Show IDY frames","showidy",T_BOOLEAN,[True,False])
+      self.cBut.add_option("Display Mode","displaymode",T_STRING,display_mode)
+      self.cBut.add_option("Log mode","logmode",T_STRING,log_mode)
+#
+#     create HP-IL devices and let the GUI object know them
+#
       self.pildevice= cls_pilscope(True,self)
       self.pildevice2= cls_pilscope(False,self)
       self.guiobject.set_pildevice(self.pildevice)
+
+      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
+#
+#  handle changes of tab configuration
+#
+   def do_tabconfig_changed(self):
+      param= self.cBut.get_changed_option_name()
+#
+#     change local config parameters
+#
+      if param=="showidy":
+         self.showIdy= PILCONFIG.get(self.name,"showidy")
+         self.pildevice.set_show_idy(self.showIdy)
+         self.pildevice2.set_show_idy(self.showIdy)
+      elif param=="displaymode":
+         self.displayMode= PILCONFIG.get(self.name,"displaymode")
+         self.pildevice.set_displayMode(self.displayMode)
+         self.pildevice2.set_displayMode(self.displayMode)
+      elif param=="logmode":
+         self.logMode= PILCONFIG.get(self.name,"logmode")
+         self.pildevice.setlocked(True)
+         self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
+         self.pildevice.setlocked(False)
+         self.pildevice2.setlocked(True)
+         self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
+         self.pildevice2.setlocked(False)
+      super().do_tabconfig_changed()
 
    def enable(self):
       super().enable()
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
-      self.cbShowIdy.setEnabled(True)
       self.pildevice.set_show_idy(self.showIdy)
       self.pildevice.set_displayMode(self.displayMode)
-      self.comboLogMode.setEnabled(True)
-      self.comboDisplayMode.setEnabled(True)
 
    def post_enable(self):
       self.parent.commthread.register(self.pildevice2,self.name)
@@ -121,25 +137,6 @@ class cls_tabscope(cls_tabtermgeneric):
 
    def disable(self):
       super().disable()
-      self.cbShowIdy.setEnabled(False)
-      self.comboLogMode.setEnabled(False)
-      self.comboDisplayMode.setEnabled(False)
-
-   def do_changeLogMode(self,text):
-      self.logMode=self.comboLogMode.findText(text)
-      PILCONFIG.put(self.name,'logmode',self.logMode)
-      self.pildevice.setlocked(True)
-      self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
-      self.pildevice.setlocked(False)
-      self.pildevice2.setlocked(True)
-      self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
-      self.pildevice2.setlocked(False)
-
-   def do_changeDisplayMode(self,text):
-      self.displayMode=self.comboDisplayMode.findText(text)
-      PILCONFIG.put(self.name,'displaymode',self.displayMode)
-      self.pildevice.set_displayMode(self.displayMode)
-      self.pildevice2.set_displayMode(self.displayMode)
 
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
@@ -157,22 +154,10 @@ class cls_tabscope(cls_tabtermgeneric):
          pass
       return
 #
-#  action: show idy frames checkbox 
-#
-   def do_show_idy(self):
-      self.cbShowIdy.setEnabled(False)
-      self.showIdy= self.cbShowIdy.isChecked()
-      PILCONFIG.put(self.name,"showidy",self.showIdy)
-      self.pildevice.set_show_idy(self.showIdy)
-      self.pildevice2.set_show_idy(self.showIdy)
-      self.cbShowIdy.setEnabled(True)
-#
 #
 #  forward character to the terminal frontend widget and do logging
 #
    def out_scope(self,s):
-#     ts= datetime.datetime.now()
-#     print("%s %d:%d:%d:%d %s" % (self.name,ts.hour, ts.minute, ts.second, ts.microsecond, s))
       l=len(s) 
       if self.scope_charpos+l>=self.guiobject.get_cols() :
          self.guiobject.out_terminal("\x0D")

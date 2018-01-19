@@ -28,6 +28,8 @@ import array
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric
 from .pildevbase import cls_pildevbase
+from .pilcharconv import CHARSET_HP71, charsets
+from .pilcore import T_STRING
 #
 # Terminal tab object classes ----------------------------------------------
 #
@@ -39,14 +41,33 @@ from .pildevbase import cls_pildevbase
 # - refactoring, keyboard input is disabled if device not active
 # 17.11.2017 jsi
 # - moved reconfigure method to cls_tabtermgeneric
+# 16.01.2018 jsi
+# - adapted to cls_tabtermgeneric, implemented cascading config menu
 
 class cls_tabterminal(cls_tabtermgeneric):
 
    def __init__(self,parent,name):
-      super().__init__(parent,name, False, True)
-      self.hbox2.addStretch(1)
+      super().__init__(parent,name)
+#
+#     init local configuration parameters
+#
+      self.charset=PILCONFIG.get(self.name,"charset",CHARSET_HP71)
+#
+#     add terminal config options to cascading menu
+#
+      self.cBut.add_option("Character set","charset",T_STRING,charsets)
+#
+#     create HP-IL device and let the GUI object know it
+#
       self.pildevice= cls_pilterminal(self.guiobject)
       self.guiobject.set_pildevice(self.pildevice)
+
+      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
+#
+#  handle changes of the character set
+#
+   def do_tabconfig_changed(self):
+      super().do_tabconfig_changed()
 #
 #     enable/disable
 #

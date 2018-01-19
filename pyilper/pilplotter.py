@@ -78,6 +78,8 @@
 # 04.01.2018 jsi
 # - reconfigure log checkbox
 # - flush log buffer
+# 16.01.2018 jsi
+# - adapt to cls_tabgeneric, implemented cascading config menus
 
 import sys
 import subprocess
@@ -92,6 +94,7 @@ from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
 from .pilpdf import cls_pdfprinter
 from .lifcore import add_path
+from .pilcore import T_STRING
 
 #
 # constants --------------------------------------------------------------
@@ -261,78 +264,49 @@ class cls_PenConfigWindow(QtWidgets.QDialog):
 #
 class cls_tabplotter(cls_tabgeneric):
 
-   LOGLEVEL=["HP-GL","HP-GL+Status","HP-GL+Status+Commands"]
-
    def __init__(self,parent,name):
       super().__init__(parent,name)
       self.name=name
-      self.logging= PILCONFIG.get(self.name,"logging",False)
-      self.loglevel= PILCONFIG.get(self.name,"loglevel",0)
+#
+#     this parameter is global
+#
       self.papersize=PILCONFIG.get("pyilper","papersize")
+#
+#     init config parameters
+#
+      self.loglevel= PILCONFIG.get(self.name,"loglevel",0)
 #
 #     Create Plotter GUI object
 #
       self.guiobject=cls_PlotterWidget(self,self.name,self.papersize)
 #
-#     Build GUI of tab
+#     add gui object to tab
 #
-      self.hbox1= QtWidgets.QHBoxLayout()
-      self.hbox1.addWidget(self.guiobject)
-      self.hbox1.setContentsMargins(10,10,10,10)
-      self.hbox2= QtWidgets.QHBoxLayout()
-      self.hbox2.addWidget(self.cbActive)
-
-      self.cbLogging= LogCheckboxWidget("Log "+self.name,self.name+".log")
-      self.hbox2.addWidget(self.cbLogging)
-
-      self.lbltxtc=QtWidgets.QLabel("Log level ")
-      self.comboLoglevel=QtWidgets.QComboBox()
-      for txt in self.LOGLEVEL:
-          self.comboLoglevel.addItem(txt)
-      self.hbox2.addWidget(self.lbltxtc)
-      self.hbox2.addWidget(self.comboLoglevel)
-
-      self.hbox2.addStretch(1)
-
-      self.hbox2.setContentsMargins(10,3,10,3)
-      self.vbox= QtWidgets.QVBoxLayout()
-      self.vbox.addLayout(self.hbox1)
-      self.vbox.addLayout(self.hbox2)
-      self.setLayout(self.vbox)
-
-      self.cbLogging.setChecked(self.logging)
-      self.cbLogging.setEnabled(False)
-      self.cbLogging.stateChanged.connect(self.do_cbLogging)
-
-      self.comboLoglevel.activated[str].connect(self.do_changeLoglevel)
-      self.comboLoglevel.setCurrentIndex(self.loglevel)
-      self.comboLoglevel.setEnabled(False)
+      self.add_guiobject(self.guiobject)
+#
+#     add cascading config menu
+#
+      self.add_configwidget()
+#
+#     add logging control widget
+#
+      self.add_logging()
+#
+#     add local config options to cascading config menu
+#
+      self.cBut.add_option("Log level","loglevel",T_STRING, ["HP-GL","HP-GL+Status","HP-GL+Status+Commands"])
 #
 #     create IL-Interface object, notify plotter processor object
 #
       self.pildevice= cls_pilplotter(self.guiobject,self.papersize)
       self.guiobject.set_pildevice(self.pildevice)
+      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
-#     configure
+#  handle changes of tab config options
 #
-      self.reconfigure()
-
-
-   def do_cbLogging(self):
-      self.cbLogging.setEnabled(False)
-      self.logging= self.cbLogging.isChecked()
-      self.pildevice.setlocked(True)
-      if self.logging:
-         self.cbLogging.logOpen()
-      else:
-         self.cbLogging.logClose()
-      PILCONFIG.put(self.name,"logging",self.logging)
-      self.pildevice.setlocked(False)
-      self.cbLogging.setEnabled(True)
-
-   def do_changeLoglevel(self,text):
-      self.loglevel=self.comboLoglevel.currentIndex()
-      PILCONFIG.put(self.name,'loglevel',self.loglevel)
+   def do_tabconfig_changed(self):
+      self.loglevel= PILCONFIG.get(self.name,"loglevel")
+      super().do_tabconfig_changed()
 #
 #  enable pildevice and gui object
 #
@@ -340,10 +314,6 @@ class cls_tabplotter(cls_tabgeneric):
       super().enable()
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(self.active)
-      self.cbLogging.setEnabled(True)
-      self.comboLoglevel.setEnabled(True)
-      if self.logging:
-         self.cbLogging.logOpen()
       self.pildevice.enable()
       self.guiobject.enable()
 #
@@ -352,17 +322,7 @@ class cls_tabplotter(cls_tabgeneric):
    def disable(self):
       self.pildevice.disable()
       self.guiobject.disable()
-      if self.logging:
-         self.cbLogging.logClose()
-      self.cbLogging.setEnabled(False)
-      self.comboLoglevel.setEnabled(False)
       super().disable()
-#
-#  active/inactive: enable/disable GUI controls
-#
-   def toggle_active(self):
-      self.guiobject.toggle_active()
-
 #
 #  becomes visible, refresh content, activate update and blink
 #
@@ -376,11 +336,12 @@ class cls_tabplotter(cls_tabgeneric):
       self.guiobject.becomes_invisible()
       return
 #
-#  reconfigure, only logging object needs reconfigure
+#  toggle active/inactive
 #
-   def reconfigure(self):
-      self.cbLogging.reconfigure()
-
+   def toggle_active(self):
+      super().toggle_active()
+      self.guiobject.toggle_active()
+      return
 #
 # Custom class LED widget -------------------------------------------------
 #
