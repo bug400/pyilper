@@ -80,6 +80,9 @@
 # - flush log buffer
 # 16.01.2018 jsi
 # - adapt to cls_tabgeneric, implemented cascading config menus
+# 20.01.2018 jsi
+# - removed the external plot view window. Since the plotter tab can be
+#   undocked now it is no needed any more
 
 import sys
 import subprocess
@@ -701,19 +704,13 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
 #     push buttons "Config" - starts configuration window
 #
-      self.configButton= QtWidgets.QPushButton("Config")
+      self.configButton= QtWidgets.QPushButton("Pens")
       self.configButton.setEnabled(False)
       self.vbox.addWidget(self.configButton)
       self.configButton.clicked.connect(self.do_config)
 #
-#     push buttons "View" - opens external view window
-#
-      self.viewButton= QtWidgets.QPushButton("View")
-      self.viewButton.setEnabled(False)
-      self.vbox.addWidget(self.viewButton)
-      self.viewButton.clicked.connect(self.do_view)
-#
-#     push buttons "Enter" - digitize: this button is only enabled in digitizing mode
+#     push buttons "Enter" - digitize: this button is only enabled in 
+#     digitizing mode
 #
       self.digiButton= QtWidgets.QPushButton("Enter")
       self.digiButton.setEnabled(False)
@@ -863,7 +860,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       if self.parent.active:
          self.configButton.setEnabled(True)
          self.digiButton.setEnabled(self.digibutton_state)
-         self.viewButton.setEnabled(True)
          self.p1p2Button.setEnabled(True)
          self.clearButton.setEnabled(True)
          self.printButton.setEnabled(True)
@@ -872,7 +868,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
          self.configButton.setEnabled(False)
          self.digibutton_state= self.digiButton.isEnabled()
          self.digiButton.setEnabled(False)
-         self.viewButton.setEnabled(False)
          self.p1p2Button.setEnabled(False)
          self.clearButton.setEnabled(False)
          self.printButton.setEnabled(False)
@@ -893,19 +888,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
          self.p1y=279
          self.p2x=10250
          self.p2y=7479
-#
-#     action: show external view window, restore size and position
-#
-   def do_view(self):
-      viewposition=PILCONFIG.get(self.name,"viewposition",[10,10,self.width,self.height])
-      if self.viewwin is None:
-         self.viewwin= cls_plotViewWindow(self,self.aspect_ratio)
-      if self.digi_mode != MODE_NONE:
-         self.viewwin.plotview.digi_start()
-      self.viewwin.show()
-      self.viewwin.move(QtCore.QPoint(viewposition[0],viewposition[1]))
-      self.viewwin.resize(viewposition[2],viewposition[3])
-      self.viewwin.raise_()
 #
 #     action: print pdf file
 #
@@ -1246,44 +1228,8 @@ class cls_PlotterWidget(QtWidgets.QWidget):
             self.parent.cbLogging.logWrite(item[2])
             self.parent.cbLogging.logFlush()
      
-#       
-# external plot view window class ------------------------------------------------------
 #
-class cls_plotViewWindow(QtWidgets.QDialog):
-
-   def __init__(self,parent,aspect_ratio):
-      super().__init__()
-      self.parent=parent
-      self.aspect_ratio= aspect_ratio
-      self.setWindowTitle(self.parent.name+" view")
-      self.vbox=QtWidgets.QVBoxLayout()
-      self.plotview= cls_mygraphicsview(self.parent,self.aspect_ratio)
-      self.vbox.addWidget(self.plotview)
-      self.setLayout(self.vbox)
-
-      self.plotview.setScene(self.parent.plotscene)
-#     self.plotview.setSceneRect(self.parent.plotscene.sceneRect())
-#     self.plotview.fitInView(self.parent.plotscene.sceneRect(),QtCore.Qt.KeepAspectRatio)
-#     self.plotview.scale(self.width/self.parent.width,self.height/self.parent.height)
-#     self.plotview.setSceneRect(self.parent.plotscene.sceneRect())
-#     self.plotview.fitInView(self.parent.plotscene.sceneRect(),QtCore.Qt.KeepAspectRatio)
-#     self.plotview.ensureVisible(0,0,self.width,self.height,0,0)
-
-#
-#  store geometry and position whenever changed
-#
-   def resizeEvent(self,event):
-      self.plotview.fitInView(self.parent.plotscene.sceneRect(),QtCore.Qt.KeepAspectRatio)
-      self.update_position()
-
-   def moveEvent(self,event):
-      self.update_position()
-
-   def update_position(self):
-      PILCONFIG.put(self.parent.name,"viewposition",[self.pos().x(),self.pos().y(),self.plotview.width(),self.plotview.height()])
-   
-#
-# status window class -------------------------------------------------------------
+# status window class --------------------------------------------------------
 #
 # Display status byte, error code, error message and illegal HP-GL command
 # The window may remain open and the content of the window will be updated

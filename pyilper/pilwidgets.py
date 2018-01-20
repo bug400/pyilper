@@ -174,6 +174,8 @@
 #   device tab/window configuration
 # - removed configuration of terminal width and terminal color scheme
 #   from cls_PilConfigWindow
+# 20.01.2018 jsi:
+# - scrollupbuffersize is not a local parameter
 #
 import os
 import glob
@@ -705,6 +707,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
       self.terminalwidth= PILCONFIG.get(self.name,"terminalwidth",80)
       self.colorscheme= PILCONFIG.get(self.name,"colorscheme",COLOR_SCHEME_WHITE)
+      self.scrollupbuffersize=PILCONFIG.get(self.name,"scrollupbuffersize",1000)
 #
 #     Build GUI 
 #
@@ -722,6 +725,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
       self.cBut.add_option("Terminal width","terminalwidth",T_INTEGER,[80,120])
       self.cBut.add_option("Color scheme","colorscheme",T_STRING,color_scheme_names)
+      self.cBut.add_option("Scrollup buffer","scrollupbuffersize",T_INTEGER,[1000,2000,5000,10000])
 
       self.statuswidget=QtWidgets.QLabel("")
       self.statuswidget.setText("Display size :")
@@ -734,6 +738,8 @@ class cls_tabtermgeneric(cls_tabgeneric):
       if param=="terminalwidth":
          self.guiobject.reconfigure()
       elif param=="colorscheme":
+         self.guiobject.reconfigure()
+      elif param=="scrollupbuffersize":
          self.guiobject.reconfigure()
       super().do_tabconfig_changed()
 #
@@ -1006,7 +1012,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
       self.__serverport__= PILCONFIG.get(self.__name__,"serverport")
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
-      self.__scrollupbuffersize__= PILCONFIG.get(self.__name__,"scrollupbuffersize")
       self.__termcharsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
       self.__dircharsize__=PILCONFIG.get(self.__name__,"directorycharsize")
       self.__papersize__=PILCONFIG.get(self.__name__,"papersize")
@@ -1196,20 +1201,13 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gboxt.setTitle("Terminal Settings")
       self.gridt= QtWidgets.QGridLayout()
       self.gridt.setSpacing(3)
-      self.gridt.addWidget(QtWidgets.QLabel("Scroll up buffer size"),1,0)
-      self.gridt.addWidget(QtWidgets.QLabel("Font Size"),2,0)
-
-      self.spinScrollBufferSize=QtWidgets.QSpinBox()
-      self.spinScrollBufferSize.setMinimum(TERMINAL_MINIMUM_ROWS)
-      self.spinScrollBufferSize.setMaximum(10000)
-      self.spinScrollBufferSize.setValue(self.__scrollupbuffersize__)
-      self.gridt.addWidget(self.spinScrollBufferSize,1,1)
+      self.gridt.addWidget(QtWidgets.QLabel("Font Size"),0,0)
 
       self.spinTermCharsize=QtWidgets.QSpinBox()
       self.spinTermCharsize.setMinimum(15)
       self.spinTermCharsize.setMaximum(20)
       self.spinTermCharsize.setValue(self.__termcharsize__)
-      self.gridt.addWidget(self.spinTermCharsize,2,1)
+      self.gridt.addWidget(self.spinTermCharsize,0,1)
 
       self.gboxt.setLayout(self.gridt)
       self.vbox2.addWidget(self.gboxt)
@@ -1257,12 +1255,12 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridps=QtWidgets.QGridLayout()
       self.gridps.setSpacing(3)
 
-      self.gridps.addWidget(QtWidgets.QLabel("Papersize:"),1,0)
+      self.gridps.addWidget(QtWidgets.QLabel("Papersize:"),0,0)
       self.combops=QtWidgets.QComboBox()
       self.combops.addItem("A4")
       self.combops.addItem("Letter")
       self.combops.setCurrentIndex(self.__papersize__)
-      self.gridps.addWidget(self.combops,1,1)
+      self.gridps.addWidget(self.combops,0,1)
       self.gboxps.setLayout(self.gridps)
       self.vbox2.addWidget(self.gboxps)
       self.vbox2.addStretch(1)
@@ -1419,7 +1417,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
       self.__needs_restart__= False
       self.__needs_restart__ |= self.check_param("papersize",self.combops.currentIndex())
-      self.__needs_restart__ |= self.check_param("scrollupbuffersize", self.spinScrollBufferSize.value())
       self.__needs_restart__ |= self.check_param("lifutilspath",self.lbllifpath.text())
 #
 #     some parameters need a restart of the application, inform user
@@ -1438,7 +1435,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
 #     store parameters
 #
-      PILCONFIG.put(self.__name__,"scrollupbuffersize", self.spinScrollBufferSize.value())
       PILCONFIG.put(self.__name__,"terminalcharsize",self.spinTermCharsize.value())
       PILCONFIG.put(self.__name__,"directorycharsize",self.spinDirCharsize.value())
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())

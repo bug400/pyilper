@@ -127,6 +127,10 @@
 # 28.12.2017 jsi:
 # - fix crash in getSelection if self.move_row/self.move_col is None
 # - introduced autoscroll when moving selection
+# 16.01.2018 jsi:
+# - colorscheme and display width are now local parameters
+# 20.01.2018 jsi
+# - scrollupbuffersize is now a local parameter and does not require a restart
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -485,7 +489,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._cols=PILCONFIG.get(self._name,"terminalwidth")
         self._color_scheme_index=PILCONFIG.get(self._name,"colorscheme")
         self._font_size=PILCONFIG.get("pyilper","terminalcharsize")
-        self._scrollupbuffersize=PILCONFIG.get("pyilper","scrollupbuffersize")
+        self._scrollupbuffersize=PILCONFIG.get(self._name,"scrollupbuffersize")
         if self._scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
            self._scrollupbuffersize= TERMINAL_MINIMUM_ROWS
 
@@ -989,12 +993,16 @@ class HPTerminal:
         self.UpdateTimer.setSingleShot(True)
         self.UpdateTimer.timeout.connect(self.process_queue)
 #
-#  reconfigure: changing the number of columns results in a hard reset of the screen
+#  reconfigure: changing the number of columns or the scrollup buffersize 
+#  result in a hard reset of the screen
 #
     def reconfigure(self):
-       self.h = PILCONFIG.get("pyilper","scrollupbuffersize")
-       if self.h < TERMINAL_MINIMUM_ROWS:
-          self.h= TERMINAL_MINIMUM_ROWS
+       h = PILCONFIG.get(self.name,"scrollupbuffersize")
+       if h < TERMINAL_MINIMUM_ROWS:
+          h= TERMINAL_MINIMUM_ROWS
+       if h != self.h:
+          self.h=h
+          self.reset_hard()
        w=PILCONFIG.get(self.name,"terminalwidth")
        if w != self.w:
           self.w= w
