@@ -59,6 +59,8 @@
 # - flush log buffer 
 # 16.01.2018 jsi
 # - adapt to cls_tabgeneric, implemented cascading config menu
+# 20.01.2018 jsi
+# - the pixel size is now a dual parameter
 #
 import copy
 import queue
@@ -69,9 +71,9 @@ from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT
 from .pilconfig import PILCONFIG
 from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
 from .pildevbase import cls_pildevbase
-from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
+from .pilwidgets import cls_tabgeneric, LogCheckboxWidget, T_INTEGER, O_DEFAULT
 from .pilpdf import cls_pdfprinter
-from .pilcore import T_INTEGER, HP82162A_LINEBUFFERSIZE
+from .pilcore import HP82162A_LINEBUFFERSIZE
 
 #
 # constants --------------------------------------------------------------
@@ -451,6 +453,10 @@ class cls_tabhp82162a(cls_tabgeneric):
 #
       self.papersize=PILCONFIG.get("pyilper","papersize")
 #
+#     init local parameter
+#
+      self.pixelsize=PILCONFIG.get(self.name,"hp82162a_pixelsize",-1)
+#
 #     create Printer GUI object
 #
       self.guiobject=cls_HP82162AWidget(self,self.name,self.papersize)
@@ -462,6 +468,10 @@ class cls_tabhp82162a(cls_tabgeneric):
 #     add cascading config menu
 #
       self.add_configwidget()
+#
+#     add local config option
+#
+      self.cBut.add_option("Pixel size","hp82162a_pixelsize",T_INTEGER,[O_DEFAULT,1,2])
 #
 #     add logging control widget
 #
@@ -534,7 +544,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     configuration
 #
       self.pdfpixelsize=3
-      self.pixelsize=PILCONFIG.get("pyilper","hp82162a_pixelsize")
+      self.pixelsize=PILCONFIG.get_dual(self.name,"hp82162a_pixelsize")
       self.linebuffersize=HP82162A_LINEBUFFERSIZE
       self.printer_modeswitch= PILCONFIG.get(self.name,"modeswitch",MODESWITCH_MAN)
 #
@@ -927,7 +937,7 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #     configure/reconfigure the printview widget, scene and its content
 #
    def reconfigure(self):
-      tmp=PILCONFIG.get("pyilper","hp82162a_pixelsize")
+      tmp=PILCONFIG.get_dual(self.name,"hp82162a_pixelsize")
 #
 #     re/configure the printview widget
 #

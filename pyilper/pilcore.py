@@ -84,6 +84,8 @@
 # 17.01.2018 jsi
 # - added color scheme constants
 # - changed version to 1.7.0 because of major enhancements of the GUI
+# 21.01.2018 jsi
+# - moved cls_config_tool_button and color scheme constants to pilwidget.py
 #
 import platform
 #
@@ -94,14 +96,6 @@ import platform
 PRODUCTION= False     # Production/Development Version
 VERSION="1.7.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
-
-#
-# Config type parameters for cls_config_tool_button
-#
-T_BOOLEAN=1
-T_STRING=2
-T_INTEGER=3
-
 #
 # Communication modes and classes
 #
@@ -136,11 +130,6 @@ CURSOR_BLINK=500                # 500 ms cursor blink rate
 CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
 AUTOSCROLL_RATE=100             # 500 ms cursor blink rate
 TERMINAL_MINIMUM_ROWS=24        # cant get beyond that
-COLOR_SCHEME_WHITE=0
-COLOR_SCHEME_GREEN=1
-COLOR_SCHEME_AMBER=2
-color_scheme_names= ["white","amber","green"]
-
 #
 # predefined baudrates
 # the list controlles the baudrates that are supported by the application:
@@ -165,13 +154,6 @@ HP82162A_LINEBUFFERSIZE=2000
 if not PRODUCTION:
    VERSION=VERSION+" (Development)"
    CONFIG_VERSION= CONFIG_VERSION+"d"
-#
-# Min, Max Values for font sizes. Note: MIN value means: automatic!!
-#
-MIN_TERMCHAR_SIZE=14
-MAX_TERMCHAR_SIZE=20
-MIN_DIRCHAR_SIZE=12
-MAX_DIRCHAR_SIZE=18
 #
 # Tab types
 #

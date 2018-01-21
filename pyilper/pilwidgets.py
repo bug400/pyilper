@@ -176,6 +176,9 @@
 #   from cls_PilConfigWindow
 # 20.01.2018 jsi:
 # - scrollupbuffersize is not a local parameter
+# - terminalcharsize is now dual config parameter
+# - cls_config_tool_button can now handle the "Default" option (only for
+#   T_INTEGER)
 #
 import os
 import glob
@@ -205,6 +208,20 @@ from .pilconfig import PILCONFIG
 from .pilcore import *
 if isWINDOWS():
    import winreg
+#
+# constants for color schemes
+#
+COLOR_SCHEME_WHITE=0
+COLOR_SCHEME_GREEN=1
+COLOR_SCHEME_AMBER=2
+color_scheme_names= ["white","amber","green"]
+#
+# constants for cls_config_tool_button
+#
+T_BOOLEAN=1
+T_STRING=2
+T_INTEGER=3
+O_DEFAULT= -1
 
 #
 # class for cascading config menus
@@ -239,7 +256,10 @@ class cls_config_tool_button(QtWidgets.QToolButton):
             else:
                choice="Off"
          if option_type== T_INTEGER:
-            choice= str(choice)
+            if choice== -1:
+               choice="Default"
+            else:
+               choice= str(choice)
          action= submenu.addAction(choice)
          option_actions.append(action)
          action.triggered.connect(functools.partial(self. do_choice_submenu,n,k))
@@ -265,7 +285,6 @@ class cls_config_tool_button(QtWidgets.QToolButton):
       v=self.options[n][2][k]
       option_type=self.options[n][1]
       
-#     self.do_enable_disable(n,v)
       self.config_changed=n
 #     store parameter value
       if option_type== T_INTEGER:
@@ -708,6 +727,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.terminalwidth= PILCONFIG.get(self.name,"terminalwidth",80)
       self.colorscheme= PILCONFIG.get(self.name,"colorscheme",COLOR_SCHEME_WHITE)
       self.scrollupbuffersize=PILCONFIG.get(self.name,"scrollupbuffersize",1000)
+      self.termcharsize=PILCONFIG.get(self.name,"terminalcharsize",-1)
 #
 #     Build GUI 
 #
@@ -725,6 +745,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
       self.cBut.add_option("Terminal width","terminalwidth",T_INTEGER,[80,120])
       self.cBut.add_option("Color scheme","colorscheme",T_STRING,color_scheme_names)
+      self.cBut.add_option("Font size","terminalcharsize",T_INTEGER,[O_DEFAULT,15,16,17,18,19,20])
       self.cBut.add_option("Scrollup buffer","scrollupbuffersize",T_INTEGER,[1000,2000,5000,10000])
 
       self.statuswidget=QtWidgets.QLabel("")
@@ -740,6 +761,8 @@ class cls_tabtermgeneric(cls_tabgeneric):
       elif param=="colorscheme":
          self.guiobject.reconfigure()
       elif param=="scrollupbuffersize":
+         self.guiobject.reconfigure()
+      elif param=="terminalcharsize":
          self.guiobject.reconfigure()
       super().do_tabconfig_changed()
 #

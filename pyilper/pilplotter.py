@@ -94,10 +94,9 @@ from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version, isWIND
 from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PENCONFIG
 from .pildevbase import cls_pildevbase
-from .pilwidgets import cls_tabgeneric, LogCheckboxWidget
+from .pilwidgets import cls_tabgeneric, LogCheckboxWidget, T_STRING
 from .pilpdf import cls_pdfprinter
 from .lifcore import add_path
-from .pilcore import T_STRING
 
 #
 # constants --------------------------------------------------------------

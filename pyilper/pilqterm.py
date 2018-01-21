@@ -142,7 +142,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, MIN_TERMCHAR_SIZE, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE
 from .pilconfig import PILCONFIG
 
 CURSOR_OFF=0
@@ -488,7 +488,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
         self._cols=PILCONFIG.get(self._name,"terminalwidth")
         self._color_scheme_index=PILCONFIG.get(self._name,"colorscheme")
-        self._font_size=PILCONFIG.get("pyilper","terminalcharsize")
+        self._font_size=PILCONFIG.get_dual(self._name,"terminalcharsize")
         self._scrollupbuffersize=PILCONFIG.get(self._name,"scrollupbuffersize")
         if self._scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
            self._scrollupbuffersize= TERMINAL_MINIMUM_ROWS
@@ -496,8 +496,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #       determine font metrics and character size in pixel
 #
-        if self._font_size > MIN_TERMCHAR_SIZE:
-           self._font.setPixelSize(self._font_size)
+        self._font.setPixelSize(self._font_size)
         metrics= QtGui.QFontMetrics(self._font)
         self._char_width=metrics.maxWidth()
         self._char_height=metrics.height()

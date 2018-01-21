@@ -24,10 +24,9 @@
 #
 from .pilconfig import PILCONFIG
 from .pilcharconv import charconv
-from .pilwidgets import cls_tabtermgeneric
+from .pilwidgets import cls_tabtermgeneric, T_STRING
 from .pildevbase import cls_pildevbase
 from .pilcharconv import CHARSET_HP71, charsets
-from .pilcore import T_STRING
 #
 # Generic printer tab classes -------------------------------------------------
 #

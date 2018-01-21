@@ -25,9 +25,8 @@
 
 from PyQt5 import  QtWidgets
 from .pilconfig import PILCONFIG
-from .pilwidgets import cls_tabtermgeneric
+from .pilwidgets import cls_tabtermgeneric, T_BOOLEAN, T_STRING,O_DEFAULT
 from .pildevbase import cls_pildevbase
-from .pilcore import *
 
 #
 # Scope tab object classes ----------------------------------------------------

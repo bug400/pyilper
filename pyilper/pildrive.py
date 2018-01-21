@@ -333,6 +333,8 @@
 # - refactoring: adapt cls_tabdrive to cls_tabgeneric, create new 
 #   cls_DriveWidget class. Remove tool menu button in favour of push buttons
 # - implemented cascading configuration menu
+# 18.01.2018 jsi
+# - direcorycharsize is now a dual parameter
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -340,11 +342,10 @@ import threading
 import os
 from .pilcore import *
 from .pildevbase import cls_pildevbase
-from .pilwidgets import cls_tabgeneric
+from .pilwidgets import cls_tabgeneric, T_STRING, T_INTEGER, O_DEFAULT
 from .pilconfig import PilConfigError, PILCONFIG
 from .pilcharconv import CHARSET_HP71, charsets
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt, putLifInt
-from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
 from .pilpdf import cls_pdfprinter,cls_textItem
 
@@ -357,6 +358,7 @@ class cls_tabdrive(cls_tabgeneric):
 #     Set default values
 #
       self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
+      self.terminalcharsize= PILCONFIG.get(self.name,"directorycharsize",-1)
 #
 #     create drive GUI object
 #
@@ -370,6 +372,7 @@ class cls_tabdrive(cls_tabgeneric):
 #
       self.add_configwidget()
       self.cBut.add_option("Character set","charset",T_STRING,charsets)
+      self.cBut.add_option("Font size","directorycharsize",T_INTEGER,[O_DEFAULT,13,14,15,16,17,18])
 #
 #     create HPIL-device, notify object to drive gui object
 #
@@ -382,6 +385,12 @@ class cls_tabdrive(cls_tabgeneric):
    def do_tabconfig_changed(self):
       self.guiobject.reconfigure()
       super().do_tabconfig_changed()
+#
+#  reconfigure
+#
+   def reconfigure(self):
+      self.guiobject.reconfigure()
+      super().reconfigure()
 #
 #     enable/disable
 #
@@ -998,7 +1007,7 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 #   reconfigure the font size of the directory list
 #
     def reconfigure(self):
-        self.__font_size__= PILCONFIG.get("pyilper","directorycharsize")
+        self.__font_size__= PILCONFIG.get_dual(self.name,"directorycharsize")
         self.__font__.setPixelSize(self.__font_size__)
         metrics= QtGui.QFontMetrics(self.__font__)
         self.__table__.verticalHeader().setDefaultSectionSize(metrics.height()+1)

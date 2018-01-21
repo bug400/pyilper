@@ -29,6 +29,8 @@
 # - added filename parameter to cls_userconfig
 # 17.08.2017 jsi:
 # - assign "" to self.add_msg if parameter is none in PilConfigError
+# 20.01.2018 jsi
+# - added get_dual method
 #
 from .userconfig import cls_userconfig, ConfigError
 
@@ -76,6 +78,14 @@ class cls_pilconfig:
          else:
             self.__config__[pname]= default
             p=default
+      return(p)
+#
+#  Get a key, first a local key, if the value is -1 then get the global key
+#
+   def get_dual(self,name,param):
+      p = self.get(name,param)
+      if p == -1:
+         p = self.get("pyilper",param)
       return(p)
 #
 #  Put a key into the configuration dictrionary
