@@ -335,6 +335,8 @@
 # - implemented cascading configuration menu
 # 18.01.2018 jsi
 # - direcorycharsize is now a dual parameter
+# 24.01.2018 jsi
+# - fixed missing lifcore import
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -346,6 +348,7 @@ from .pilwidgets import cls_tabgeneric, T_STRING, T_INTEGER, O_DEFAULT
 from .pilconfig import PilConfigError, PILCONFIG
 from .pilcharconv import CHARSET_HP71, charsets
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt, putLifInt
+from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
 from .pilpdf import cls_pdfprinter,cls_textItem
 
