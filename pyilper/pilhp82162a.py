@@ -61,6 +61,8 @@
 # - adapt to cls_tabgeneric, implemented cascading config menu
 # 20.01.2018 jsi
 # - the pixel size is now a dual parameter
+# 28.01.2018 jsi
+# - set AutoDefault property of buttons to false
 #
 import copy
 import queue
@@ -597,6 +599,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       self.clearButton= QtWidgets.QPushButton("Clear")
       self.clearButton.setEnabled(False)
+      self.clearButton.setAutoDefault(False)
       self.vbox.addWidget(self.clearButton)
       self.clearButton.clicked.connect(self.do_clear)
 #
@@ -604,6 +607,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       self.printButton= QtWidgets.QPushButton("Print")
       self.printButton.setEnabled(False)
+      self.printButton.setAutoDefault(False)
       self.vbox.addWidget(self.printButton)
       self.printButton.pressed.connect(self.do_print_pressed)
       self.printButton.released.connect(self.do_print_released)
@@ -612,6 +616,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       self.advanceButton= QtWidgets.QPushButton("Advance")
       self.advanceButton.setEnabled(False)
+      self.advanceButton.setAutoDefault(False)
       self.vbox.addWidget(self.advanceButton)
       self.advanceButton.pressed.connect(self.do_advance_pressed)
       self.advanceButton.released.connect(self.do_advance_released)
@@ -620,6 +625,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       self.pdfButton= QtWidgets.QPushButton("PDF")
       self.pdfButton.setEnabled(False)
+      self.pdfButton.setAutoDefault(False)
       self.vbox.addWidget(self.pdfButton)
       self.pdfButton.clicked.connect(self.do_pdf)
 

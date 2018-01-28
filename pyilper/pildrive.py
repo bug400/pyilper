@@ -339,6 +339,7 @@
 # - fixed missing lifcore import
 # 28.01.2018 jsi
 # - fixed errors in referencing gui object
+# - set pushbutton autodefault property false
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -480,6 +481,7 @@ class cls_DriveWidget(QtWidgets.QWidget):
       self.lbltxt1=QtWidgets.QLabel("LIF Image File: ")
       self.lblFilename=QtWidgets.QLabel()
       self.butFilename=QtWidgets.QPushButton()
+      self.butFilename.setAutoDefault(False)
       self.butFilename.setText("change")
       self.hbox1.addWidget(self.lbltxt1)
       self.hbox1.addWidget(self.lblFilename)
@@ -514,15 +516,19 @@ class cls_DriveWidget(QtWidgets.QWidget):
 #
       self.butPack= QtWidgets.QPushButton("Pack")
       self.butPack.setEnabled(False)
+      self.butPack.setAutoDefault(False)
       self.vbox3.addWidget(self.butPack)
       self.butImport= QtWidgets.QPushButton("Import")
       self.butImport.setEnabled(False)
+      self.butImport.setAutoDefault(False)
       self.vbox3.addWidget(self.butImport)
       self.butLabel= QtWidgets.QPushButton("Label")
       self.butLabel.setEnabled(False)
+      self.butLabel.setAutoDefault(False)
       self.vbox3.addWidget(self.butLabel)
       self.butDirList= QtWidgets.QPushButton("Directory Listing")
       self.butDirList.setEnabled(False)
+      self.butDirList.setAutoDefault(False)
       self.vbox3.addWidget(self.butDirList)
       self.vbox3.addStretch(1)
 #

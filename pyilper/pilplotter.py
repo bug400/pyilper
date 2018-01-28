@@ -86,6 +86,7 @@
 # 29.01.2018 jsi
 # - removed external view references
 # - clear digitize mode when "IN" received
+# - set pushbutton autodefault property to false
 
 import sys
 import subprocess
@@ -707,6 +708,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
       self.configButton= QtWidgets.QPushButton("Pens")
       self.configButton.setEnabled(False)
+      self.configButton.setAutoDefault(False)
       self.vbox.addWidget(self.configButton)
       self.configButton.clicked.connect(self.do_config)
 #
@@ -715,6 +717,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
       self.digiButton= QtWidgets.QPushButton("Enter")
       self.digiButton.setEnabled(False)
+      self.digiButton.setAutoDefault(False)
       self.vbox.addWidget(self.digiButton)
       self.digiButton.clicked.connect(self.do_enter)
       self.digibutton_state= self.digiButton.isEnabled()
@@ -723,6 +726,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
       self.p1p2Button= QtWidgets.QPushButton("P1/P2")
       self.p1p2Button.setEnabled(False)
+      self.p1p2Button.setAutoDefault(False)
       self.vbox.addWidget(self.p1p2Button)
       self.p1p2Button.clicked.connect(self.do_p1p2)
 #
@@ -731,6 +735,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
       self.clearButton= QtWidgets.QPushButton("Clear")
       self.clearButton.setEnabled(False)
+      self.clearButton.setAutoDefault(False)
       self.vbox.addWidget(self.clearButton)
       self.clearButton.clicked.connect(self.do_clear)
 #
@@ -738,6 +743,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
       self.printButton= QtWidgets.QPushButton("PDF")
       self.printButton.setEnabled(False)
+      self.printButton.setAutoDefault(False)
       self.vbox.addWidget(self.printButton)
       self.printButton.clicked.connect(self.do_print)
 #
@@ -745,6 +751,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #
       self.statusButton= QtWidgets.QPushButton("Status")
       self.statusButton.setEnabled(False)
+      self.statusButton.setAutoDefault(False)
       self.vbox.addWidget(self.statusButton)
       self.statusButton.clicked.connect(self.do_status)
 #
