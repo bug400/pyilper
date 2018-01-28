@@ -42,6 +42,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - moved reconfigure method to cls_tabtermgeneric
 # 16.01.2018 jsi
 # - adapted to cls_tabtermgeneric, implemented cascading config menu
+# 28.01.2018 jsi
+# - fixed charset configuration
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -60,12 +62,22 @@ class cls_tabterminal(cls_tabtermgeneric):
 #
       self.pildevice= cls_pilterminal(self.guiobject)
       self.guiobject.set_pildevice(self.pildevice)
+      self.guiobject.set_charset(self.charset)
 
       self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
 #  handle changes of the character set
 #
    def do_tabconfig_changed(self):
+      param= self.cBut.get_changed_option_name()
+#
+#     change local config parameters
+#
+      if param=="charset":
+         self.charset= PILCONFIG.get(self.name,"charset")
+         self.guiobject.set_charset(self.charset)
+
+
       super().do_tabconfig_changed()
 #
 #     enable/disable

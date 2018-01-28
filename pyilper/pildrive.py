@@ -337,6 +337,8 @@
 # - direcorycharsize is now a dual parameter
 # 24.01.2018 jsi
 # - fixed missing lifcore import
+# 28.01.2018 jsi
+# - fixed errors in referencing gui object
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -596,7 +598,7 @@ class cls_DriveWidget(QtWidgets.QWidget):
          try:
             PILCONFIG.save()
          except PilConfigError as e:
-            reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
@@ -666,7 +668,7 @@ class cls_DriveWidget(QtWidgets.QWidget):
       try:
          PILCONFIG.save()
       except PilConfigError as e:
-         reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
       if self.pildevice is not None:
          self.pildevice.setlocked(True)
@@ -696,12 +698,12 @@ class cls_DriveWidget(QtWidgets.QWidget):
          PILCONFIG.put(self.name,'filename',self.filename)
          self.lblFilename.setText(self.filename)
          self.lifdir.clear()
-         reply=QtWidgets.QMessageBox.warning(self.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.warning(self.parent.parent.ui,'Warning',"Drive type changed. You have to reopen the LIF image file",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       did,aid= self.deviceinfo[self.drivetype]
       try:
          PILCONFIG.save()
       except PilConfigError as e:
-         reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       if self.pildevice is not None:
          self.pildevice.setlocked(True)
          self.pildevice.setdevice(did,aid)
@@ -810,11 +812,11 @@ class cls_DriveWidget(QtWidgets.QWidget):
             return [True, def_tracks, def_surfaces, def_blocks]
       elif status==2:
          if not quiet:
-            reply=QtWidgets.QMessageBox.critical(self.parent.ui,'Error',"File does not contain a LIF type 1 medium.",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',"File does not contain a LIF type 1 medium.",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return [False, def_tracks, def_surfaces, def_blocks]
       elif status==3:
          if not quiet:
-            reply=QtWidgets.QMessageBox.warning(self.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout of current drive type.",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+            reply=QtWidgets.QMessageBox.warning(self.parent.parent.ui,'Warning',"File does not contain a LIF type 1 medium with valid layout information. Using default layout of current drive type.",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return [True, def_tracks, def_surfaces, def_blocks]
 #
 # get media info from lif header
@@ -1158,9 +1160,11 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 # - improved os detection
 # 08.07.2016 jsi
 # - refactoring: windows platform flag is constructor parameter now
-#
 # 19.09.2017 jsi
 # - duplicate definition of getLifInt and putLifInt removed
+# 28.01.2017 jsi
+# - removed self.__islocked__ in cls_pildrive because it hides the
+#   variable of cls_pildevbase
 
 
 
@@ -1197,7 +1201,6 @@ class cls_pildrive(cls_pildevbase):
       self.__buf1__= bytearray(256) # buffer 1
       self.__hdiscfile__= ""        # disc file
       self.__isactive__= False    # device active in loop
-      self.__islocked__= False    # locked device
       self.__access_lock__= threading.Lock() 
       self.__timestamp__= time.time() # last time of beeing talker
 
@@ -1396,6 +1399,7 @@ class cls_pildrive(cls_pildevbase):
 #
    def __format_disc__(self):
       b= bytearray(256)
+#     print("Format disk")
       for i in range (0, len(b)):
                b[i]= 0xFF
 

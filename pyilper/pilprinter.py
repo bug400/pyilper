@@ -39,6 +39,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - flush log after a line feed was encountered
 # 16.01.2018 jsi
 # - adapted to cls_tabtermgeneric, implemented cascading config menu
+# 28.01.2018 jsi
+# - fixed charset configuration
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
@@ -61,12 +63,21 @@ class cls_tabprinter(cls_tabtermgeneric):
 #
       self.pildevice= cls_pilprinter(self,self.guiobject)
       self.guiobject.set_pildevice(self.pildevice)
+      self.guiobject.set_charset(self.charset)
 
       self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
 #  handle changes of the character set
 #
    def do_tabconfig_changed(self):
+      param= self.cBut.get_changed_option_name()
+#
+#     change local config parameters
+#
+      if param=="charset":
+         self.charset= PILCONFIG.get(self.name,"charset")
+         self.guiobject.set_charset(self.charset)
+
       super().do_tabconfig_changed()
 
    def enable(self):

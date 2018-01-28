@@ -83,6 +83,9 @@
 # 20.01.2018 jsi
 # - removed the external plot view window. Since the plotter tab can be
 #   undocked now it is no needed any more
+# 29.01.2018 jsi
+# - removed external view references
+# - clear digitize mode when "IN" received
 
 import sys
 import subprocess
@@ -666,9 +669,8 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.errmsg=""
       self.status=0
 #
-#     status window and external view window
+#     status window 
 #
-      self.viewwin= None
       self.statuswin= None
 #
 #     initialize digitize mode and digitzed coordinates (-1 means none)
@@ -953,13 +955,9 @@ class cls_PlotterWidget(QtWidgets.QWidget):
             self.p1x=x
             self.p1y=y
             self.plotview.digi_clear()
-            if self.viewwin is not None:
-               self.viewwin.plotview.digi_clear()
             self.digi_mode= MODE_P2
             self.plotscene.digi_mode(self.digi_mode)
             self.plotview.digi_start()
-            if self.viewwin is not None:
-               self.viewwin.plotview.digi_start()
             self.lineEditX.setText(str(self.p2x))
             self.lineEditY.setText(str(self.p2y))
 #
@@ -987,8 +985,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digi_mode= MODE_DIGI
       self.plotscene.digi_mode(self.digi_mode)
       self.plotview.digi_start()
-      if self.viewwin is not None:
-         self.viewwin.plotview.digi_start()
 #
 #  stop digitizing in both views and the scene, disable Enter button, enable P1/p2 button
 #
@@ -1002,15 +998,13 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digi_mode= MODE_NONE
       self.plotscene.digi_clear()
       self.plotview.digi_clear()
-      if self.viewwin is not None:
-         self.viewwin.plotview.digi_clear()
       return
 #
 #     Action: digitize P1/P2
 #
    def do_p1p2(self):
 #
-#     enable "Enter", disable P1/P2, enable digitizing mode in scene and both views,
+#     enable "Enter", disable P1/P2, enable digitizing mode in scene and view,
 #     enable coordinate line edit
 #
       self.digiButton.setEnabled(True)
@@ -1020,8 +1014,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.digi_mode= MODE_P1
       self.plotscene.digi_mode(self.digi_mode)
       self.plotview.digi_start()
-      if self.viewwin is not None:
-         self.viewwin.plotview.digi_start()
 #
 #     set marks according to the original postion of P1, P2
 #
@@ -1129,6 +1121,8 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     clear graphhics views (issued by in IN command)
 #
       if cmd==  CMD_CLEAR:
+         if self.digi_mode != MODE_NONE:
+            self.digi_clear()
          self.plotscene.clear()
 #
 #     end of commands
