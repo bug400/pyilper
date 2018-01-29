@@ -63,6 +63,8 @@
 # - the pixel size is now a dual parameter
 # 28.01.2018 jsi
 # - set AutoDefault property of buttons to false
+# 29.01.2018 jsi
+# - shrink all parent widgets if the pixel size was changed
 #
 import copy
 import queue
@@ -971,6 +973,13 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
                if self.lb[i] is not None:
                   self.lb[i].reconfigure(self.pixelsize)
             self.do_resize()
+#
+#       now shrink all parent windows to minimum size
+#
+         w=self.parentWidget()
+         while w is not None:
+            w.adjustSize()
+            w=w.parentWidget()
       return
 #
 #      reset output window

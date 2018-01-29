@@ -131,6 +131,10 @@
 # - colorscheme and display width are now local parameters
 # 20.01.2018 jsi
 # - scrollupbuffersize is now a local parameter and does not require a restart
+# 29.01.2018 jsi
+# - added stretches to center terminal widget
+# - shrink parent widgets to minimum size if font size or number of columns
+#   was changed
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -166,10 +170,12 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #       create terminal window and scrollbar
 #
         self.hbox= QtWidgets.QHBoxLayout()
+        self.hbox.addStretch(1)
         self.terminalwidget= QTerminalWidget(self,self.name,self.tabwidget)
         self.hbox.addWidget(self.terminalwidget)
         self.scrollbar= QtWidgets.QScrollBar()
         self.hbox.addWidget(self.scrollbar)
+        self.hbox.addStretch(1)
         self.setLayout(self.hbox)
         self.HPTerminal= HPTerminal(self,self.name)
         self.terminalwidget.setHPTerminal(self.HPTerminal)
@@ -529,6 +535,13 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._color_scheme=self.color_schemes[self._color_scheme_index]
         self._cursor_color=self._color_scheme[2]
         self.setBackgroundBrush(QtGui.QBrush(self._color_scheme[0]))
+#
+#       now shrink all parent windows to minimum size
+#
+        w=self.parentWidget()
+        while w is not None:
+           w.adjustSize()
+           w=w.parentWidget()
         return
 #
 #  overwrite standard methods
