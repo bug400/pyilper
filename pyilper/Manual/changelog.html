@@ -198,9 +198,11 @@ virtual device chain.</li>
 
 <ul class="w3-ul">
 
-<li>Virtual device widgets can now be undocked from the tab into floating windows.</li>
-<li>The configuration of a device tab/window is now implemented by cascading menus.</li>
-<li>Pixel size of HP82162A display is now configurable (global option).</li>
+<li>Virtual device widgets can now be undocked from the tab into floating 
+windows.</li>
+<li>The configuration of a device tab/window is now implemented as cascading 
+menus.</li>
+<li>Pixel size of HP82162A display is now configurable.</li>
 <li>Log buffering can no be configured individually for all virtual tabs/windows that support logging.</li>
 <li>The number of terminal columns, the color scheme and the number of lines
 in the display scroll buffer are now configured individually in the 
@@ -209,12 +211,18 @@ configuration menu of the device tab/window.</li>
 <li>File management functions of the drive tab/window are now accessible by 
 push buttons.</li>
 <li>Display size indicator for terminal, printer and scope tab.
-<li>Check whether the sent and the incoming data byte are identical if a
-virtual device is talker. Send ETE if not.  Fix a bug in handling the SRQ bit 
-in DOE frames (Both changes are courtesy of Christoph Gie&szlig;elink).</li>
+<li>A device as active talker now checks if the incoming data frame is equal 
+to the last send data frame.  Sends ETE if not.  
+Fix a bug in handling the SRQ bit in DOE frames (Both changes are courtesy of 
+Christoph Gie&szlig;elink).</li>
 <li>The selection feature of the Terminal, Printer and Scope now supports autoscrolling.</li>
 <li>Removed the external plot view window.</li>
-<li>All font size parameters can be configured either global or local.</li>
+<li>All font size parameters can be configured either at application or
+tab/window level.</li>
+<li>Fixed crash if the selection area exceeds the display buffer 
+(Scope/Printer/Terminal).</li>
+<li>An "IN" command now termnates digitizing mode (Plotter).</li>
+<li>Various other bug fixes, see the internal changelogs.</li>
 </ul>
 <!-- End content -->
 
