@@ -1,6 +1,6 @@
-pyilper (1.7.0-devel) trusty; urgency=medium
+pyilper (1.7.0-beta1) trusty; urgency=medium
 
-  * development 
+  * first beta of 1.7.0
 
  -- trusty <achim@trillian>  Tue, 05 Dec 2017 10:15:29 +0100
 
