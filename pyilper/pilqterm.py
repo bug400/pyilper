@@ -135,6 +135,9 @@
 # - added stretches to center terminal widget
 # - shrink parent widgets to minimum size if font size or number of columns
 #   was changed
+# 04.02.2018 jsi
+# - added margin when determining row of selection area from mouse position
+# - fixed bug in swapping coordinates in selectionMove
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -1627,8 +1630,9 @@ class HPTerminal:
              col=i-1
              break
 #
-#      get row
+#      get row, add margin
 #
+       y=y+ round(char_h/2)
        row=int(round((y- char_h) /char_h))+ self.view_y0 
        if row < 0:
           row=0
@@ -1673,10 +1677,13 @@ class HPTerminal:
 #
 #      swap coordinates if necessary
 #
-       if self.start_row > self.move_row:
-          self.start_row,self.move_row= self.move_row, self.start_row
-       if self.start_col > self.move_col:
-          self.start_col,self.move_col= self.move_col, self.start_col
+       if (self.start_row* self.w+ self.start_col) > (self.move_row* self.w + self.move_col):
+          temp=self.start_col
+          self.start_col= self.move_col
+          self.move_col=temp
+          temp=self.start_row
+          self.start_row= self.move_row
+          self.move_row=temp
        self.needsUpdate=True
        return True
 #
