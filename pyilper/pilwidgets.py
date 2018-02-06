@@ -179,6 +179,11 @@
 # - terminalcharsize is now dual config parameter
 # - cls_config_tool_button can now handle the "Default" option (only for
 #   T_INTEGER)
+# 05.02.2018 jsi:
+# - apply BOM to log file on Windows only at the beginning of a new file
+#   if usebom config variable is tru
+# - make usebom variable configurable
+# - allow smaller font sizes for terminal window
 #
 import os
 import glob
@@ -518,13 +523,21 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
       self.filename=self.name+".log"
       self.log= None
       self.buffer_log=PILCONFIG.get(self.name,"buffer_log",True)
-
+#
+#   configure log buffering
+#
    def set_buffering(self,buffer_log):
       self.buffer_log= buffer_log
-
+#
+#   open log file, output BOM only on Windows at the beginning of the file
+#
    def logOpen(self):
       try:
-         self.log=open(self.filename,"a",encoding="UTF-8-SIG")
+         self.log=open(self.filename,"a",encoding="UTF-8")
+         if self.log.tell()==0:
+            if isWINDOWS():
+               if PILCONFIG.get("pyilper","usebom"):
+                  self.log.write(u'ufef')
          self.log.write("\nBegin log "+self.filename+" at ")
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
          self.log.write("\n")
@@ -745,7 +758,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
 #
       self.cBut.add_option("Terminal width","terminalwidth",T_INTEGER,[80,120])
       self.cBut.add_option("Color scheme","colorscheme",T_STRING,color_scheme_names)
-      self.cBut.add_option("Font size","terminalcharsize",T_INTEGER,[O_DEFAULT,15,16,17,18,19,20])
+      self.cBut.add_option("Font size","terminalcharsize",T_INTEGER,[O_DEFAULT,13,14,15,16,17,18,19,20])
       self.cBut.add_option("Scrollup buffer","scrollupbuffersize",T_INTEGER,[1000,2000,5000,10000])
 
       self.statuswidget=QtWidgets.QLabel("")
@@ -1040,6 +1053,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__papersize__=PILCONFIG.get(self.__name__,"papersize")
       self.__lifutilspath__=PILCONFIG.get(self.__name__,"lifutilspath")
       self.__hp82162a_pixelsize__=PILCONFIG.get(self.__name__,"hp82162a_pixelsize")
+      self.__usebom__= PILCONFIG.get(self.__name__,"usebom")
 
       self.setWindowTitle("pyILPER configuration")
       self.vbox0= QtWidgets.QVBoxLayout()
@@ -1227,7 +1241,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridt.addWidget(QtWidgets.QLabel("Font Size"),0,0)
 
       self.spinTermCharsize=QtWidgets.QSpinBox()
-      self.spinTermCharsize.setMinimum(15)
+      self.spinTermCharsize.setMinimum(13)
       self.spinTermCharsize.setMaximum(20)
       self.spinTermCharsize.setValue(self.__termcharsize__)
       self.gridt.addWidget(self.spinTermCharsize,0,1)
@@ -1262,7 +1276,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridd.setSpacing(3)
       self.gridd.addWidget(QtWidgets.QLabel("Font Size"),0,0)
       self.spinDirCharsize=QtWidgets.QSpinBox()
-      self.spinDirCharsize.setMinimum(13)
+      self.spinDirCharsize.setMinimum(11)
       self.spinDirCharsize.setMaximum(18)
       self.spinDirCharsize.setValue(self.__dircharsize__)
       self.gridd.addWidget(self.spinDirCharsize,0,1)
@@ -1286,6 +1300,21 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gridps.addWidget(self.combops,0,1)
       self.gboxps.setLayout(self.gridps)
       self.vbox2.addWidget(self.gboxps)
+#
+#     section log file options (Windows only)
+#
+      self.gboxbom= QtWidgets.QGroupBox()
+      self.gboxbom.setFlat(True)
+      self.gboxbom.setTitle("UTF-8 encoding")
+      self.vboxbom= QtWidgets.QVBoxLayout()
+      self.cbUseBom= QtWidgets.QCheckBox('Use BOM (Windows only)')
+      self.cbUseBom.setChecked(self.__usebom__)
+      self.cbUseBom.stateChanged.connect(self.do_cbUseBom)
+      self.vboxbom.addWidget(self.cbUseBom)
+      self.gboxbom.setLayout(self.vboxbom)
+      if isWINDOWS():
+         self.vbox2.addWidget(self.gboxbom)
+
       self.vbox2.addStretch(1)
 #
 #     add ok/cancel buttons
@@ -1348,6 +1377,9 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 
    def do_cbIdyFrame(self):
       self.__idyframe__= self.cbIdyFrame.isChecked()
+
+   def do_cbUseBom(self):
+      self.__usebom__= self.cbUseBom.isChecked()
 
    def do_config_Workdir(self):
       flist=self.getWorkDirName()
@@ -1463,6 +1495,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
       PILCONFIG.put(self.__name__,"lifutilspath",self.lbllifpath.text())
       PILCONFIG.put(self.__name__,"hp82162a_pixelsize",self.spinHP82162APixelsize.value())
+      PILCONFIG.put(self.__name__,"usebom",self.__usebom__)
       super().accept()
 
    def do_cancel(self):

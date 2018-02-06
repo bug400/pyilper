@@ -74,6 +74,17 @@ by push buttons. Note: These buttons are only accessilbe if the
 <li>The external view window of the virtual HP7470A plotter was removed. It
 is not needed any more, because the tab can be undocked as a floating 
 window.</li>
+<li>Allow smaller font sizes for the directory listing and the terminal
+widget.</li>
+
+<li>UTF-8 text files created by <em>pyILPER</em> had a byte ordering mark (BOM)
+at the beginning of the file to avoid encoding detection problems with some 
+older Windows programs. Hence UTF-8 text files with BOM are not compatible with
+the <em>LIFUTILS</em>. Therefore this feature was now entirely removed on Linux and MacOS. 
+On Windows the addition of a BOM can be enabled in the <em>pyILPER</em> configuration menu. Enable this option if other Windows programs do not recognize the
+UTF-8 encoding of <em>pyILPER</em> log files correctly. <b>Note:</b> 
+Since the BOM is inserted at the beginning of a file all log files must be
+removed to have an effect when changing this option.</li>
 </ul>
 <p>See the <a class="w3-hover-black" href="changelog.html">Change Log</a> for a full list of changes.</p>
 

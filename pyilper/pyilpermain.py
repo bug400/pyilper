@@ -157,6 +157,8 @@
 # - remove global parameters for terminal width and color scheme which
 #   are now tab specific. 
 # - remove scrollupbuffersize as global parameter
+# 05.02.2018 jsi
+# - usebom config variable introduced
 #
 import os
 import sys
@@ -271,6 +273,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"hp82162a_pixelsize",1)
+         PILCONFIG.get(self.name,"usebom",False)
 
          PILCONFIG.save()
       except PilConfigError as e:

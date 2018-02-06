@@ -222,7 +222,13 @@ tab/window level.</li>
 <li>Fixed crash if the selection area exceeds the display buffer 
 (Scope/Printer/Terminal).</li>
 <li>An "IN" command now termnates digitizing mode (Plotter).</li>
-<li>Various other bug fixes, see the internal changelogs.</li>
+<li>Writing a byte order mark (BOM) at the beginning of UTF-8 files was 
+removed on Linux and MacOS. It can be enabled on Windows to avoid problems with 
+Windows programs that do not recognize the UTF-8 encoding correctly.</li>
+<li>Allow smaller font sizes for the directory listing and the terminal 
+widget.</li>
+<li>Various other bug fixes, see the internal changelogs. This change makes
+the log files compatible with other programs linke the <em>LIFUTILS</em></li>
 </ul>
 <!-- End content -->
 

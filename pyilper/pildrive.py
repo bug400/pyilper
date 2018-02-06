@@ -340,6 +340,8 @@
 # 28.01.2018 jsi
 # - fixed errors in referencing gui object
 # - set pushbutton autodefault property false
+# 05.02.2018 jsi
+# - allow smaller font sizes for directory listing
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -378,7 +380,7 @@ class cls_tabdrive(cls_tabgeneric):
 #
       self.add_configwidget()
       self.cBut.add_option("Character set","charset",T_STRING,charsets)
-      self.cBut.add_option("Font size","directorycharsize",T_INTEGER,[O_DEFAULT,13,14,15,16,17,18])
+      self.cBut.add_option("Font size","directorycharsize",T_INTEGER,[O_DEFAULT,11,12,13,14,15,16,17,18])
 #
 #     create HPIL-device, notify object to drive gui object
 #

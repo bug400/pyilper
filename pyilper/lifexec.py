@@ -81,7 +81,10 @@
 # - detection of lifutils extended and improved
 # 11.11.2017 jsi:
 # - Eramco MLDL-OS packed rom file pre- and postprocessing implemented
-# 21.11.2017 added -r 0 option to textlif to add HP-41 implementation specific bytes
+# 21.11.2017 jsi:
+# - added -r 0 option to textlif to add HP-41 implementation specific bytes
+# 05.02.2018 jsi:
+# - apply BOM to saved "view" file only on Windows at the beginning of the file
 #
 import subprocess
 import tempfile
@@ -1171,7 +1174,10 @@ class cls_lifview(QtWidgets.QDialog):
          if reply== QtWidgets.QMessageBox.Cancel:
             return
       try:
-         with open(self.outputfile,"w",encoding="UTF-8-SIG") as outfile:
+         with open(self.outputfile,"w",encoding="UTF-8") as outfile:
+            if isWINDOWS():
+               if PILCONFIG.get("pyilper","usebom"):
+                  outfile.write(u'\ufeff')
             outfile.write(str(self.viewer.toPlainText()))
       except OSError as e:
          reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
