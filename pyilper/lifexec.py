@@ -85,6 +85,8 @@
 # - added -r 0 option to textlif to add HP-41 implementation specific bytes
 # 05.02.2018 jsi:
 # - apply BOM to saved "view" file only on Windows at the beginning of the file
+# 10.02.2018 jsi:
+# - fixed BOM handling
 #
 import subprocess
 import tempfile
@@ -1168,17 +1170,19 @@ class cls_lifview(QtWidgets.QDialog):
       flist= self.get_outputFilename()
       if flist is None:
          return
-      self.outputfile=flist[0]
+      outputfile=flist[0]
       if os.access(self.outputfile,os.W_OK):
          reply=QtWidgets.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.outputfile,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
          if reply== QtWidgets.QMessageBox.Cancel:
             return
       try:
-         with open(self.outputfile,"w",encoding="UTF-8") as outfile:
-            if isWINDOWS():
-               if PILCONFIG.get("pyilper","usebom"):
-                  outfile.write(u'\ufeff')
-            outfile.write(str(self.viewer.toPlainText()))
+         if isWINDOWS() and PILCONFIG.get("pyilper","usebom"):
+            outfile=open(outputfile,"a",encoding="UTF-8-SIG")
+         else:
+            outfile=open(outputfile,"a",encoding="UTF-8")
+
+         outfile.write(str(self.viewer.toPlainText()))
+         outfile.close()
       except OSError as e:
          reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       return

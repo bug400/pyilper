@@ -184,6 +184,8 @@
 #   if usebom config variable is tru
 # - make usebom variable configurable
 # - allow smaller font sizes for terminal window
+# 10.02.2018 jsi:
+# - fixed bom handling
 #
 import os
 import glob
@@ -533,11 +535,10 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
 #
    def logOpen(self):
       try:
-         self.log=open(self.filename,"a",encoding="UTF-8")
-         if self.log.tell()==0:
-            if isWINDOWS():
-               if PILCONFIG.get("pyilper","usebom"):
-                  self.log.write(u'ufef')
+         if isWINDOWS() and PILCONFIG.get("pyilper","usebom"):
+            self.log=open(self.filename,"a",encoding="UTF-8-SIG")
+         else:
+            self.log=open(self.filename,"a",encoding="UTF-8")
          self.log.write("\nBegin log "+self.filename+" at ")
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
          self.log.write("\n")
