@@ -159,6 +159,8 @@
 # - remove scrollupbuffersize as global parameter
 # 05.02.2018 jsi
 # - usebom config variable introduced
+# 12.02.2018 jsi
+# - added --clean startup option
 #
 import os
 import sys
@@ -206,9 +208,12 @@ class cls_pyilper(QtCore.QObject):
       super().__init__()
       self.name="pyilper"
       self.instance=""
+      self.clean=False
       if args.instance:
          if args.instance.isalnum():
             self.instance=args.instance
+      if args.clean:
+         self.clean=True
       self.status= STAT_DISABLED
       self.pilwidgets= [ ]
       self.commobject=None
@@ -252,7 +257,7 @@ class cls_pyilper(QtCore.QObject):
 #     1. pyILPER config
 #
       try:
-         PILCONFIG.open(self.name,CONFIG_VERSION,self.instance)
+         PILCONFIG.open(self.name,CONFIG_VERSION,self.instance,self.clean)
          PILCONFIG.get(self.name,"active_tab",0)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
          PILCONFIG.get(self.name,"tty","")
@@ -282,7 +287,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     2. pen configuration
       try:
-         PENCONFIG.open(self.name,CONFIG_VERSION,self.instance)
+         PENCONFIG.open(self.name,CONFIG_VERSION,self.instance,self.clean)
       except PenConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -634,6 +639,7 @@ def dumpstacks(signal, frame):
 def main():
    parser=argparse.ArgumentParser(description='pyILPER startup script')
    parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE")
+   parser.add_argument('--clean','-clean',action='store_true',help="Start pyILPER witha config file which is reset to defaults")
    args=parser.parse_args()
 
    if not isWINDOWS():

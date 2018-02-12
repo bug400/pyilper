@@ -23,6 +23,8 @@
 # Changelog
 # 17.10.2016 jsi:
 # - first version (merged)
+# 12.02.2018 jsi:
+# - added the clean parameter to the open method
 #
 import copy
 from .userconfig import cls_userconfig, ConfigError
@@ -66,11 +68,14 @@ class cls_penconfig:
    
 
 #
-#  open: read in the pen configuration. If the configuration file does not exist, the 
-#  default configuration is written to the pen config file
+#  open: read in the pen configuration. If the configuration file does not 
+#  exist, the default configuration is written to the pen config file
+#  If clean is true do not read an existing config file
 #
-   def open(self,name,version,instance):
+   def open(self,name,version,instance,clean):
       self.__userconfig__= cls_userconfig(name,"penconfig",version,instance)
+      if clean:
+         return
       try:
          self.__penconfig__= self.__userconfig__.read(self.default_config())
       except ConfigError as e:

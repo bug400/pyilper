@@ -31,6 +31,8 @@
 # - assign "" to self.add_msg if parameter is none in PilConfigError
 # 20.01.2018 jsi
 # - added get_dual method
+# 12.02.2018 jsi
+# - added the clean parameter to the open method
 #
 from .userconfig import cls_userconfig, ConfigError
 
@@ -57,9 +59,12 @@ class cls_pilconfig:
 #
 #  open: read in the configuration file into the dictionary
 #  if the configuration file does not exist, an empty file is created
+#  If clean is true do not read the config file
 #
-   def open(self,name,version,instance):
+   def open(self,name,version,instance,clean):
       self.__userconfig__= cls_userconfig(name,name,version,instance)
+      if clean:
+         return
       try:
          self.__config__= self.__userconfig__.read(self.__config__)
       except ConfigError as e:

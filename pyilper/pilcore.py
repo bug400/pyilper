@@ -94,7 +94,7 @@ import platform
 # General constants:
 #
 PRODUCTION= False     # Production/Development Version
-VERSION="1.7.0b1"       # pyILPR version number
+VERSION="1.7.0b2"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Communication modes and classes
