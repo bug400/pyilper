@@ -186,6 +186,8 @@
 # - allow smaller font sizes for terminal window
 # 10.02.2018 jsi:
 # - fixed bom handling
+# 19.02.2018 jsi:
+# - introduced "paper" color scheme
 #
 import os
 import glob
@@ -221,7 +223,7 @@ if isWINDOWS():
 COLOR_SCHEME_WHITE=0
 COLOR_SCHEME_GREEN=1
 COLOR_SCHEME_AMBER=2
-color_scheme_names= ["white","amber","green"]
+color_scheme_names= ["white","amber","green","paper"]
 #
 # constants for cls_config_tool_button
 #

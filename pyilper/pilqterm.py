@@ -138,6 +138,8 @@
 # 04.02.2018 jsi
 # - added margin when determining row of selection area from mouse position
 # - fixed bug in swapping coordinates in selectionMove
+# 19.02.2018 jsi
+# - introduced "paper" color scheme
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -391,14 +393,13 @@ class TermCursor(QtWidgets.QGraphicsItem):
 
 class QTerminalWidget(QtWidgets.QGraphicsView):
 
-# color scheme: normal_foreground, normal_background, inverse_foreground, inverse_background, cursor_color
-
-#   color_scheme_names = { "white" : 0, "amber" : 1, "green": 2 }
+# color scheme: foreground, background, transparent (for selection area only)
 
     color_schemes= [
        [ QtGui.QColor("#000"),QtGui.QColor("#fff"), QtGui.QColor(0xff,0xff, 0xff,0xc0) ],
        [ QtGui.QColor("#000"), QtGui.QColor("#ffbe00"), QtGui.QColor(0xff, 0xbe, 0x00,0xc0) ],
        [ QtGui.QColor("#000"), QtGui.QColor("#18f018"), QtGui.QColor(0x00,0xff,0x00,0xc0) ],
+       [ QtGui.QColor("#fff"), QtGui.QColor("#000"), QtGui.QColor(0xff,0xff,0xff,0xc0) ],
     ]
 #
 #   Keymap keycodes
