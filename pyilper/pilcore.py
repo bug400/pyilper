@@ -86,6 +86,8 @@
 # - changed version to 1.7.0 because of major enhancements of the GUI
 # 21.01.2018 jsi
 # - moved cls_config_tool_button and color scheme constants to pilwidget.py
+# 21.02.2018 jsi
+# - 1.7.8 production
 #
 import platform
 #
@@ -93,8 +95,8 @@ import platform
 #
 # General constants:
 #
-PRODUCTION= False     # Production/Development Version
-VERSION="1.7.0b2"       # pyILPR version number
+PRODUCTION= True      # Production/Development Version
+VERSION="1.7.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Communication modes and classes

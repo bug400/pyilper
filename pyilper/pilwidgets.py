@@ -223,6 +223,7 @@ if isWINDOWS():
 COLOR_SCHEME_WHITE=0
 COLOR_SCHEME_GREEN=1
 COLOR_SCHEME_AMBER=2
+COLOR_SCHEME_PAPER=3
 color_scheme_names= ["white","amber","green","paper"]
 #
 # constants for cls_config_tool_button

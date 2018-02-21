@@ -1,6 +1,6 @@
-pyilper (1.7.0-beta2) trusty; urgency=medium
+pyilper (1.7.0-ubuntu1) trusty; urgency=medium
 
-  * second beta of 1.7.0
+  * production
 
  -- trusty <achim@trillian>  Tue, 05 Dec 2017 10:15:29 +0100
 
