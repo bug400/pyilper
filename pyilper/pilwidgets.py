@@ -188,6 +188,9 @@
 # - fixed bom handling
 # 19.02.2018 jsi:
 # - introduced "paper" color scheme
+# 21.02.2018 jsi:
+# - fixed crash in cls_DevStatusWindo.de_refresh() if pyILPER status is 
+#   disabled
 #
 import os
 import glob
@@ -1805,6 +1808,8 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
 
    def do_refresh(self):
       devices=self.parent.commthread.getDevices()
+      if not devices:
+         return
       i=1
       for row in range(self.rows):
          pildevice= devices[i][0]
