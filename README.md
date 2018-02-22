@@ -1,7 +1,7 @@
 ## pyILPR (Virtual HP-IL Devices)
 ==============================
 
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/b5544a2/img/pyilper_drive.png)
+![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_drive.png)
 
 Index
 -----
@@ -51,7 +51,8 @@ Features
 * Support for the PIL-Box via serial-over-usb interface
 * Support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
 
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/b5544a2/img/pyilper_terminal.png)
+See the [pyILPER virtual devices gallery](https://github.com/bug400/pyilper/blob/master/GALLERY.md) for details.
+
 
 Compatibility
 -------------
