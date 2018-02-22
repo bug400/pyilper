@@ -44,7 +44,8 @@ Features
 * Virtual plotter emulating the HP 7470A HP-IL plotter
 * Virtual printer emualting the HP HP82162A thermal printer
 * HP-IL scope
-* The number of virtual devices is configurable
+* The number of virtual devices is configurable,
+* The virtual devices can be either organized in a compact tabbed view or in independent floating windows
 * The output of the scope or the virtual printer(s) is logged to file(s)
 * Monitoring the status of the virtual HP-IL devices
 * Support for the PIL-Box via serial-over-usb interface
