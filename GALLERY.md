@@ -68,6 +68,7 @@ Features:
 * digitizing support
 * PDF output
 * configurable paper size
+* logging of HP-GL commands to external file
 
 HP82162A thermal printer
 ------------------------
