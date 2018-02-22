@@ -23,7 +23,7 @@ Features:
 
 Printer
 -------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_printer.png)
+![pyilper](https://cdn.rawgit.com/bug400/pyilper/c36dfd5/img/pyilper_printer.png)
 
 Features:
 * 80 or 132 column output
