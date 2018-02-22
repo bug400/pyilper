@@ -23,7 +23,7 @@ Features:
 
 Printer
 -------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_drive.png)
+![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_printer.png)
 
 Features:
 * 80 or 132 column output
@@ -77,4 +77,3 @@ Features:
 * supports all features of the HP82162A thermal printer with the exception of bar code generation
 * scrollable
 * PDF output
-*
