@@ -140,6 +140,8 @@
 # - fixed bug in swapping coordinates in selectionMove
 # 19.02.2018 jsi
 # - introduced "paper" color scheme
+# 22.02.2018 jsi
+# - disabled shrinking parent widgets because of errors in reconfiguration
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -542,11 +544,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #       now shrink all parent windows to minimum size
 #
-        w=self.parentWidget()
-        while w is not None:
-           w.adjustSize()
-           w=w.parentWidget()
-        return
+#       w=self.parentWidget()
+#       while w is not None:
+#          w.adjustSize()
+#          w=w.parentWidget()
+#       return
 #
 #  overwrite standard methods
 #
