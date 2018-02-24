@@ -4,12 +4,22 @@
 Index
 -----
 
+* [User Interface](#user-interface)
 * [Drive](#drive)
 * [Printer](#printer)
 * [Terminal](#terminal)
 * [Scope](#scope)
 * [HP7470A Plotter](#hp7470a-plotter)
 * [HP82162A thermal printer](#hp82162a-thermal-printer)
+
+User Interface
+--------------
+![pyilper](https://cdn.rawgit.com/bug400/pyilper/970872ee/img/pyilper_floatwindows.png)
+
+Features:
+* The virtual device tabs can be undocked from the main application and used as independent floating windows (see above)
+* The GUI settings like font sizes can be configured individually for each device
+* The local configuration of the devices is fast and easy accessible by cascading menus
 
 Drive
 -----
