@@ -43,6 +43,8 @@
 # - LIFUTILS_PATH module variable and functions added
 # 11.11.2017 jsi
 # - set required version of lifutils to 1.7.7
+# 01.03.2018 jsi
+# - set required version of lifutils to 1.7.8
 #
 # core constants and functions to handle lif image files
 #
@@ -58,7 +60,7 @@ dict_finfo_name={"TEXT":0x0001,"D-LEX":0x00FF,"WAXM41":0xE020,"XM41":0xE030,"ALL
 #
 # Minimum Version number of LIFUTILS
 #
-LIFUTILS_REQUIRED_VERSION=10707
+LIFUTILS_REQUIRED_VERSION=10708
 #
 # GUID of a lifutils > 1.7.7 windows installation
 #

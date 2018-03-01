@@ -17,7 +17,7 @@ General
 
 pyILPER requires:
 
-* Python 3.4 or higher
+* Python 3.5 or higher
 * QT 5.6 or higher
 * PyQt compatible to the Python and Qt version
 * the Python bindings for either Qt Webkit or Qt Webengine
@@ -183,7 +183,7 @@ Now you can start the development version with:
 
       python <Path to the pyilper-master directory>/start.py
 
-If you get the error message "This script requires Python 3.4 or newer!" use python3 instead.
+If you get the error message "This script requires Python 3.5 or newer!" use python3 instead.
 
 Note:
 * Development versions are work in progress and are only coarse tested. They may crash and may ruin your data at worst.
