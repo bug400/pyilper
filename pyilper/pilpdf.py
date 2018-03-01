@@ -29,6 +29,8 @@
 # - added textItem class
 # 01.11.2017 - jsi
 # - update page number
+# 01.03.2018 - jsi
+# - use monospaced font defined in pilcore.py
 #
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 from .pilcore import *
@@ -196,8 +198,9 @@ class cls_textItem(QtWidgets.QGraphicsItem):
    def __init__(self,text):
       super().__init__()
       self.text=text
-      self.font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
-      self.font.setStyleHint(QtGui.QFont.TypeWriter)
+#     self.font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
+#     self.font.setStyleHint(QtGui.QFont.TypeWriter)
+      self.font= QtGui.QFont(FONT)
       self.font.setPointSize(2)
       metrics= QtGui.QFontMetrics(self.font)
       self.font_h= metrics.height()
