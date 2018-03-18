@@ -18,7 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# lif utilities dialog classes -------------------------------------------------
+# lif utilities dialog classes ---------------------------------------------------
 #
 # Changelog
 # 02.01.2016 - jsi
@@ -87,8 +87,6 @@
 # - apply BOM to saved "view" file only on Windows at the beginning of the file
 # 10.02.2018 jsi:
 # - fixed BOM handling
-# 01.03.2018 jsi:
-# - changed all subprocess calls to the subprocess.run interface
 #
 import subprocess
 import tempfile
@@ -109,15 +107,24 @@ BARCODE_NARROW_W= 5
 BARCODE_WIDE_W= 10
 BARCODE_SPACING= 5
 #
+# decode an error message to string and truncate it to 150 chars
+#
+def trunc_message(msg):
+   temp= msg.decode()
+   return (temp[:75] + '.. (truncated)') if len(temp) > 150 else temp
+#
 # get lif version if 0 is returned then lifversion was not found
 #
 def get_lifversion(cmd):
    retval=0
    try:
-      ret=subprocess.run(cmd,stdout=subprocess.PIPE)
-      retval=int(ret.stdout.decode())
-   finally:
-      return retval
+      result=subprocess.check_output(cmd)
+      retval=int(result.decode())
+   except OSError as e:
+      pass
+   except subprocess.CalledProcessError as exp:
+      pass
+   return retval
 #
 # check if lifutils are installed, return if required version found
 #
@@ -194,53 +201,35 @@ def check_lifutils():
       required_version_installed=True
    return required_version_installed, installed_version
 #
-#  check and display messages of lifutils
-#
-def check_errormessages(parent,ret):
-   msg= ret.stderr.decode()
-   if msg == "":
-      return
-#
-#  truncate message if length > 150 
-#
-   if len(msg)  >150:
-      msg=msg[:75] + '.. (truncated)'
-#
-#  display an error if returncode !=0 otherwise a warning
-#
-   if ret.returncode == 0:
-      reply=QtWidgets.QMessageBox.warning(parent,'Warning',msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   else:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   return
-#
 # exec single command
 #
 def exec_single(parent,cmd):
    try:
-      ret=subprocess.run(cmd,stderr=subprocess.STDOUT)
-      check_errormessages(parent,ret)
+      subprocess.check_output(cmd,stderr=subprocess.STDOUT)
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   finally:
-      return
+   except subprocess.CalledProcessError as exp:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exp.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 #
 # exec single command, return output
 #
 def exec_single_export(parent,cmd):
-   returnvalue=None
    try:
-      ret= subprocess.run(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      check_errormessages(parent,ret)
-      if ret.returncode==0:
-         returnvalue= ret.stdout
+      p= subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      output,err=p.communicate()
+      if err.decode() != "":
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return None
 #
 #  catch errors
 #
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   finally:
-      return returnvalue
+      return None
+   except subprocess.CalledProcessError as exc:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      return None
+   return output
 
 #
 # exec piped command, read input from file, return True if success, False otherwise
@@ -248,7 +237,6 @@ def exec_single_export(parent,cmd):
 def exec_double_import(parent,cmd1,cmd2,inputfile):
 
    tmpfile=None
-   print("exec double import")
    try:
       if isWINDOWS():
          fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
@@ -261,8 +249,13 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
 #
 #  execute first command
 #
-      ret= subprocess.run(cmd1,stdin=fd,stdout=tmpfile,stderr=subprocess.PIPE)
-      check_errormessages(parent,ret)
+      p1= subprocess.Popen(cmd1,stdin=fd,stdout=tmpfile,stderr=subprocess.PIPE)
+      output1,err1= p1.communicate()
+      if err1.decode() != "":
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err1),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         tmpfile.close()
+         os.close(fd)
+         return
       os.close(fd)
 #
 #  execute second command
@@ -272,23 +265,26 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
          tmpfile.close()
          return
       tmpfile.seek(0)
-      ret= subprocess.run(cmd2,stdin=tmpfile,stderr=subprocess.PIPE)
-      check_errormessages(parent,ret)
+      p2= subprocess.Popen(cmd2,stdin=tmpfile,stderr=subprocess.PIPE)
+      output2,err2=p2.communicate()
+      if err2.decode() != "":
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err2),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         tmpfile.close()
+         return
 #
 #  catch errors
 #
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   finally:
+   except subprocess.CalledProcessError as exc:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       if tmpfile is not None:
          tmpfile.close()
-      return
 #
 # exec piped command, write output to file or stdout
 #
 def exec_double_export(parent,cmd1,cmd2,outputfile):
    tmpfile=None
-   returnvalue= None
    try:
       fd=None
       if outputfile != "":
@@ -310,9 +306,10 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 #
 # execute first command
 #
-      ret= subprocess.run(cmd1,stdout=tmpfile,stderr=subprocess.PIPE)
-      check_errormessages(parent,ret)
-      if ret.returncode!=0:
+      p1= subprocess.Popen(cmd1,stdout=tmpfile,stderr=subprocess.PIPE)
+      output1,err1= p1.communicate()
+      if err1.decode() != "":
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err1),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          tmpfile.close()
          if fd is not None:
             os.close(fd)
@@ -322,23 +319,32 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 #
       tmpfile.seek(0)
       if outputfile != "":
-         ret= subprocess.run(cmd2,stdin=tmpfile,stdout=fd,stderr=subprocess.PIPE)
+         p2= subprocess.Popen(cmd2,stdin=tmpfile,stdout=fd,stderr=subprocess.PIPE)
       else:
-         ret= subprocess.run(cmd2,stdin=tmpfile,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-         if ret.returncode==0:
-            returnvalue= ret.stdout
-      check_errormessages(parent,ret)
+         p2= subprocess.Popen(cmd2,stdin=tmpfile,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      output2,err2=p2.communicate()
+      if err2.decode() != "":
+         reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(err2),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         if fd is not None:
+            os.close(fd)
+         return None
+      if fd is not None:
+         os.close(fd)
 #
 #  catch errors
 #
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   finally:
       if tmpfile is not None:
          tmpfile.close()
-      if fd is not None:
-         os.close(fd)
-      return returnvalue
+      return None
+   except subprocess.CalledProcessError as exc:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',trunc_message(exc.output),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      if tmpfile is not None:
+         tmpfile.close()
+      return None
+   tmpfile.close()
+   return output2
 
 #
 # validator checks for valid lif label or file names, converts to capital lettes

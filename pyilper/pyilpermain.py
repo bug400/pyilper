@@ -161,8 +161,6 @@
 # - usebom config variable introduced
 # 12.02.2018 jsi
 # - added --clean startup option
-# 01.03.2018 jsi
-# - check minimum python version
 #
 import os
 import sys
@@ -227,22 +225,11 @@ class cls_pyilper(QtCore.QObject):
       self.message=""
       self.msgTimer=QtCore.QTimer()
       self.msgTimer.timeout.connect(self.show_refresh_message)
-#
-#     create user interface instance
-#
-      self.ui= cls_ui(self,VERSION,self.instance)
-#
-#     check minimum python version
-#
-      if sys.version_info < ( PYTHON_REQUIRED_MAJOR, PYTHON_REQUIRED_MINOR):
-         required_version= str(PYTHON_REQUIRED_MAJOR)+"."+str(PYTHON_REQUIRED_MINOR)
-         found_version=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
-         reply=QtWidgets.QMessageBox.critical(self.ui,'Error','pyILPER requires at least Python version '+required_version+". You rund Python version "+found_version,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-         sys.exit(1)
 
 #
 #     Initialize Main Window, connect callbacks
 #
+      self.ui= cls_ui(self,VERSION,self.instance)
       self.ui.actionConfig.triggered.connect(self.do_pyilperConfig)
       self.ui.actionDevConfig.triggered.connect(self.do_DevConfig)
       self.ui.actionPenConfig.triggered.connect(self.do_PenConfig)
