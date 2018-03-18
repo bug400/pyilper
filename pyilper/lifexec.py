@@ -248,6 +248,7 @@ def exec_single_export(parent,cmd):
 def exec_double_import(parent,cmd1,cmd2,inputfile):
 
    tmpfile=None
+   print("exec double import")
    try:
       if isWINDOWS():
          fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
