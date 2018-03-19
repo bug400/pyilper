@@ -87,6 +87,8 @@
 # - apply BOM to saved "view" file only on Windows at the beginning of the file
 # 10.02.2018 jsi:
 # - fixed BOM handling
+# 18.03.2018 jsi:
+# - added options to import an ASCII file either for the HP-41 or the HP-71
 #
 import subprocess
 import tempfile
@@ -805,17 +807,19 @@ class cls_lifimport (QtWidgets.QDialog):
 
       self.gBox1=QtWidgets.QGroupBox("Preprocessing options")
       self.bGroup=QtWidgets.QButtonGroup()
-      self.radio1= QtWidgets.QRadioButton("convert from ASCII to LIF-Text")
-      self.radio2= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
-      self.radio3= QtWidgets.QRadioButton("convert HP-41 rom file to XM-41 file (Eramco MLDL-OS)")
-      self.radio4= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
-      self.radio5= QtWidgets.QRadioButton("None")
-      self.radio5.setChecked(True)
+      self.radio1= QtWidgets.QRadioButton("convert from ASCII to LIF-Text (HP-41)")
+      self.radio2= QtWidgets.QRadioButton("convert from ASCII to LIF-Text (HP-71)")
+      self.radio3= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
+      self.radio4= QtWidgets.QRadioButton("convert HP-41 rom file to XM-41 file (Eramco MLDL-OS)")
+      self.radio5= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
+      self.radio6= QtWidgets.QRadioButton("None")
+      self.radio6.setChecked(True)
       self.bGroup.addButton(self.radio1) 
       self.bGroup.addButton(self.radio2)
       self.bGroup.addButton(self.radio3)
       self.bGroup.addButton(self.radio4)
       self.bGroup.addButton(self.radio5)
+      self.bGroup.addButton(self.radio6)
       self.bGroup.buttonClicked.connect(self.do_butclicked)
 
       self.vbox=QtWidgets.QVBoxLayout()
@@ -823,6 +827,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.vbox.addWidget(self.radio2)
       self.vbox.addWidget(self.radio3)
       self.vbox.addWidget(self.radio4)
+      self.vbox.addWidget(self.radio5)
 
       self.hbox2=QtWidgets.QHBoxLayout()
       self.lbl=QtWidgets.QLabel("LIF Filename:")
@@ -839,7 +844,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.gBox1.setLayout(self.vbox)
       self.gBox1.setEnabled(False)
       self.vlayout.addWidget(self.gBox1)
-      self.vbox.addWidget(self.radio5)
+      self.vbox.addWidget(self.radio6)
       self.vbox.addStretch(1)
 
       self.buttonBox = QtWidgets.QDialogButtonBox(self)
@@ -882,7 +887,7 @@ class cls_lifimport (QtWidgets.QDialog):
 #  any radio button clicked, enable/disable lif filename entry, check ok button
 #
    def do_butclicked(self,id):
-      if id== self.radio1 or id==self.radio2 or id==self.radio3 or id==self.radio4:
+      if id== self.radio1 or id==self.radio2 or id==self.radio3 or id==self.radio4 or id==self.radio5:
          self.leditFileName.setEnabled(True)
       else:
          self.leditFileName.setEnabled(False)
@@ -893,9 +898,9 @@ class cls_lifimport (QtWidgets.QDialog):
 #
    def do_checkenable(self):
       self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-      if (self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked() or self.radio4.isChecked()) and self.leditFileName.text() != "":
+      if (self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked() or self.radio4.isChecked() or self.radio5.isChecked()) and self.leditFileName.text() != "":
          self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
-      if self.radio5.isChecked():
+      if self.radio6.isChecked():
          self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       return
 
@@ -904,15 +909,17 @@ class cls_lifimport (QtWidgets.QDialog):
 #
    def do_ok(self):
       if self.inputfile != "":
-         if self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked() or self.radio4.isChecked():
+         if self.radio1.isChecked() or self.radio2.isChecked() or self.radio3.isChecked() or self.radio4.isChecked() or self.radio5.isChecked():
             self.liffilename=self.leditFileName.text()
             if self.radio1.isChecked():
                exec_double_import(self,[add_path("textlif"),"-r 0",self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
-            elif self.radio2.isChecked():
-               exec_double_import(self,[add_path("rom41hx"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+            if self.radio2.isChecked():
+               exec_double_import(self,[add_path("textlif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radio3.isChecked():
-               exec_double_import(self,[add_path("rom41er"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("rom41hx"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radio4.isChecked():
+               exec_double_import(self,[add_path("rom41er"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+            elif self.radio5.isChecked():
                exec_double_import(self,[add_path("raw41lif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
          else:
             if  cls_chk_import.exec(None, self.inputfile):
