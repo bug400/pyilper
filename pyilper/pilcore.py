@@ -88,6 +88,8 @@
 # - moved cls_config_tool_button and color scheme constants to pilwidget.py
 # 22.02.2018 jsi
 # - 1.7.1 production
+# 18.03.2018 jsi
+# - 1.7.2 development, added Python minimum version requirements
 #
 import platform
 #
@@ -95,9 +97,14 @@ import platform
 #
 # General constants:
 #
-PRODUCTION= True      # Production/Development Version
-VERSION="1.7.1"       # pyILPR version number
+PRODUCTION= False     # Production/Development Version
+VERSION="1.7.2"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
+#
+# Python minimum version
+#
+PYTHON_REQUIRED_MAJOR=3
+PYTHON_REQUIRED_MINOR=4
 #
 # Communication modes and classes
 #
