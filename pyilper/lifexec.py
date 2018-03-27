@@ -89,6 +89,8 @@
 # - fixed BOM handling
 # 18.03.2018 jsi:
 # - added options to import an ASCII file either for the HP-41 or the HP-71
+# 20.03.2018 jsi:
+# - code cleanup
 #
 import subprocess
 import tempfile
@@ -691,7 +693,6 @@ class cls_lifexport (QtWidgets.QDialog):
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.selectFile(self.liffilename.lower()+self.outputextension)
       dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #
@@ -864,7 +865,6 @@ class cls_lifimport (QtWidgets.QDialog):
       dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 
@@ -913,7 +913,7 @@ class cls_lifimport (QtWidgets.QDialog):
             self.liffilename=self.leditFileName.text()
             if self.radio1.isChecked():
                exec_double_import(self,[add_path("textlif"),"-r 0",self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
-            if self.radio2.isChecked():
+            elif self.radio2.isChecked():
                exec_double_import(self,[add_path("textlif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radio3.isChecked():
                exec_double_import(self,[add_path("rom41hx"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
@@ -1167,7 +1167,6 @@ class cls_lifview(QtWidgets.QDialog):
       dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #
@@ -1324,7 +1323,6 @@ class cls_lifinit (QtWidgets.QDialog):
       dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #
@@ -1477,7 +1475,6 @@ class cls_liffix (QtWidgets.QDialog):
       dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["All Files (*)"] )
       dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-#     dialog.setDirectory(self.workdir)
       if dialog.exec():
          return dialog.selectedFiles()
 #
