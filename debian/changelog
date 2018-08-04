@@ -1,8 +1,8 @@
-pyilper (1.7.2beta1-ubuntu1) trusty; urgency=medium
+pyilper (1.7.2~beta1) bionic; urgency=medium
 
-  * production
+  * beta1 
 
- -- trusty <achim@trillian>  Tue, 05 Dec 2017 10:15:29 +0100
+ -- trusty <achim@trillian.trilldom.lan>  Sat, 04 Aug 2018 10:06:22 +0200
 
 pyilper (1.6.0-ubuntu1) xenial; urgency=medium
 
