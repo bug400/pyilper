@@ -25,11 +25,143 @@
 # - first version (merged)
 # 12.02.2018 jsi:
 # - added the clean parameter to the open method
+# 10.08.2018 jsi:
+# - cls_PenConfigWindow moved from pilplotter.py
 #
 import copy
+from PyQt5 import QtCore, QtGui, QtWidgets
 from .userconfig import cls_userconfig, ConfigError
+#
+# Plotter pen table model class --------------------------------------------
+#
+class PenTableModel(QtCore.QAbstractTableModel):
+   def __init__(self, datain, parent = None):
+      super().__init__()
+      self.arraydata = datain
 
+   def rowCount(self, parent):
+      return len(self.arraydata)
 
+   def columnCount(self, parent):
+      return len(self.arraydata[0])
+
+   def data(self, index, role):
+      if not index.isValid():
+          return None
+      elif role != QtCore.Qt.DisplayRole:
+          return None
+      return (self.arraydata[index.row()][index.column()])
+
+   def setData(self, index, value,role):
+      if index.column()==0:
+         self.arraydata[index.row()][index.column()] = value
+      else:
+         self.arraydata[index.row()][index.column()] = int(value)
+      self.dataChanged.emit(index,index) # this updates the edited cell
+      return True
+
+   def flags(self, index):
+      return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+   def headerData(self,section,orientation,role):
+      if role != QtCore.Qt.DisplayRole:
+         return None
+      if (orientation == QtCore.Qt.Horizontal):
+         if section==0:
+            return("Description")
+         elif section==1:
+            return("R")
+         elif section==2:
+            return("G")
+         elif section==3:
+            return("B")
+         elif section==3:
+            return("A")
+         elif section==4:
+            return("Alpha")
+         elif section==5:
+            return("Width")
+         else:
+            return("")
+
+   def getTable(self):
+      return self.arraydata
+
+   def setAll(self,penconfig):
+      self.arraydata=penconfig
+      self.layoutChanged.emit() # this updates all cells
+         
+#
+# Custom class with input validators ---------------------------------------
+#
+class PenDelegate(QtWidgets.QItemDelegate):
+
+   def createEditor(self, parent, option, index):
+      editor= super(PenDelegate,self).createEditor(parent,option,index)
+      if index.column() > 0 and index.column()< 5:
+         editor.setValidator(QtGui.QIntValidator(0,255))
+      elif index.column() == 5:
+         editor.setValidator(QtGui.QDoubleValidator(0.0,5.0,1))
+      return(editor)
+
+   def setEditorData(self, editor, index):
+      # Gets display text if edit data hasn't been set.
+      text = index.data(QtCore.Qt.EditRole) or index.data(QtCore.Qt.DisplayRole)
+      editor.setText(str(text))         
+
+#
+# Plotter pen  configuration class -----------------------------------
+#
+class cls_PenConfigWindow(QtWidgets.QDialog):
+
+   def __init__(self): 
+      super().__init__()
+      self.setWindowTitle('Plotter pen config')
+      self.vlayout = QtWidgets.QVBoxLayout()
+#
+#     table widget
+#
+      self.tablemodel=PenTableModel(PENCONFIG.get_all())
+      self.tableview= QtWidgets.QTableView()
+      self.tableview.setModel(self.tablemodel)
+      self.tableview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+      self.tableview.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+      self.delegate= PenDelegate()
+      self.tableview.setItemDelegate(self.delegate)
+      self.vlayout.addWidget(self.tableview)
+#
+#     ok/cancel button box
+#    
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Reset| QtWidgets.QDialogButtonBox.Ok)
+      self.buttonBox.setCenterButtons(True)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.rejected.connect(self.do_cancel)
+      self.buttonBox.button(QtWidgets.QDialogButtonBox.Reset).clicked.connect(self.do_reset)
+      self.vlayout.addWidget(self.buttonBox)
+      self.setLayout(self.vlayout)
+
+   def do_ok(self):
+      PENCONFIG.set_all(self.tablemodel.getTable())
+      super().accept()
+
+   def do_cancel(self):
+      super().reject()
+#
+#     reset populates table with the default configuration
+#
+   def do_reset(self):
+      self.tablemodel.setAll(PENCONFIG.default_config())
+
+   @staticmethod
+   def getPenConfig():
+      dialog= cls_PenConfigWindow()
+      dialog.resize(650,600)
+      result= dialog.exec_()
+      if result== QtWidgets.QDialog.Accepted:
+         return True
+      else:
+         return False
 class PenConfigError(Exception):
    def __init__(self,msg,add_msg= None):
       self.msg= msg

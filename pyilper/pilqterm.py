@@ -142,6 +142,8 @@
 # - introduced "paper" color scheme
 # 22.02.2018 jsi
 # - disabled shrinking parent widgets because of errors in reconfiguration
+# 11.08.2018 jsi
+# - custom keyboard shortcuts added
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -154,6 +156,7 @@ import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
 from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE
+from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT
 from .pilconfig import PILCONFIG
 
 CURSOR_OFF=0
@@ -705,15 +708,32 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
               elif key== QtCore.Qt.Key_9:
                  self._kbdfunc(ord("}"),False)
                  self._alt_sequence=False
-              elif key== QtCore.Qt.Key_L:
-                 self._kbdfunc(ord("@"),False)
-                 self._alt_sequence=False
-              elif key== QtCore.Qt.Key_I:
-                 self._kbdfunc(72,True)
-                 self._alt_sequence=False
+#             elif key== QtCore.Qt.Key_L:
+#                self._kbdfunc(ord("@"),False)
+#                self._alt_sequence=False
+#             elif key== QtCore.Qt.Key_I:
+#                self._kbdfunc(72,True)
+#                self._alt_sequence=False
               elif key== QtCore.Qt.Key_1 or key == QtCore.Qt.Key_0 :
                  self._alt_seq_value+= key - QtCore.Qt.Key_0
                  self._alt_seq_length+=1
+              elif (key >= QtCore.Qt.Key_A and key <= QtCore.Qt.Key_Z):
+                 if key==QtCore.Qt.Key_I:
+                     self._kbdfunc(72,True)
+                 elif key== QtCore.Qt.Key_L:
+                     self._kbdfunc(ord("@"),False)
+                 else:
+                     shortcut_text,shortcut_flag = SHORTCUTCONFIG.get_shortcut(key-QtCore.Qt.Key_A) 
+                     for c in shortcut_text:
+                        t=ord(c)
+                        if t >= 0x20 and t <= 0x7E:
+                           self._kbdfunc(t,False)
+                     if shortcut_flag==SHORTCUT_EXEC:
+                        self._kbdfunc(82, True)
+                     elif shortcut_flag==SHORTCUT_EDIT:
+                        self._kbdfunc(66,True)
+                        self._kbdfunc(66,True)
+                 self._alt_sequence=False
               else:
                  self._alt_sequence=False
            else:

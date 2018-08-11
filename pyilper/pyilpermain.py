@@ -163,6 +163,10 @@
 # - added --clean startup option
 # 01.03.2018 jsi
 # - check minimum python version
+# 10.08.2018 jsi
+# - cls_PenConfigWindow moved to penconfig.py
+# 11.08.2018 jsi
+# - terminal custom shortcut config added
 #
 import os
 import sys
@@ -177,11 +181,12 @@ from PyQt5 import QtCore, QtWidgets
 from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilcore import *
 from .pilconfig import  PilConfigError, PILCONFIG
-from .penconfig import  PenConfigError, PENCONFIG
+from .penconfig import  PenConfigError, PENCONFIG, cls_PenConfigWindow
+from .shortcutconfig import  ShortcutConfigError, SHORTCUTCONFIG, cls_ShortcutConfigWindow
 from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThread, PilThreadError
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck, check_lifutils
 from .pilhp82162a import cls_tabhp82162a
-from .pilplotter import cls_tabplotter, cls_PenConfigWindow
+from .pilplotter import cls_tabplotter
 from .pildrive import cls_tabdrive
 from .pilscope import cls_tabscope
 from .pilprinter import cls_tabprinter
@@ -246,6 +251,7 @@ class cls_pyilper(QtCore.QObject):
       self.ui.actionConfig.triggered.connect(self.do_pyilperConfig)
       self.ui.actionDevConfig.triggered.connect(self.do_DevConfig)
       self.ui.actionPenConfig.triggered.connect(self.do_PenConfig)
+      self.ui.actionShortcutConfig.triggered.connect(self.do_ShortcutConfig)
       self.ui.actionDevStatus.triggered.connect(self.do_DevStatus)
       self.ui.actionReconnect.triggered.connect(self.do_Reconnect)
       self.ui.actionExit.triggered.connect(self.do_Exit)
@@ -299,9 +305,18 @@ class cls_pyilper(QtCore.QObject):
          sys.exit(1)
 #
 #     2. pen configuration
+#
       try:
          PENCONFIG.open(self.name,CONFIG_VERSION,self.instance,self.clean)
       except PenConfigError as e:
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         sys.exit(1)
+#
+#     3. terminal keyboard shortcuts
+#
+      try:
+         SHORTCUTCONFIG.open(self.name,CONFIG_VERSION,self.instance,self.clean)
+      except ShortcutConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
 #
@@ -518,6 +533,18 @@ class cls_pyilper(QtCore.QObject):
       try:
          PENCONFIG.save()
       except PenConfigError as e:
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return
+
+#
+# callback terminal keyboard shortcut configuration
+#
+   def do_ShortcutConfig(self):
+      if not cls_ShortcutConfigWindow.getShortcutConfig():
+         return
+      try:
+         SHORTCUTCONFIG.save()
+      except ShortcutConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
 

@@ -189,4 +189,4 @@ Note:
 * Development versions are work in progress and are only coarse tested. They may crash and may ruin your data at worst.
 * The development version does not affect the configuration of your production version because a different naming convention is used.
 
-To obtain more recent development versions of pyILPER download the pyilper-master.zip file again. If you are familiar with a git client you can synchronize a local pyilper-master directory with the remove GitHub repository.
+To obtain more recent development versions of pyILPER download the pyilper-master.zip file again. If you are familiar with a git client you can synchronize a local pyilper-master directory with the remote GitHub repository.

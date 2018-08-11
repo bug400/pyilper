@@ -191,6 +191,10 @@
 # 21.02.2018 jsi:
 # - fixed crash in cls_DevStatusWindo.de_refresh() if pyILPER status is 
 #   disabled
+# 08.07.2018:
+# - fixed closeEvent of cls_ui
+# 11.08.2018 jsi:
+# - terminal custom shortcut configuration added in main menu
 #
 import os
 import glob
@@ -1858,6 +1862,7 @@ class cls_ui(QtWidgets.QMainWindow):
       self.actionConfig=self.menuFile.addAction("pyILPER configuration")
       self.actionDevConfig=self.menuFile.addAction("Virtual HP-IL device configuration")
       self.actionPenConfig=self.menuFile.addAction("Plotter pen configuration")
+      self.actionShortcutConfig=self.menuFile.addAction("Terminal keyboard shortcut configuration")
       self.actionReconnect=self.menuFile.addAction("Reconnect")
       self.actionExit=self.menuFile.addAction("Quit")
 
@@ -1896,8 +1901,8 @@ class cls_ui(QtWidgets.QMainWindow):
 #
 #  catch close event
 #
-   def closeEvent(self,evnt):
-      evnt.accept()
+   def closeEvent(self,event):
+      event.accept()
       self.sig_quit.emit()
 #
 # enable controls that require lifutils

@@ -145,8 +145,9 @@ application for take the changes to effect.</p>
 
 <h3 class="w3-text-teal">Plotter pen configuration</h3>
 
-<p>With this configuration dialog the 16 predefined pens for the HP7470A
-plotter can be configured. For each pen the following properties can be
+<p>With this configuration dialog the 16 predefined pens for the 
+<a class="w3-hover-black" href="plotter.html">HP7470A plotter</a>
+can be configured. For each pen the following properties can be
 specified:</p>
 
 <ul class="w3-ul">
@@ -156,7 +157,28 @@ specified:</p>
 <li>Pen width in pixel (1..5)</li>
 </ul>
 
-<p>The <em>Reset</em> button restores the default configuration of the pens.
+<h3 class="w3-text-teal">Terminal keyboard shortcut configuration</h3>
+
+<p>With this configuration dialog you can define the key combinations ALT-A 
+to ALT-Z as typing aids for the 
+<a class="w3-hover-black" href="terminal.html">terminal</a>. 
+If you type one of these ALT key combinations the text defined for that 
+key is sent to the calculator. The following shortcut types are 
+available: </p>
+
+<table class="w3-table-all">
+<tr><th>Shortcut type</th><th>Action</th></tr>
+<tr><td>Input only</td><td>The text is sent to the calculator</td></tr>
+<tr><td>Input+Endline</td><td>The text is sent to the calculator followed by an endline</td></tr>
+<tr><td>Input+2*Cursor left</td><td>The text is sent to the calculator 
+followed by 2 times cursor left. If yous specify e.g. "TAPE( )" as text 
+the cursor is positioned between both parantheses.</td></tr>
+</table>
+
+<p>The <em>Reset</em> button restores the default configuration of the keys.
+
+<p><em>Note:</em>The key combinations ALT-L and ALT-I are reserved and cannot 
+be used as a user defined shortcut.</p>
 
 <h3 class="w3-text-teal">Reconnect</h3>
 
