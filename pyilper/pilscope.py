@@ -24,6 +24,7 @@
 #
 
 from PyQt5 import  QtWidgets
+import datetime
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric, T_BOOLEAN, T_STRING,O_DEFAULT
 from .pildevbase import cls_pildevbase
@@ -82,6 +83,13 @@ class cls_tabscope(cls_tabtermgeneric):
 #
       self.add_logging()
 #
+#     add tag button
+#
+      self.tagButton=QtWidgets.QPushButton("Tag Logfile")
+      self.add_controlwidget(self.tagButton)
+      self.tagButton.setEnabled(False)
+      self.tagButton.clicked.connect(self.do_tagbutton)
+#
 #     add scope config options to cascading menu
 #
       self.cBut.add_option("Show IDY frames","showidy",T_BOOLEAN,[True,False])
@@ -127,6 +135,8 @@ class cls_tabscope(cls_tabtermgeneric):
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
       self.pildevice.set_show_idy(self.showIdy)
       self.pildevice.set_displayMode(self.displayMode)
+      if self.logging:
+         self.tagButton.setEnabled(True)
 
    def post_enable(self):
       self.parent.commthread.register(self.pildevice2,self.name)
@@ -152,6 +162,35 @@ class cls_tabscope(cls_tabtermgeneric):
       except AttributeError:
          pass
       return
+#
+#  set tag button active/inactive
+#
+   def do_cbLogging(self):
+      super().do_cbLogging()
+      if self.logging:
+         self.tagButton.setEnabled(True)
+      else:
+         self.tagButton.setEnabled(False)
+#
+# exec tag button, because we may write it asynchronous pause the thread
+#
+   def do_tagbutton(self):
+      text,okPressed=QtWidgets.QInputDialog.getText(self,"Tag Logfile","Logfile tag",QtWidgets.QLineEdit.Normal,"")
+      if okPressed and text != "":
+          if self.parent.commthread is not None:
+              if self.parent.commthread.isRunning():
+                 self.parent.commthread.halt()
+#
+#  all errors that might occur during log write are handled from the
+#  cbLogging methods, we do not need to catch errors
+#
+          self.cbLogging.logWrite("\n")
+          self.cbLogging.logWrite(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+          self.cbLogging.logWrite(" ")
+          self.cbLogging.logWrite(text)
+          self.cbLogging.logWrite("\n")
+          if self.parent.commthread is not None:
+             self.parent.commthread.resume()
 #
 #
 #  forward character to the terminal frontend widget and do logging
