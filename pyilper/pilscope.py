@@ -57,6 +57,10 @@ from .pildevbase import cls_pildevbase
 # - display mode of scopes not initialized properly on program start
 # 16.01.2018 jsi
 # - adapted to cls_tabtermgeneric, implemented new cascading config menu
+# 13.08.2018 jsi
+# - log file tagging as proposed by Sylvain Cote
+# 14.08.2018 jsi
+# - added "**" to tag to find tags better in the logfile
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -186,7 +190,7 @@ class cls_tabscope(cls_tabtermgeneric):
 #
           self.cbLogging.logWrite("\n")
           self.cbLogging.logWrite(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-          self.cbLogging.logWrite(" ")
+          self.cbLogging.logWrite(" ** ")
           self.cbLogging.logWrite(text)
           self.cbLogging.logWrite("\n")
           if self.parent.commthread is not None:
