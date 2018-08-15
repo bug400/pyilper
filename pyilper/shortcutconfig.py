@@ -31,6 +31,7 @@ from .userconfig import cls_userconfig, ConfigError
 SHORTCUT_INPUT=0
 SHORTCUT_EXEC=1
 SHORTCUT_EDIT=2
+SHORTCUT_INSERT=3
 #
 # Terminal shortcut table model class -----------------------------------------
 #
@@ -95,7 +96,8 @@ class ShortcutDelegate(QtWidgets.QItemDelegate):
 
    def __init__(self, parent=None):
       super(ShortcutDelegate, self).__init__(parent)
-      self.items = ["Input only","Input+Endline","Input+2*Cursor left"]
+      self.items = ["Input only","Input+Endline","Input+2*Cursor left","Input+2*Cursor left+Insert"]
+
 #
 #  do not create an editor for the first column, create text editor for
 #  the second column and a QComboBox for the third column

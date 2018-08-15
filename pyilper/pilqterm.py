@@ -156,7 +156,7 @@ import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
 from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE
-from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT
+from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT, SHORTCUT_INSERT
 from .pilconfig import PILCONFIG
 
 CURSOR_OFF=0
@@ -733,6 +733,10 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                      elif shortcut_flag==SHORTCUT_EDIT:
                         self._kbdfunc(66,True)
                         self._kbdfunc(66,True)
+                     elif shortcut_flag==SHORTCUT_INSERT:
+                        self._kbdfunc(66,True)
+                        self._kbdfunc(66,True)
+                        self._kbdfunc(72,True)
                  self._alt_sequence=False
               else:
                  self._alt_sequence=False
