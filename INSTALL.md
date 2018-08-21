@@ -111,13 +111,13 @@ You should issue occasionally:
 
 to clean the conda package cache and save disk space.
 
-Note: pyILPER requires Python 3.6. Check the Python version with:
+Note: pyILPER requires Python 3.6 or Python 3.7. Check the Python version with:
 
      conda list
 
-If the Python version is still 3.5.x upgrade to 3.6 with:
+You can upgrade the Python version to 3.7 with:
 
-     conda install python=3.6
+     conda install python=3.7
 
 
 Setup
