@@ -50,7 +50,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <p><em>Note:</em> Line feeds are not visible in the scrollable display. However they trigger a page break in the PDF file.</p>
 
-<h3 class="w3-text-teal">Differences</h3>
+<h3 class="w3-text-teal">Differences from the real device</h3>
 
 <p>The emulated device differs from the original device in the following ways:</p>
 
@@ -64,7 +64,13 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 <li>The HP-IL printer status bytes always return the condition "ready to receive data" because the error conditions of the real device do not apply to the emulator.</li>
 
 <li>Printer controls for selftest or bidirectional printing have no effect.</li>
+</ul>
 
+
+<h3 class="w3-text-teal">Issues</h3>
+
+<ul class="w3-ul">
+<li>On macOS stretched characters do not render correctly. This is probably a problem with the Qt version for this operating system. As a work around the expanded font is displayed with unstretched characters but the correct character spacing on macOS.</li>
 <li>The alternate control mode is not implemented.</li>
 </ul>
 
