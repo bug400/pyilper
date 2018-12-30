@@ -23,6 +23,8 @@
 # Changelog
 # 11.08.2018 jsi
 # - first version
+# 15.08.2018 jsi
+# - SHORTCUT_INSERT shortcut type added
 #
 import copy
 from PyQt5 import QtCore, QtGui, QtWidgets

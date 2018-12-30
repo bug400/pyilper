@@ -1,3 +1,12 @@
+pyilper (1.8.0~devel) bionic; urgency=medium
+
+  * develompent 
+  * added HP2225 thermal printer emulator
+  * refactoring in lifexec: moved to the subprocess.run interface
+  * minimum required Python version is now 3.5
+
+ -- bionic <achim@trillian.trilldom.lan>  Sun, 30 Dec 2018 12:24:08 +0100
+
 pyilper (1.7.2-ubuntu1) bionic; urgency=medium
 
   * production 

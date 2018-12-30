@@ -167,6 +167,8 @@
 # - cls_PenConfigWindow moved to penconfig.py
 # 11.08.2018 jsi
 # - terminal custom shortcut config added
+# 18.12.2018 jsi
+# - added HP2225B tab
 #
 import os
 import sys
@@ -191,13 +193,14 @@ from .pildrive import cls_tabdrive
 from .pilscope import cls_tabscope
 from .pilprinter import cls_tabprinter
 from .pilterminal import cls_tabterminal
+from .pilhp2225b import cls_tabhp2225b
 
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 
 COMMTHREAD_CLASSES={MODE_PILBOX:cls_PilBoxThread,MODE_TCPIP:cls_PilTcpIpThread,MODE_SOCKET:cls_PilSocketThread}
 
-TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a}
+TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a,TAB_HP2225B: cls_tabhp2225b}
 
 #
 # Main application ------------------------------------------------------ 

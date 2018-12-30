@@ -144,6 +144,8 @@
 # - disabled shrinking parent widgets because of errors in reconfiguration
 # 11.08.2018 jsi
 # - custom keyboard shortcuts added
+# 15.08.2018 jsi
+# - SHORTCUT_INSERT shortcut type added
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()

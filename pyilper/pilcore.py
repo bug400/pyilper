@@ -96,6 +96,11 @@
 # - 1.7.2 beta2
 # 20.08.2018 jsi
 # - 1.7.2 production
+# 12.12.2018 jsi
+# - added HP2225B_LINEBUFFERSIZE
+# - 1.8.0 development
+# 18.12.2018 jsi
+# - added HP2225B
 #
 import platform
 #
@@ -103,14 +108,14 @@ import platform
 #
 # General constants:
 #
-PRODUCTION= True      # Production/Development Version
-VERSION="1.7.2"       # pyILPR version number
+PRODUCTION= False     # Production/Development Version
+VERSION="1.8.0"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Python minimum version
 #
 PYTHON_REQUIRED_MAJOR=3
-PYTHON_REQUIRED_MINOR=4
+PYTHON_REQUIRED_MINOR=5
 #
 # Communication modes and classes
 #
@@ -178,8 +183,9 @@ TAB_DRIVE=2
 TAB_TERMINAL=3
 TAB_PLOTTER=4
 TAB_HP82162A=5
+TAB_HP2225B=6
 #
-TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A'}
+TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A', TAB_HP2225B: 'HP2225B'}
 #
 # PDF Constants in 1/10 mm
 #
@@ -209,6 +215,8 @@ def isMACOS():
    return platform.system()=="Darwin"
 #
 # Standard FONT
+# Note: It would be more elegant to use "Andale Mono" on Macos and "Consolas" on 
+# Windows. "Consolas" is not available on XP and older Windows versions.
 #
 if isLINUX():
    FONT="Monospace"
