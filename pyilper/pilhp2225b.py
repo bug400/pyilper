@@ -25,8 +25,11 @@
 # HP2225B virtual device classes  ---------------------------------------------
 #
 # Changelog
-# XX.XX.XXXX jsi:
+# 30.12.2018 jsi:
 # - initial version
+# 02.01.2018 jsi:
+# - added support for ^N and ^O for bold mode on and off
+# - allow ESC&kS in addition to ESC&k0S to switch to normal character pitch
 #
 import copy
 import queue
@@ -1272,7 +1275,7 @@ class cls_hp2225b(QtCore.QObject):
 #
 #     normal width
 #
-      if self.esc_seq=="&k0S":
+      if self.esc_seq=="&k0S" or self.esc_seq=="&kS":
          self.char_attr= (self.char_attr & 0x0C) 
          self.put_status()
          return
@@ -1508,7 +1511,7 @@ class cls_hp2225b(QtCore.QObject):
          self.put_status()
          return
       else:
-          print("illegal escape sequence ignored: ", self.esc_seq)
+          print("hp2225: illegal escape sequence ignored: ", self.esc_seq)
       return
 #
 #  printer data processor HP command set
@@ -1620,6 +1623,22 @@ class cls_hp2225b(QtCore.QObject):
           if self.ltermMode & 0x02 or self.ltermMode & 0x03:
               self.cr()
           self.ff()
+#
+#     bold mode on ^N
+#
+      elif (ch == 0x0E):
+          self.empty_line= False
+          self.graphics_mode=False
+          self.char_bold=True
+          self.put_status()
+#
+#     bold mode off ^O
+#
+      elif (ch == 0x0F):
+          self.empty_line= False
+          self.graphics_mode=False
+          self.char_bold=False
+          self.put_status()
 #
 #     normal character
 #

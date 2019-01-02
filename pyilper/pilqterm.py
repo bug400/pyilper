@@ -1565,7 +1565,7 @@ class HPTerminal:
           elif t==122:  # reset
              self.reset_hard()
           else:
-             print("unhandled escape sequence %d" % t)
+              print("terminal: unhandled escape sequence %d" % t)
           self.fesc= False
 
        else:
