@@ -30,6 +30,9 @@
 # 02.01.2018 jsi:
 # - added support for ^N and ^O for bold mode on and off
 # - allow ESC&kS in addition to ESC&k0S to switch to normal character pitch
+# 04.01.2018 jsi:
+# - support zero length graphics chunks
+# - switchable print color
 #
 import copy
 import queue
@@ -92,6 +95,7 @@ HP2225B_MAX_LINES= 69       # maximum number of lines for a page
 FONT_WIDTH= [16, 32, 9, 18 ]
 #
 # this is a hack because Qt on Macos does not display expanded fonts correctly
+#
 if isMACOS():
    FONT_STRETCH= [100, 110, 56, 110]
 else:
@@ -99,6 +103,15 @@ else:
 
 BUFFER_SIZE_NAMES=["5 Pages", "10 Pages","20 Pages","50 Pages"]
 BUFFER_SIZE_VALUES=[2500, 5000, 10000, 25000]
+#
+# Print colors
+#
+HP2225_COLOR_BLACK=0
+HP2225_COLOR_RED=1
+HP2225_COLR_BLUE=2
+HP2225_COLOR_GREEN=3
+COLOR_NAMES= [ "black", "red", "blue", "green" ]
+HP2225_COLORS=[QtCore.Qt.black, QtCore.Qt.red, QtCore.Qt.blue, QtCore.Qt.green]
 
 #
 # HP2225B tab widget ---------------------------------------------------------
@@ -117,7 +130,8 @@ class cls_tabhp2225b(cls_tabgeneric):
 #     init local parameter
 #
       self.screenwidth=PILCONFIG.get(self.name,"hp2225b_screenwidth",640)
-      self.screenwidth=PILCONFIG.get(self.name,"hp2225b_scrollupbuffersize",1)
+      self.scrollupbuffersize=PILCONFIG.get(self.name,"hp2225b_scrollupbuffersize",1)
+      self.printcolor=PILCONFIG.get(self.name,"hp2225b_printcolor",HP2225_COLOR_BLACK)
 #
 #     create Printer GUI object
 #
@@ -135,6 +149,7 @@ class cls_tabhp2225b(cls_tabgeneric):
 #
       self.cBut.add_option("Screen width","hp2225b_screenwidth",T_INTEGER,[O_DEFAULT,640,960,1280])
       self.cBut.add_option("Buffer size","hp2225b_scrollupbuffersize",T_STRING,BUFFER_SIZE_NAMES)
+      self.cBut.add_option("Print color","hp2225b_printcolor",T_STRING,COLOR_NAMES)
 #
 #     add logging control widget
 #
@@ -656,6 +671,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       self.parent=parent
       self.name= name
       self.screenwidth= -1
+      self.printcolor= QtCore.Qt.black
       self.w=-1
       self.h=-1
       self.rows= 0
@@ -669,7 +685,6 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 
       self.font.setPixelSize(HP2225B_FONT_PIXELSIZE)
       metrics=QtGui.QFontMetrics(self.font)
-      self.font_height= metrics.height()
 #
 #     Initialize line bitmap buffer
 #
@@ -709,15 +724,20 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #        initialize scene if not existing
 #
          if  self.printscene is None:
-            self.printscene= cls_hp2225b_scene(self,self.font, self.screenwidth)
+            self.printscene= cls_hp2225b_scene(self,self.font, self.screenwidth,self.printcolor)
             self.setScene(self.printscene)
             self.reset()
 #
 #        otherwise reconfigure scene and its content
 #
          else:
-            self.printscene.reconfigure(self.screenwidth)
+            self.printscene.reconfigure(self.screenwidth,self.printcolor)
             self.do_resize()
+      tmp=HP2225_COLORS[PILCONFIG.get(self.name,"hp2225b_printcolor")]
+      if tmp != self.printcolor:
+          self.printcolor=tmp
+          self.printscene.reconfigure(self.screenwidth,self.printcolor)
+          self.do_resize()
       return
 #
 #      reset output window
@@ -761,7 +781,6 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #     now adjust the scroll bar parameters
 #
-#     scroll_max=self.lb_current- self.rows+1
       scroll_max=self.lb_current- self.rows
       if scroll_max < 0:
          scroll_max=0
@@ -840,7 +859,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
                  y=tmargin + horizontal_margin
                  rowcount=0
 #                print("reset y to ",y,tmargin,horizontal_margin)
-              item=cls_hp2225b_line(s,self.font)
+              item=cls_hp2225b_line(s,self.font,self.printcolor)
               pdfitems.append(item)
               self.pdfscene.addItem(item)
               item.setPos(lmargin,y)
@@ -946,7 +965,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 class cls_hp2225b_scene(QtWidgets.QGraphicsScene):
 
-   def __init__(self,parent,font,screenwidth):
+   def __init__(self,parent,font,screenwidth,printcolor):
       super().__init__()
       self.rows= 0
       self.w=0
@@ -954,15 +973,16 @@ class cls_hp2225b_scene(QtWidgets.QGraphicsScene):
       self.parent=parent
       self.si= None
       self.font=font
-      self.reconfigure(screenwidth)
+      self.reconfigure(screenwidth,printcolor)
       return
 #
 #  re/configure graphics scene
 #
-   def reconfigure(self,screenwidth):
+   def reconfigure(self,screenwidth,printcolor):
       self.screenwidth=screenwidth
       self.w= PRINTER_WIDTH_HIGH
       self.h= BUFFER_LINE_H *2
+      self.printcolor=printcolor
       return
 #
 #  set or change the size of the scene
@@ -998,7 +1018,7 @@ class cls_hp2225b_scene(QtWidgets.QGraphicsScene):
       for i in range(start,end):
          self.si[j]=self.parent.lb[i]
          if self.parent.lb[i] is not None:
-            self.si[j]=cls_hp2225b_line(self.parent.lb[i], self.font)
+            self.si[j]=cls_hp2225b_line(self.parent.lb[i], self.font,self.printcolor)
             self.addItem(self.si[j])
             self.si[j].setPos(0,y)
          y+=self.h
@@ -1010,14 +1030,16 @@ class cls_hp2225b_scene(QtWidgets.QGraphicsScene):
 #
 class cls_hp2225b_line(QtWidgets.QGraphicsItem):
 
-    def __init__(self,itemlist, font):
+    def __init__(self,itemlist, font, color):
         super().__init__()
         self.itemlist= itemlist
         self.font=font
+        self.color=color
         metrics=QtGui.QFontMetrics(self.font)
         self.font_height=metrics.height()
         self.rect= QtCore.QRectF(0,0,PRINTER_WIDTH_HIGH,self.font_height)
-        self.flags=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop | QtCore.Qt.TextDontClip
+#       self.flags=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop | QtCore.Qt.TextDontClip
+#       self.flags=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop 
 
 
     def setPos(self,x,y):
@@ -1042,15 +1064,18 @@ class cls_hp2225b_line(QtWidgets.QGraphicsItem):
 #       number of characters per row as the original printer
 #
             elif item[0]== ELEMENT_TEXT:
+                painter.setPen(self.color)
                 posx=item[1]
                 self.font.setBold(item[3])
                 self.font.setUnderline(item[4])
                 self.font.setStretch(FONT_STRETCH[item[2]])
+                posy=self.font_height-12
 
                 painter.setFont(self.font)
                 for c in item[5]:
-                    bounding_rect= QtCore.QRect(posx,0,posx+ (FONT_WIDTH[item[2]]),self.font_height)
-                    painter.drawText(bounding_rect, self.flags, c)
+                    painter.drawText(posx,posy,c)
+#                   bounding_rect= QtCore.QRect(posx,0,posx+ (FONT_WIDTH[item[2]]),self.font_height)
+#                   painter.drawText(bounding_rect, self.flags, c)
                     posx+= FONT_WIDTH[item[2]]
                 continue
 #
@@ -1060,6 +1085,7 @@ class cls_hp2225b_line(QtWidgets.QGraphicsItem):
 #       dpi according to the hiRes mode
 #
             elif item[0]==ELEMENT_GRAPHICS:
+                painter.setPen(self.color)
                 posy=item[1]*2
                 hiRes=item[2]
                 posx=0
@@ -1070,11 +1096,11 @@ class cls_hp2225b_line(QtWidgets.QGraphicsItem):
                     for j in range (0,8):
                        if hiRes:
                           if i & mask:
-                             painter.fillRect(posx,posy,1,2,QtCore.Qt.black)
+                             painter.fillRect(posx,posy,1,2,self.color)
                           posx+=1
                        else:
                           if i & mask:
-                             painter.fillRect(posx,posy,2,2,QtCore.Qt.black)
+                             painter.fillRect(posx,posy,2,2,self.color)
                           posx+=2
                        mask= mask >> 1
         return
@@ -1165,8 +1191,8 @@ class cls_hp2225b(QtCore.QObject):
       self.esc= False             # escape mode
       self.esc_seq=""             # escape sequence
       self.esc_prefix=""          # prefix of combined esc sequences
-      self.num_graphics=0         # number of graphics bytes
-      self.graphics_mode=False    # flag if we are in graphics mode
+      self.num_graphics=-1        # number of graphics bytes
+      self.ignore_crlf=False      # flag to ignore cr/lf between graphics chunks
       self.apgot=False            # flag avoid printing graphics over text
 #
 #     printer status that controls the appearance of the printer output and
@@ -1180,8 +1206,8 @@ class cls_hp2225b(QtCore.QObject):
       self.lpi6=False             # lines/inch
       self.pdf_rows=480           # number of rows for pdf output
       self.wrapEOL=False          # EOL wrap
-      self.empty_line=False       # detect empty line this terminates graphics
-                                  # awful!
+      self.empty_line=False       # detect empty text lines, this disables
+                                  # ignoring cr/lf.
 #
 #     printer status which is handled here
 #
@@ -1205,8 +1231,8 @@ class cls_hp2225b(QtCore.QObject):
       self.esc= False
       self.esc_seq=""
       self.esc_prefix=""
-      self.num_graphics=0
-      self.graphics_mode=False
+      self.num_graphics=-1
+      self.ignore_crlf=False
       self.apgot=False
       self.text_length=60
       self.pdf_rows=480
@@ -1245,8 +1271,10 @@ class cls_hp2225b(QtCore.QObject):
        data_copy= copy.deepcopy(self.buf_data)
        if self.buf_status == self.BUF_TEXT:
            self.guiobject.put_cmd([REMOTECMD_TEXT,data_copy])
+#          print("put cmd text",data_copy)
        else:
            self.guiobject.put_cmd([REMOTECMD_GRAPHICS,data_copy])
+#          print("put cmd graphics",data_copy)
        self.buf_clear()
 # 
 #  send status
@@ -1266,7 +1294,10 @@ class cls_hp2225b(QtCore.QObject):
 #
    def setAltMode(self,mode):
        self.altMode= mode
-       print("set alt mode ",mode)
+       if self.altMode:
+           print("hp2225: entering ESC/P command mode. This mode is not supported by the emulator")
+       else:
+           print("hp2225: returning to PCL command mode.")
        return
 #
 #  process escaape sequences HP command set
@@ -1404,7 +1435,7 @@ class cls_hp2225b(QtCore.QObject):
 #     terminate graphics
 #
       elif self.esc_seq=="*rB":
-         self.graphics_mode= False
+         self.ignore_crlf= False
          self.guiobject.put_cmd([REMOTECMD_TERMGRAPHICS])
          return
 #
@@ -1456,6 +1487,7 @@ class cls_hp2225b(QtCore.QObject):
          if n<0 or n> 255:
             return
          self.num_graphics=n
+         self.begin_graphics()
          return
 #
 #     graphics resolution
@@ -1514,36 +1546,44 @@ class cls_hp2225b(QtCore.QObject):
           print("hp2225: illegal escape sequence ignored: ", self.esc_seq)
       return
 #
+#  begin graphics
+#
+   def begin_graphics(self):
+#
+#     flush any pending text and go to BOL
+#
+#     print("begin new graphics ",self.num_graphics)
+      if self.buf_status== self.BUF_TEXT:
+         self.cr()
+#
+#  if the avoid printing graphics over text command was issued do a linefeed
+#
+         if self.apgot:
+            self.lf()
+      self.apgot= False
+      self.ignore_crlf= True
+      self.buf_status= self.BUF_GRAPHICS
+      self.empty_line= False
+      return
+
+#
 #  printer data processor HP command set
 #
    def process_char_hp(self,ch):
 #
-#     graphics mode (ESC mode only), add columns to buffer
+#     if there are graphics data, append it to buffer and return
 #
-      if (self.num_graphics > 0):
+      if self.num_graphics > 0:
+         self.num_graphics-=1
+         self.buf_data.append(ch)
+         return
 #
-#         if we begin graphics flush any pending text and go to BOL
+#     last byte of graphics received, flush buffer and proceed
 #
-          if not self.graphics_mode:
-              if self.buf_status== self.BUF_TEXT:
-                 self.cr()
-#
-#     if the avoid printing graphics over text command was issued do a linefeed
-#
-                 if self.apgot:
-                    self.lf()
-              self.apgot= False
-              self.graphics_mode= True
-          self.num_graphics-=1
-          self.buf_status= self.BUF_GRAPHICS
-          self.buf_data.append(ch)
-#
-#         last byte of graphics received, flush buffer
-#
-          if self.num_graphics==0:
-              self.buf_flush()
-          self.empty_line= False
-          return
+      if self.num_graphics==0:
+         self.buf_flush()
+#        print("graphics flushed ", self.buf_status)
+         self.num_graphics= -1
 #
 #     process ESC sequences
 #
@@ -1571,7 +1611,7 @@ class cls_hp2225b(QtCore.QObject):
 #
 #        repeated escape sequence terminated with lowercase letter
 #
-         if chr(ch) in "swabgdlpfc" and len(self.esc_seq)>2:
+         if chr(ch) in "sdlpfcwabg" and len(self.esc_seq)>2:
             if self.esc_prefix == "":
                self.esc_prefix= self.esc_seq[:2]
                self.esc_seq= self.esc_seq[2:]
@@ -1590,7 +1630,7 @@ class cls_hp2225b(QtCore.QObject):
 #     Backspace:
 #
       if (ch == 0x08):
-          if self.graphics_mode:
+          if self.ignore_crlf:
               return
           self.buf_flush()
           self.guiobject.put_cmd([REMOTECMD_BS])
@@ -1598,7 +1638,7 @@ class cls_hp2225b(QtCore.QObject):
 #     CR
 #
       elif (ch == 0x0D):
-          if self.graphics_mode:
+          if self.ignore_crlf:
               return
           self.cr()
           if self.ltermMode & 0x01:
@@ -1608,10 +1648,10 @@ class cls_hp2225b(QtCore.QObject):
 #
       elif (ch == 0x0A):
           if self.empty_line:
-              if self.graphics_mode:
-                  self.graphics_mode= False
-          self.empty_line= True
-          if self.graphics_mode:
+              if self.ignore_crlf:
+                  self.ignore_crlf= False
+          self.empty_line= True 
+          if self.ignore_crlf:
               return
           if self.ltermMode & 0x02:
               self.cr()
@@ -1628,7 +1668,6 @@ class cls_hp2225b(QtCore.QObject):
 #
       elif (ch == 0x0E):
           self.empty_line= False
-          self.graphics_mode=False
           self.char_bold=True
           self.put_status()
 #
@@ -1636,7 +1675,6 @@ class cls_hp2225b(QtCore.QObject):
 #
       elif (ch == 0x0F):
           self.empty_line= False
-          self.graphics_mode=False
           self.char_bold=False
           self.put_status()
 #
@@ -1644,7 +1682,7 @@ class cls_hp2225b(QtCore.QObject):
 #
       else:
           self.empty_line= False
-          self.graphics_mode=False
+          self.ignore_crlf=False
           if ((ch >=0x20 and ch < 127) or (ch > 159 and ch< 255)):
               self.buf_status= self.BUF_TEXT
               assert self.buf_status== self.BUF_EMPTY or self.buf_status== self.BUF_TEXT
