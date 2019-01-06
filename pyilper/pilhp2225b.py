@@ -721,23 +721,27 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
          self.setFixedWidth(self.w)
 #
-#        initialize scene if not existing
+#        reconfigure scene if it exists
 #
-         if  self.printscene is None:
-            self.printscene= cls_hp2225b_scene(self,self.font, self.screenwidth,self.printcolor)
-            self.setScene(self.printscene)
-            self.reset()
-#
-#        otherwise reconfigure scene and its content
-#
-         else:
+         if self.printscene is not None:
             self.printscene.reconfigure(self.screenwidth,self.printcolor)
             self.do_resize()
+#
+#     print color
+#
       tmp=HP2225_COLORS[PILCONFIG.get(self.name,"hp2225b_printcolor")]
       if tmp != self.printcolor:
           self.printcolor=tmp
-          self.printscene.reconfigure(self.screenwidth,self.printcolor)
-          self.do_resize()
+          if self.printscene is not None:
+             self.printscene.reconfigure(self.screenwidth,self.printcolor)
+             self.do_resize()
+#
+#     initialize scene if it does not exist
+#
+      if  self.printscene is None:
+         self.printscene= cls_hp2225b_scene(self,self.font, self.screenwidth,self.printcolor)
+         self.setScene(self.printscene)
+         self.reset()
       return
 #
 #      reset output window
