@@ -147,7 +147,7 @@ class cls_tabhp2225b(cls_tabgeneric):
 #
 #     add local config option
 #
-      self.cBut.add_option("Screen width","hp2225b_screenwidth",T_INTEGER,[O_DEFAULT,640,960,1280])
+      self.cBut.add_option("Screen width","hp2225b_screenwidth",T_INTEGER,[640,960,1280])
       self.cBut.add_option("Buffer size","hp2225b_scrollupbuffersize",T_STRING,BUFFER_SIZE_NAMES)
       self.cBut.add_option("Print color","hp2225b_printcolor",T_STRING,COLOR_NAMES)
 #
@@ -1245,7 +1245,6 @@ class cls_hp2225b(QtCore.QObject):
       self.wrapEOL=False
 
       self.displayFunctions=False
-      self.altMode=False
       self.log_line=""
       self.empty_line=False
       self.buf_clear()
@@ -1295,7 +1294,7 @@ class cls_hp2225b(QtCore.QObject):
    def setAltMode(self,mode):
        self.altMode= mode
        if self.altMode:
-           print("hp2225: entering ESC/P command mode. This mode is not supported by the emulator")
+           print("hp2225: entering ESC/P command mode. This mode is not supported and the emulator will ignore all data.")
        else:
            print("hp2225: returning to PCL command mode.")
        return
