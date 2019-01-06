@@ -129,7 +129,7 @@ class cls_tabhp2225b(cls_tabgeneric):
 #
 #     init local parameter
 #
-      self.screenwidth=PILCONFIG.get(self.name,"hp2225b_screenwidth",640)
+      self.screenwidth=PILCONFIG.get(self.name,"hp2225b_screenwidth",-1)
       self.scrollupbuffersize=PILCONFIG.get(self.name,"hp2225b_scrollupbuffersize",1)
       self.printcolor=PILCONFIG.get(self.name,"hp2225b_printcolor",HP2225_COLOR_BLACK)
 #
@@ -147,7 +147,7 @@ class cls_tabhp2225b(cls_tabgeneric):
 #
 #     add local config option
 #
-      self.cBut.add_option("Screen width","hp2225b_screenwidth",T_INTEGER,[640,960,1280])
+      self.cBut.add_option("Screen width","hp2225b_screenwidth",T_INTEGER,[O_DEFAULT,640,960,1280])
       self.cBut.add_option("Buffer size","hp2225b_scrollupbuffersize",T_STRING,BUFFER_SIZE_NAMES)
       self.cBut.add_option("Print color","hp2225b_printcolor",T_STRING,COLOR_NAMES)
 #
@@ -712,7 +712,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
          self.lb_anz=0
          self.lb_position=0
 
-      tmp=PILCONFIG.get(self.name,"hp2225b_screenwidth")
+      tmp=PILCONFIG.get_dual(self.name,"hp2225b_screenwidth")
       if tmp != self.screenwidth:
          self.screenwidth=tmp
          self.w=self.screenwidth

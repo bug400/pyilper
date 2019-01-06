@@ -169,6 +169,8 @@
 # - terminal custom shortcut config added
 # 18.12.2018 jsi
 # - added HP2225B tab
+# 06.01.2018 jsi
+# - added HP2225B screenwidth global parameter
 #
 import os
 import sys
@@ -300,6 +302,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"terminalcharsize",15)
          PILCONFIG.get(self.name,"directorycharsize",13)
          PILCONFIG.get(self.name,"hp82162a_pixelsize",1)
+         PILCONFIG.get(self.name,"hp2225b_screenwidth",640)
          PILCONFIG.get(self.name,"usebom",False)
 
          PILCONFIG.save()

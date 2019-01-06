@@ -195,6 +195,8 @@
 # - fixed closeEvent of cls_ui
 # 11.08.2018 jsi:
 # - terminal custom shortcut configuration added in main menu
+# 06.01.2018 jsi
+# - added global configuration for HP2225B screenwidth
 #
 import os
 import glob
@@ -1064,6 +1066,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__papersize__=PILCONFIG.get(self.__name__,"papersize")
       self.__lifutilspath__=PILCONFIG.get(self.__name__,"lifutilspath")
       self.__hp82162a_pixelsize__=PILCONFIG.get(self.__name__,"hp82162a_pixelsize")
+      self.__hp2225b_screenwidth__=PILCONFIG.get(self.__name__,"hp2225b_screenwidth")
       self.__usebom__= PILCONFIG.get(self.__name__,"usebom")
 
       self.setWindowTitle("pyILPER configuration")
@@ -1278,6 +1281,25 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gbox82162a.setLayout(self.grid82162a)
       self.vbox2.addWidget(self.gbox82162a)
 #
+#     HP2225B thermal printer settings
+#
+      self.gbox2225B= QtWidgets.QGroupBox()
+      self.gbox2225B.setFlat(True)
+      self.gbox2225B.setTitle("HP2225B Settings")
+      self.grid2225B= QtWidgets.QGridLayout()
+      self.grid2225B.setSpacing(3)
+      self.grid2225B.addWidget(QtWidgets.QLabel("Screen width size"),0,0)
+
+      self.spinHP2225Bscreenwidth=QtWidgets.QSpinBox()
+      self.spinHP2225Bscreenwidth.setMinimum(640)
+      self.spinHP2225Bscreenwidth.setMaximum(1280)
+      self.spinHP2225Bscreenwidth.setSingleStep(320)
+      self.spinHP2225Bscreenwidth.setValue(self.__hp2225b_screenwidth__)
+      self.grid2225B.addWidget(self.spinHP2225Bscreenwidth,0,1)
+
+      self.gbox2225B.setLayout(self.grid2225B)
+      self.vbox2.addWidget(self.gbox2225B)
+#
 #     Section Directory listing configuration: font size
 #
       self.gboxd= QtWidgets.QGroupBox()
@@ -1478,6 +1500,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__needs_reconfigure__ |= self.check_param("terminalcharsize",self.spinTermCharsize.value())
       self.__needs_reconfigure__ |= self.check_param("directorycharsize",self.spinDirCharsize.value())
       self.__needs_reconfigure__ |= self.check_param("hp82162a_pixelsize",self.spinHP82162APixelsize.value())
+      self.__needs_reconfigure__ |= self.check_param("hp2225b_screenwidth",self.spinHP2225Bscreenwidth.value())
 #
 #     These parameters need a restart, display message
 #
@@ -1506,6 +1529,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"papersize",self.combops.currentIndex())
       PILCONFIG.put(self.__name__,"lifutilspath",self.lbllifpath.text())
       PILCONFIG.put(self.__name__,"hp82162a_pixelsize",self.spinHP82162APixelsize.value())
+      PILCONFIG.put(self.__name__,"hp2225b_screenwidth",self.spinHP2225Bscreenwidth.value())
       PILCONFIG.put(self.__name__,"usebom",self.__usebom__)
       super().accept()
 
