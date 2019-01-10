@@ -6,12 +6,12 @@ Index
 
 * [User Interface](#user-interface)
 * [Drive](#drive)
-* [Generic Printer](#printer)
+* [Generic Printer](#generic-printer)
 * [Terminal](#terminal)
 * [Scope](#scope)
-* [HP-7470A Plotter](#hp7470a-plotter)
-* [HP-82162A thermal printer](#hp82162a-thermal-printer)
-* [ThinkJet HP-2225B printer](#hp2225b-printer)
+* [HP-7470A Plotter](#hp-7470a-plotter)
+* [HP-82162A thermal printer](#hp-82162a-thermal-printer)
+* [ThinkJet HP-2225B printer](#thinkjet-hp-2225b-printer)
 
 User Interface
 --------------
