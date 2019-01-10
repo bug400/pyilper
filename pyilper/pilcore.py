@@ -101,6 +101,9 @@
 # - 1.8.0 development
 # 18.12.2018 jsi
 # - added HP2225B
+# 10.01.2018 jsi
+# - renamed Printer tab to Generic Printer
+# - prepare Beta1
 #
 import platform
 #
@@ -109,7 +112,7 @@ import platform
 # General constants:
 #
 PRODUCTION= False     # Production/Development Version
-VERSION="1.8.0"       # pyILPR version number
+VERSION="1.8.0b1"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Python minimum version
@@ -185,7 +188,7 @@ TAB_PLOTTER=4
 TAB_HP82162A=5
 TAB_HP2225B=6
 #
-TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A', TAB_HP2225B: 'HP2225B'}
+TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Generic Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A', TAB_HP2225B: 'HP2225B'}
 #
 # PDF Constants in 1/10 mm
 #

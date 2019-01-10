@@ -1,4 +1,4 @@
-## pyILPR (Virtual HP-IL Devices)
+pyILPR (Virtual HP-IL Devices)
 ==============================
 
 ![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_drive.png)
@@ -39,10 +39,11 @@ Features
 
 * Entirely written in Python3 using the QT GUI-Framework
 * Virtual mass storage drive with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize)
-* Virtual printer emulating the HP-71B, HP-41C and ROMAN-8 character sets
+* Virtual generic printer emulating the HP-71B, HP-41C and ROMAN-8 character sets
 * Terminal emulator with keyboard support (HP-71B only). Requires at least version 1.6 of the PIL-Box firmware
-* Virtual plotter emulating the HP 7470A HP-IL plotter
-* Virtual printer emualting the HP HP82162A thermal printer
+* Virtual plotter emulating the HP-7470A HP-IL plotter
+* Virtual printer emulating the HP-82162A thermal printer
+* Virtual printer emulating the ThinkJet HP-2225B printer (new in pyILPER 1.8.0)
 * HP-IL scope
 * The number of virtual devices is configurable,
 * The virtual devices can be either organized in a compact tabbed view or in independent floating windows
@@ -71,7 +72,7 @@ Linux, Windows and mac OS.
 See the [Installation Instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md) for details.
 
 In order to use the file and disk management functions and the virtual HP7470A plotter 
-an up to date version of the [LIFUTILS] (https://github.com/bug400/lifutils/releases) 
+an up to date version of the [LIFUTILS](https://github.com/bug400/lifutils/releases) 
 is required as well.
 
 

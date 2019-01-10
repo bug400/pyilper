@@ -1,4 +1,4 @@
-pyilper (1.8.0~devel) bionic; urgency=medium
+pyilper (1.8.0~beta1) bionic; urgency=medium
 
   * develompent 
   * added HP2225 thermal printer emulator
