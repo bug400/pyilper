@@ -6,11 +6,12 @@ Index
 
 * [User Interface](#user-interface)
 * [Drive](#drive)
-* [Printer](#printer)
+* [Generic Printer](#printer)
 * [Terminal](#terminal)
 * [Scope](#scope)
-* [HP7470A Plotter](#hp7470a-plotter)
-* [HP82162A thermal printer](#hp82162a-thermal-printer)
+* [HP-7470A Plotter](#hp7470a-plotter)
+* [HP-82162A thermal printer](#hp82162a-thermal-printer)
+* [ThinkJet HP-2225B printer](#hp2225b-printer)
 
 User Interface
 --------------
@@ -31,8 +32,8 @@ Features:
 * file management functions (load external file, export to external file, rename, purge, view)
 * medium management functions (initialize, label, pack)
 
-Printer
--------
+Generic Printer
+---------------
 ![pyilper](https://cdn.rawgit.com/bug400/pyilper/c36dfd5/img/pyilper_printer.png)
 
 Features:
@@ -54,6 +55,7 @@ Features:
 * HP-41, HP-71 or Roman-8 character set
 * scrollable
 * select, copy and paste text
+* configurable keyboard shortcuts
 
 Scope
 -----
@@ -68,8 +70,8 @@ Features:
 * select and copy text 
 * log to external file
 
-HP7470A Plotter
----------------
+HP-7470A Plotter
+----------------
 ![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_plotter.png)
 
 Features:
@@ -80,11 +82,22 @@ Features:
 * configurable paper size
 * logging of HP-GL commands to external file
 
-HP82162A thermal printer
-------------------------
+HP-82162A thermal printer
+-------------------------
 ![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_thermal.png)
 
 Features:
 * supports all features of the HP82162A thermal printer with the exception of bar code generation
-* scrollable
+* scrollable printer output window
 * PDF output
+
+ThinkJet HP-2225B printer
+-------------------------
+![pyilper](https://cdn.rawgit.com/bug400/pyilper/4dd8c7e/img/pyilper_hp2225.png)
+
+Features:
+* supports output of text and graphics
+* supports all PCL printer control commands that are applicable for an emulator
+* scrollable printer output window
+* PDF output
+
