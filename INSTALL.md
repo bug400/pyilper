@@ -10,33 +10,30 @@ Index
 * [Setup](#setup)
 * [Operation](#operation)
 * [Installation without the ANACONDA platform](#installation-without-the-anaconda-platform)
-* [Installation of development versions](#installation-of-development-versions)
+* [Installation of beta or development versions](#installation-of-beta-or-development-versions)
 
 General
 -------
 
 pyILPER requires:
 
-* Python 3.4 or higher
+* Python 3.5 or higher
 * QT 5.6 or higher
 * PyQt compatible to the Python and Qt version
 * the Python bindings for either Qt Webkit or Qt Webengine
 * pyserial  2.7 
-* [LIFUTILS] (https://github.com/bug400/lifutils/releases) (the most recent version)
+* [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
 
 It is recommended to use the [ANACONDA platform](https://www.continuum.io) 
 to install pyILPER and the required Python software and keep them up to date.
 
-If you already installed the required Python software you can install pyILPER without
-ANACONDA. See the last chapter of this manual.
+If you already installed the required Python software you can install pyILPER [without ANACONDA](#installation-without-the-anaconda-platform).
 
 Windows requires the installation of the FTDI USB serial driver first.
 See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
 More recent mac OS versions already provide a USB serial driver for the
 PIL-Box.  By experience you get better results if you use the original FTDI driver. 
-See the installation instructions for that driver how to install and how to 
-disable the Apple driver.
 
 LINUX does not require to install any driver software.
 
@@ -45,8 +42,8 @@ Installation of the LIFUTILS
 ----------------------------
 
 In order to use the file and disk management functions and the virtual HP7470A plotter
-an up to date version of the [LIFUTILS] (https://github.com/bug400/lifutils/releases)
-must be installed. See the [Installation Instructions] (https://github.com/bug400/lifutils/blob/master/INSTALL.md) for further details.
+an up to date version of the [LIFUTILS](https://github.com/bug400/lifutils/releases)
+must be installed. See the [Installation Instructions](https://github.com/bug400/lifutils/blob/master/INSTALL.md) for further details.
 
 
 Installation with the ANACONDA platform
@@ -67,7 +64,7 @@ runtime environment. Everything is installed as a local user and thus no
 administrator privileges are needed. 
 
 Note: for the Anaconda/Miniconda platform pyILPER is only available for 
-Python 3.6.
+Python 3.7.
 
 **Note for Windows users**: Due to recent changes in the Anaconda installation
 environment it is strongly encouraged to do a clean reinstall of the
@@ -91,7 +88,7 @@ and type:
      conda config --add channels bug400
      conda install pyilper
 
-This installs pyilper and all required Python runtime components. 
+This installs pyILPER and all required Python runtime components. 
 
 To update pyILPER and the Python runtime type:
 
@@ -111,7 +108,7 @@ You should issue occasionally:
 
 to clean the conda package cache and save disk space.
 
-Note: pyILPER requires Python 3.6 or Python 3.7. Check the Python version with:
+Note: pyILPER requires Python 3.7. Check the Python version with:
 
      conda list
 
@@ -164,9 +161,9 @@ Installation without the ANACONDA platform
 
 The requirements specified above must be available on the system.
 
-On Debian based Linux systems you can install the pyilper Debian package.
+On Debian based Linux systems you can install the pyILPER Debian package.
 
-On all other systems unzip the pyilper source code, go to the pyilper 
+On all other systems unzip the pyILPER source code, go to the pyILPER 
 directory and type:
 
      python3 setup.py install
@@ -174,19 +171,24 @@ directory and type:
 in a terminal window.
 
 
-Installation of development versions
-------------------------------------
+Installation of beta or development versions
+--------------------------------------------
 
-Download the pyilper-master.zip file from GitHub front page of pyILPER ("Download ZIP" button). Unzip this file to an arbitrary location of your file system.
+Beta versions of pyILPER are published on the [release page](https://github.com/bug400/pyilper/releases). Download the source code zip file and proceed as described below.
 
-Now you can start the development version with:
+To use development versions of pyILPER download the pyilper-master.zip file from GitHub [front page of pyILPER](https://github.com/bug400/pyilper) ("Download ZIP" button). 
 
-      python <Path to the pyilper-master directory>/start.py
+Unzip the downloaded file to an arbitrary location of your file system.
 
-If you get the error message "This script requires Python 3.4 or newer!" use python3 instead.
+Now you can start the beta or development version with:
+
+      python <Path to the unzipped directory>/start.py
+
+If you get the error message "This script requires Python 3.5 or newer!" use python3 instead.
 
 Note:
-* Development versions are work in progress and are only coarse tested. They may crash and may ruin your data at worst.
-* The development version does not affect the configuration of your production version because a different naming convention is used.
+* Development versions are work in progress and were tested roughly. They are not testet on all platforms.  They may crash and may ruin your data at worst.
+* Beta versions are tested more thoroughly also all supported platforms. They are intended for public testing but should not be used for production.
+* The beta or development versions do not affect the configuration of an already installed production version because a different naming convention is used for the configuration files.
 
 To obtain more recent development versions of pyILPER download the pyilper-master.zip file again. If you are familiar with a git client you can synchronize a local pyilper-master directory with the remote GitHub repository.
