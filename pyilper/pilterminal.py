@@ -27,6 +27,7 @@ import threading
 import array
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric, T_STRING
+from .pilcore import KEYBOARD_TYPE_HP71, keyboardtypes
 from .pildevbase import cls_pildevbase
 from .pilcharconv import CHARSET_HP71, charsets
 #
@@ -44,6 +45,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - adapted to cls_tabtermgeneric, implemented cascading config menu
 # 28.01.2018 jsi
 # - fixed charset configuration
+# 14.02.2019 jsi
+# - added keyboard type configuration
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -53,17 +56,19 @@ class cls_tabterminal(cls_tabtermgeneric):
 #     init local configuration parameters
 #
       self.charset=PILCONFIG.get(self.name,"charset",CHARSET_HP71)
+      self.keyboardtype=PILCONFIG.get(self.name,"keyboardtype",KEYBOARD_TYPE_HP71)
 #
 #     add terminal config options to cascading menu
 #
       self.cBut.add_option("Character set","charset",T_STRING,charsets)
+      self.cBut.add_option("Keyboard type","keyboardtype",T_STRING,keyboardtypes)
 #
 #     create HP-IL device and let the GUI object know it
 #
       self.pildevice= cls_pilterminal(self.guiobject)
       self.guiobject.set_pildevice(self.pildevice)
       self.guiobject.set_charset(self.charset)
-
+      self.guiobject.set_keyboardtype(self.keyboardtype)
       self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
 #  handle changes of the character set
@@ -77,6 +82,9 @@ class cls_tabterminal(cls_tabtermgeneric):
          self.charset= PILCONFIG.get(self.name,"charset")
          self.guiobject.set_charset(self.charset)
 
+      if param=="keyboardtype":
+         self.keyboardtype= PILCONFIG.get(self.name,"keyboardtype")
+         self.guiobject.set_keyboardtype(self.keyboardtype)
 
       super().do_tabconfig_changed()
 #

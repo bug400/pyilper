@@ -104,6 +104,9 @@
 # 10.01.2018 jsi
 # - renamed Printer tab to Generic Printer
 # - prepare Beta1
+# 14.01.2018 jsi
+# - added constants for keyboard type configuration
+# - prepare Beta2
 #
 import platform
 #
@@ -112,7 +115,7 @@ import platform
 # General constants:
 #
 PRODUCTION= False     # Production/Development Version
-VERSION="1.8.0b1"       # pyILPR version number
+VERSION="1.8.0b2"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Python minimum version
@@ -153,6 +156,10 @@ CURSOR_BLINK=500                # 500 ms cursor blink rate
 CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
 AUTOSCROLL_RATE=100             # 500 ms cursor blink rate
 TERMINAL_MINIMUM_ROWS=24        # cant get beyond that
+KEYBOARD_TYPE_HP71=0
+KEYBOARD_TYPE_HP75=1
+keyboardtypes= ["HP-71","HP-75"]
+
 #
 # predefined baudrates
 # the list controlles the baudrates that are supported by the application:

@@ -146,6 +146,10 @@
 # - custom keyboard shortcuts added
 # 15.08.2018 jsi
 # - SHORTCUT_INSERT shortcut type added
+# 14.02.2019 jsi
+# - fix: do not switch to insert mode on ESC Q
+# - fix: do not increase line length if we overwrite existing text
+# - added HP-75 keyboard support
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -157,7 +161,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, KEYBOARD_TYPE_HP75
 from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT, SHORTCUT_INSERT
 from .pilconfig import PILCONFIG
 
@@ -228,6 +232,12 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
     def set_charset(self,charset):
         self.HPTerminal.set_charset(charset)
+
+#
+#   set keyboard type
+#
+    def set_keyboardtype(self,t):
+       self.terminalwidget.set_keyboardtype(t)
 #
 #   tab becomes visible, call appropriate methods to:
 #   - stop cursor blink
@@ -452,6 +462,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._font_size=size= -1      # dto
         self._color_scheme_index= -1  # dto
         self._scrollupbuffersize= -1  # dto
+        self._keyboard_type=-1        # keyboard type (HP-71 or HP-75)
         self._HPTerminal= None        # backend object,set by setHPterminal
         self._screen = []             # frontend screen buffer
         self._cursor_col = 0          # cursor position
@@ -686,9 +697,13 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         key = event.key()
         modifiers = event.modifiers()
         alt = modifiers == QtCore.Qt.AltModifier 
+        shift= (modifiers == QtCore.Qt.ShiftModifier)
         if (event.isAutoRepeat() and text) or self._kbdfunc is None:
            event.accept()
            return
+#
+#       Alt mode keys
+#
         if alt:
            if not self._alt_sequence:
               self._alt_sequence= True
@@ -753,7 +768,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                     self._alt_sequence= False
               else:
                  self._alt_sequence= False
+
         elif text:
+#
+#          non function keys
+#
            t=ord(text)
            if t== 13:  # lf -> Endline
               self._kbdfunc(82, True)
@@ -761,48 +780,75 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
               self._kbdfunc(81, True)
            elif t== 127: # -CHAR ESC G
               self._kbdfunc(71, True)
+           elif t== 9: # horizontal tab ESC Y (only HP-75)
+              if self._keyboard_type== KEYBOARD_TYPE_HP75:
+                 self._kbdfunc(89, True)
            else:
               if t < 128: # > 127 generates BASIC KEYWORDS!
                  self._kbdfunc(t, False)
         else:
            s = self.keymap.get(key)
-           if s:
-              if s == "~A":        # cursor up ESC A
-                 self._kbdfunc(65,True)
-              elif s == "~B":      # cursor down ESC D
-                 self._kbdfunc(68, True)
-              elif s == "~C":      # cursor right ESC C
-                 self._kbdfunc(67,True)
-              elif s == "~D":      # cursor left ESC B
-                 self._kbdfunc(66, True)
-              elif s == "~3":      # I/R ESC H
-                 self._kbdfunc(72, True)
-              elif s == "~4":      # -CHAR ESC G
-                 self._kbdfunc(71,True)
-              elif s == "~1":      # Page Up ESC J
-                 self._kbdfunc(74,True)
-              elif s == "~2":      # Page Down ESC K
-                 self._kbdfunc(75, True)
-              elif s == "~H":      # Begin of line ESC E
-                 self._kbdfunc(69,True)
-              elif s == "~F":      # End of line ESC F
-                 self._kbdfunc(70, True)
-              elif s == "~a":      # F1 -> Attn ESC L
-                 self._kbdfunc(76, True)
-              elif s == "~b":      # F2 -> Run ESC M
-                 self._kbdfunc(77, True)
-              elif s == "~c":      # F3 -> Cmds ESC N
-                 self._kbdfunc(78, True)
-              elif s == "~d":      # F4 -> SST ESC P
-                 self._kbdfunc(80, True)
-              elif s == "~e":      # F5 -> -Line ESC I
-                 self._kbdfunc(73, True)
-              elif s == "~f":      # F6 -> LC ESC O
-                 self._kbdfunc(79, True)
-#             elif s == "~g":      # F7 -> Ctrl ESC S
-#                self._kbdfunc(83, True)
-              else:
-                 pass
+#
+#          function keys
+#
+           if (s is not None):
+#
+#             shifted keys (HP-75 only)
+#
+              if shift:
+                 if self._keyboard_type== KEYBOARD_TYPE_HP75:
+                    if s == "~a":        # Shift F1
+                       self._kbdfunc(84,True)
+                    elif s == "~b":      # Shift F2
+                       self._kbdfunc(85, True)
+                    elif s == "~c":      # Shift F3
+                       self._kbdfunc(86,True)
+                    elif s == "~d":      # Shift F4
+                       self._kbdfunc(87, True)
+                    elif s == "~e":      # Shift F5
+                       self._kbdfunc(88, True)
+                    else:
+                       pass
+#
+#             unshifted function keys
+#
+              else: 
+                 if s == "~A":        # cursor up ESC A
+                    self._kbdfunc(65,True)
+                 elif s == "~B":      # cursor down ESC D
+                    self._kbdfunc(68, True)
+                 elif s == "~C":      # cursor right ESC C
+                    self._kbdfunc(67,True)
+                 elif s == "~D":      # cursor left ESC B
+                    self._kbdfunc(66, True)
+                 elif s == "~3":      # I/R ESC H
+                    self._kbdfunc(72, True)
+                 elif s == "~4":      # -CHAR ESC G
+                    self._kbdfunc(71,True)
+                 elif s == "~1":      # Page Up ESC J
+                    self._kbdfunc(74,True)
+                 elif s == "~2":      # Page Down ESC K
+                    self._kbdfunc(75, True)
+                 elif s == "~H":      # Begin of line ESC E
+                    self._kbdfunc(69,True)
+                 elif s == "~F":      # End of line ESC F
+                    self._kbdfunc(70, True)
+                 elif s == "~a":      # F1 -> Attn ESC L
+                    self._kbdfunc(76, True)
+                 elif s == "~b":      # F2 -> Run ESC M
+                    self._kbdfunc(77, True)
+                 elif s == "~c":      # F3 -> Cmds ESC N
+                    self._kbdfunc(78, True)
+                 elif s == "~d":      # F4 -> SST ESC P
+                    self._kbdfunc(80, True)
+                 elif s == "~e":      # F5 -> -Line ESC I
+                    self._kbdfunc(73, True)
+                 elif s == "~f":      # F6 -> LC ESC O
+                    self._kbdfunc(79, True)
+#                elif s == "~g":      # F7 -> Ctrl ESC S
+#                   self._kbdfunc(83, True)
+                 else:
+                    pass
                 
         if (event.isAutoRepeat() and not text) :
            time.sleep(0.05)
@@ -818,6 +864,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #      initial terminal size
 #
        self._HPTerminal.resize_rows(TERMINAL_MINIMUM_ROWS)
+#
+#   set keyboard type
+#
+    def set_keyboardtype(self,t):
+       self._keyboard_type=t
 #
 #   get cursor type (insert, replace, off)
 #
@@ -1410,16 +1461,24 @@ class HPTerminal:
 #   Dumb echo, if we exceed the wrapped part then issue a CR/LF
 #
     def dumb_echo(self, char):
+#       print("dumb_echo ",char)
         if self.insert:
            self.scroll_line_right(self.cy, self.cx)
            self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
         else:
            oldwrappedlinelength=self.get_wrapped_linelength(self.cy)
+#          print("dumb echo ",oldwrappedlinelength, self.w*2)
            if oldwrappedlinelength == self.w*2:
+#             print("dumb_echo cr/lf")
               self.ctrl_CR()
               self.ctrl_LF()
            self.poke(self.cy, self.cx, array.array('i', [self.attr | char]))
-           self.set_wrapped_linelength(self.cy,oldwrappedlinelength+1)
+#
+#          do not increase line length if we overwrite existing text
+#
+           cursor_pos=self.get_wrapped_cursor_x(self.cx,self.cy)
+           if cursor_pos== oldwrappedlinelength:
+              self.set_wrapped_linelength(self.cy,oldwrappedlinelength+1)
         self.cursor_right()
 #
 #   dump screen to terminal window, the data are painted during a paint event
@@ -1513,6 +1572,7 @@ class HPTerminal:
 #      process escape sequences, translate to pyqterm
 #
        if self.fesc:
+#         print("Esc sequence %d %s " % (t,chr(t)))
           if t== 67: # cursor right (ESC C)
              self.cursor_right()
           elif t== 68: # cursor left (ESC D)
@@ -1543,7 +1603,6 @@ class HPTerminal:
              self.scroll_line_left(self.cy, self.cx)
           elif t== 81: # switch to insert cursor (ESC Q)
              self.win.terminalwidget.setCursorType(CURSOR_INSERT)
-             self.insert = True
           elif t== 78: # swicht to insert cursor and insert mode (ESC N)
              self.insert = True
              self.win.terminalwidget.setCursorType(CURSOR_INSERT)

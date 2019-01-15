@@ -49,7 +49,7 @@ virtual serial device over USB. The PIL-Box is connected to
 the HP-IL Loop.</p>
 
 <p><em>pyILPER</em> is a program that reads incoming HP-IL frames from the
-PIL-Box, processes them by emulating some virtual HPIL
+PIL-Box, processes them by emulating some virtual HP-IL
 devices, like a printer, a disk drive or a terminal and sends
 the processed frames back to the loop.</p>
 
@@ -68,29 +68,26 @@ one application:<p>
 <li>Terminal emulator (display and keyboard)</li>
 <li>HP7470A plotter</li>
 <li>HP82161A thermal printer</li>
-<li>HP2225B thermal printer</li>
+<li>HP2225B ThinkJet printer</li>
 </ul>
 
-<p>To use <em>pyILPER</em> you need at least the PIL-Box and a
-HP-IL controller such as the HP-41 or the HP-71B. Most fun you
+<p>To use <em>pyILPER</em> you need at the PIL-Box and a
+HP-IL controller such as the HP-41, HP-75 or the HP-71B. Most fun you
 will have with the HP-71B which is a powerful device to
 control a HP-IL system.</p>
 
-<p>Alternatively <em>pyILPER provides</em> 
+<p>In addition <em>pyILPER</em> can be used with emulator programs for the HP-41, HP-71 or HP-75 which do not require a PIL-Box or any other HP calculator hardware. For this purposes <em>pyILPER</em> supports 
 <a class="w3-hover-black" href="http://hp.giesselink.com/hpil.htm">virtual HP-IL over TCP/IP</a>.
-You may connect the
- <a class="w3-hover-black" href="http://hp.giesselink.com/emu71.htm">HP-71B Emulator of
-Christoph Gie&szlig;elink</a> with pyILPER.
+and a <em>Serial over TCP/IP PIL-Box emulator</em> to connect to DOS based emulators running on <a class="w3-hover-black" href="http://www.dosbox.com">DOSBox</a> or <a class="w3-hover-black" href="https://www.virtualbox.org">VirtualBox</a>.</p>
 
-<p><em>pyILPER</em> supports stand alone file management operations for virtual 
-storage media. The latest version of the 
+<p><em>pyILPER</em> can be used for stand alone file management operations for virtual LIF image files. The latest version of the 
 <a class="w3-hover-black" href="https://github.com/bug400/lifutils/releases">LIFUTILS</a>
 must be installed to use this feature.</p>
 
 <p><em>pyILPER</em> was written in pure Python 3 and its user interface
 was implemented with the Qt framework. The software 
 was tested successfully on Ubuntu LINUX 16.04/18.04, Windows 7/10 
-and mac OS 10.13.</p>
+and macOS 10.14.</p>
 
 <!-- End content -->
 

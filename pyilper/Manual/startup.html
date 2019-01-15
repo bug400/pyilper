@@ -32,14 +32,13 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 <p>If you use <em>pyILPER</em> for the first time, please read this document
 to get <em>pyILPER</em> up and running.</p>
 
-<h3 class="w3-text-teal">Set up pyILPER with the PIL-Box</h3>
-
 <p>To use the file management capabilities of the virtual drives or
 the HP7470A plotter the latest version of the
-<a href="https://github.com/bug400/lifutils/releases" class="w3-hover-black">LIFUTILS</a>
-must be installed. After installation of the LIFUTILS restart
-<em>pyILPER</em> and check from the "Utilities" menu if the LIFUTILS
+<a href="https://github.com/bug400/lifutils/releases" class="w3-hover-black">LIFUTILS</a> must be installed. After installation of the <em>LIFUTILS</em> restart
+<em>pyILPER</em> and check from the "Utilities" menu if a <em>LIFUTILS</em>
 version was detected by <em>pyILPER</em>.</p>
+
+<h3 class="w3-text-teal">Set up pyILPER with the PIL-Box</h3>
 
 <p>Connect the PIL-Box to your computer.</p>
 
@@ -64,19 +63,13 @@ to an appropriate location.</p>
 <ul class="w3-ul">
 <li>HP-41: switch the calculator OFF and ON.</li>
 <li>HP-71: issue an <code>RESET HPIL @ RESTORE IO @ CLEAR</code></li>
+<li>HP-75: do an <code>ASSIGN IO</code>.</li>
 </ul>
 
-<p>See the <a href="interface.html" class="w3-hover-black">User Interface Documentation</a> for further
-details.</p>
-
-<h3 class="w3-text-teal">Setup the Terminal Emulator (HP-71 only)</h3>
-
-<p>You can use <em>pyILPER</em> as a remote display and keyboard for the
-HP-71B. See the <a href="terminal.html" class="w3-hover-black">documentation of the virtual terminal</a>
-for further information.</p>
+<p>See the <a href="interface.html" class="w3-hover-black">User Interface Documentation</a> for further details.</p>
 
 
-<h3 class="w3-text-teal">Setup <em>pyILPER</em> with virtual HP-IL over TCP/IP</h3>
+<h3 class="w3-text-teal">Set up <em>pyILPER</em> with virtual HP-IL over TCP/IP</h3>
 
 <p><em>pyILPER</em> supports
 <a href="http://hp.giesselink.com/hpil.htm" class="w3-hover-black">virtual HP-IL over TCP/IP</a>.
@@ -89,8 +82,7 @@ Check if the TCP/IP configuration parameters (remote host, remote port, local po
 are configured properly. See the documentation of the virtual HP-IL over
 TCP/IP and the documentation of EMU71 or V41 for further details.<p>
 
-<p>The most recent versions of Emu71 includes remote keyboard support. Setup
-the terminal emulator as documented above.</p>
+<p>Emu71 includes remote keyboard support. See the <a href="terminal.html" class="w3-hover-black">Terminal Tab documentation</a> how to set up.</p> 
 
 <p>The recommended procedure to connect Emu71 to <em>pyILPER</em> is:</p>
 
@@ -109,6 +101,38 @@ virtual HP-IL devices".
 <li>Switch Emu71 off and close the program.</li>
 <li>Close pyILPER.</li>
 </ul>
+
+<h3 class="w3-text-teal">Set up <em>pyILPER</em> with Emulators running on DOSBox</h3>
+
+<p>The <a href="http://www.jeffcalc.hp41.eu/" class="w3-hover-black">HP-41, HP-71 and HP-75 emulators of J. F. Garnier</a> can be attached to <em>pyILPER</em> if they are executed on <a href="https://www.dosbox.com">DOSBox</a>.</p>
+
+<p>You need the <em>DOSBox</em> version 0.74-2 or later. Other versions will not work.</p>
+
+<p>Install the <em>DosBox</em> software and apply the following change to the serial section of the <em>DOSBox</em> configuration file:</p>
+
+<code>serial1=nullmodem server:localhost port:59999 transparent:1 txdelay:0</code>
+
+<p>See the <em>DOSBox</em> documentation how to locate the configuration file.</em>
+
+<p>Install your favorite <em>EMUxx</em> emulator(s) on <em>DOSBox</em>.</p>
+
+<p>Modify the <em>INI</em> file of the emulator. Remove all devices you do not need to be emulated by the <em>EMUxx</em> program. Insert the device:</p>
+
+<code>XIL COM1</code>
+
+
+<p>Change the communication configuration to <em>TCP/IP socket Server (PIL-Box emulator)</em> in the <em>pyILPER</em> configuration.</p>
+
+<p>Start <em>pyILPER</em>. You should see the message "waiting for client" in the status bar. Start <em>DOSBox</em>. The <em>pyILPER</em> status line should now say "client connected". Now start the <em>EMUxx</em> program on <em>DOSBox</em>.
+
+<p>Note:</p> 
+
+<ul class="w3-ul">
+<li>The <em>EMUxx</em> programs do not support sending IDY frames for asynchronous service requests . Therefore the virtual keyboard will not work for the HP-71. It works for the HP-75 because this calculator does not use service requests to query the virtual keyboard. The function keys of the HP-82162A thermal printer do not work either.</li>
+<li>Always start <em>pyILPER</em> before the <em>DOSBox</em> program.</li>
+</ul>
+
+
 
 <h3 class="w3-text-teal">Using pyILPER stand-alone</h3>
 

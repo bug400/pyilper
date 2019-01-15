@@ -1,7 +1,8 @@
-pyilper (1.8.0~beta1) bionic; urgency=medium
+pyilper (1.8.0~beta2) bionic; urgency=medium
 
   * develompent 
   * added HP2225 thermal printer emulator
+  * added HP-75 terminal and keyboard support
   * refactoring in lifexec: moved to the subprocess.run interface
   * minimum required Python version is now 3.5
 

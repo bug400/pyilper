@@ -34,8 +34,8 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
 
 <p>This virtual HP-IL device emulates a terminal (display and
 keyboard). It can be used as a sole display device without
-using a keyboard by all HP-IL controllers. The keyboard emulation is only
-supported by the HP-71B (see below).<p>
+using a keyboard by all HP-IL controllers. The keyboard emulation is 
+supported for the HP-75 and the HP-71B (see below).<p>
 
 <p>HP-IL configuration:</p>
 
@@ -49,14 +49,22 @@ supported by the HP-71B (see below).<p>
 specified on page 328 of the HP-71B reference manual. Selected text can be
 copied to the system clipboard.</p>
 
-<h3 class="w3-text-teal">Requirements and setup for the keyboard emulation</h3>
+<p>The display supports three character sets:<p>
+<ul class="w3-ul">
+<li><em>HP-41:</em> Alternate character set of the HP82152 thermal printer. Characters &gt; chr(127) are displayed inverse video. Use this character set if the controller is a HP-41. Note: the character with code 002 is displayed without over bar.</li>
+<li><em>HP-71: </em>  Character set of the HP-71 calculator. Characters &gt; chr(127) are displayed inverse video. This character should be used if the controller is a HP-71 or a HP-75. Note: the character with code 000 of the HP-75 is not supported.</li>
+<li><em>Roman-8:</em> This character set should be used if the controller is a HP-71 where the ROMAN-8 character set was enabled with the aid of a LEX file.</li>
+</ul>
+
+
+<h3 class="w3-text-teal">Requirements and setup for the keyboard emulation (HP-71)</h3>
 
 <p>The <em>Enable IDY frames</em> option in the <em>pyILPER</em> configuration must 
 be enabled if <em>pyILPER</em> is connected to the PIL-BOX. You need at least the 
 firmware version 1.6 installed on the PIL-Box as well.</p>
 
 <p>To use the keyboard emulator you have to install the
-<em>keyboard</em> lex and the <em>pilterm</em> basic program first.
+<em>keyboard</em> LEX and the <em>pilterm</em> Basic program first.
 Both files are provided in the LIF disk image file
 <em>PILIMAGE.DAT</em> which is part of the <em>pyILPER</em> package.<p>
 
@@ -64,9 +72,7 @@ Both files are provided in the LIF disk image file
 Utilities menu copies the file <em>PILIMAGE.DAT</em> from the <em>pyILPER</em>
 software directory to the current <em>pyILPER</em> working directory.
 Mount <em>PILIMAGE.DAT</em> to a virtual drive and copy the 
-<em>KEYBOARD</em> lexfile and the <em>PILTERM</em> basic program to the HP-71B.
-
-<h3 class="w3-text-teal">Use</h3>
+<em>KEYBOARD</em>  LEX file and the <em>PILTERM</em> Basic program to the HP-71B.
 
 <p>Enter <code>RUN PILTERM</code> from the HP-71B keyboard and make
 the terminal tab of <em>pyILPER</em> visible. You should now see a blinking
@@ -79,28 +85,50 @@ rerun the <em>PILTERM</em> program from the HP-71 keyboard.</p>
 <p>If you need to reconfigure the loop simply run the <em>PILTERM</em> 
 program from the terminal window again.</p>
 
+<h3 class="w3-text-teal">Requirements and setup for the keyboard emulation (HP-75)</h3>
+
+<p>You need the HP-75 IO-ROM to use the keyboard emulation. In addition you have
+to install the <em>KEYMAP</em> text file and the <em>PILHP75</em> basic program.</p>
+
+<p>Both files are included in the LIF disk image file <em>PILIMAGE.DAT</em>. See the chapter above how to mount this file as a virtual drive.</p>
+
+<p>Copy both files to the HP-75 and enter <code>run 'pilhp75'</code>. Proceed as specified in the chapter above.</p>
+
+<p>To use all function keys which are supported in <em>pyILPER</em> you have to set the <em>Keyboard Type</em> in the <em>Tab Configuration menu</em> to <em>HP-75</em> (see below).</p>
+
+
+<h3 class="w3-text-teal">Keyboard operations</h3>
+
 <p>The keyboard emulator uses the following function key mapping:</p>
 
 <table class="w3-table-all">
-<tr><th>PC keyboard</th><th>HP-71 key</th></tr>
-<tr><td>Up</td><td>Up</td></tr>
-<tr><td>Down</td><td>Down</td></tr>
-<tr><td>Left</td><td>Left</td></tr>
-<tr><td>Right</td><td>Right</td></tr>
-<tr><td>Back</td><td>BACK</td></tr>
-<tr><td>Page Up</td><td>Jump Begin</td></tr>
-<tr><td>Page Down</td><td>Jump End</td></tr>
-<tr><td>Home</td><td>Cursor to begin of line</td></tr>
-<tr><td>End</td><td>Cursor to end of line</td></tr>
-<tr><td>Insert</td><td>I/R</td></tr>
-<tr><td>Delete</td><td>-CHAR</td></tr>
-<tr><td>F1</td><td>ATTN</td></tr>
-<tr><td>F2</td><td>RUN</td></tr>
-<tr><td>F3</td><td>CMDS</td></tr>
-<tr><td>F4</td><td>SST</td></tr>
-<tr><td>F5</td><td>-LINE</td></tr>
-<tr><td>F6</td><td>LC</td></tr>
+<tr><th>PC keyboard</th><th>HP-71 key</th><th>HP-75 key</th></tr>
+<tr><td>Up</td><td>Up</td><td>Up</td></tr>
+<tr><td>Down</td><td>Down</td><td>Down</td></tr>
+<tr><td>Left</td><td>Left</td><td>Left</td></tr>
+<tr><td>Right</td><td>Right</td><td>Right</td></tr>
+<tr><td>Back</td><td>BACK</td><td>BACK</td></tr>
+<tr><td>Page Up</td><td>Jump Begin</td><td>Shift Up</td></tr>
+<tr><td>Page Down</td><td>Jump End</td><td>Shift Down</td></tr>
+<tr><td>Home</td><td>Cursor to begin of line</td><td>Shift Left</td></tr>
+<tr><td>End</td><td>Cursor to end of line</td><td>Shift Right</td></tr>
+<tr><td>Insert</td><td>I/R</td><td>I/R</td></tr>
+<tr><td>Delete</td><td>-CHAR</td><td>DEL</td></tr>
+<tr><td>F1</td><td>ATTN</td><td>ATTN</td></tr>
+<tr><td>F2</td><td>RUN</td><td>RUN</td></tr>
+<tr><td>F3</td><td>CMDS</td><td>Ctrl FET</td></tr>
+<tr><td>F4</td><td>SST</td><td>Shift RUN</td></tr>
+<tr><td>F5</td><td>-LINE</td><td>Shift DEL</td></tr>
+<tr><td>F6</td><td>LC</td><td>LOCK</td></tr>
+<tr><td>Tab</td><td></td><td>TAB</td></tr>
+<tr><td>Shift F1</td><td></td><td>TIME</td></tr>
+<tr><td>Shift F2</td><td></td><td>APPT</td></tr>
+<tr><td>Shift F3</td><td></td><td>EDIT</td></tr>
+<tr><td>Shift F4</td><td></td><td>FET</td></tr>
+<tr><td>Shift F5</td><td></td><td>CLR</td></tr>
 </table>
+
+<p>Note: The key mappings for the Tab and the Shift F1-F5 keys are only available if the <em>Keyboard Type</em> is set to <em>HP-75</em> in the <em>Tab Configuration Menu</em> (see below).</p>
 
 <p>To enter a numeric character value hold down the <em>ALT</em>
 key and enter a 3 digit numeric value (000 - 127).</p>
@@ -134,41 +162,15 @@ the loop each time this box has been checked or unchecked.
 <ul class="w3-ul">
 <li><em>Terminal width</em>: Switches between a 80 column and a 120 column
 output Note: toggling this option will clear the display.</li>
-<li><em>Color scheme</em>: choose a black, amberr, green or "paper" color scheme.</li>
+<li><em>Color scheme</em>: choose a black, amber, green or "paper" color scheme.</li>
 <li><em>Font size</em>: set the font size of the terminal output.
 If <em>Default</em> is selected, the setting of the <em>pyILPER</em>
 configuration is used.</li>
 <li><em>Scrollup buffer</em>: alter the number of lines of the display scroll buffer. Note: changing this value will clear the display.</li>
-<li><em>Character set</em>: select the character set that is emulated.
-You may choose between HP-41 character set (alternate character set
-of the HP82162 thermal printer), HP-71 character set and the
-Roman-8 character set. The characters are converted to unicode
-and displayed in the terminal window. Note: the character with code 002
-is displayed without overbar.  </li>
+<li><em>Character set</em>: select the character set that is emulated (HP-41, HP-71 or Roman-8).</li>
+<li><em>Keyboard type</em>: set to <em>HP-71</em> or <em>HP-75</em> depending on the calculator being used.</li>
 </ul>
 
-<h3 class="w3-text-teal">PILTERM Basic Program for the HP-71B</h3>
-
-<code>
-10 REM PILTERM V 2.1 - set up printer, keyboard and display for pyILPER<br>
-20 DISPLAY IS * @ PRINTER IS * @ DELAY .5,.125<br>
-30 IF POS(VER$,"KBD") THEN RESET ESCAPE @ KEYBOARD IS *<br>
-40 RESET HPIL @ RESTORE IO @ CLEAR<br>
-50 D=DEVADDR("PILTERM")<br>
-60 P=DEVADDR("PRINTER")<br>
-70 IF D&gt;0 THEN DISPLAY IS :D @ DELAY 0,INF<br>
-80 DISP "Assigning: ";<br>
-90 IF D&gt;0 THEN DISP "display.. ";<br>
-100 IF P&gt;0 THEN PRINTER IS :P @ DISP "printer.. ";<br>
-110 IF D&lt;0 OR POS(VER$,"KBD")=0 THEN GOTO 180<br>
-120 CFLAG -23<br>
-130 ESCAPE 'A',50 @ ESCAPE 'B',47 @ ESCAPE 'C',48 @ ESCAPE 'D',51<br>
-140 ESCAPE 'E',159 @ ESCAPE 'F',160 @ ESCAPE 'G',104 @ ESCAPE 'H',105 @ ESCAPE 'I',107<br>
-150 ESCAPE 'J',162 @ ESCAPE 'K',163 @ ESCAPE 'L',43 @ ESCAPE 'M',46 @ ESCAPE 'N',150<br>
-160 ESCAPE 'O',106 @ ESCAPE 'P',102 @ ESCAPE 'Q',103 @ ESCAPE 'R',38<br>
-170 KEYBOARD IS :D @ DISP "keyboard.. ";<br>
-180 DISP "done" @ END<br>
-</code><br>
 <!-- End content -->
 </div>
 </div>
