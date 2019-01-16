@@ -52,7 +52,8 @@ copied to the system clipboard.</p>
 <p>The display supports three character sets:<p>
 <ul class="w3-ul">
 <li><em>HP-41:</em> Alternate character set of the HP82152 thermal printer. Characters &gt; chr(127) are displayed inverse video. Use this character set if the controller is a HP-41. Note: the character with code 002 is displayed without over bar.</li>
-<li><em>HP-71: </em>  Character set of the HP-71 calculator. Characters &gt; chr(127) are displayed inverse video. This character should be used if the controller is a HP-71 or a HP-75. Note: the character with code 000 of the HP-75 is not supported.</li>
+<li><em>HP-71: </em>  Character set of the HP-71 calculator. Characters &gt; chr(127) are displayed inverse video.</li>
+<li><em>HP-75: </em>  Character set of the HP-75 calculator. Characters &gt; chr(127) are displayed underlined. Note: the underlined decoration might not be available for all special characters.</li>
 <li><em>Roman-8:</em> This character set should be used if the controller is a HP-71 where the ROMAN-8 character set was enabled with the aid of a LEX file.</li>
 </ul>
 
@@ -167,7 +168,7 @@ output Note: toggling this option will clear the display.</li>
 If <em>Default</em> is selected, the setting of the <em>pyILPER</em>
 configuration is used.</li>
 <li><em>Scrollup buffer</em>: alter the number of lines of the display scroll buffer. Note: changing this value will clear the display.</li>
-<li><em>Character set</em>: select the character set that is emulated (HP-41, HP-71 or Roman-8).</li>
+<li><em>Character set</em>: select the character set that is emulated (HP-41, HP-71, HP-75 or Roman-8).</li>
 <li><em>Keyboard type</em>: set to <em>HP-71</em> or <em>HP-75</em> depending on the calculator being used.</li>
 </ul>
 

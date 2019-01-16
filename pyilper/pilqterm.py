@@ -150,6 +150,9 @@
 # - fix: do not switch to insert mode on ESC Q
 # - fix: do not increase line length if we overwrite existing text
 # - added HP-75 keyboard support
+# 16.02.2019 jsi
+# - out_terminal now requires int instead of char to avoid multiple conversions
+# - character attribute handling rewritten, added underline attribute
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -160,7 +163,7 @@ import threading
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from .pilcharconv import charconv, CHARSET_HP71, CHARSET_ROMAN8
+from .pilcharconv import icharconv, CHARSET_HP71, CHARSET_HP75, CHARSET_HP41
 from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, KEYBOARD_TYPE_HP75
 from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT, SHORTCUT_INSERT
 from .pilconfig import PILCONFIG
@@ -172,6 +175,23 @@ CURSOR_OVERWRITE=2
 AUTOSCROLL_OFF=0
 AUTOSCROLL_UP=1
 AUTOSCROLL_DOWN=2
+#
+# character attributes
+#
+CHAR_ATTRIB_NONE= 0x00000000
+CHAR_ATTRIB_INVERSE= 0x020000000
+CHAR_ATTRIB_INVERSE_SHORT= CHAR_ATTRIB_INVERSE >> 16
+CHAR_ATTRIB_UNDERLINE= 0x01000000
+CHAR_ATTRIB_UNDERLINE_SHORT= CHAR_ATTRIB_UNDERLINE >> 16
+#
+# character attribute lookup table for ord(c) > 127
+#
+CHAR_ATTRIB = [
+        CHAR_ATTRIB_INVERSE,   # HP-71 charset
+        CHAR_ATTRIB_INVERSE,   # HP-41 charset
+        CHAR_ATTRIB_UNDERLINE, # HP-75 charset
+        CHAR_ATTRIB_NONE       # Roman-8 charset
+]
 #
 # scrolled terminal widget class ---------------------------------------------
 #
@@ -258,8 +278,8 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
 #
 #   output character to terminal
 #
-    def out_terminal(self,s):
-        self.HPTerminal.out_terminal(s)
+    def out_terminal(self,t):
+        self.HPTerminal.out_terminal(t)
 #
 #   reset terminal
 #
@@ -940,7 +960,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
        foreground_color = self._color_scheme[1]
        fgbrush=QtGui.QBrush(foreground_color)
        bgbrush=QtGui.QBrush(background_color)
-       invers_flag=False
+       self._font.setUnderline(False)
+       invers_flag= False
 #
 #      loop over each row
 #
@@ -978,15 +999,22 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #                item is attribute, set fg/bg color
 # 
-                 invers_flag = item
-                 if invers_flag:
+                 if item== CHAR_ATTRIB_INVERSE_SHORT:
                     background_color = self._color_scheme[1]
                     foreground_color = self._color_scheme[0]
+                    invers_flag= True
                  else:
                     background_color = self._color_scheme[0]
                     foreground_color = self._color_scheme[1]
+                    invers_flag= False
                  fgbrush=QtGui.QBrush(foreground_color)
                  bgbrush=QtGui.QBrush(background_color)
+#
+#                underline
+#
+                 self._font.setUnderline(False)
+                 if item == CHAR_ATTRIB_UNDERLINE_SHORT:
+                    self._font.setUnderline(True)
           y += self._char_height
 #
 #      add selection area to scene
@@ -1018,6 +1046,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
           self._cursorItem= TermCursor(self._char_width,self._char_height,self._cursortype, cursor_foreground_color)
           self._cursorItem.setPos(self._true_w[self._cursor_col],self._cursor_row*self._char_height)
           self._scene.addItem(self._cursorItem)
+       self._font.setUnderline(False)
 
 #
 # Terminal backend class -----------------------------------------------------------
@@ -1052,10 +1081,7 @@ class HPTerminal:
         self.cx=0                         # actual cursor position
         self.cy=0 
         self.insert=False                 # inser mode flag
-        self.attr = 0x00000000            # character attribute mask:
-                                          # Bit 0 - Underlined (not used)
-                                          # Bit 1 - Negative
-                                          # Bit 2 - Concealed (not used)
+        self.attr = CHAR_ATTRIB_NONE      # character attribute 
         self.screen=None                  # Terminal line buffer array
                                           # initialized by reset_screen
         self.linelength=None              # Vector with length of each line
@@ -1108,13 +1134,13 @@ class HPTerminal:
 #   Reset functions
 #
     def reset_hard(self):
-        self.attr = 0x00000000
+        self.attr = CHAR_ATTRIB_NONE
         # Invoke other resets
         self.reset_screen()
         self.reset_soft()
 
     def reset_soft(self):
-        self.attr = 0x00000000
+        self.attr = CHAR_ATTRIB_NONE
         # Modes
         self.insert = False
         self.movecursor=0
@@ -1122,7 +1148,7 @@ class HPTerminal:
 
     def reset_screen(self):
         # Screen
-        self.screen = array.array('i', [self.attr | 0x20] * self.w * self.h)
+        self.screen = array.array('i', [CHAR_ATTRIB_NONE | 0x20] * self.w * self.h)
         self.linelength= array.array('i', [0] * self.h)
         self.linewrapped= array.array('i',[False] * self.h)
         # Scroll parameters
@@ -1187,7 +1213,7 @@ class HPTerminal:
         self.poke(y0, x0, array.array('i', [char] * n))
 
     def clear(self, y0, x0, y1, x1):
-        self.fill(y0, x0, y1, x1, self.attr | 0x20)
+        self.fill(y0, x0, y1, x1, CHAR_ATTRIB_NONE | 0x20)
 #
 #   utility functions for wrapped lines
 #
@@ -1503,13 +1529,13 @@ class HPTerminal:
                 if x== cx and y== cy:
                    cursor_char=char
                    cursor_attr=attr
-                # Attributes (inverse only)
+#
+#               Attributes 
+#
                 if attr != attr_:
                     if attr_ != -1:
                         line.append("")
-                    # Inverse
-                    inv = attr & 0x0200
-                    line.append(inv)
+                    line.append(attr)
                     line.append("")
                     attr_ = attr
                 wx += 1
@@ -1557,11 +1583,10 @@ class HPTerminal:
        self.UpdateTimer.start(UPDATE_TIMER)
        return
 #
-#   process keyboard input
+#   process output to display
 # 
-    def process(self,c):
+    def process(self,t):
  
-       t=ord(c)
 #
 #      start of ESC sequence, set flag and return
 #
@@ -1656,11 +1681,16 @@ class HPTerminal:
              elif t== 0x7F:    # DEL
                 self.clear(self.cy, self.cx, self.cy+1, self.cx+1)
              else:
-                cc= charconv(c,self.charset)
-                if t > 127 and (not self.charset == CHARSET_ROMAN8):
-                   self.attr |= 0x02000000
+#
+#            convert to unicode and set character attribute for the upper half
+#            of the code table
+#
+                cc= icharconv(t,self.charset)
+                if t > 127:
+                   self.attr= CHAR_ATTRIB[self.charset]
+                else:
+                   self.attr= CHAR_ATTRIB_NONE
                 self.dumb_echo(ord(cc)) 
-                self.attr = 0x00000000
        return
  
 #
@@ -1674,17 +1704,17 @@ class HPTerminal:
 #
 #   put character into terminal output buffer
 # 
-    def out_terminal (self,c):
+    def out_terminal (self,t):
        self.termqueue_lock.acquire()
-       self.termqueue.put(c)
+       self.termqueue.put(t)
        self.termqueue_lock.release()
 #
-#   reset terminal
+#   reset terminal, send ESC e
 # 
     def reset_terminal(self):
        self.termqueue_lock.acquire()
-       self.termqueue.put("\x1b")
-       self.termqueue.put("e")
+       self.termqueue.put(0x1b)
+       self.termqueue.put(0x65)
        self.termqueue_lock.release()
 #
 #    becomes visible, call update_term to redraw the view

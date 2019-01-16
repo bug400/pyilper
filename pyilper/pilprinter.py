@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 from .pilconfig import PILCONFIG
-from .pilcharconv import charconv
 from .pilwidgets import cls_tabtermgeneric, T_STRING
 from .pildevbase import cls_pildevbase
-from .pilcharconv import CHARSET_HP71, charsets
+from .pilcharconv import CHARSET_HP71, charsets, icharconv
 #
 # Generic printer tab classes -------------------------------------------------
 #
@@ -41,6 +40,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - adapted to cls_tabtermgeneric, implemented cascading config menu
 # 28.01.2018 jsi
 # - fixed charset configuration
+# 16.01.2018 jsi
+# - use int instead char for printer data
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
@@ -87,11 +88,10 @@ class cls_tabprinter(cls_tabtermgeneric):
 #
 #   output a character to the terminal and perform logging
 #
-   def out_printer(self,s):
-      self.guiobject.out_terminal(s)
-      t=ord(s)
+   def out_printer(self,t):
+      self.guiobject.out_terminal(t)
       if t !=8 and t != 13:
-         self.cbLogging.logWrite(charconv(s,self.charset))
+         self.cbLogging.logWrite(icharconv(t,self.charset))
       if t== 10:
          self.cbLogging.logFlush()
 #
@@ -144,12 +144,11 @@ class cls_pilprinter(cls_pildevbase):
 #
    def __indata__(self,frame):
 
-      c= chr(frame & 0xFF)
+      t=frame & 0xFF
 #
 #     no escape squence 
 #
       if not self.__fesc__:
-         t= ord(c)
          if t == 27:
             self.__fesc__ = True
          if not self.__fesc__:
@@ -157,7 +156,7 @@ class cls_pilprinter(cls_pildevbase):
             locked= self.__islocked__
             self.__access_lock__.release()
             if not locked:
-               self.__parent__.out_printer(c)
+               self.__parent__.out_printer(t)
 #
 #     ignore escape sequences
 #

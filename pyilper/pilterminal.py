@@ -47,6 +47,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - fixed charset configuration
 # 14.02.2019 jsi
 # - added keyboard type configuration
+# 16.02.2019 jsi
+# - put int not char on termqueue
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -203,7 +205,7 @@ class cls_pilterminal(cls_pildevbase):
       locked= self.__islocked__
       self.__access_lock__.release()
       if not locked:
-         self.__guiobject__.out_terminal(chr(frame & 0xFF))
+         self.__guiobject__.out_terminal(frame & 0xFF)
 #
 #  clear device: empty HP-IL outdata buffer and reset terminal
 #

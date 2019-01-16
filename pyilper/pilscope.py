@@ -61,6 +61,8 @@ from .pildevbase import cls_pildevbase
 # - log file tagging as proposed by Sylvain Cote
 # 14.08.2018 jsi
 # - added "**" to tag to find tags better in the logfile
+# 16.01.2018 jsi
+# - send int instead of char to terminal
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1
@@ -202,13 +204,13 @@ class cls_tabscope(cls_tabtermgeneric):
    def out_scope(self,s):
       l=len(s) 
       if self.scope_charpos+l>=self.guiobject.get_cols() :
-         self.guiobject.out_terminal("\x0D")
-         self.guiobject.out_terminal("\x0A")
+         self.guiobject.out_terminal(0x0D)
+         self.guiobject.out_terminal(0x0A)
          self.cbLogging.logWrite("\n")
          self.cbLogging.logFlush()
          self.scope_charpos=0
       for i in range(0,len(s)):
-         self.guiobject.out_terminal(s[i])
+         self.guiobject.out_terminal(ord(s[i]))
       self.cbLogging.logWrite(s)
       self.scope_charpos+=l
 #
