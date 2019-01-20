@@ -156,9 +156,6 @@ CURSOR_BLINK=500                # 500 ms cursor blink rate
 CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
 AUTOSCROLL_RATE=100             # 500 ms cursor blink rate
 TERMINAL_MINIMUM_ROWS=24        # cant get beyond that
-KEYBOARD_TYPE_HP71=0
-KEYBOARD_TYPE_HP75=1
-keyboardtypes= ["HP-71","HP-75"]
 
 #
 # predefined baudrates

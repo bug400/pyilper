@@ -153,6 +153,9 @@
 # 16.02.2019 jsi
 # - out_terminal now requires int instead of char to avoid multiple conversions
 # - character attribute handling rewritten, added underline attribute
+# 20.02.2019 jsi
+# - keyboard handler rewritten, keydefs are now in pilkeysym.py
+# - local keys PageUp and PageDown scroll window up and down one page
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -164,9 +167,10 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import icharconv, CHARSET_HP71, CHARSET_HP75, CHARSET_HP41
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, KEYBOARD_TYPE_HP75
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS
 from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT, SHORTCUT_INSERT
 from .pilconfig import PILCONFIG
+from .pilkeymap import *
 
 CURSOR_OFF=0
 CURSOR_INSERT=1
@@ -438,37 +442,6 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
        [ QtGui.QColor("#000"), QtGui.QColor("#18f018"), QtGui.QColor(0x00,0xff,0x00,0xc0) ],
        [ QtGui.QColor("#fff"), QtGui.QColor("#000"), QtGui.QColor(0xff,0xff,0xff,0xc0) ],
     ]
-#
-#   Keymap keycodes
-#
-    keymap = {
-        QtCore.Qt.Key_Backspace: chr(127),
-        QtCore.Qt.Key_Escape: chr(27),
-        QtCore.Qt.Key_AsciiTilde: "~~",
-        QtCore.Qt.Key_Up: "~A",
-        QtCore.Qt.Key_Down: "~B",
-        QtCore.Qt.Key_Left: "~D",
-        QtCore.Qt.Key_Right: "~C",
-        QtCore.Qt.Key_PageUp: "~1",
-        QtCore.Qt.Key_PageDown: "~2",
-        QtCore.Qt.Key_Home: "~H",
-        QtCore.Qt.Key_End: "~F",
-        QtCore.Qt.Key_Insert: "~3",
-        QtCore.Qt.Key_Delete: "~4",
-        QtCore.Qt.Key_F1: "~a",
-        QtCore.Qt.Key_F2: "~b",
-        QtCore.Qt.Key_F3:  "~c",
-        QtCore.Qt.Key_F4:  "~d",
-        QtCore.Qt.Key_F5:  "~e",
-        QtCore.Qt.Key_F6:  "~f",
-        QtCore.Qt.Key_F7:  "~g",
-        QtCore.Qt.Key_F8:  "~h",
-        QtCore.Qt.Key_F9:  "~i",
-        QtCore.Qt.Key_F10:  "~j",
-        QtCore.Qt.Key_F11:  "~k",
-        QtCore.Qt.Key_F12:  "~l",
-    }
-
 
     def __init__(self,parent,name,tabwidget):
         super().__init__(parent)
@@ -492,6 +465,10 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._alt_sequence= False     # Variables for parsing ALT keyboard sequences
         self._alt_seq_length=0        #
         self._alt_seq_value=0         #
+        self._alt_modifier= False     # Alt key pressed
+        self._shift_modifier=False    # Shift key pressed
+        self._ctrl_modifier=False     # Ctrl key pressed
+        self._modifier_flags=0        # Modifier flags for look up
         self._cursortype= CURSOR_OFF  # cursor mode (off, overwrite, insert)
         self._cursor_char= 0x20       # character at cursor position
         self._cursor_attr=-1          # attribute at cursor position
@@ -710,169 +687,177 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
               self._HPTerminal.scroll_view_up()
         event.accept()
 #
+#   focus out event, reset keyboard 
+#
+    def focusOutEvent(self,event):
+
+       self._alt_modifier=False
+       self._alt_sequence= False
+       self._ctrl_modifier=False
+       self._shift_modifier=False
+       self._modifier_flags=0
+       return
+#
+#   keyboard release event, only hanlde modifier keys
+#
+    def keyReleaseEvent(self, event):
+        key = event.key()
+#
+#       handle modifier keys
+#
+        if key == QtCore.Qt.Key_Alt:
+           self._alt_modifier= False
+           self._alt_sequence= False
+           self._modifier_flags= self._modifier_flags & 0x600000000
+           return
+        elif key == QtCore.Qt.Key_Shift:
+           self._shift_modifier= False
+           self._modifier_flags= self._modifier_flags & 0x500000000
+           return
+        elif key == QtCore.Qt.Key_Control:
+           if not isMACOS():
+              self._ctrl_modifier= False
+           self._modifier_flags= self._modifier_flags & 0x300000000
+           return
+        elif key == QtCore.Qt.Key_Meta:
+           if isMACOS():
+              self._ctrl_modifier= False
+        event.accept()
+        return
+
+#
 #   keyboard pressed event, process keys and put them into the HP-IL outdata buffer
 #
     def keyPressEvent(self, event):
         text = event.text()
         key = event.key()
-        modifiers = event.modifiers()
-        alt = modifiers == QtCore.Qt.AltModifier 
-        shift= (modifiers == QtCore.Qt.ShiftModifier)
         if (event.isAutoRepeat() and text) or self._kbdfunc is None:
            event.accept()
            return
+
 #
-#       Alt mode keys
+#       handle modifier keys first
 #
-        if alt:
-           if not self._alt_sequence:
-              self._alt_sequence= True
-              self._alt_seq_length=0
-              self._alt_seq_value=0
-           if self._alt_seq_length==0:
-              if key== QtCore.Qt.Key_5:
-                 self._kbdfunc(ord("["),False)
-                 self._alt_sequence=False
-              elif key== QtCore.Qt.Key_6:
-                 self._kbdfunc(ord("]"),False)
-                 self._alt_sequence=False
-              elif key== QtCore.Qt.Key_7:
-                 self._kbdfunc(124,False)
-                 self._alt_sequence=False
-              elif key== QtCore.Qt.Key_8:
-                 self._kbdfunc(ord("{"),False)
-                 self._alt_sequence=False
-              elif key== QtCore.Qt.Key_9:
-                 self._kbdfunc(ord("}"),False)
-                 self._alt_sequence=False
-#             elif key== QtCore.Qt.Key_L:
-#                self._kbdfunc(ord("@"),False)
-#                self._alt_sequence=False
-#             elif key== QtCore.Qt.Key_I:
-#                self._kbdfunc(72,True)
-#                self._alt_sequence=False
-              elif key== QtCore.Qt.Key_1 or key == QtCore.Qt.Key_0 :
-                 self._alt_seq_value+= key - QtCore.Qt.Key_0
-                 self._alt_seq_length+=1
-              elif (key >= QtCore.Qt.Key_A and key <= QtCore.Qt.Key_Z):
-                 if key==QtCore.Qt.Key_I:
-                     self._kbdfunc(72,True)
-                 elif key== QtCore.Qt.Key_L:
-                     self._kbdfunc(ord("@"),False)
-                 else:
-                     shortcut_text,shortcut_flag = SHORTCUTCONFIG.get_shortcut(key-QtCore.Qt.Key_A) 
-                     for c in shortcut_text:
-                        t=ord(c)
-                        if t >= 0x20 and t <= 0x7E:
-                           self._kbdfunc(t,False)
-                     if shortcut_flag==SHORTCUT_EXEC:
-                        self._kbdfunc(82, True)
-                     elif shortcut_flag==SHORTCUT_EDIT:
-                        self._kbdfunc(66,True)
-                        self._kbdfunc(66,True)
-                     elif shortcut_flag==SHORTCUT_INSERT:
-                        self._kbdfunc(66,True)
-                        self._kbdfunc(66,True)
-                        self._kbdfunc(72,True)
-                 self._alt_sequence=False
-              else:
-                 self._alt_sequence=False
-           else:
+        if key == QtCore.Qt.Key_Alt:
+           self._alt_modifier= True
+           self._modifier_flags= self._modifier_flags | KEYBOARD_ALT
+        elif key == QtCore.Qt.Key_Shift:
+           self._shift_modifier= True
+           self._modifier_flags= self._modifier_flags | KEYBOARD_SHIFT
+        elif key == QtCore.Qt.Key_Control:
+           self._modifier_flags= self._modifier_flags | KEYBOARD_CTRL
+           if not isMACOS():
+              self._ctrl_modifier=True
+        elif key == QtCore.Qt.Key_Meta:
+           if isMACOS():
+              self._ctrl_modifier=True
+           self._modifier_flags= self._modifier_flags | KEYBOARD_CTRL
+#
+#       Alt pressed without Shift or Ctrl
+#
+        elif self._modifier_flags== KEYBOARD_ALT:
+#
+#          process Altnnn
+#
+           if self._alt_sequence:
               if key >= QtCore.Qt.Key_0 and key <= QtCore.Qt.Key_9:
                  self._alt_seq_value*=10
                  self._alt_seq_value+= key - QtCore.Qt.Key_0
                  self._alt_seq_length+=1
                  if self._alt_seq_length == 3:
                     if self._alt_seq_value <= 127:
-                       self._kbdfunc(self._alt_seq_value,False)
+#                      print("keyboard alt value: ",self._alt_seq_value)
+                       self._kbdfunc(self._alt_seq_value)
                     self._alt_sequence= False
               else:
                  self._alt_sequence= False
-
-        elif text:
-#
-#          non function keys
-#
-           t=ord(text)
-           if t== 13:  # lf -> Endline
-              self._kbdfunc(82, True)
-           elif t== 8: # BACK  ESC Q
-              self._kbdfunc(81, True)
-           elif t== 127: # -CHAR ESC G
-              self._kbdfunc(71, True)
-           elif t== 9: # horizontal tab ESC Y (only HP-75)
-              if self._keyboard_type== KEYBOARD_TYPE_HP75:
-                 self._kbdfunc(89, True)
            else:
-              if t < 128: # > 127 generates BASIC KEYWORDS!
-                 self._kbdfunc(t, False)
-        else:
-           s = self.keymap.get(key)
 #
-#          function keys
+#          check if a new alt sequence begins
 #
-           if (s is not None):
+              if key== QtCore.Qt.Key_1 or key == QtCore.Qt.Key_0 :
+                 self._alt_sequence=True
+                 self._alt_seq_length=1
+                 self._alt_seq_value=key - QtCore.Qt.Key_0
 #
-#             shifted keys (HP-75 only)
+#          no alt sequence, do key lookup (macOS only)
 #
-              if shift:
-                 if self._keyboard_type== KEYBOARD_TYPE_HP75:
-                    if s == "~a":        # Shift F1
-                       self._kbdfunc(84,True)
-                    elif s == "~b":      # Shift F2
-                       self._kbdfunc(85, True)
-                    elif s == "~c":      # Shift F3
-                       self._kbdfunc(86,True)
-                    elif s == "~d":      # Shift F4
-                       self._kbdfunc(87, True)
-                    elif s == "~e":      # Shift F5
-                       self._kbdfunc(88, True)
-                    else:
-                       pass
+              else:
+                 alt_mode_lookup=None
+                 if isMACOS():
+#                   print("keyboard ALT mode lookup for %d",key)
+                    alt_mode_lookup= macOSreplaceKey(key)
+                    if alt_mode_lookup:
+                        self._kbdfunc(alt_mode_lookup)
 #
-#             unshifted function keys
+#                proces shortcuts
 #
-              else: 
-                 if s == "~A":        # cursor up ESC A
-                    self._kbdfunc(65,True)
-                 elif s == "~B":      # cursor down ESC D
-                    self._kbdfunc(68, True)
-                 elif s == "~C":      # cursor right ESC C
-                    self._kbdfunc(67,True)
-                 elif s == "~D":      # cursor left ESC B
-                    self._kbdfunc(66, True)
-                 elif s == "~3":      # I/R ESC H
-                    self._kbdfunc(72, True)
-                 elif s == "~4":      # -CHAR ESC G
-                    self._kbdfunc(71,True)
-                 elif s == "~1":      # Page Up ESC J
-                    self._kbdfunc(74,True)
-                 elif s == "~2":      # Page Down ESC K
-                    self._kbdfunc(75, True)
-                 elif s == "~H":      # Begin of line ESC E
-                    self._kbdfunc(69,True)
-                 elif s == "~F":      # End of line ESC F
-                    self._kbdfunc(70, True)
-                 elif s == "~a":      # F1 -> Attn ESC L
-                    self._kbdfunc(76, True)
-                 elif s == "~b":      # F2 -> Run ESC M
-                    self._kbdfunc(77, True)
-                 elif s == "~c":      # F3 -> Cmds ESC N
-                    self._kbdfunc(78, True)
-                 elif s == "~d":      # F4 -> SST ESC P
-                    self._kbdfunc(80, True)
-                 elif s == "~e":      # F5 -> -Line ESC I
-                    self._kbdfunc(73, True)
-                 elif s == "~f":      # F6 -> LC ESC O
-                    self._kbdfunc(79, True)
-#                elif s == "~g":      # F7 -> Ctrl ESC S
-#                   self._kbdfunc(83, True)
-                 else:
-                    pass
-                
+                 if alt_mode_lookup is None:
+                    shortcut_text,shortcut_flag= SHORTCUTCONFIG.get_shortcut(key-QtCore.Qt.Key_A)
+                    self.kbdstring(shortcut_text)
+#                   print("Shortcut look up ",shortcut_text)
+                    if shortcut_flag== SHORTCUT_EXEC:
+                       self.fake_key(QtCore.Qt.Key_Return)
+                    elif shortcut_flag== SHORTCUT_EDIT:
+                       self.fake_key(QtCore.Qt.Key_Left)
+                       self.fake_key(QtCore.Qt.Key_Left)
+                    elif shortcut_flag== SHORTCUT_INSERT:
+                       self.fake_key(QtCore.Qt.Key_Left)
+                       self.fake_key(QtCore.Qt.Key_Left)
+                       self.fake_key(QtCore.Qt.Key_Insert)
+
+        else: # all other keyboard input
+#
+#          local keys (not table driven at the moment)
+#
+           if key== QtCore.Qt.Key_PageUp:
+               self._HPTerminal.out_terminal(0x1B)
+               self._HPTerminal.out_terminal(0x56)
+           elif key== QtCore.Qt.Key_PageDown:
+               self._HPTerminal.out_terminal(0x1B)
+               self._HPTerminal.out_terminal(0x55)
+#
+#          all other remote keys
+#
+           else:
+              lookup= keyboard_lookup(key | self._modifier_flags, self._keyboard_type)
+#
+#             found key replacement, send it
+#
+              if lookup:
+#                print("Keyboard lookup ", lookup)
+                 for i in lookup:
+                    self._kbdfunc(i)
+#
+#             no keyboard replacement, use text (if any)
+#
+              else:
+#                print("keyboard: text ",text)
+                 if text:
+                    self.kbdstring(text)
+
         if (event.isAutoRepeat() and not text) :
            time.sleep(0.05)
         event.accept()
+        return
+#
+#   send string from keyboard to HP-IL, but only printable lower ASCII
+#
+    def kbdstring(self,s):
+        for c in s:
+            t=ord(c)
+#           if t >= 0x20 and t <= 0x7E:
+            if t <= 0x7E:
+               self._kbdfunc(t)
+        return
+#
+#   send a faked key to HP-IL
+#
+    def fake_key(self,key):
+       lookup= keyboard_lookup(key, self._keyboard_type)
+       for c in lookup:
+          self._kbdfunc(ord(c))
+       return
 #
 #   External interface
 #
@@ -1355,6 +1340,32 @@ class HPTerminal:
           self.view_y1-=1
           self.needsUpdate=True
           self.win.scrollbar.setValue(self.view_y0)
+
+    def scroll_page_down(self):
+       if self.view_y1== self.cy:
+          return
+       if self.view_y1+ self.view_h  > self.cy:
+          self.view_y1= self.cy
+          self.view_y0= self.view_y1-self.view_h+1
+       else:
+          self.view_y1+= self.view_h 
+          self.view_y0+= self.view_h
+       self.needsUpdate=True
+       self.win.scrollbar.setValue(self.view_y0)
+
+
+    def scroll_page_up(self):
+       if self.view_y0 == 0:
+          return
+       if self.view_y0 - self.view_h < 0:
+          self.view_y0= 0
+          self.view_y1= self.view_h-1
+       else:
+          self.view_y0-= self.view_h
+          self.view_y1-= self.view_h
+       self.needsUpdate=True
+       self.win.scrollbar.setValue(self.view_y0)
+
 #
 #   scroll to the last line of the buffer
 #
@@ -1638,6 +1649,10 @@ class HPTerminal:
              self.scroll_view_up()
           elif t== 84: # roll down (ESC T)
              self.scroll_view_down()
+          elif t== 85: # display next page (ESC U)
+             self.scroll_page_down()
+          elif t==86: # display previous page (ESC V)
+             self.scroll_page_up()
           elif t== 101: # reset hard (ESC e)
              self.reset_hard()
           elif t== 3:  # move cursor far right (ESC Ctrl c)

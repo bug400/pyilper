@@ -27,7 +27,7 @@ import threading
 import array
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric, T_STRING
-from .pilcore import KEYBOARD_TYPE_HP71, keyboardtypes
+from .pilkeymap import KEYBOARD_TYPE_HP71, keyboardtypes
 from .pildevbase import cls_pildevbase
 from .pilcharconv import CHARSET_HP71, charsets
 #
@@ -180,20 +180,11 @@ class cls_pilterminal(cls_pildevbase):
 #
 #  put character or escape sequence to HP-IL outdata queue, called by terminal frontend
 #
-   def putDataToHPIL(self,c,esc):
+   def putDataToHPIL(self,c):
       self.__status_lock__.acquire()
-      if esc:
-#        do not queue ATTN if queue not empty, put esc sequence in reverse order!
-         if not (self.__status__ & 0x40 and c== 76):
-            self.__outbuf__.insert(0, 0x1B)
-            self.__oc__+=1
-            self.__outbuf__.insert(0, c)
-            self.__oc__+=1
-            self.__status__ = self.__status__ | 0x50 # set ready for data and srq bit
-      else:
-         self.__outbuf__.insert(0, c)
-         self.__oc__+=1
-         self.__status__ = self.__status__ | 0x50 # set ready for data and srq bit
+      self.__outbuf__.insert(0, c)
+      self.__oc__+=1
+      self.__status__ = self.__status__ | 0x50 # set ready for data and srq bit
       self.__status_lock__.release()
 #
 # private (overloaded) --------

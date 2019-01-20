@@ -1215,7 +1215,7 @@ class cls_hp2225b(QtCore.QObject):
 #
 #     printer status which is handled here
 #
-      self.lterm_mode=0           # line termination mode
+      self.ltermMode=0           # line termination mode
       self.altMode= False         # alternate control mode
       self.displayFunctions=False # display functions mode
 #

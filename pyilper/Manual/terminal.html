@@ -45,11 +45,9 @@ supported for the HP-75 and the HP-71B (see below).<p>
 <tr><td>Device ID</td><td>PILTERM</td></tr>
 </table>
 
-<p>The display supports all escape sequences which are
-specified on page 328 of the HP-71B reference manual. Selected text can be
-copied to the system clipboard.</p>
+<p>The display supports all escape sequences which are specified on page 328 of the HP-71B reference manual. In addition the emulator supports the escape sequences <code>ESC S</code> (scroll one line up), <code>ESC T</code> (scroll line down>, <code>ESC U</code> (display next page) and <code>ESC V</code> (display previous page). Selected text can be copied to the system clipboard.</p>
 
-<p>The display supports three character sets:<p>
+<p>The display supports four character sets:<p>
 <ul class="w3-ul">
 <li><em>HP-41:</em> Alternate character set of the HP82152 thermal printer. Characters &gt; chr(127) are displayed inverse video. Use this character set if the controller is a HP-41. Note: the character with code 002 is displayed without over bar.</li>
 <li><em>HP-71: </em>  Character set of the HP-71 calculator. Characters &gt; chr(127) are displayed inverse video.</li>
@@ -60,78 +58,85 @@ copied to the system clipboard.</p>
 
 <h3 class="w3-text-teal">Requirements and setup for the keyboard emulation (HP-71)</h3>
 
-<p>The <em>Enable IDY frames</em> option in the <em>pyILPER</em> configuration must 
-be enabled if <em>pyILPER</em> is connected to the PIL-BOX. You need at least the 
-firmware version 1.6 installed on the PIL-Box as well.</p>
+<p>The <code>Enable IDY frames</code> option in the <em>pyILPER</em> configuration must be enabled if <em>pyILPER</em> is connected to the PIL-BOX. You need at least the firmware version 1.6 installed on the PIL-Box as well.</p>
 
-<p>To use the keyboard emulator you have to install the
-<em>keyboard</em> LEX and the <em>pilterm</em> Basic program first.
-Both files are provided in the LIF disk image file
-<em>PILIMAGE.DAT</em> which is part of the <em>pyILPER</em> package.<p>
+<p>Set the character set and keyboard type to <code>HP-71</code> in the  <code>Tab configuration menu</code> (see below).</p>
 
-<p>The function <em>Copy PILIMAGE.DAT to workdir</em> in the
-Utilities menu copies the file <em>PILIMAGE.DAT</em> from the <em>pyILPER</em>
+<p>Install the <code>KEYBOARD</code> LEX and the <code>PILTERM</code> Basic program which are provided in the LIF disk image file <code>PILIMAGE.DAT</code> which is part of the <em>pyILPER</em> package.<p>
+
+<p>The function <code>Copy PILIMAGE.DAT to workdir</code> in the
+Utilities menu copies the file <code>PILIMAGE.DAT</code> from the <em>pyILPER</em>
 software directory to the current <em>pyILPER</em> working directory.
-Mount <em>PILIMAGE.DAT</em> to a virtual drive and copy the 
-<em>KEYBOARD</em>  LEX file and the <em>PILTERM</em> Basic program to the HP-71B.
+Mount <code>PILIMAGE.DAT</code> to a virtual drive and copy the 
+<code>KEYBOARD</code> LEX file and the <code>PILTERM</code> Basic program to the HP-71B.
 
 <p>Enter <code>RUN PILTERM</code> from the HP-71B keyboard and make
 the terminal tab of <em>pyILPER</em> visible. You should now see a blinking
 cursor.  Click into terminal window. Now you can enter characters that
 are sent to the HP-71B as keyboard input.</p>
 
-<p>If the keyboard hangs press the <em>ATTN</em> key twice at the HP-71 and
-rerun the <em>PILTERM</em> program from the HP-71 keyboard.</p>
+<p>If the keyboard hangs press the <code>ATTN</code> key twice at the HP-71 and
+rerun the <code>PILTERM</code> program from the HP-71 keyboard.</p>
 
-<p>If you need to reconfigure the loop simply run the <em>PILTERM</em> 
+<p>If you need to reconfigure the loop simply run the <code>PILTERM</code> 
 program from the terminal window again.</p>
+
+<p>Keyboard mappings:</p>
+
+<table class="w3-table-all">
+<tr><th>PC keyboard</th><th>HP-71 key</th></tr>
+<tr><td>F1</td><td>ATTN</td></tr>
+<tr><td>F2</td><td>RUN</td></tr>
+<tr><td>F3</td><td>CMDS</td></tr>
+<tr><td>F4</td><td>SST</td></tr>
+<tr><td>F5</td><td>-LINE</td></tr>
+<tr><td>F6</td><td>LC</td></tr>
+<tr><td>Up</td><td>Up</td></tr>
+<tr><td>Down</td><td>Down</td></tr>
+<tr><td>Left</td><td>Left</td></tr>
+<tr><td>Right</td><td>Right</td></tr>
+<tr><td>Back</td><td>BACK</td></tr>
+<tr><td>Shift up</td><td>Jump Begin</td></tr>
+<tr><td>Shift down</td><td>Jump End</td></tr>
+<tr><td>Shift left</td><td>Cursor to begin of line</td></tr>
+<tr><td>Shift right</td><td>Cursor to end of line</td></tr>
+<tr><td>Ctrl down</td><td>Next catalog</td></tr>
+<tr><td>Insert</td><td>I/R</td></tr>
+<tr><td>Delete</td><td>-CHAR</td></tr>
+</table>
+
+<p>To enter any character which is not available on the PC keyboard you can use the <code>ALTnnn</code> input method (see below). It is not possible to enter characters with a character code &gt; 127.</p>
 
 <h3 class="w3-text-teal">Requirements and setup for the keyboard emulation (HP-75)</h3>
 
 <p>You need the HP-75 IO-ROM to use the keyboard emulation. In addition you have
-to install the <em>KEYMAP</em> text file and the <em>PILHP75</em> basic program.</p>
+to install the  <code>PILHP75</code> basic program which included in the LIF disk image file <code>PILIMAGE.DAT</code>. See the chapter above how to mount this file as a virtual drive.</p>
 
-<p>Both files are included in the LIF disk image file <em>PILIMAGE.DAT</em>. See the chapter above how to mount this file as a virtual drive.</p>
+<p>Set the character set and keyboard type to <code>HP-75</code> in the  <code>Tab configuration menu</code> (see below).</p>
 
-<p>Copy both files to the HP-75 and enter <code>run 'pilhp75'</code>. Proceed as specified in the chapter above.</p>
+<p>Copy the file to the HP-75 and enter <code>run 'pilhp75'</code>. Proceed as specified in the chapter above.</p>
 
-<p>To use all function keys which are supported in <em>pyILPER</em> you have to set the <em>Keyboard Type</em> in the <em>Tab Configuration menu</em> to <em>HP-75</em> (see below).</p>
-
-
-<h3 class="w3-text-teal">Keyboard operations</h3>
-
-<p>The keyboard emulator uses the following function key mapping:</p>
+<p>Keyboard mappings:</p>
 
 <table class="w3-table-all">
-<tr><th>PC keyboard</th><th>HP-71 key</th><th>HP-75 key</th></tr>
-<tr><td>Up</td><td>Up</td><td>Up</td></tr>
-<tr><td>Down</td><td>Down</td><td>Down</td></tr>
-<tr><td>Left</td><td>Left</td><td>Left</td></tr>
-<tr><td>Right</td><td>Right</td><td>Right</td></tr>
-<tr><td>Back</td><td>BACK</td><td>BACK</td></tr>
-<tr><td>Page Up</td><td>Jump Begin</td><td>Shift Up</td></tr>
-<tr><td>Page Down</td><td>Jump End</td><td>Shift Down</td></tr>
-<tr><td>Home</td><td>Cursor to begin of line</td><td>Shift Left</td></tr>
-<tr><td>End</td><td>Cursor to end of line</td><td>Shift Right</td></tr>
-<tr><td>Insert</td><td>I/R</td><td>I/R</td></tr>
-<tr><td>Delete</td><td>-CHAR</td><td>DEL</td></tr>
-<tr><td>F1</td><td>ATTN</td><td>ATTN</td></tr>
-<tr><td>F2</td><td>RUN</td><td>RUN</td></tr>
-<tr><td>F3</td><td>CMDS</td><td>Ctrl FET</td></tr>
-<tr><td>F4</td><td>SST</td><td>Shift RUN</td></tr>
-<tr><td>F5</td><td>-LINE</td><td>Shift DEL</td></tr>
-<tr><td>F6</td><td>LC</td><td>LOCK</td></tr>
-<tr><td>Tab</td><td></td><td>TAB</td></tr>
-<tr><td>Shift F1</td><td></td><td>TIME</td></tr>
-<tr><td>Shift F2</td><td></td><td>APPT</td></tr>
-<tr><td>Shift F3</td><td></td><td>EDIT</td></tr>
-<tr><td>Shift F4</td><td></td><td>FET</td></tr>
-<tr><td>Shift F5</td><td></td><td>CLR</td></tr>
+<tr><th>PC keyboard</th><th>HP-71 key</th></tr>
+<tr><td>F1</td><td>ATTN</td></tr>
+<tr><td>F2</td><td>RUN</td></tr>
+<tr><td>F3</td><td>TIME</td></tr>
+<tr><td>F4</td><td>APPT</td></tr>
+<tr><td>F5</td><td>EDIT</td></tr>
+<tr><td>F6</td><td>FET</td></tr>
+<tr><td>F6</td><td>LOCK</td></tr>
+<tr><td>F6</td><td>CLR</td></tr>
 </table>
 
-<p>Note: The key mappings for the Tab and the Shift F1-F5 keys are only available if the <em>Keyboard Type</em> is set to <em>HP-75</em> in the <em>Tab Configuration Menu</em> (see below).</p>
+<p>For all other input to the HP-75 use the keystrokes as specified in the user manual. Nearly all key combinations should work.</p>
 
-<p>To enter a numeric character value hold down the <em>ALT</em>
+<p>To enter any character below character code 127 use the appropriate keystroke or the <code>ALTnnn</code> input method (see below). To enter characters with code &gt; 127 use the prefix <code>CTL I/R</code> which is <code>Ctrl Ins</code> on the PC keyboard.</p>
+
+<h3 class="w3-text-teal">Keyboard operations (HP-71 and HP-75)</h3>
+
+<p>To enter a numeric character value hold down the <code>ALT</code>
 key and enter a 3 digit numeric value (000 - 127).</p>
 
 <p>For MAC Users the following shortcuts are available:</p>
@@ -151,6 +156,10 @@ with care.</p>
 <p>The ALT-A to ALT-Z key combinations with the exception of ALT-I and
 ALT-L (see above) can be used as user defined shortcuts. These shortcuts
 can be specified in the <a class="w3-hover-black" href="filemanu.html">filemenu</a>.
+
+<h3 class="w3-text-teal">Device function keys</h3>
+
+<p>The keystrokes <code>PageUp</code> and <code>PageDown</code> scroll the window to the previous and next window respectively. These keystrokes do not send any data to the controller. Instead they insert the correspondig Escape sequences in the display command buffer immediately.</p> 
 
 <h3 class="w3-text-teal">Device controls</h3>
 <p>
