@@ -97,8 +97,8 @@ keymap_hp75 = {
         QtCore.Qt.Key_F5      :                          [131],  # EDIT
         QtCore.Qt.Key_Up :                               [132],
         QtCore.Qt.Key_Down :                             [133],
-        QtCore.Qt.Key_Right :                            [134],
-        QtCore.Qt.Key_Left :                             [135],
+        QtCore.Qt.Key_Left :                             [134],
+        QtCore.Qt.Key_Right :                            [135],
         QtCore.Qt.Key_Insert:                            [136],
         QtCore.Qt.Key_F6      :                          [137],  # FET
         QtCore.Qt.Key_Delete:                            [138],  # DEL
