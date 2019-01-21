@@ -146,16 +146,18 @@
 # - custom keyboard shortcuts added
 # 15.08.2018 jsi
 # - SHORTCUT_INSERT shortcut type added
-# 14.02.2019 jsi
+# 14.01.2019 jsi
 # - fix: do not switch to insert mode on ESC Q
 # - fix: do not increase line length if we overwrite existing text
 # - added HP-75 keyboard support
-# 16.02.2019 jsi
+# 16.01.2019 jsi
 # - out_terminal now requires int instead of char to avoid multiple conversions
 # - character attribute handling rewritten, added underline attribute
-# 20.02.2019 jsi
+# 20.01.2019 jsi
 # - keyboard handler rewritten, keydefs are now in pilkeysym.py
 # - local keys PageUp and PageDown scroll window up and down one page
+# 21.01.2019 jsi
+# - various bug fixes (keyboard handling and page up/page down scrolling)
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -783,16 +785,17 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #          no alt sequence, do key lookup (macOS only)
 #
               else:
-                 alt_mode_lookup=None
+                 alt_mode_lookup=[]
                  if isMACOS():
-#                   print("keyboard ALT mode lookup for %d",key)
-                    alt_mode_lookup= macOSreplaceKey(key)
-                    if alt_mode_lookup:
-                        self._kbdfunc(alt_mode_lookup)
+#                   print("keyboard ALT mode lookup for ",key)
+                    alt_mode_lookup= macOSreplaceKey(key,self._keyboard_type)
+#                   print("lookup result",alt_mode_lookup)
+                    for i in alt_mode_lookup:
+                       self._kbdfunc(i)
 #
 #                proces shortcuts
 #
-                 if alt_mode_lookup is None:
+                 if not alt_mode_lookup :
                     shortcut_text,shortcut_flag= SHORTCUTCONFIG.get_shortcut(key-QtCore.Qt.Key_A)
                     self.kbdstring(shortcut_text)
 #                   print("Shortcut look up ",shortcut_text)
@@ -824,8 +827,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #             found key replacement, send it
 #
+#             print("Keyboard lookup ", lookup)
               if lookup:
-#                print("Keyboard lookup ", lookup)
                  for i in lookup:
                     self._kbdfunc(i)
 #
@@ -856,7 +859,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     def fake_key(self,key):
        lookup= keyboard_lookup(key, self._keyboard_type)
        for c in lookup:
-          self._kbdfunc(ord(c))
+          self._kbdfunc(c)
        return
 #
 #   External interface
@@ -1342,7 +1345,7 @@ class HPTerminal:
           self.win.scrollbar.setValue(self.view_y0)
 
     def scroll_page_down(self):
-       if self.view_y1== self.cy:
+       if self.view_y1>= self.cy:
           return
        if self.view_y1+ self.view_h  > self.cy:
           self.view_y1= self.cy
