@@ -158,6 +158,8 @@
 # - local keys PageUp and PageDown scroll window up and down one page
 # 21.01.2019 jsi
 # - various bug fixes (keyboard handling and page up/page down scrolling)
+# 23.01.2019 jsi
+# - bug fix, restore cursor type
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -1069,6 +1071,7 @@ class HPTerminal:
         self.cx=0                         # actual cursor position
         self.cy=0 
         self.insert=False                 # inser mode flag
+        self.saved_cursortype=CURSOR_OVERWRITE # saved cursor type
         self.attr = CHAR_ATTRIB_NONE      # character attribute 
         self.screen=None                  # Terminal line buffer array
                                           # initialized by reset_screen
@@ -1154,6 +1157,7 @@ class HPTerminal:
         self.win.scrollbar.setMaximum(0)
         self.win.scrollbar.setSingleStep(1)
         self.win.scrollbar.setPageStep(self.view_h)
+        self.saved_cursortype= CURSOR_OVERWRITE
 #
 #   enable: start update timer (one shot timer)
 #
@@ -1627,10 +1631,7 @@ class HPTerminal:
           elif t== 75: # erase from cursor to end of the line (ESC K)
              self.clear(self.cy,self.cx,self.cy+1,self.w)
           elif t== 62: # Cursor on (ESC >)
-             if self.insert:
-                self.win.terminalwidget.setCursorType(CURSOR_INSERT)
-             else:
-                self.win.terminalwidget.setCursorType(CURSOR_OVERWRITE)
+                self.win.terminalwidget.setCursorType(self.saved_cursortype)
           elif t== 60: # Cursor off (ESC <)
              self.win.terminalwidget.setCursorType(CURSOR_OFF)
           elif t== 69: # Reset (ESC E)
@@ -1641,11 +1642,14 @@ class HPTerminal:
           elif t== 79: # Clear Character with wrap back (ESC O)
              self.scroll_line_left(self.cy, self.cx)
           elif t== 81: # switch to insert cursor (ESC Q)
+             self.saved_cursortype= CURSOR_INSERT
              self.win.terminalwidget.setCursorType(CURSOR_INSERT)
           elif t== 78: # swicht to insert cursor and insert mode (ESC N)
+             self.saved_cursortype= CURSOR_INSERT
              self.insert = True
              self.win.terminalwidget.setCursorType(CURSOR_INSERT)
           elif t== 82: # switch to replace cursor and replace mode (ESC R)
+             self.saved_cursortype= CURSOR_OVERWRITE
              self.insert = False
              self.win.terminalwidget.setCursorType(CURSOR_OVERWRITE)
           elif t== 83: # roll up (ESC S)
