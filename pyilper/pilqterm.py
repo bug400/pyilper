@@ -160,6 +160,9 @@
 # - various bug fixes (keyboard handling and page up/page down scrolling)
 # 23.01.2019 jsi
 # - bug fix, restore cursor type
+# 25.01.2019 jsi
+# - removed special Mac key lookup
+# - update self.actual_h on "delete to end of display"
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -790,7 +793,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                  alt_mode_lookup=[]
                  if isMACOS():
 #                   print("keyboard ALT mode lookup for ",key)
-                    alt_mode_lookup= macOSreplaceKey(key,self._keyboard_type)
+                    alt_mode_lookup= keyboard_lookup(key | self._modifier_flags, self._keyboard_type)
 #                   print("lookup result",alt_mode_lookup)
                     for i in alt_mode_lookup:
                        self._kbdfunc(i)
@@ -800,7 +803,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                  if not alt_mode_lookup :
                     shortcut_text,shortcut_flag= SHORTCUTCONFIG.get_shortcut(key-QtCore.Qt.Key_A)
                     self.kbdstring(shortcut_text)
-#                   print("Shortcut look up ",shortcut_text)
+#                   nrint("Shortcut look up ",shortcut_text)
                     if shortcut_flag== SHORTCUT_EXEC:
                        self.fake_key(QtCore.Qt.Key_Return)
                     elif shortcut_flag== SHORTCUT_EDIT:
@@ -1414,6 +1417,13 @@ class HPTerminal:
            self.win.scrollbar.setMaximum(self.actual_h-self.view_h+1)
            self.win.scrollbar.setValue(self.actual_h-self.view_h+1) ## fix
 #
+#   clear from cursor to end of display
+#
+    def clear_to_eod(self):
+       self.clear(self.cy,self.cx,self.h, self.w)
+       self.actual_h= self.cy
+       self.update_scrollbar()
+#
 #   Cursor functions, up and down
 #
     def cursor_up(self):
@@ -1627,7 +1637,8 @@ class HPTerminal:
           elif t== 72: # move cursor to home position (ESC H)
              self.cursor_set(0,0)
           elif t== 74: # erase from cursor to end of screen (ESC J)
-             self.clear(self.cy,self.cx,self.h, self.w)
+#            adjustion of more display parameters required
+             self.clear_to_eod()
           elif t== 75: # erase from cursor to end of the line (ESC K)
              self.clear(self.cy,self.cx,self.cy+1,self.w)
           elif t== 62: # Cursor on (ESC >)

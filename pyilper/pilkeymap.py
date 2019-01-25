@@ -29,8 +29,12 @@
 # - bug fixes
 # 23.01.2019 - jsi
 # - missing HP-75 keys added
+# 25.01.2019 - jsi:
+# - added Shift Alt I and Ctrl Alt I keystrokes for Shift I/R and Ctrl I/R
+# - refactoring
 
 from PyQt5 import QtCore
+from .pilcore import isMACOS
 #
 # Modifier masks
 #
@@ -172,6 +176,8 @@ keymap_hp75 = {
         QtCore.Qt.Key_Tab | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [238], # ??
         QtCore.Qt.Key_F8  | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [255], # Reset
 
+
+
 #       map PC keyboard keys to HP special characters
         0xc4 : [21],                      # Ä
         0xd6 : [23],                      # Ö
@@ -182,33 +188,30 @@ keymap_hp75 = {
         QtCore.Qt.Key_sterling : [30]    # Sterling
 
 }
-#
-# special shortcuts for the mac
-#
-shortcut_mac = {
-        QtCore.Qt.Key_5 : [T_CHAR, [ord("[")]],
-        QtCore.Qt.Key_6 : [T_CHAR, [ord("]")]],
-        QtCore.Qt.Key_7 : [T_CHAR, [124]],
-        QtCore.Qt.Key_8 : [T_CHAR, [ord("{")]],
-        QtCore.Qt.Key_9 : [T_CHAR, [ord("}")]],
-        QtCore.Qt.Key_L : [T_CHAR, [ord("@")]],
-        QtCore.Qt.Key_I : [T_KEY,QtCore.Qt.Key_Insert]
-}
-#
-# get shortcut for mac
-#
-def macOSreplaceKey(keycode, keyboard_type):
 
-   try:
-      result= shortcut_mac[keycode]
-      print("got ",result)
-      if result[0]== T_CHAR:
-         return result[1]
-      else:
-         return keyboard_lookup(result[1], keyboard_type)
+#
+# add special shortcuts for macOS to the HP-71 and HP-75 keymap
+#
+if isMACOS():
+#  Shift+Alt modifier 
+   keymap_hp75[QtCore.Qt.Key_I | KEYBOARD_SHIFT | KEYBOARD_ALT]= [168] # Enter char
+#  Control+Alt modifier
+   keymap_hp75[QtCore.Qt.Key_I | KEYBOARD_CTRL | KEYBOARD_ALT]= [200] # Enter char and literalize
+   keymap_hp71[QtCore.Qt.Key_5 | KEYBOARD_ALT]= [ord("[")]
+   keymap_hp75[QtCore.Qt.Key_5 | KEYBOARD_ALT]= [ord("[")]
+   keymap_hp71[QtCore.Qt.Key_6 | KEYBOARD_ALT]= [ord("]")]
+   keymap_hp75[QtCore.Qt.Key_6 | KEYBOARD_ALT]= [ord("]")]
+   keymap_hp71[QtCore.Qt.Key_7 | KEYBOARD_ALT]= [124]
+   keymap_hp75[QtCore.Qt.Key_7 | KEYBOARD_ALT]= [124]
+   keymap_hp71[QtCore.Qt.Key_8 | KEYBOARD_ALT]= [ord("{")]
+   keymap_hp75[QtCore.Qt.Key_8 | KEYBOARD_ALT]= [ord("{")]
+   keymap_hp71[QtCore.Qt.Key_9 | KEYBOARD_ALT]= [ord("}")]
+   keymap_hp75[QtCore.Qt.Key_9 | KEYBOARD_ALT]= [ord("}")]
+   keymap_hp71[QtCore.Qt.Key_L | KEYBOARD_ALT]= [ord("@")]
+   keymap_hp75[QtCore.Qt.Key_L | KEYBOARD_ALT]= [ord("@")]
+   keymap_hp71[QtCore.Qt.Key_I | KEYBOARD_ALT]= [ ESC , ord("H")]  # I/R
+   keymap_hp75[QtCore.Qt.Key_I | KEYBOARD_ALT]= [136]              # I/R
 
-   except KeyError as e:
-       return []
 #
 # lookup keyboard map
 #
