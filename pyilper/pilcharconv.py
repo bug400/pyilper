@@ -34,6 +34,8 @@
 # - refactoring: use list of lists for code tables to speed up access
 # - added HP-75 charset
 # - added icharconv function
+# 25.01.2018 jsi
+# - various bug fixes in the HP-75 and HP-71 character table
 #
 
 #
@@ -54,16 +56,16 @@ charsets= [ "HP-71", "HP-41", "HP-75", "ROMAN-8" ]
 convert_to_unicode= [
 # map hp-71 character set to unicode
 [
- ' ', 
- '°', 
- 'x',
- '\u2190' ,
- '\u03B1' ,
- '\u03B2' ,
- '\u03B3' ,
+ ' ',       # 0 
+ '°',       # 1
+ 'x',       # 2
+ '\u2190' , # 3
+ '\u03B1' , # 4
+ '\u03B2' , # 5
+ '\u0393' , # 6
  '\u2618' , # bell!
  chr(8),
- '\u03A3' ,
+ '\u03C3' ,
  chr(10),
  '\u03BB' ,
  '\u03Bc' ,
@@ -150,7 +152,7 @@ convert_to_unicode= [
  ']' ,
  '^' ,
  '_' ,
- '\\' ,
+ '\'' ,
  'a' ,
  'b' ,
  'c' ,
@@ -182,20 +184,20 @@ convert_to_unicode= [
  '}' ,
  '~' ,
  '\u251C' ,
- ' ', 
- '°', 
- 'x',
- '\u2190' ,
- '\u03B1' ,
- '\u03B2' ,
- '\u03B3' ,
- '\u2618' ,
- '\u25AF' ,
- '\u03A3' ,
- '\u25AF' ,
- '\u03BB' ,
- '\u03Bc' ,
- '\u25AF' ,
+ ' ',       # 128
+ '°',       # 129
+ 'x',       # 130
+ '\u2190' , # 131
+ '\u03B1' , # 132
+ '\u03B2' , # 133
+ '\u0393' , # 134
+ '\u2618' , # 135
+ '\u2408' , # 136 carriage return digraph
+ '\u03C3' , # 137
+ '\u240A' , # 138 line feed digraph
+ '\u03BB' , # 139
+ '\u03Bc' , # 140
+ '\u21B5' , # 141 downwards arrow
  '\u03C4' ,
  '\u03A6' ,
  '\u03B8' ,
@@ -221,7 +223,7 @@ convert_to_unicode= [
  '$' ,
  '%' ,
  '&' ,
- '\\' ,
+ '\'' ,
  '(' ,
  ')' ,
  '*' ,
@@ -480,7 +482,7 @@ convert_to_unicode= [
  '$' ,
  '%' ,
  '&' ,
- '\\' ,
+ '\'' ,
  '(' ,
  ')' ,
  '*' ,
@@ -572,16 +574,16 @@ convert_to_unicode= [
 ], 
 # map HP-75 character set to unicode
  [
- '\u0394', 
- '°', 
- 'x',
- '\u2190' ,
- '\u03B1' ,
- '\u03B2' ,
- '\u03B3' ,
+ '\u0394',  # 0 
+ '°',       # 1
+ 'x',       # 2
+ '\u2190' , # 3
+ '\u03B1' , # 4
+ '\u03B2' , # 5
+ '\u0393' , # 6 capital gamma
  '\u2618' , # bell!
  chr(8),
- '\u03A3' ,
+ '\u03C3' , # 9
  chr(10),
  '\u03BB' ,
  '\u03Bc' ,
@@ -668,7 +670,7 @@ convert_to_unicode= [
  ']' ,
  '^' ,
  '_' ,
- '\\' ,
+ '\'' ,
  'a' ,
  'b' ,
  'c' ,
@@ -699,35 +701,35 @@ convert_to_unicode= [
  '|' ,
  '}' ,
  '~' ,
- '\u251C' ,
- '\u0394', 
- '°', 
- 'x',
- '\u2190' ,
- '\u03B1' ,
- '\u03B2' ,
- '\u03B3' ,
- '\u2618' ,
- '\u25AF' ,
- '\u03A3' ,
- '\u25AF' ,
- '\u03BB' ,
- '\u03Bc' ,
- '\u25AF' ,
- '\u03C4' ,
- '\u03A6' ,
- '\u03B8' ,
- '\u03A9' ,
- '\u03B4' ,
- '\u03B5' ,
- '\u03C0',
+ '\u251C' , # 127, append
+ '\u0394',  # 128
+ '°',       # 129
+ 'x',       # 130
+ '\u2190' , # 131
+ '\u03B1' , # 132
+ '\u03B2' , # 133
+ '\u0393' , # 134, capital gamma
+ '\u2618' , # 135
+ '~'      , # 136
+ '\u03C3' , # 137
+ '\u251C' , # 138
+ '\u03BB' , # 139
+ '\u03Bc' , # 140
+ '\u25AF' , # 141
+ '\u03C4' , # 142
+ '\u03A6' , # 143
+ '\u03B8' , # 144
+ '\u03C9' , # 145
+ '\u03B4' , # 146
+ '\u03B5' , # 147
+ '\u03C0',  # 148
  'Ä' ,
  'ä' ,
  'Ö' ,
  'ö' ,
  'Ü' ,
  'ü',
- '\u25AF' ,
+ '\u241B' ,
  '\u03A3' ,
  '\u2260' ,
  '£',
@@ -827,7 +829,7 @@ convert_to_unicode= [
  '|' ,
  '}' ,
  '~' ,
- '\u251C' 
+ '\u251C' # 255
 ],  
 # map ROMAN-8 to unicode
 [

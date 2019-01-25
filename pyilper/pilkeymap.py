@@ -27,6 +27,8 @@
 # - initial release
 # 21.01.2019 - jsi:
 # - bug fixes
+# 23.01.2019 - jsi
+# - missing HP-75 keys added
 
 from PyQt5 import QtCore
 #
@@ -130,6 +132,13 @@ keymap_hp75 = {
         QtCore.Qt.Key_Semicolon | KEYBOARD_CTRL:         [30],  # Sterling
         QtCore.Qt.Key_8 | KEYBOARD_CTRL:                 [31],  # smear
         QtCore.Qt.Key_9 | KEYBOARD_CTRL:                 [127], # append
+        QtCore.Qt.Key_0 | KEYBOARD_CTRL:                 [176], # underscore 0
+        QtCore.Qt.Key_1 | KEYBOARD_CTRL:                 [177], # underscore 1
+        QtCore.Qt.Key_2 | KEYBOARD_CTRL:                 [178], # underscore 2
+        QtCore.Qt.Key_3 | KEYBOARD_CTRL:                 [179], # underscore 3
+        QtCore.Qt.Key_4 | KEYBOARD_CTRL:                 [180], # underscore 4
+        QtCore.Qt.Key_5 | KEYBOARD_CTRL:                 [181], # underscore 5
+        QtCore.Qt.Key_6 | KEYBOARD_CTRL:                 [182], # underscore 6
         QtCore.Qt.Key_F1 | KEYBOARD_CTRL :               [192], # ??
         QtCore.Qt.Key_F3 | KEYBOARD_CTRL :               [193], # ??
         QtCore.Qt.Key_F4 | KEYBOARD_CTRL :               [194], # ??
