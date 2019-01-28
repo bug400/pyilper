@@ -101,12 +101,14 @@
 # - 1.8.0 development
 # 18.12.2018 jsi
 # - added HP2225B
-# 10.01.2018 jsi
+# 10.01.2019 jsi
 # - renamed Printer tab to Generic Printer
 # - prepare Beta1
-# 14.01.2018 jsi
+# 14.01.2019 jsi
 # - added constants for keyboard type configuration
 # - prepare Beta2
+# 27.01.2019 jsi
+# - introduced KEYBOARD_DELAY configuration parameter
 #
 import platform
 #
@@ -155,7 +157,8 @@ UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
 CURSOR_BLINK=500                # 500 ms cursor blink rate
 CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
 AUTOSCROLL_RATE=100             # 500 ms cursor blink rate
-TERMINAL_MINIMUM_ROWS=24        # cant get beyond that
+TERMINAL_MINIMUM_ROWS=24        # can't get beyond that
+KEYBOARD_DELAY=500              # autorepeat delay to prevent too fast kbd input
 
 #
 # predefined baudrates

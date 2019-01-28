@@ -163,6 +163,8 @@
 # 25.01.2019 jsi
 # - removed special Mac key lookup
 # - update self.actual_h on "delete to end of display"
+# 28.01.2019 jsi
+# - autorepeat delay improved
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -174,7 +176,7 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilcharconv import icharconv, CHARSET_HP71, CHARSET_HP75, CHARSET_HP41
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS, KEYBOARD_DELAY
 from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT, SHORTCUT_INSERT
 from .pilconfig import PILCONFIG
 from .pilkeymap import *
@@ -486,6 +488,12 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._scrollUpAreaY=0         # display area that activates scroll up
         self._scrollDownAreaY=0       # display area that activates scroll down
         self._saved_pos=None          # saved last cursor move position
+#
+#       If this timer is active, autorpeat keyboard entries are ignored
+#
+        self._inhibitAutorepeatTimer= QtCore.QTimer()
+        self._inhibitAutorepeatTimer.setInterval(KEYBOARD_DELAY)
+        self._inhibitAutorepeatTimer.setSingleShot(True)
         self._autoscrollMode= AUTOSCROLL_OFF
         self._autoscrollTimer=QtCore.QTimer()
         self._autoscrollTimer.setInterval(AUTOSCROLL_RATE)
@@ -731,16 +739,28 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
               self._ctrl_modifier= False
         event.accept()
         return
+#
+#  inhibit autorepeat if timer is running
+#
+    def inhibitAutorepeat(self):
+       self._inhibitAutorepeatTimer.start()
 
+    def isAutorepeatInhibited(self):
+       return self._inhibitAutorepeatTimer.isActive()
 #
 #   keyboard pressed event, process keys and put them into the HP-IL outdata buffer
 #
     def keyPressEvent(self, event):
-        text = event.text()
-        key = event.key()
-        if (event.isAutoRepeat() and text) or self._kbdfunc is None:
+        if self._kbdfunc is None:
            event.accept()
            return
+        if event.isAutoRepeat():
+           if self.isAutorepeatInhibited():
+              event.accept()
+              return
+        self.inhibitAutorepeat()
+        text = event.text()
+        key = event.key()
 
 #
 #       handle modifier keys first
@@ -832,7 +852,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #             found key replacement, send it
 #
-#             print("Keyboard lookup ", lookup)
+              print("Keyboard lookup ", lookup, event.isAutoRepeat())
               if lookup:
                  for i in lookup:
                     self._kbdfunc(i)
@@ -844,8 +864,6 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                  if text:
                     self.kbdstring(text)
 
-        if (event.isAutoRepeat() and not text) :
-           time.sleep(0.05)
         event.accept()
         return
 #
