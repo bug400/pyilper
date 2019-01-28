@@ -852,7 +852,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #             found key replacement, send it
 #
-              print("Keyboard lookup ", lookup, event.isAutoRepeat())
+#             print("Keyboard lookup ", lookup, event.isAutoRepeat())
               if lookup:
                  for i in lookup:
                     self._kbdfunc(i)
