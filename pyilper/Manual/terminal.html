@@ -121,20 +121,26 @@ to install the  <code>PILHP75</code> basic program which included in the LIF dis
 <p>Keyboard mappings:</p>
 
 <table class="w3-table-all">
-<tr><th>PC keyboard</th><th>HP-71 key</th></tr>
+<tr><th>PC keyboard</th><th>HP-75 key</th></tr>
 <tr><td>F1</td><td>ATTN</td></tr>
 <tr><td>F2</td><td>RUN</td></tr>
 <tr><td>F3</td><td>TIME</td></tr>
 <tr><td>F4</td><td>APPT</td></tr>
 <tr><td>F5</td><td>EDIT</td></tr>
 <tr><td>F6</td><td>FET</td></tr>
-<tr><td>F6</td><td>LOCK</td></tr>
-<tr><td>F6</td><td>CLR</td></tr>
+<tr><td>F7</td><td>LOCK</td></tr>
+<tr><td>F8</td><td>CLR</td></tr>
 </table>
 
 <p>For all other input to the HP-75 use the keystrokes as specified in the user manual. Nearly all key combinations should work.</p>
 
 <p>To enter any character below character code 127 use the appropriate keystroke or the <code>ALTnnn</code> input method (see below). To enter characters with code &gt; 127 use the prefix <code>CTL I/R</code> which is <code>Ctrl Ins</code> on the PC keyboard.</p>
+
+<p><b>Limitations:</b> 
+<ul class="w3-ul">
+<li>The calculator does not process any keyboard input while a Basic program or a calculator command is running. Thus you have to interrupt them with the ATTN key of the calculator.</li>
+<li>Key combinations that display information temporarily while the keys are held down do not work.</li>
+</ul>
 
 <h3 class="w3-text-teal">Common keyboard features and issues</h3>
 
@@ -162,12 +168,7 @@ with care.</p>
 ALT-L (see above) can be used as user defined shortcuts. These shortcuts
 can be specified in the <a class="w3-hover-black" href="filemanu.html">file menu</a>.
 
-<p><b>Limitations:</b> 
-<ul class="w3-ul">
-<li>Both calculators do not process keyboard input from a HP-IL device while executing a command. Therefore it is not possible to interrupt e.g. a <code>LIST</code> from the virtual keyboard. Running Basic programs can not be interrupted on the HP-75. You have to use the <code>ATTN</code> of the actual calculator instead.</li>
-<li>Some key combinations might be reserved for the window manager and thus are not forwarded to the <em>pyILPER</em> application. In this case try to disable or redefine the affected key combination in the window manager.</li>
-<li>Key combinations that display information temporarily while the keys are held down do not work.</li>
-</ul>
+<p><b>Note:</b> Some key combinations might be reserved for the window manager and thus are not forwarded to the <em>pyILPER</em> application. In this case try to disable or redefine the affected key combination in the window manager.</p>
 
 
 <h3 class="w3-text-teal">Device function keys</h3>
