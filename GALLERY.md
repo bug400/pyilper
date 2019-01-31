@@ -15,7 +15,7 @@ Index
 
 User Interface
 --------------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/970872ee/img/pyilper_floatwindows.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_floatwindows.png)
 
 Features:
 * The virtual device tabs can be undocked from the main application and used as independent floating windows (see above)
@@ -24,7 +24,7 @@ Features:
 
 Drive
 -----
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_drive.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_drive.png)
 
 Features:
 * emulates a HP82161A tape drive, a HP9114B drive (filbert only) or a HDRIVE1 device with medium sizes up to 16MB
@@ -34,7 +34,7 @@ Features:
 
 Generic Printer
 ---------------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/c36dfd5/img/pyilper_printer.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_printer.png)
 
 Features:
 * 80 or 132 column output
@@ -46,7 +46,7 @@ Features:
 
 Terminal
 --------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_terminal.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_terminal.png)
 
 Features:
 * supports all edit functions of the HP-71
@@ -59,7 +59,7 @@ Features:
 
 Scope
 -----
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_scope.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_scope.png)
 
 Features:
 * display mnemoic or hex codes
@@ -72,7 +72,7 @@ Features:
 
 HP-7470A Plotter
 ----------------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_plotter.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_plotter.png)
 
 Features:
 * supports all HP-GL commands of the HP7470A
@@ -84,7 +84,7 @@ Features:
 
 HP-82162A thermal printer
 -------------------------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_thermal.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_thermal.png)
 
 Features:
 * supports all features of the HP82162A thermal printer with the exception of bar code generation
@@ -93,7 +93,7 @@ Features:
 
 ThinkJet HP-2225B printer
 -------------------------
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/4dd8c7e/img/pyilper_hp2225.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_hp2225.png)
 
 Features:
 * supports output of text and graphics

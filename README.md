@@ -1,7 +1,7 @@
 pyILPR (Virtual HP-IL Devices)
 ==============================
 
-![pyilper](https://cdn.rawgit.com/bug400/pyilper/73dfd05/img/pyilper_drive.png)
+![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_drive.png)
 
 Index
 -----
