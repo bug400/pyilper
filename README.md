@@ -39,11 +39,11 @@ Features
 
 * Entirely written in Python3 using the QT GUI-Framework
 * Virtual mass storage drive with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize)
-* Virtual generic printer emulating the HP-71B, HP-41C and ROMAN-8 character sets
-* Terminal emulator with keyboard support (HP-71B only). Requires at least version 1.6 of the PIL-Box firmware
+* Virtual generic printer emulating the HP-71B, HP-41C, HP-75 and ROMAN-8 character sets
+* Terminal emulator with keyboard support for HP-71B and HP-75.
 * Virtual plotter emulating the HP-7470A HP-IL plotter
 * Virtual printer emulating the HP-82162A thermal printer
-* Virtual printer emulating the ThinkJet HP-2225B printer (new in pyILPER 1.8.0)
+* Virtual printer emulating the ThinkJet HP-2225B printer
 * HP-IL scope
 * The number of virtual devices is configurable,
 * The virtual devices can be either organized in a compact tabbed view or in independent floating windows
@@ -51,6 +51,7 @@ Features
 * Monitoring the status of the virtual HP-IL devices
 * Support for the PIL-Box via serial-over-usb interface
 * Support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
+* Support to connect the emulators [EMU41, EMU71 and EMU75](http://www.jeffcalc.hp41.eu/index.html) running on DOSBox to pyILPER.
 
 See the [pyILPER virtual devices gallery](https://github.com/bug400/pyilper/blob/master/GALLERY.md) for details.
 
