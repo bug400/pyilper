@@ -67,10 +67,12 @@ keymap_hp71 = {
         QtCore.Qt.Key_Insert:                  [ ESC , ord("H")],   # I/R
         QtCore.Qt.Key_Delete:                  [ ESC , ord("G")],   # -CHAR
         QtCore.Qt.Key_Backspace:               [ ESC , ord("Q")],   # BACK
-        QtCore.Qt.Key_Up | KEYBOARD_SHIFT:     [ ESC , ord("J")], # far left
-        QtCore.Qt.Key_Down | KEYBOARD_SHIFT:   [ ESC , ord("K")], # far right
-        QtCore.Qt.Key_Left | KEYBOARD_SHIFT :  [ ESC , ord("E")], # far up
-        QtCore.Qt.Key_Right | KEYBOARD_SHIFT:  [ ESC , ord("F")], # far down
+        QtCore.Qt.Key_Up | KEYBOARD_SHIFT:     [ ESC , ord("J")], # far up
+        QtCore.Qt.Key_Down | KEYBOARD_SHIFT:   [ ESC , ord("K")], # far down
+        QtCore.Qt.Key_Left | KEYBOARD_SHIFT :  [ ESC , ord("E")], # far left
+        QtCore.Qt.Key_Home                  :  [ ESC , ord("E")], # far left
+        QtCore.Qt.Key_Right | KEYBOARD_SHIFT:  [ ESC , ord("F")], # far right
+        QtCore.Qt.Key_End                   :  [ ESC , ord("F")], # far right
         QtCore.Qt.Key_Down | KEYBOARD_CTRL:    [ ESC , ord("T")], # next catalog
         QtCore.Qt.Key_F1      :                [ ESC , ord("L")], # ATTN
         QtCore.Qt.Key_F2      :                [ ESC , ord("M")], # RUN
@@ -98,37 +100,39 @@ keymap_hp75 = {
         QtCore.Qt.Key_Return:                            [13],
         QtCore.Qt.Key_Escape  :                          [27],
         QtCore.Qt.Key_F1      :                          [128],  # ATTN
-        QtCore.Qt.Key_F3      :                          [129],  # TIME
-        QtCore.Qt.Key_F4      :                          [130],  # APPT
-        QtCore.Qt.Key_F5      :                          [131],  # EDIT
+        QtCore.Qt.Key_F2      :                          [129],  # TIME
+        QtCore.Qt.Key_F3      :                          [130],  # APPT 
+        QtCore.Qt.Key_F4      :                          [131],  # APPT
         QtCore.Qt.Key_Up :                               [132],
         QtCore.Qt.Key_Down :                             [133],
         QtCore.Qt.Key_Left :                             [134],
         QtCore.Qt.Key_Right :                            [135],
         QtCore.Qt.Key_Insert:                            [136],
-        QtCore.Qt.Key_F6      :                          [137],  # FET
+        QtCore.Qt.Key_F5      :                          [137],  # FET
+        QtCore.Qt.Key_F6      :                          [139],  # CLR
         QtCore.Qt.Key_Delete:                            [138],  # DEL
-        QtCore.Qt.Key_F8      :                          [139],  # CLR
-        QtCore.Qt.Key_F7      :                          [140],  # LOCK
-        QtCore.Qt.Key_F2      :                          [141],  # RUN
+        QtCore.Qt.Key_F8      :                          [141],  # RUN
         QtCore.Qt.Key_Tab      :                         [142],  # TAB
+        QtCore.Qt.Key_Home                 :             [166], # Goto BOL
+        QtCore.Qt.Key_End                   :            [167], # Goto EOL
+        QtCore.Qt.Key_F7      :                          [168],  # Lit.
 
 #       Shift modifier group
         QtCore.Qt.Key_F1 | KEYBOARD_SHIFT:               [160], # OFF
-        QtCore.Qt.Key_F3 | KEYBOARD_SHIFT:               [161], # ??
-        QtCore.Qt.Key_F4 | KEYBOARD_SHIFT:               [162], # chk interval
-        QtCore.Qt.Key_F5 | KEYBOARD_SHIFT:               [163], # ??
+        QtCore.Qt.Key_F2 | KEYBOARD_SHIFT :              [161], # --
+        QtCore.Qt.Key_F3 | KEYBOARD_SHIFT:               [162], # chk interval
+        QtCore.Qt.Key_F4 | KEYBOARD_SHIFT:               [163], # --
         QtCore.Qt.Key_Up   | KEYBOARD_SHIFT :            [164], # Page up
         QtCore.Qt.Key_Down | KEYBOARD_SHIFT:             [165], # Page down
         QtCore.Qt.Key_Left | KEYBOARD_SHIFT:             [166], # Goto BOL
         QtCore.Qt.Key_Right| KEYBOARD_SHIFT :            [167], # Goto EOL
         QtCore.Qt.Key_Insert | KEYBOARD_SHIFT:           [168], # Enter char
-        QtCore.Qt.Key_F6 | KEYBOARD_SHIFT:               [169], # Last err
+        QtCore.Qt.Key_F5 | KEYBOARD_SHIFT:               [169], # last err
         QtCore.Qt.Key_Delete | KEYBOARD_SHIFT:           [170], # Del to EOL
-        QtCore.Qt.Key_F8  | KEYBOARD_SHIFT  :            [171], # ??
-        QtCore.Qt.Key_F7  | KEYBOARD_SHIFT  :            [172], # Lock kbd
-        QtCore.Qt.Key_F2 | KEYBOARD_SHIFT :              [173], # Single step
+        QtCore.Qt.Key_F6 | KEYBOARD_SHIFT:               [171], # --
+        QtCore.Qt.Key_F8  | KEYBOARD_SHIFT  :            [173], # SST
         QtCore.Qt.Key_Tab | KEYBOARD_SHIFT:              [174], # Tab back
+        QtCore.Qt.Key_F7  | KEYBOARD_SHIFT  :            [200], # Lit and _
 
 #       Control modifier group
         QtCore.Qt.Key_Plus | KEYBOARD_CTRL:              [28],  # sigma
@@ -143,38 +147,38 @@ keymap_hp75 = {
         QtCore.Qt.Key_4 | KEYBOARD_CTRL:                 [180], # underscore 4
         QtCore.Qt.Key_5 | KEYBOARD_CTRL:                 [181], # underscore 5
         QtCore.Qt.Key_6 | KEYBOARD_CTRL:                 [182], # underscore 6
-        QtCore.Qt.Key_F1 | KEYBOARD_CTRL :               [192], # ??
-        QtCore.Qt.Key_F3 | KEYBOARD_CTRL :               [193], # ??
-        QtCore.Qt.Key_F4 | KEYBOARD_CTRL :               [194], # ??
-        QtCore.Qt.Key_F5 | KEYBOARD_CTRL :               [195], # ??
+        QtCore.Qt.Key_F1 | KEYBOARD_CTRL :               [192], # --
+        QtCore.Qt.Key_F2 | KEYBOARD_CTRL  :              [193], # --
+        QtCore.Qt.Key_F3 | KEYBOARD_CTRL :               [194], # --
+        QtCore.Qt.Key_F4 | KEYBOARD_CTRL :               [195], # --
         QtCore.Qt.Key_Up   | KEYBOARD_CTRL  :            [196], # send ESC S
         QtCore.Qt.Key_Down | KEYBOARD_CTRL :             [197], # send ESC T
         QtCore.Qt.Key_Left | KEYBOARD_CTRL :             [198], # 32 <-
         QtCore.Qt.Key_Right| KEYBOARD_CTRL  :            [199], # 32 ->
         QtCore.Qt.Key_Insert | KEYBOARD_CTRL :           [200], # lit+undersc.
-        QtCore.Qt.Key_F6 | KEYBOARD_CTRL :               [201], # Last entry
+        QtCore.Qt.Key_F5 | KEYBOARD_CTRL :               [201], # last entry
+        QtCore.Qt.Key_F6 | KEYBOARD_CTRL :               [203], # reset display
         QtCore.Qt.Key_Delete | KEYBOARD_CTRL :           [202], # Delete to BOL
-        QtCore.Qt.Key_F8  | KEYBOARD_CTRL   :            [203], # Reset display
-        QtCore.Qt.Key_F7  | KEYBOARD_CTRL   :            [204], # Num keybd
-        QtCore.Qt.Key_F2 | KEYBOARD_CTRL  :              [205], # ??
-        QtCore.Qt.Key_Tab | KEYBOARD_CTRL :              [206], # ??
+        QtCore.Qt.Key_F8  | KEYBOARD_CTRL   :            [205], # --
+        QtCore.Qt.Key_F7  | KEYBOARD_CTRL   :            [201], # lit+undersc.
+        QtCore.Qt.Key_Tab | KEYBOARD_CTRL :              [206], # --
         
 #       Shift+Control modifier group
-        QtCore.Qt.Key_F1 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [224], # ??
-        QtCore.Qt.Key_F3 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [225], # ??
-        QtCore.Qt.Key_F4 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [226], # ??
-        QtCore.Qt.Key_F5 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [227], # ??
-        QtCore.Qt.Key_Up   | KEYBOARD_CTRL | KEYBOARD_SHIFT: [228], # ??
-        QtCore.Qt.Key_Down | KEYBOARD_CTRL | KEYBOARD_SHIFT: [229], # ??
+        QtCore.Qt.Key_F1 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [224], # --
+        QtCore.Qt.Key_F2 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [225], # --
+        QtCore.Qt.Key_F3 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [226], # --
+        QtCore.Qt.Key_F4 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [227], # --
+        QtCore.Qt.Key_Up   | KEYBOARD_CTRL | KEYBOARD_SHIFT: [228], # --
+        QtCore.Qt.Key_Down | KEYBOARD_CTRL | KEYBOARD_SHIFT: [229], # --
         QtCore.Qt.Key_Left | KEYBOARD_CTRL | KEYBOARD_SHIFT: [230], # find prv char
         QtCore.Qt.Key_Right| KEYBOARD_CTRL | KEYBOARD_SHIFT: [231], # find next char
-        QtCore.Qt.Key_Insert | KEYBOARD_CTRL | KEYBOARD_SHIFT:[232], # ??
-        QtCore.Qt.Key_F6 | KEYBOARD_CTRL | KEYBOARD_SHIFT:    [233], # ??
-        QtCore.Qt.Key_Delete | KEYBOARD_CTRL | KEYBOARD_SHIFT:[234], # ??
-        QtCore.Qt.Key_F7  | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [236], # ??
-        QtCore.Qt.Key_F2 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [237], # ??
-        QtCore.Qt.Key_Tab | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [238], # ??
-        QtCore.Qt.Key_F8  | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [255], # Reset
+        QtCore.Qt.Key_Insert | KEYBOARD_CTRL | KEYBOARD_SHIFT:[232], # --
+        QtCore.Qt.Key_F5 | KEYBOARD_CTRL | KEYBOARD_SHIFT:   [233], # --
+        QtCore.Qt.Key_Delete | KEYBOARD_CTRL | KEYBOARD_SHIFT:[234], # --
+        QtCore.Qt.Key_F6 | KEYBOARD_CTRL | KEYBOARD_SHIFT:    [255], # reset
+        QtCore.Qt.Key_F7  | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [232], #  --
+        QtCore.Qt.Key_F8  | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [237], # Reset
+        QtCore.Qt.Key_Tab | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [238], # --
 
 
 
