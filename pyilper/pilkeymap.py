@@ -32,6 +32,8 @@
 # 25.01.2019 - jsi:
 # - added Shift Alt I and Ctrl Alt I keystrokes for Shift I/R and Ctrl I/R
 # - refactoring
+# 11.02.2019 jsi:
+# - fixed backtab key
 
 from PyQt5 import QtCore
 from .pilcore import isMACOS
@@ -131,7 +133,7 @@ keymap_hp75 = {
         QtCore.Qt.Key_Delete | KEYBOARD_SHIFT:           [170], # Del to EOL
         QtCore.Qt.Key_F6 | KEYBOARD_SHIFT:               [171], # --
         QtCore.Qt.Key_F8  | KEYBOARD_SHIFT  :            [173], # SST
-        QtCore.Qt.Key_Tab | KEYBOARD_SHIFT:              [174], # Tab back
+        QtCore.Qt.Key_Backtab | KEYBOARD_SHIFT:          [174], # Tab back
         QtCore.Qt.Key_F7  | KEYBOARD_SHIFT  :            [200], # Lit and _
 
 #       Control modifier group
@@ -178,7 +180,7 @@ keymap_hp75 = {
         QtCore.Qt.Key_F6 | KEYBOARD_CTRL | KEYBOARD_SHIFT:    [255], # reset
         QtCore.Qt.Key_F7  | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [232], #  --
         QtCore.Qt.Key_F8  | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [237], # Reset
-        QtCore.Qt.Key_Tab | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [238], # --
+        QtCore.Qt.Key_Backtab | KEYBOARD_CTRL | KEYBOARD_SHIFT:  [238], # --
 
 
 
