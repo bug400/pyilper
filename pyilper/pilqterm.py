@@ -165,6 +165,9 @@
 # - update self.actual_h on "delete to end of display"
 # 28.01.2019 jsi
 # - autorepeat delay improved
+# 10.02.2019 jsi
+# - disable tab widget switching in terminal widget and enable TAB key for 
+#   keyboard input
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -511,6 +514,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #       widget cursor type
 #
         self.setCursor(QtCore.Qt.IBeamCursor)
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
 #
 #       system clipboard object
 #
@@ -702,6 +706,12 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
               self._HPTerminal.scroll_view_up()
         event.accept()
 #
+#   overwriting this method prevents finding the next child widget and 
+#   enables the TAB key for normal keyboard input
+#
+    def focusNextPrevChild(self,flag):
+       return False
+#
 #   focus out event, reset keyboard 
 #
     def focusOutEvent(self,event):
@@ -823,7 +833,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                  if not alt_mode_lookup :
                     shortcut_text,shortcut_flag= SHORTCUTCONFIG.get_shortcut(key-QtCore.Qt.Key_A)
                     self.kbdstring(shortcut_text)
-#                   nrint("Shortcut look up ",shortcut_text)
+#                   print("Shortcut look up ",shortcut_text)
                     if shortcut_flag== SHORTCUT_EXEC:
                        self.fake_key(QtCore.Qt.Key_Return)
                     elif shortcut_flag== SHORTCUT_EDIT:
