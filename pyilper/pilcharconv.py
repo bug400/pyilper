@@ -30,12 +30,14 @@
 # - renamed stringconv to barrrconv. Added stringconv.
 # 27.12.2018 jsi
 # - added HP2225 charset
-# 16.01.2018 jsi
+# 16.01.2019 jsi
 # - refactoring: use list of lists for code tables to speed up access
 # - added HP-75 charset
 # - added icharconv function
-# 25.01.2018 jsi
+# 25.01.2019 jsi
 # - various bug fixes in the HP-75 and HP-71 character table
+# 11.02.2019 jsi
+# - fix in HP-75 character set
 #
 
 #
@@ -741,7 +743,7 @@ convert_to_unicode= [
  '$' ,
  '%' ,
  '&' ,
- '\\' ,
+ '\'' ,
  '(' ,
  ')' ,
  '*' ,

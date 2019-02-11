@@ -168,6 +168,9 @@
 # 10.02.2019 jsi
 # - disable tab widget switching in terminal widget and enable TAB key for 
 #   keyboard input
+# 11.02.2019 jsi
+# - prevent possible crash in shortcut lookup
+# - use inverse video instead of underline for HP-75 character set
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -205,7 +208,8 @@ CHAR_ATTRIB_UNDERLINE_SHORT= CHAR_ATTRIB_UNDERLINE >> 16
 CHAR_ATTRIB = [
         CHAR_ATTRIB_INVERSE,   # HP-71 charset
         CHAR_ATTRIB_INVERSE,   # HP-41 charset
-        CHAR_ATTRIB_UNDERLINE, # HP-75 charset
+#       CHAR_ATTRIB_UNDERLINE, # HP-75 charset
+        CHAR_ATTRIB_INVERSE  , # HP-75 charset
         CHAR_ATTRIB_NONE       # Roman-8 charset
 ]
 #
@@ -831,18 +835,20 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #                proces shortcuts
 #
                  if not alt_mode_lookup :
-                    shortcut_text,shortcut_flag= SHORTCUTCONFIG.get_shortcut(key-QtCore.Qt.Key_A)
-                    self.kbdstring(shortcut_text)
-#                   print("Shortcut look up ",shortcut_text)
-                    if shortcut_flag== SHORTCUT_EXEC:
-                       self.fake_key(QtCore.Qt.Key_Return)
-                    elif shortcut_flag== SHORTCUT_EDIT:
-                       self.fake_key(QtCore.Qt.Key_Left)
-                       self.fake_key(QtCore.Qt.Key_Left)
-                    elif shortcut_flag== SHORTCUT_INSERT:
-                       self.fake_key(QtCore.Qt.Key_Left)
-                       self.fake_key(QtCore.Qt.Key_Left)
-                       self.fake_key(QtCore.Qt.Key_Insert)
+                    if key >= QtCore.Qt.Key_A and key <= QtCore.Qt.Key_Z:
+                       shortcut_index= key- QtCore.Qt.Key_A
+                       shortcut_text,shortcut_flag= SHORTCUTCONFIG.get_shortcut(shortcut_index)
+                       self.kbdstring(shortcut_text)
+#                      print("Shortcut look up ",shortcut_text)
+                       if shortcut_flag== SHORTCUT_EXEC:
+                          self.fake_key(QtCore.Qt.Key_Return)
+                       elif shortcut_flag== SHORTCUT_EDIT:
+                          self.fake_key(QtCore.Qt.Key_Left)
+                          self.fake_key(QtCore.Qt.Key_Left)
+                       elif shortcut_flag== SHORTCUT_INSERT:
+                          self.fake_key(QtCore.Qt.Key_Left)
+                          self.fake_key(QtCore.Qt.Key_Left)
+                          self.fake_key(QtCore.Qt.Key_Insert)
 
         else: # all other keyboard input
 #
