@@ -43,24 +43,25 @@
 # - LIFUTILS_PATH module variable and functions added
 # 11.11.2017 jsi
 # - set required version of lifutils to 1.7.7
+# 31.05.2019 jsi
+# - set required version of lifutils to 1.7.9
+# - text75 is now liftext75
 #
 # core constants and functions to handle lif image files
 #
+
 import pathlib
 
-#
-# core constants and functions to handle lif image files
-#
 
-dict_finfo_type={0x0001:["TEXT","liftext"],0x00FF:["D-LEX","lexcat71"],0xE020:["WAXM41",""],0xE030:["XM41",""],0xE040:["ALL41","wcat41"],0xE050:["KEY41","key41"],0xE052:["TXT75","text75"],0xE053:["APP75",""],0xE058:["DAT75",""],0xE060:["STA41","stat41"],0xE070:["X-M41",""],0xE080:["PGM41","decomp41"],0xE088:["BAS75",""],0xE089:["LEX75",""],0xE08A:["WKS75",""],0xE08B:["ROM75",""],0xE0D0:["SDATA","sdata"],0xE0D1:["TEXT (S)","liftext"],0xE0F0:["DAT71",""],0xE0F1:["DAT71 (S)",""],0xE204:["BIN71",""],0xE205:["BIN71 (S)",""],0xE206:["BIN71 (P)",""],0xE207:["BIN71 (SP)",""],0xE208:["LEX71","lexcat71"],0xE209:["LEX71 (S)","lexcat71"],0xE20A:["LEX71 (P)","lexcat71"],0xE20B:["LEX71 (SP)","lexcat71"],0xE20C:["KEY71",""],0xE20D:["KEY71 (S)",""],0xE214:["BAS71",""],0xE215:["BAS71 (S)",""],0xE216:["BAS71 (P)",""],0xE217:["BAS71 (SP)",""],0xE218:["FTH71",""],0xE219:["FTH71 (S)",""],0xE21A:["FTH71 (P)",""],0xE21B:["FTH71 (SP)",""],0xE222:["GRA71",""],0xE224:["ADR71",""],0xE22E:["SYM71",""],0xE21C:["ROM71",""]}
+dict_finfo_type={0x0001:["TEXT","liftext"],0x00FF:["D-LEX","lexcat71"],0xE020:["WAXM41",""],0xE030:["XM41",""],0xE040:["ALL41","wcat41"],0xE050:["KEY41","key41"],0xE052:["TXT75","liftext75"],0xE053:["APP75",""],0xE058:["DAT75",""],0xE060:["STA41","stat41"],0xE070:["X-M41",""],0xE080:["PGM41","decomp41"],0xE088:["BAS75",""],0xE089:["LEX75",""],0xE08A:["WKS75",""],0xE08B:["ROM75",""],0xE0D0:["SDATA","sdata"],0xE0D1:["TEXT (S)","liftext"],0xE0F0:["DAT71",""],0xE0F1:["DAT71 (S)",""],0xE204:["BIN71",""],0xE205:["BIN71 (S)",""],0xE206:["BIN71 (P)",""],0xE207:["BIN71 (SP)",""],0xE208:["LEX71","lexcat71"],0xE209:["LEX71 (S)","lexcat71"],0xE20A:["LEX71 (P)","lexcat71"],0xE20B:["LEX71 (SP)","lexcat71"],0xE20C:["KEY71",""],0xE20D:["KEY71 (S)",""],0xE214:["BAS71",""],0xE215:["BAS71 (S)",""],0xE216:["BAS71 (P)",""],0xE217:["BAS71 (SP)",""],0xE218:["FTH71",""],0xE219:["FTH71 (S)",""],0xE21A:["FTH71 (P)",""],0xE21B:["FTH71 (SP)",""],0xE222:["GRA71",""],0xE224:["ADR71",""],0xE22E:["SYM71",""],0xE21C:["ROM71",""]}
 
 dict_finfo_name={"TEXT":0x0001,"D-LEX":0x00FF,"WAXM41":0xE020,"XM41":0xE030,"ALL41":0xE040,"KEY41":0xE050,"TXT75":0xE052,"APP75":0xE053,"DAT75":0xE058,"STA41":0xE060,"X-M41":0xE070,"PGM41":0xE080,"BAS75":0xE088,"LEX75":0xE089,"WKS75":0xE08A,"ROM75":0xE08B,"SDATA":0xE0D0,"TEXT (S)":0xE0D1,"DAT71":0xE0F0,"DAT71 (S)":0xE0F1,"BIN71":0xE204,"BIN71 (S)":0xE205,"BIN71 (P)":0xE206,"BIN71 (SP)":0xE207,"LEX71":0xE208,"LEX71 (S)":0xE209,"LEX71 (P)":0xE20A,"LEX71 (SP)":0xE20B,"KEY71":0xE20C,"KEY71 (S)":0xE20D,"BAS71":0xE214,"BAS71 (S)":0xE215,"BAS71 (P)":0xE216,"BAS71 (SP)":0xE217,"FTH71":0xE218,"FTH71 (S)":0xE219,"FTH71 (P)":0xE21A,"FTH71 (SP)":0xE21B,"GRA71":0xE222,"ADR71":0xE224,"SYM71":0xE22E,"ROM71":0xE21C}
 #
 # Minimum Version number of LIFUTILS
 #
-LIFUTILS_REQUIRED_VERSION=10707
+LIFUTILS_REQUIRED_VERSION=10709
 #
-# GUID of a lifutils > 1.7.7 windows installation
+# GUID of a lifutils > 1.7.x windows installation
 #
 LIFUTILS_UUID="{0C786F40-D1C6-4681-9B1D-AFC920428192}"
 #
