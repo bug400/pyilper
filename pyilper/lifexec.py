@@ -618,17 +618,24 @@ class cls_lifexport (QtWidgets.QDialog):
       
       self.gBox1=QtWidgets.QGroupBox("Postprocessing options")
       self.radioLifAscii= QtWidgets.QRadioButton("convert LIF-Text to ASCII")
+      self.radioLifAscii.clicked.connect(self.do_radio)
       self.radioLifAscii.setEnabled(False)
       self.radioTxt75Ascii= QtWidgets.QRadioButton("convert HP-75 text file to ASCII, omit line numbers")
+      self.radioTxt75Ascii.clicked.connect(self.do_radio)
       self.radioTxt75Ascii.setEnabled(False)
       self.radioTxt75AsciiNumbers= QtWidgets.QRadioButton("convert HP-75 text file to ASCII, retain line numbers")
+      self.radioTxt75AsciiNumbers.clicked.connect(self.do_radio)
       self.radioTxt75AsciiNumbers.setEnabled(False)
       self.radioEramco= QtWidgets.QRadioButton("unpack Eramco MLDL-OS ROM file")
+      self.radioEramco.clicked.connect(self.do_radio)
       self.radioEramco.setEnabled(False)
       self.radioHepax= QtWidgets.QRadioButton("unpack HEPAX HP41 SDATA ROM file")
       self.radioHepax.setEnabled(False)
-      self.radioRaw= QtWidgets.QRadioButton("remove LIF header")
+      self.radioHepax.clicked.connect(self.do_radio)
+      self.radioRaw= QtWidgets.QRadioButton("remove LIF header, create RAW file")
+      self.radioRaw.clicked.connect(self.do_radio)
       self.radioNone= QtWidgets.QRadioButton("None")
+      self.radioNone.clicked.connect(self.do_radio)
 
       if self.liffiletype== "TEXT":
          self.radioLifAscii.setEnabled(True)
@@ -646,7 +653,6 @@ class cls_lifexport (QtWidgets.QDialog):
       elif self.liffiletype== "SDATA":
          self.radioNone.setChecked(True)
          self.radioHepax.setEnabled(True)
-         self.radioHepax.clicked.connect(self.do_radioHepax)
          self.outputextension=".lif"
       else:
          self.radioNone.setChecked(True)
@@ -684,10 +690,22 @@ class cls_lifexport (QtWidgets.QDialog):
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
       self.vlayout.addWidget(self.buttonBox)
-
-   def do_radioHepax(self):
-      if self.radioHepax.isChecked():
+#
+#  Radio button clicked, adjust file type
+#
+   def do_radio(self):
+      if self.radioLifAscii.isChecked():
+         self.outputextension=".txt"
+      elif self.radioTxt75Ascii.isChecked():
+         self.outputextension=".txt"
+      elif self.radioTxt75AsciiNumbers.isChecked():
+         self.outputextension=".txt"
+      elif self.radioHepax.isChecked():
          self.outputextension=".rom"
+      elif self.radioEramco.isChecked():
+         self.outputextension=".rom"
+      elif self.radioRaw.isChecked():
+         self.outputextension=".raw"
       else:
          self.outputextension=".lif"
       self.outputfile=os.path.join(self.workdir, self.liffilename.lower()+self.outputextension)
