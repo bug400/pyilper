@@ -1,6 +1,6 @@
 pyilper (1.8.1~development) bionic; urgency=medium
 
-  * enhancements of virtual disk import/export
+  * added/improved HP-75 text file support in the drive tab
 
  -- bionic <achim@trillian>  Fri, 31 May 2019 13:39:08 +0200
 

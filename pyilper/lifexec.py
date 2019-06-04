@@ -96,6 +96,8 @@
 # 31.5.2019 jsi:
 # - added HP-75 text file import/export
 # - do not run lifput in exec_double_import if first command failed
+# 03.06.2019 jsi:
+# - show HP-75 text files optional with or without line numbers
 #
 import subprocess
 import tempfile
@@ -1251,10 +1253,21 @@ class cls_lifview(QtWidgets.QDialog):
       ft=get_finfo_name(liffiletype)
       call= get_finfo_type(ft)[1]
 #
-# decomp41 needs additional parameters (xrmoms)
+# decomp41 needs additional parameters (xmoms)
 #
       if call == "decomp41":
          call= cls_chkxrom.exec()
+#
+# liftext75 has the option to show line numbers
+#
+      elif call == "liftext75":
+         call= add_path(call)
+         reply=QtWidgets.QMessageBox.question(None,'',"Show line numbers?",QtWidgets.QMessageBox.Yes,QtWidgets.QMessageBox.No)
+         if reply== QtWidgets.QMessageBox.Yes:
+            call= [ add_path(call), "-n"]
+#
+# all other lifutil progs
+#
       else:
          call= add_path(call)
       output=exec_double_export(d,[add_path("lifget"),"-r",lifimagefile,liffilename],call,"")
