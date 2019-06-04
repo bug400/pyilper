@@ -1,6 +1,6 @@
 pyilper (1.8.1~development) bionic; urgency=medium
 
-  * added/improved HP-75 text file support in the drive tab
+  * added/improved HP-75 text and lex file support in the file management functions of the drive tab
 
  -- bionic <achim@trillian>  Fri, 31 May 2019 13:39:08 +0200
 
