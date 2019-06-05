@@ -1,4 +1,4 @@
-pyilper (1.8.1~development) bionic; urgency=medium
+pyilper (1.8.1) bionic; urgency=medium
 
   * added/improved HP-75 text and lex file support in the file management functions of the drive tab
 
