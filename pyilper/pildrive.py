@@ -342,6 +342,8 @@
 # - set pushbutton autodefault property false
 # 05.02.2018 jsi
 # - allow smaller font sizes for directory listing
+# 06.11.2019 jsi
+# - changed text in drive type selection box to "HP9114B"
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -503,7 +505,7 @@ class cls_DriveWidget(QtWidgets.QWidget):
       self.radbutCass.setText("HP82161A")
       self.vbox2.addWidget(self.radbutCass)
       self.radbutDisk = QtWidgets.QRadioButton(self.gbox)
-      self.radbutDisk.setText("HP9114A")
+      self.radbutDisk.setText("HP9114B")
       self.radbutHdrive1 = QtWidgets.QRadioButton(self.gbox)
       self.vbox2.addWidget(self.radbutDisk)
       self.radbutHdrive1.setText("HDRIVE1")
