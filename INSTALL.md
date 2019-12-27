@@ -70,10 +70,8 @@ Python 3.7.
 environment it is strongly encouraged to do a clean reinstall of the
 Anaconda/Miniconda environment.
 
-The following instructions apply to Linux, Windows and mac OS:
+Download the Python 3.x version of [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and follow the [Installation Instructions](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and install Miniconda first.
 
-Follow the [Quick Install Guide](http://conda.pydata.org/docs/install/quick.html)
-and install Miniconda first. 
 
 Note for Windows: Do not instruct the installer to change the PATH. Instead use
 always the Anaconda Prompt which is available from the start menu.

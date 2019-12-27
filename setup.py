@@ -47,10 +47,11 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 
     # What does your project relate to?
-    keywords='pyqt5 HP-IL PIL-Box',
+    keywords='pyqt5 HP-IL PIL-Box HP-41 HP-71 HP-75',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().

@@ -171,6 +171,8 @@
 # - added HP2225B tab
 # 06.01.2018 jsi
 # - added HP2225B screenwidth global parameter
+# 30.11.2019 jsi
+# - improved help text for command line parameters
 #
 import os
 import sys
@@ -684,8 +686,8 @@ def dumpstacks(signal, frame):
 
 def main():
    parser=argparse.ArgumentParser(description='pyILPER startup script')
-   parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE")
-   parser.add_argument('--clean','-clean',action='store_true',help="Start pyILPER witha config file which is reset to defaults")
+   parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE. This instance has an own configuration file.")
+   parser.add_argument('--clean','-clean',action='store_true',help="Start pyILPER with a config file which is reset to defaults")
    args=parser.parse_args()
 
    if not isWINDOWS():
