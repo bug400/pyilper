@@ -1,3 +1,10 @@
+pyilper (1.8.2) bionic; urgency=medium
+
+  * python 3.8 compatibility 
+  * Corrected the drive name to "HP9114B" in the drive type selection box of the drive tab.
+
+ -- bionic <achim@trillian>  Mon, 03 Feb 2020 10:12:05 +0100
+
 pyilper (1.8.1) bionic; urgency=medium
 
   * added/improved HP-75 text and lex file support in the file management functions of the drive tab
