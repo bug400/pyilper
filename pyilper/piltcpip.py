@@ -61,6 +61,8 @@
 # - timeout parameter added
 # - refactoring: move code of process() and sendFrame() and device list handling
 #   to thread object
+# 03.02.2020 jsi:
+# - fixed Python 3.8 syntax warning
 
 import select
 import socket
@@ -117,7 +119,7 @@ class cls_piltcpip:
          except OSError as msg:
             s.close()
             continue
-      if len(self.__serverlist__) is 0:
+      if len(self.__serverlist__) == 0:
          raise TcpIpError("cannot bind to port","")
 
    def openclient(self):

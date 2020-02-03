@@ -27,6 +27,8 @@
 # Initial version derived from ILPER 1.43
 #
 # Changelog
+# 03.02.2020 jsi:
+# - fixed Python 3.8 syntax warning
 
 import select
 import socket
@@ -80,7 +82,7 @@ class cls_pilsocket:
          except OSError as msg:
             s.close()
             continue
-      if len(self.__serverlist__) is 0:
+      if len(self.__serverlist__) == 0:
          raise SocketError("cannot bind to port","")
 #
 #  Disconnect from Network
