@@ -89,6 +89,8 @@
 # - set pushbutton autodefault property to false
 # 10.08.2018 jsi
 # - cls_PenConfigWindow moved to penconfig.py
+# 25.02.2018 jsi
+# - cleanup status byte access
 
 import sys
 import subprocess
@@ -1155,7 +1157,7 @@ class cls_statusWindow(QtWidgets.QDialog):
 #  timer event function, refresh output
 #
    def do_refresh(self):
-      self.lblStatus.setText("{0:b}".format(self.parent.parent.pildevice.get_status()))
+      self.lblStatus.setText("{0:b}".format(self.parent.parent.pildevice.getstatus()))
       self.lblError.setText(str(self.parent.error))
       self.lblIllCmd.setText(self.parent.illcmd)
       self.lblErrMsg.setText(self.parent.errmsg)
@@ -1691,20 +1693,6 @@ class cls_pilplotter(cls_pildevbase):
       self.__status__ = self.__status__ | 0x10 # set ready for data bit
       self.__status_lock__.release()
 
-   def set_status(self,s):
-      if self.__getstatus__() & 0x10:
-         s= s | 0x10
- 
-      self.__setstatus__(s)
-      return s
-#
-#  get status byte
-#
-   def get_status(self):
-      self.__status_lock__.acquire()
-      s= self.__status__
-      self.__status_lock__.release()
-      return s
 #
 #  disable permanently, if emu7470 is not available
 #

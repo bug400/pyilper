@@ -244,7 +244,7 @@ class cls_pildevbase:
 #              save current SRQ bit
                SrqBit= frame & 0x100 
 
-#              status (SST) ir accessory ID (SDI)
+#              status (SST) or accessory ID (SDI)
                if (self.__ilstate__ & 0x01) != 0: 
 
 #                 0x43: active talker (multibyte status)

@@ -197,6 +197,9 @@
 # - terminal custom shortcut configuration added in main menu
 # 06.01.2018 jsi
 # - added global configuration for HP2225B screenwidth
+# 13.02.2020 cg
+# - fixed wrong address view for addresses > 15 and changed device
+#   address view to HP71 style in cls_DevStatusWindow()
 #
 import os
 import glob
@@ -930,7 +933,7 @@ class cls_AboutWindow(QtWidgets.QDialog):
       self.view = QtWidgets.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
-      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2017 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+" and Qt "+self.qtversion+"\n")
+      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2020 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+" and Qt "+self.qtversion+"\n")
 
 
       self.button = QtWidgets.QPushButton('OK')
@@ -1767,7 +1770,7 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
       self.__timer__=QtCore.QTimer()
       self.__timer__.timeout.connect(self.do_refresh)
       self.rows=len(parent.pilwidgets)-1
-      self.cols=6
+      self.cols=5
       self.__table__ = QtWidgets.QTableWidget(self.rows,self.cols)  # Table view for dir
       self.__table__.setSortingEnabled(False)  # no sorting
 #
@@ -1789,11 +1792,8 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
       h4.setText("Addr.")
       self.__table__.setHorizontalHeaderItem(3,h4)
       h5= QtWidgets.QTableWidgetItem()
-      h5.setText("2nd. Addr.")
+      h5.setText("HP-IL Status")
       self.__table__.setHorizontalHeaderItem(4,h5)
-      h6= QtWidgets.QTableWidgetItem()
-      h6.setText("HP-IL Status")
-      self.__table__.setHorizontalHeaderItem(5,h6)
       self.__table__.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
       self.__table__.resizeColumnsToContents()
 #
@@ -1851,11 +1851,16 @@ class cls_DevStatusWindow(QtWidgets.QDialog):
          (active, did, aid, addr, addr2nd, hpilstatus)= pildevice.getstatus()
          if not active:
             continue
+         devaddr = ''
+         if (addr & 0x80) != 0:
+            devaddr = str(addr & 0x1F)
+            if (addr2nd & 0x80) != 0:
+               devextaddr = ".{0:02d}".format((addr2nd & 0x1F) + 1)
+               devaddr += devextaddr
          self.__items__[row,1].setText(did)
          self.__items__[row,2].setText("{0:x}".format(aid))
-         self.__items__[row,3].setText("{0:x}".format(addr& 0xF))
-         self.__items__[row,4].setText("{0:x}".format(addr2nd &0xF))
-         self.__items__[row,5].setText("{0:s}".format(hpilstatus))
+         self.__items__[row,3].setText(devaddr)
+         self.__items__[row,4].setText("{0:s}".format(hpilstatus))
 #
 # Main Window user interface class -------------------------------------------
 #

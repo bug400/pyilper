@@ -1,7 +1,9 @@
 pyilper (1.8.2) bionic; urgency=medium
 
-  * python 3.8 compatibility 
-  * Corrected the drive name to "HP9114B" in the drive type selection box of the drive tab.
+  * Python 3.8 compatibility 
+  * Corrected the drive name to "HP9114B" in the drive type selection box of the drive tab (hint from Christoph Gießelink)
+  * Fixed wrong address view for addresses > 15 and changed device # address view to HP71 style in the virtual HP-IL device status window (courtesy by Christoph Gießelink)
+  * Clear device buffers on LIF Image file change and clear disk drive status after successful reading or writing (hint from Christoph Gießelink)
 
  -- bionic <achim@trillian>  Mon, 03 Feb 2020 10:12:05 +0100
 
