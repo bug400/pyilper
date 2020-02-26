@@ -89,8 +89,10 @@
 # - set pushbutton autodefault property to false
 # 10.08.2018 jsi
 # - cls_PenConfigWindow moved to penconfig.py
-# 25.02.2018 jsi
+# 25.02.2020 jsi
 # - cleanup status byte access
+# 26.02.2020 jsi
+# - cleanup status byte access fix
 
 import sys
 import subprocess
@@ -1157,7 +1159,7 @@ class cls_statusWindow(QtWidgets.QDialog):
 #  timer event function, refresh output
 #
    def do_refresh(self):
-      self.lblStatus.setText("{0:b}".format(self.parent.parent.pildevice.getstatus()))
+      self.lblStatus.setText("{0:b}".format(self.parent.parent.pildevice.getPlotterStatus()))
       self.lblError.setText(str(self.parent.error))
       self.lblIllCmd.setText(self.parent.illcmd)
       self.lblErrMsg.setText(self.parent.errmsg)
@@ -1699,6 +1701,11 @@ class cls_pilplotter(cls_pildevbase):
    def disable_permanently(self):
       self.__disabled__= True
       self.setactive(False)
+#
+#  get status
+#
+   def getPlotterStatus(self):
+      return(self.__getstatus__())
 #
 # public (overloaded)
 #
