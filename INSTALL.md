@@ -63,8 +63,8 @@ You need approximately 700MB free disk space for pyILPER and the Python
 runtime environment. Everything is installed as a local user and thus no 
 administrator privileges are needed. 
 
-Note: for the Anaconda/Miniconda platform pyILPER is only available for 
-Python 3.7.
+Note: pyILPER is available for Python 3.7 and Python 3.8 at the moment for the Anaconda/Miniconda platform. Future versions of pyILPER will only support 
+Python 3.8 if that version becomes default of the Anaconda/Miniconda installer.
 
 **Note for Windows users**: Due to recent changes in the Anaconda installation
 environment it is strongly encouraged to do a clean reinstall of the
@@ -106,7 +106,7 @@ You should issue occasionally:
 
 to clean the conda package cache and save disk space.
 
-Note: pyILPER requires Python 3.7. Check the Python version with:
+Note: pyILPER requires at least Python 3.7. If you get no pyILPER updates check your Anaconda/Miniconda Python version with:
 
      conda list
 
