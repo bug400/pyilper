@@ -1,6 +1,7 @@
 pyilper (1.8.3) bionic; urgency=medium
 
   * disable right clicks into an empty directory listing in the drive tab
+  * left click on a selected row in the directory listing of the drive tab now deselects it
 
  -- bionic <achim@trillian>  Wed, 29 Apr 2020 11:54:26 +0200
 
