@@ -347,6 +347,8 @@
 # 29.04.2020 jsi
 # - initialize directory table with zero rows (prevents doing right clicks into
 #   empty rows of a directory which caused a crash of the program)
+# - make all entries of the directory table read only
+# - left click on a selected row does a deselect.
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -899,6 +901,37 @@ class DirTableView(QtWidgets.QTableView):
         self.parent=parent
         self.papersize= papersize
 #
+#       custom mouse press even. A click to a selected row unselects it
+#
+    def mousePressEvent(self, event):
+        if event.button()== QtCore.Qt.LeftButton:
+           row=self.indexAt(event.pos()).row()
+           isSelected=False
+#
+#       check if the row is already selected
+#         
+           for i in self.selectionModel().selection().indexes():
+              if i.row()== row:
+                 isSelected=True
+#
+#       yes, clear
+#
+           if isSelected:
+              self.selectionModel().clear()
+              event.accept()
+              return
+#
+#       no, select
+#
+           else:
+              self.selectRow(row)
+              event.accept()
+              return
+#
+#       No left button, let others do the job
+#
+        event.ignore()
+#
 #       context menu
 #
     def contextMenuEvent(self, event):
@@ -966,11 +999,11 @@ class cls_LifDirWidget(QtWidgets.QWidget):
         self.__font_size__= 13
         self.__table__ = DirTableView(self,self.__papersize__)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
-        self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+#       self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 #
 #       switch off grid, no focus, no row selection
 #
-        self.__table__.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+#       self.__table__.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.__table__.setFocusPolicy(QtCore.Qt.NoFocus)
         self.__table__.setShowGrid(False)
         self.__columns__=6     # 5 rows for directory listing
@@ -1111,6 +1144,7 @@ class cls_LifDirWidget(QtWidgets.QWidget):
                 item = QtGui.QStandardItem(x[column])
                 item.setFont(self.__font__)
                 item.setTextAlignment(QtCore.Qt.AlignLeft)
+                item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
                 self.__model__.setItem(self.__rowcount__, column, item)
             self.__rowcount__+=1
         lif.lifclose()
