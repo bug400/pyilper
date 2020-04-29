@@ -344,6 +344,9 @@
 # - allow smaller font sizes for directory listing
 # 06.11.2019 jsi
 # - changed text in drive type selection box to "HP9114B"
+# 29.04.2020 jsi
+# - initialize directory table with zero rows (prevents doing right clicks into
+#   empty rows of a directory which caused a crash of the program)
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -539,7 +542,7 @@ class cls_DriveWidget(QtWidgets.QWidget):
 #     directory widget
 #
       self.vbox1= QtWidgets.QVBoxLayout()
-      self.lifdir=cls_LifDirWidget(self,self.name,10,FONT,self.papersize)
+      self.lifdir=cls_LifDirWidget(self,self.name,0,FONT,self.papersize)
       self.vbox1.addWidget(self.lifdir)
 
       self.hbox2= QtWidgets.QHBoxLayout()
