@@ -98,6 +98,8 @@
 # - do not run lifput in exec_double_import if first command failed
 # 03.06.2019 jsi:
 # - show HP-75 text files optional with or without line numbers
+# 04.01.2021 jsi
+# - exec_single did not get stderr output of executed program
 #
 import subprocess
 import tempfile
@@ -227,7 +229,7 @@ def check_errormessages(parent,ret):
 #
 def exec_single(parent,cmd):
    try:
-      ret=subprocess.run(cmd,stderr=subprocess.STDOUT)
+      ret=subprocess.run(cmd,stderr=subprocess.PIPE)
       check_errormessages(parent,ret)
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)

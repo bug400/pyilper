@@ -54,246 +54,6 @@
 # 16.01.2016 jsi
 # - revert disabling filename and drivetype controls if the drive is enabled
 # - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
-# 08.01.2016 jsi
-# - introduced lifcore, refactoring
-# - do not lock pildevice, if pyilper is disabled
-# 10.01.2016 jsi
-# - show tooltips for disabled controls in the drive tab
-# 16.01.2016 jsi
-# - revert disabling filename and drivetype controls if the drive is enabled
-# - allow arbitrary disk layouts 
 # 30.01.2016 jsi
 # - enable file management controls only if a compatible version of the LIF
 #   utilities is installed
@@ -349,6 +109,8 @@
 #   empty rows of a directory which caused a crash of the program)
 # - make all entries of the directory table read only
 # - left click on a selected row does a deselect.
+# 30.04.2020 jsi
+# - code optimization
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -910,8 +672,9 @@ class DirTableView(QtWidgets.QTableView):
 #
 #       check if the row is already selected
 #         
-           for i in self.selectionModel().selection().indexes():
-              if i.row()== row:
+           i =self.selectionModel().selection().indexes()
+           if i:
+              if i[0].row()== row:
                  isSelected=True
 #
 #       yes, clear
@@ -941,9 +704,9 @@ class DirTableView(QtWidgets.QTableView):
         if not self.parent.parent.parent.parent.lifutils_installed:
            event.accept()
            return
-        if self.selectionModel().selection().indexes():
-            for i in self.selectionModel().selection().indexes():
-                row, column = i.row(), i.column()
+        i= self.selectionModel().selection().indexes()
+        if i:
+            row=i[0].row()
             model=self.parent.getModel()
             imagefile= self.parent.getFilename()
             liffilename=model.item(row,0).text()

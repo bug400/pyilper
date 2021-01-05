@@ -2,6 +2,8 @@ pyilper (1.8.3) bionic; urgency=medium
 
   * disable right clicks into an empty directory listing in the drive tab
   * left click on a selected row in the directory listing of the drive tab now deselects it
+  * fix a bug that the file management controls in the drive tab were not disabled if no valid version of the <i>LIFUTILS</i> was installed.<
+  * fix a bug that not all errormessages of lifutils are shown in the graphical user interface
 
  -- bionic <achim@trillian>  Wed, 29 Apr 2020 11:54:26 +0200
 

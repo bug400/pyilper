@@ -79,8 +79,8 @@
 # - store coordinate list of position in config instead of QPoint Object
 # - set config file version to 2
 # 21.04.2016 jsi
-# - development version uses other config file than the production version. This is
-#   controlled by the PRODUCTION constant
+# - development version uses other config file than the production version. This 
+#   is controlled by the PRODUCTION constant
 # 26.04.2016 jsi
 # - IDY frame processing now enabled by default
 # - remove baudrate config parameter
@@ -173,6 +173,8 @@
 # - added HP2225B screenwidth global parameter
 # 30.11.2019 jsi
 # - improved help text for command line parameters
+# 26.11.2020 jsi
+# - fix: disable filemanagement controls, if lifutils are not installed
 #
 import os
 import sys
@@ -330,7 +332,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     check lifutils
 #
-      self.lifutils_installed= check_lifutils()
+      self.lifutils_installed= check_lifutils()[0]
       if self.lifutils_installed:
          self.ui.enableLIFControls()
 #
