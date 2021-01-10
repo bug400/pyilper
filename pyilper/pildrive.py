@@ -762,11 +762,12 @@ class cls_LifDirWidget(QtWidgets.QWidget):
         self.__font_size__= 13
         self.__table__ = DirTableView(self,self.__papersize__)  # Table view for dir
         self.__table__.setSortingEnabled(False)  # no sorting
-#       self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+##
+        self.__table__.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 #
 #       switch off grid, no focus, no row selection
 #
-#       self.__table__.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.__table__.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.__table__.setFocusPolicy(QtCore.Qt.NoFocus)
         self.__table__.setShowGrid(False)
         self.__columns__=6     # 5 rows for directory listing
