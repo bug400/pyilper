@@ -32,7 +32,7 @@ If you already installed the required Python software you can install pyILPER [w
 Windows requires the installation of the FTDI USB serial driver first.
 See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
-More recent mac OS versions already provide a USB serial driver for the
+More recent macOS versions already provide a USB serial driver for the
 PIL-Box.  By experience you get better results if you use the original FTDI driver. 
 
 LINUX does not require to install any driver software.
@@ -51,7 +51,7 @@ Installation with the ANACONDA platform
 
 Anaconda is a Python distribution widely used in Data Science applications.
 It provides an Python environment that is easy to install and maintain
-on Windows, mac OS and Linux. The Anaconda cloud gives access to more than
+on Windows, macOS and Linux. The Anaconda cloud gives access to more than
 1000 Python applications.
 
 The Anaconda distribution installs more then 150 Python packages on your
@@ -63,23 +63,21 @@ You need approximately 700MB free disk space for pyILPER and the Python
 runtime environment. Everything is installed as a local user and thus no 
 administrator privileges are needed. 
 
-Note: pyILPER is available for Python 3.7 and Python 3.8 for the Anaconda/Miniconda platform at the moment. Future versions of pyILPER will only support 
-Python 3.8 if that version becomes default of the Anaconda/Miniconda installer.
 
 **Note for Windows**: Due to recent changes in the Anaconda installation
 environment it is strongly encouraged to do a clean reinstall of the
 Anaconda/Miniconda environment.
 
-Download the Python 3.x version of [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and follow the [Installation Instructions](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and install Miniconda first.
+Download the Python 3.8 version of [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and follow the [Installation Instructions](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and install Miniconda first.
 
 
 **Note for Windows**: Do not instruct the installer to change the PATH. 
 Use always the Anaconda Prompt which is available from the start menu.
 
-**Note for Linux and mac OS**: If you install Miniconda the first time
+**Note for Linux and macOS**: If you install Miniconda the first time
 then let the installer modify the PATH variable of your environment.
 
-Reopen a new terminal window (Linux, mac OS) or Anaconda Prompt (Windows) 
+Reopen a new terminal window (Linux, macOS) or Anaconda Prompt (Windows) 
 and type:
 
      conda update conda
@@ -92,13 +90,13 @@ To update pyILPER and the Python runtime type:
 
      conda update --all
 
-in a terminal window (Linux and mac OS) or Anaconda Prompt (Windows).
+in a terminal window (Linux and macOS) or Anaconda Prompt (Windows).
 
 To start pyILPER type:
 
      pyilper
 
-in a terminal window (Linux and mac OS) or Anaconda Prompt (Windows).
+in a terminal window (Linux and macOS) or Anaconda Prompt (Windows).
 
 You should issue occasionally:
 
@@ -106,13 +104,13 @@ You should issue occasionally:
 
 to clean the conda package cache and save disk space.
 
-Note: pyILPER requires at least Python 3.7. If you get no pyILPER updates check your Anaconda/Miniconda Python version with:
+Note: pyILPER requires at least Python 3.8. If you get no pyILPER updates check your Anaconda/Miniconda Python version with:
 
      conda list
 
-You can upgrade the Python version to 3.7 with:
+You can upgrade the Python version to 3.8 with:
 
-     conda install python=3.7
+     conda install python=3.8
 
 
 Setup
@@ -132,7 +130,7 @@ the dialout group to access the device.
 On Windows the device is COMn. If you are uncertain, check the COM ports
 in the device manager. 
 
-On mac OS the device name is usually /dev/tty.usbserial-FTDxxxx.
+On macOS the device name is usually /dev/tty.usbserial-FTDxxxx.
 
 pyILPER tries to determine the baud rate of the PIL-BOX serial device.
 If that does not work, set the baud rate manually to the baud rate the
