@@ -27,10 +27,10 @@ Drive
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_drive.png)
 
 Features:
-* emulates a HP82161A tape drive, a HP9114B drive (filbert only) or a HDRIVE1 device with medium sizes up to 16MB
-* self updating directory listing 
-* file management functions (load external file, export to external file, rename, purge, view)
-* medium management functions (initialize, label, pack)
+* Emulates a HP82161A tape drive, a HP9114B drive (filbert only) or a HDRIVE1 device with medium sizes up to 16 MB
+* Self updating directory listing 
+* File management functions (load external file, export to external file, rename, purge, view)
+* Medium management functions (initialize, label, pack)
 
 Generic Printer
 ---------------
@@ -38,57 +38,57 @@ Generic Printer
 
 Features:
 * 80 or 132 column output
-* multiple color schemes
+* Multiple color schemes
 * HP-41, HP-71 or Roman-8 character set
-* scrollable
-* select and copy text 
-* log to external file
+* Scrollable
+* Select and copy text 
+* Log to external file
 
 Terminal
 --------
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_terminal.png)
 
 Features:
-* supports all edit functions of the HP-71
+* Supports all edit functions of the HP-71
 * 80 or 132 column output
-* multiple color schemes
+* Multiple color schemes
 * HP-41, HP-71 or Roman-8 character set
-* scrollable
-* select, copy and paste text
-* configurable keyboard shortcuts
+* Scrollable
+* Select, copy and paste text
+* Configurable keyboard shortcuts
 
 Scope
 -----
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_scope.png)
 
 Features:
-* display mnemoic or hex codes
-* display incoming or outgoing traffic
+* Display mnemoic or hex codes
+* Display incoming or outgoing traffic
 * 80 or 132 column output
-* multiple color schemes
-* scrollable
-* select and copy text 
-* log to external file
+* Multiple color schemes
+* Scrollable
+* Select and copy text 
+* Log to external file
 
 HP-7470A Plotter
 ----------------
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_plotter.png)
 
 Features:
-* supports all HP-GL commands of the HP7470A
+* Supports all HP-GL commands of the HP7470A
 * AA, AR, CI commands additionally supported
-* digitizing support
+* Digitizing support
 * PDF output
-* configurable paper size
-* logging of HP-GL commands to external file
+* Configurable paper size
+* Logging of HP-GL commands to external file
 
 HP-82162A thermal printer
 -------------------------
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_thermal.png)
 
 Features:
-* supports all features of the HP82162A thermal printer with the exception of bar code generation
-* scrollable printer output window
+* Supports all features of the HP82162A thermal printer except for bar code generation
+* Scrollable printer output window
 * PDF output
 
 ThinkJet HP-2225B printer
@@ -96,8 +96,8 @@ ThinkJet HP-2225B printer
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_hp2225.png)
 
 Features:
-* supports output of text and graphics
-* supports all PCL printer control commands that are applicable for an emulator
-* scrollable printer output window
+* Supports output of text and graphics
+* Supports all PCL printer control commands that are applicable for an emulator
+* Scrollable printer output window
 * PDF output
 

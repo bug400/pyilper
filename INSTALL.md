@@ -20,8 +20,8 @@ pyILPER requires:
 * Python 3.5 or higher
 * QT 5.6 or higher
 * PyQt compatible to the Python and Qt version
-* the Python bindings for either Qt Webkit or Qt Webengine
-* pyserial  2.7 
+* The Python bindings for either Qt Webkit or Qt Webengine
+* Pyserial  2.7 
 * [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
 
 It is recommended to use the [ANACONDA platform](https://www.continuum.io) 
@@ -33,7 +33,7 @@ Windows requires the installation of the FTDI USB serial driver first.
 See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
 More recent macOS versions already provide a USB serial driver for the
-PIL-Box.  By experience you get better results if you use the original FTDI driver. 
+PIL-Box.  By experience, you get better results if you use the original FTDI driver. 
 
 LINUX does not require to install any driver software.
 
@@ -54,27 +54,21 @@ It provides an Python environment that is easy to install and maintain
 on Windows, macOS and Linux. The Anaconda cloud gives access to more than
 1000 Python applications.
 
-The Anaconda distribution installs more then 150 Python packages on your
-computer which are not needed to run pyILPER. Therefore it is recommended
+The Anaconda distribution installs more than 150 Python packages on your
+computer which are not needed to run pyILPER. Therefore, it is recommended
 to use the Miniconda installer instead which only provides Python and the
 Anaconda package manager.
 
-You need approximately 700MB free disk space for pyILPER and the Python 
+You need approximately 700 MB free disk space for pyILPER and the Python 
 runtime environment. Everything is installed as a local user and thus no 
 administrator privileges are needed. 
 
-
-**Note for Windows**: Due to recent changes in the Anaconda installation
-environment it is strongly encouraged to do a clean reinstall of the
-Anaconda/Miniconda environment.
-
 Download the Python 3.8 version of [Miniconda](https://docs.conda.io/en/latest/miniconda.html) and follow the [Installation Instructions](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) and install Miniconda first.
 
-
-**Note for Windows**: Do not instruct the installer to change the PATH. 
+**Windows**: Do not instruct the installer to change the PATH. 
 Use always the Anaconda Prompt which is available from the start menu.
 
-**Note for Linux and macOS**: If you install Miniconda the first time
+**Linux and macOS**: If you install Miniconda the first time
 then let the installer modify the PATH variable of your environment.
 
 Reopen a new terminal window (Linux, macOS) or Anaconda Prompt (Windows) 
@@ -112,6 +106,10 @@ You can upgrade the Python version to 3.8 with:
 
      conda install python=3.8
 
+**Windows**:
+If an update to a current Python version fails, do a clean reinstallation of the
+Anaconda/Miniconda environment.
+
 
 Setup
 -----
@@ -142,7 +140,7 @@ to an appropriate location.
 
 If the message "connected to PIL-BOX at xxx baud" is displayed in the
 status bar, pyILPER is ready to run. Now you have to enable each
-virtual device (check box at the lower left corner of a device tab), because
+virtual device (check box in the lower left corner of a device tab), because
 they are disabled by default.
 
 
@@ -184,7 +182,7 @@ If you get the error message "This script requires Python 3.5 or newer!" use pyt
 
 Note:
 * Development versions are work in progress and were tested roughly. They are not testet on all platforms.  They may crash and may ruin your data at worst.
-* Beta versions are tested more thoroughly also all supported platforms. They are intended for public testing but should not be used for production.
+* Beta versions are tested more thoroughly on all supported platforms. They are intended for public testing but should not be used for production.
 * The beta or development versions do not affect the configuration of an already installed production version because a different naming convention is used for the configuration files.
 
 To obtain more recent development versions of pyILPER download the pyilper-master.zip file again. If you are familiar with a git client you can synchronize a local pyilper-master directory with the remote GitHub repository.

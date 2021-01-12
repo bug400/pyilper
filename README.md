@@ -20,8 +20,8 @@ introduced by Hewlett-Packard in the early 1980s. It enabled the communication
 between peripheral devices such as printers, floppy disk drives etc. 
 with programmable calculators such as the HP-41C, HP71B and HP-75C/D.
 
-The connection to PCs was realized by either an generic ISA bus card or a 
-serial interface controller. As these devices are not available any more, 
+The connection to PCs was realized by either a generic ISA bus card or a 
+serial interface controller. As these devices are not available anymore, 
 Jean-Francois Garnier published his 
 [PIL-Box project](http://www.jeffcalc.hp41.eu/hpil/)
 in 2009 to link a PC via USB to the HP-IL system.
