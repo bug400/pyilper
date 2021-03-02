@@ -1,3 +1,9 @@
+pyilper (1.8.4) focal; urgency=medium
+
+  * Plotter Tab: activate ENTER key after having digitized or entered a coordinate
+
+ -- bionic <achim@trillian>  Tue, 02 Mar 2021 09:13:34 +0100
+
 pyilper (1.8.3) bionic; urgency=medium
 
   * disable right clicks into an empty directory listing in the drive tab

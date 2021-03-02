@@ -93,6 +93,9 @@
 # - cleanup status byte access
 # 26.02.2020 jsi
 # - cleanup status byte access fix
+# 02.03.2021 jsi
+# - Enter button is deactivated in digi mode until a point was digitized or 
+#   entered (hint by cgh)
 
 import sys
 import subprocess
@@ -657,6 +660,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.lineEditX.setText("")
       self.lineEditX.setEnabled(False)
       self.lineEditX.editingFinished.connect(self.do_finishX)
+      self.lineEditX.textChanged.connect(self.checkEnableEnter)
       self.hbox3.addWidget(self.lineEditX)
       self.vbox.addLayout(self.hbox3)
 
@@ -668,6 +672,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.lineEditY.setText("")
       self.lineEditY.setEnabled(False)
       self.lineEditY.editingFinished.connect(self.do_finishY)
+      self.lineEditY.textChanged.connect(self.checkEnableEnter)
       self.hbox4.addWidget(self.lineEditY)
       self.vbox.addLayout(self.hbox4)
 
@@ -810,6 +815,15 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.statuswin.show()
       self.statuswin.raise_()
 #
+#     action: check if lineEditX and lineEditY have text so that we
+#     can enable the Enter key. The textChanged signal is also emitted
+#     if the text was changed programmatically. Thus we also catch a digitized
+#     coordinate 
+#
+   def checkEnableEnter(self):
+      if self.lineEditX.text() != "" and self.lineEditY.text()!= "":
+         self.digiButton.setEnabled(True)
+#
 #     action: process digitized point
 #
    def do_enter(self):
@@ -829,7 +843,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
             self.send_digitize(x,y)
             self.digi_clear()
 #
-#        wen are in MODE_P!: notice the digitized coordinate, clear digitizing mode
+#        we are in MODE_P!: notice the digitized coordinate, clear digitizing mode
 #        in both views, set mode to MODE_P2 and restart digitizing 
          elif self.digi_mode== MODE_P1:
             self.p1x=x
@@ -858,7 +872,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
    def digi_start(self):
       if self.digi_mode== MODE_DIGI:
          return
-      self.digiButton.setEnabled(True)
       self.p1p2Button.setEnabled(False)
       self.lineEditX.setEnabled(True)
       self.lineEditY.setEnabled(True)
