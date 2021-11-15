@@ -111,6 +111,10 @@
 # - left click on a selected row does a deselect.
 # 30.04.2020 jsi
 # - code optimization
+# 15.11.2021 jsi
+# - refactoring, created abstract classes for drives and drivetabs
+# - created classes for raw drive and raw drive tab
+# - renamed classes for LIF drive and LIF drive tab
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -126,36 +130,14 @@ from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
 from .pilpdf import cls_pdfprinter,cls_textItem
 
-class cls_tabdrive(cls_tabgeneric):
+#
+# Tab classes ------------------------------------------------------------------
+#
+class cls_tabdrivegeneric(cls_tabgeneric):
    
    def __init__(self,parent,name):
       super().__init__(parent,name)
       self.name= name
-#
-#     Set default values
-#
-      self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
-      self.terminalcharsize= PILCONFIG.get(self.name,"directorycharsize",-1)
-#
-#     create drive GUI object
-#
-      self.guiobject= cls_DriveWidget(self,self.name)
-#
-#     add gui object to tab
-#
-      self.add_guiobject(self.guiobject)
-#
-#     add cascading config menu and option(s)
-#
-      self.add_configwidget()
-      self.cBut.add_option("Character set","charset",T_STRING,charsets)
-      self.cBut.add_option("Font size","directorycharsize",T_INTEGER,[O_DEFAULT,11,12,13,14,15,16,17,18])
-#
-#     create HPIL-device, notify object to drive gui object
-#
-      self.pildevice= cls_pildrive(isWINDOWS())
-      self.guiobject.set_pildevice(self.pildevice)
-      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
 #  handle changes of tab config options
 #
@@ -196,18 +178,72 @@ class cls_tabdrive(cls_tabgeneric):
    def becomes_invisible(self):
       self.guiobject.becomes_invisible()
 #
-#  Drive widget class --------------------------------------------------------
+# Tab class for LIF drive
 #
-class cls_DriveWidget(QtWidgets.QWidget): 
+class cls_tabdrive(cls_tabdrivegeneric):
+
+   def __init__(self,parent,name):
+      super().__init__(parent,name)
+#
+#     Set default values
+#
+      self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
+      self.terminalcharsize= PILCONFIG.get(self.name,"directorycharsize",-1)
+#
+#     create drive GUI object
+#
+      self.guiobject= cls_DriveWidget(self,self.name)
+#
+#     add gui object to tab
+#
+      self.add_guiobject(self.guiobject)
+#
+#     add cascading config menu and option(s)
+#
+      self.add_configwidget()
+      self.cBut.add_option("Character set","charset",T_STRING,charsets)
+      self.cBut.add_option("Font size","directorycharsize",T_INTEGER,[O_DEFAULT,11,12,13,14,15,16,17,18])
+#
+#     create HPIL-device, notify object to drive gui object
+#
+      self.pildevice= cls_pildrive(isWINDOWS(),False)
+      self.guiobject.set_pildevice(self.pildevice)
+      self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
+#
+# Tab class for raw drive
+#
+class cls_tabrawdrive(cls_tabdrivegeneric):
+
+   def __init__(self,parent,name):
+      super().__init__(parent,name)
+#
+#     create drive GUI object
+#
+      self.guiobject= cls_RawDriveWidget(self,self.name)
+#
+#     add gui object to tab
+#
+      self.add_guiobject(self.guiobject)
+#
+#     create HPIL-device, notify object to drive gui object
+#
+      self.pildevice= cls_pildrive(isWINDOWS(),True)
+      self.guiobject.set_pildevice(self.pildevice)
+#
+#  Generic drive widget class (contains definitions only) -----------------------
+#
+class cls_GenericDriveWidget(QtWidgets.QWidget):
 
    DEV_CASS=0
    DEV_DISK=1
    DEV_HDRIVE1=2
+   DEV_FDRIVE1=3
 
    deviceinfo= { }
    deviceinfo[DEV_CASS]=["",0x10]
    deviceinfo[DEV_DISK]=["HP9114B",0x10]
    deviceinfo[DEV_HDRIVE1]=["HDRIVE1",0x10]
+   deviceinfo[DEV_FDRIVE1]=["FDRIVE1",0x10]
 
    # Medium types
    MEDIUM_CASS=0
@@ -229,7 +265,182 @@ class cls_DriveWidget(QtWidgets.QWidget):
    mediainfo[MEDIUM_HDRIVE16]=['HDRIVE1 16MB disk',125,8,64]
    mediainfo[MEDIUM_UNKNOWN]=['unknown',0,0,0]
    
+#
+# Raw drive widget class -----------------------------------------------------
+#
+class cls_RawDriveWidget(cls_GenericDriveWidget): 
+
+   def __init__(self,parent,name):
+      super().__init__()
+#
+#     Set default values
+#
+      self.name=name
+      self.parent=parent
+#
+#     Set default values
+#
+      self.filename= PILCONFIG.get(self.name,"filename","")
+      self.medium= PILCONFIG.get(self.name,"medium",self.MEDIUM_HDRIVE1)
+      deviceName,self.tracks,self.surfaces,self.blocks=self.mediainfo[self.medium]
+      self.did=PILCONFIG.get(self.name,"did",self.deviceinfo[self.DEV_HDRIVE1][0])
+#
+#     The accessory id is always 0x10
+#
+      self.aid=0x10
+      self.pildevice=None
+#
+#     Build Gui, filename first
+#
+      self.hbox1= QtWidgets.QHBoxLayout()
+      self.lbltxt1=QtWidgets.QLabel("RAW Image File: ")
+      self.lblFilename=QtWidgets.QLabel()
+      self.butFilename=QtWidgets.QPushButton()
+      self.butFilename.setAutoDefault(False)
+      self.butFilename.setText("change")
+      self.hbox1.addWidget(self.lbltxt1)
+      self.hbox1.addWidget(self.lblFilename)
+      self.hbox1.addStretch(1)
+      self.hbox1.addWidget(self.butFilename)
+#     self.hbox1.setContentsMargins(15,10,10,5)
+      self.hbox1.setContentsMargins(0,0,0,0)
+#
+#     Combo box for medium type
+#
+      self.hbox2= QtWidgets.QHBoxLayout()
+      self.grid=QtWidgets.QGridLayout()
+      self.lbltxt2=QtWidgets.QLabel("Medium type ")
+      self.grid.addWidget(self.lbltxt2,0,0)
+      self.comboMedium=QtWidgets.QComboBox()
+      for i in self.mediainfo.keys():
+         txt=self.mediainfo[i][0]
+         if i !=  self.MEDIUM_UNKNOWN:
+            self.comboMedium.addItem(txt)
+      self.comboMedium.setCurrentIndex(self.medium)
+      self.grid.addWidget(self.comboMedium,0,1)
+      self.lblMediumText=QtWidgets.QLabel(self.mediumText())
+      self.grid.addWidget(self.lblMediumText,0,2)
+
+#
+#     editable combo box for DID
+#
+      self.lbltxt3=QtWidgets.QLabel("DID ")
+      self.grid.addWidget(self.lbltxt3,1,0)
+      self.comboDID=QtWidgets.QComboBox()
+      self.comboDID.setEditable(True)
+      for i in self.deviceinfo.keys():
+         txt=self.deviceinfo[i][0]
+         self.comboDID.addItem(txt)
+      self.comboDID.setEditText(self.did)
+      self.grid.addWidget(self.comboDID,1,1)
+      self.hbox2.addLayout(self.grid)
+      self.hbox2.addStretch(1)
+#
+#     assemble layouts
+#
+      self.vbox= QtWidgets.QVBoxLayout()
+      self.vbox.addLayout(self.hbox1)
+      self.vbox.addLayout(self.hbox2)
+      self.vbox.addStretch(1)
+      self.setLayout(self.vbox)
+#
+#     basic initialization
+#
+      self.lblFilename.setText(self.filename)
+#     self.butFilename.setEnabled(False)
+      self.lblFilename.setText(self.filename)
+      self.butFilename.clicked.connect(self.do_filenameChanged)
+      self.comboMedium.currentIndexChanged.connect(self.do_comboMediumChanged)
+#     note: every change of the text triggers this callback
+      self.comboDID.currentTextChanged.connect(self.do_comboDIDChanged)
+#
+#     set HP-IL device
+#
+   def set_pildevice(self,pildevice):
+      self.pildevice= pildevice
+
+   def mediumText(self):
+       totalblocks=self.tracks*self.surfaces*self.blocks
+       totalbytes=totalblocks*256
+       return("Medium Layout: ({}/{}/{}), Size: {} blocks ({} bytes).".format(self.tracks,self.surfaces,self.blocks,totalblocks, totalbytes))
+#
+#  Callbacks
+#
+   def do_comboMediumChanged(self):
+      self.medium=self.comboMedium.currentIndex()
+      deviceName,self.tracks,self.surfaces,self.blocks=self.mediainfo[self.medium]
+      self.lblMediumText=QtWidgets.QLabel(self.mediumText())
+      self.pildevice.sethdisk(self.filename,self.tracks,self.surfaces,self.blocks)
+      PILCONFIG.put(self.name,'medium',self.medium)
+      try:
+         PILCONFIG.save()
+      except PilConfigError as e:
+         reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+
+
+   def do_comboDIDChanged(self):
+      self.did=self.comboDID.currentText()
+      self.pildevice.setdevice(self.did,self.aid)
+      PILCONFIG.put(self.name,'did',self.did)
+      try:
+         PILCONFIG.save()
+      except PilConfigError as e:
+         reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      
+   def do_filenameChanged(self):
+      flist= self.get_rawFilename()
+      if flist is None:
+         return
+      self.filename=flist[0]
+      PILCONFIG.put(self.name,'filename',self.filename)
+      try:
+         PILCONFIG.save()
+      except PilConfigError as e:
+         reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+
+      if self.pildevice is not None:
+         self.pildevice.setlocked(True)
+         self.pildevice.setlocked(False)
+      self.lblFilename.setText(self.filename)
+#
+#  enter raw filename
+#
+   def get_rawFilename(self):
+      dialog=QtWidgets.QFileDialog()
+      dialog.setWindowTitle("Select RAW Image File")
+      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+      dialog.setNameFilters( ["RAW Image File (*.dat *.DAT *.img *.IMG)", "All Files (*)"] )
+      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
+      if dialog.exec():
+         return dialog.selectedFiles() 
+
+   def reconfigure(self):
+      return
+
+   def enable(self):
+      deviceName,tracks,surfaces,blocks=self.mediainfo[self.medium]
+      self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
+      self.pildevice.setdevice(self.did,self.aid)
+      return
+
+   def disable(self):
+      return
+
+   def toggle_active(self):
+      return
+
+   def becomes_visible(self):
+      return
+
+   def becomes_invisible(self):
+      return
    
+#
+#  Drive widget class --------------------------------------------------------
+#
+class cls_DriveWidget(cls_GenericDriveWidget): 
+
    def __init__(self,parent,name):
       super().__init__()
 #
@@ -990,7 +1201,11 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 
 class cls_pildrive(cls_pildevbase):
 
-   def __init__(self, isWindows):
+#
+#  Note: if we would like to implement a true "raw" device then we must
+#  add an option to the constructor to disable header fixing
+#
+   def __init__(self, isWindows,isRawDevice):
       super().__init__()
 
 #
@@ -1025,6 +1240,7 @@ class cls_pildrive(cls_pildevbase):
       self.__timestamp__= time.time() # last time of beeing talker
 
       self.__isWindows__= isWindows # true, if Windows platform
+      self.__isRawDevice__= isRawDevice # true, if drive is used as raw device
 
 #
 # public ------------
@@ -1209,7 +1425,7 @@ class cls_pildrive(cls_pildevbase):
             fd= os.open(self.__hdiscfile__, os.O_WRONLY)
          try:
             os.lseek(fd,self.__pe__ * 256, os.SEEK_SET)
-            if self.__pe__ == 0:
+            if self.__pe__ == 0 and (not self.__isRawDevice__) :
                self.__fix_header__()
 #           print("wrec record %d" % (self.__pe__))
             os.write(fd,self.__buf0__)

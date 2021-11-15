@@ -175,6 +175,8 @@
 # - improved help text for command line parameters
 # 26.11.2020 jsi
 # - fix: disable filemanagement controls, if lifutils are not installed
+# 15.11.2021 jsi
+# - raw drive tab added to TAB_CLASSES dict
 #
 import os
 import sys
@@ -195,7 +197,7 @@ from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThrea
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck, check_lifutils
 from .pilhp82162a import cls_tabhp82162a
 from .pilplotter import cls_tabplotter
-from .pildrive import cls_tabdrive
+from .pildrive import cls_tabdrive,cls_tabrawdrive
 from .pilscope import cls_tabscope
 from .pilprinter import cls_tabprinter
 from .pilterminal import cls_tabterminal
@@ -206,7 +208,7 @@ STAT_ENABLED = 1      # Application in warm state:  running
 
 COMMTHREAD_CLASSES={MODE_PILBOX:cls_PilBoxThread,MODE_TCPIP:cls_PilTcpIpThread,MODE_SOCKET:cls_PilSocketThread}
 
-TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a,TAB_HP2225B: cls_tabhp2225b}
+TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a,TAB_HP2225B: cls_tabhp2225b, TAB_RAWDRIVE: cls_tabrawdrive}
 
 #
 # Main application ------------------------------------------------------ 

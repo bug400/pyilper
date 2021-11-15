@@ -124,7 +124,9 @@
 # 10.01.2021 jsi
 # - 1.8.3 release
 # 01.03.2021 jsi
-# 1.8.4 development
+# - 1.8.4 development
+# 16.11.2021 jsi
+# - TAB_RAWDRIVE added
 # 
 #
 import platform
@@ -211,8 +213,9 @@ TAB_TERMINAL=3
 TAB_PLOTTER=4
 TAB_HP82162A=5
 TAB_HP2225B=6
+TAB_RAWDRIVE=7
 #
-TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Generic Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A', TAB_HP2225B: 'HP2225B'}
+TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Generic Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A', TAB_HP2225B: 'HP2225B', TAB_RAWDRIVE: 'Raw Drive'}
 #
 # PDF Constants in 1/10 mm
 #
