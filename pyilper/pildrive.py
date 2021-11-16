@@ -115,6 +115,8 @@
 # - refactoring, created abstract classes for drives and drivetabs
 # - created classes for raw drive and raw drive tab
 # - renamed classes for LIF drive and LIF drive tab
+# 16.11.2021 jsi
+# - medium info did not update in raw drive tab
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -369,7 +371,7 @@ class cls_RawDriveWidget(cls_GenericDriveWidget):
    def do_comboMediumChanged(self):
       self.medium=self.comboMedium.currentIndex()
       deviceName,self.tracks,self.surfaces,self.blocks=self.mediainfo[self.medium]
-      self.lblMediumText=QtWidgets.QLabel(self.mediumText())
+      self.lblMediumText.setText(self.mediumText())
       self.pildevice.sethdisk(self.filename,self.tracks,self.surfaces,self.blocks)
       PILCONFIG.put(self.name,'medium',self.medium)
       try:
