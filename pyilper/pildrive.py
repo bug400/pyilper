@@ -117,6 +117,8 @@
 # - renamed classes for LIF drive and LIF drive tab
 # 16.11.2021 jsi
 # - medium info did not update in raw drive tab
+# 23.11.2021 jsi
+# - change image file was not forwarded to the pildevice
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -402,6 +404,7 @@ class cls_RawDriveWidget(cls_GenericDriveWidget):
 
       if self.pildevice is not None:
          self.pildevice.setlocked(True)
+         self.pildevice.sethdisk(self.filename,self.tracks,self.surfaces,self.blocks)
          self.pildevice.setlocked(False)
       self.lblFilename.setText(self.filename)
 #
