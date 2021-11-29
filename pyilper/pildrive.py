@@ -118,7 +118,8 @@
 # 16.11.2021 jsi
 # - medium info did not update in raw drive tab
 # 23.11.2021 jsi
-# - change image file was not forwarded to the pildevice
+# - change image file was not forwarded to the pildevice in raw drive tab
+# - lock pildevice if medium changes in raw drive tab
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -374,7 +375,9 @@ class cls_RawDriveWidget(cls_GenericDriveWidget):
       self.medium=self.comboMedium.currentIndex()
       deviceName,self.tracks,self.surfaces,self.blocks=self.mediainfo[self.medium]
       self.lblMediumText.setText(self.mediumText())
+      self.pildevice.setlocked(True)
       self.pildevice.sethdisk(self.filename,self.tracks,self.surfaces,self.blocks)
+      self.pildevice.setlocked(False)
       PILCONFIG.put(self.name,'medium',self.medium)
       try:
          PILCONFIG.save()

@@ -1,3 +1,10 @@
+pyilper (1.8.5~beta1) focal; urgency=medium
+
+  * beta version
+  * raw drive device tab added
+
+ -- focal <achim@trillian>  Sun, 28 Nov 2021 20:38:03 +0100
+
 pyilper (1.8.4) focal; urgency=medium
 
   * Plotter Tab: activate ENTER key after having digitized or entered a coordinate

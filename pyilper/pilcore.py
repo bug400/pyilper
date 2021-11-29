@@ -127,6 +127,8 @@
 # - 1.8.4 development
 # 16.11.2021 jsi
 # - TAB_RAWDRIVE added
+# 28.11.2021 jsi
+# - prepare 1.8.5 beta 1
 # 
 #
 import platform
@@ -136,7 +138,7 @@ import platform
 # General constants:
 #
 PRODUCTION=  False     # Production/Development Version
-VERSION="1.8.4"       # pyILPR version number
+VERSION="1.8.5b1"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Python minimum version
