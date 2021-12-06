@@ -171,6 +171,8 @@
 # 11.02.2019 jsi
 # - prevent possible crash in shortcut lookup
 # - use inverse video instead of underline for HP-75 character set
+# 06.12.2021 jsi
+# - fixed _kbdfunc call in paste
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -635,9 +637,10 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
              for c in paste_text:
                  t=ord(c)
                  if t >= 0x20 and t <= 0x7E:
-                    self._kbdfunc(t,False)
+                    self._kbdfunc(t)
                  elif t == 0x0A:
-                    self._kbdfunc(82, True)
+                    self._kbdfunc(0x1B)
+                    self._kbdfunc(82)
        self._press_pos = None
        self._HPTerminal.selectionStop()
        self._selectionText=""
