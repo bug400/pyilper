@@ -177,6 +177,9 @@
 # - fix: disable filemanagement controls, if lifutils are not installed
 # 15.11.2021 jsi
 # - raw drive tab added to TAB_CLASSES dict
+# 12.12.2021 jsi
+# - copy config runtime option added
+# - check if the configuration are from a newer pyILPER version
 #
 import os
 import sys
@@ -287,7 +290,7 @@ class cls_pyilper(QtCore.QObject):
 #     1. pyILPER config
 #
       try:
-         PILCONFIG.open(self.name,CONFIG_VERSION,self.instance,self.clean)
+         PILCONFIG.open(self.name,CONFIG_VERSION,self.instance,PRODUCTION,self.clean)
          PILCONFIG.get(self.name,"active_tab",0)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
          PILCONFIG.get(self.name,"tty","")
@@ -319,7 +322,7 @@ class cls_pyilper(QtCore.QObject):
 #     2. pen configuration
 #
       try:
-         PENCONFIG.open(self.name,CONFIG_VERSION,self.instance,self.clean)
+         PENCONFIG.open(self.name,CONFIG_VERSION,self.instance,PRODUCTION,self.clean)
       except PenConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -327,7 +330,7 @@ class cls_pyilper(QtCore.QObject):
 #     3. terminal keyboard shortcuts
 #
       try:
-         SHORTCUTCONFIG.open(self.name,CONFIG_VERSION,self.instance,self.clean)
+         SHORTCUTCONFIG.open(self.name,CONFIG_VERSION,self.instance,PRODUCTION,self.clean)
       except ShortcutConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -338,10 +341,15 @@ class cls_pyilper(QtCore.QObject):
       if self.lifutils_installed:
          self.ui.enableLIFControls()
 #
-#     determine if we run a new version of pyILPER (or for the first time)
+#     version check, warn user if the configuration files are of a newer
+#     version
 #
       oldversion=encode_version(PILCONFIG.get(self.name,"version"))
       thisversion=encode_version(VERSION)
+      if thisversion < oldversion:
+         reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"Your configuration files are of pyILPER version: "+PILCONFIG.get(self.name,"version")+" which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
+         if reply== QtWidgets.QMessageBox.Cancel:
+            sys.exit(1) 
       PILCONFIG.put(self.name,"version",VERSION)
 #
 #     create tab objects, scope is fixed all others are configured by tabconfig
@@ -637,6 +645,9 @@ class cls_pyilper(QtCore.QObject):
       except OSError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot copy file: "+e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
+      except shutil.SameFileError:
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Source and destination file are identical",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return
 
 #
 #  callback show about window
@@ -681,6 +692,44 @@ class cls_pyilper(QtCore.QObject):
       self.helpwin.show()
       self.helpwin.raise_()
 #
+# copy configuration data from devel to production and vice versa
+# - a development/beta version of pyILPER copies the files of the
+#   production version
+# - a production version of pyILPER copies the files of the development/beta
+#   version
+#
+def copy_config(args):
+   count=0
+   if PRODUCTION:
+      print("This overwrites the configuration files of the production version")
+      print("with the configuration files of the development/beta version")
+   else:
+      print("This overwrites the configuration files of the development/beta version")
+      print("with the configuration files of the production version")
+   inp= input("Continue? (enter 'YES' uppercase): ")
+   if inp !="YES":
+      print("cancelled")
+      return
+   for name in ['pyilper','penconfig','shortcutconfig']:
+      from_filename=buildconfigfilename("pyilper",name,CONFIG_VERSION,args.instance,not PRODUCTION)[0]
+      if not os.path.isfile(from_filename):
+         continue
+      to_filename=buildconfigfilename("pyilper",name,CONFIG_VERSION,args.instance, PRODUCTION)[0]
+      try:
+         shutil.copy(from_filename,to_filename)
+      except OSError as e:
+         print("Error copying file "+from_filename+": "+e.strerror)
+         sys.exit(1)
+      except  SameFileError as e:
+         print("Error copying file "+from_filename+" "+"source and destination file are identical")
+         sys.exit(1)
+      print(from_filename)
+      print("copied to:")
+      print(to_filename)
+      count+=1
+   print(count,"file copied. Restart pyILPER without the 'cc' option now")
+
+#
 # dump stack if signalled externally (for debugging)
 #
 def dumpstacks(signal, frame):
@@ -692,7 +741,11 @@ def main():
    parser=argparse.ArgumentParser(description='pyILPER startup script')
    parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE. This instance has an own configuration file.")
    parser.add_argument('--clean','-clean',action='store_true',help="Start pyILPER with a config file which is reset to defaults")
+   parser.add_argument('--cc','-cc',action='store_true',help="Copy configuration from development to production version and vice versa")
    args=parser.parse_args()
+   if args.cc:
+      copy_config(args)
+      sys.exit(1)
 
    if not isWINDOWS():
       signal.signal(signal.SIGQUIT, dumpstacks)

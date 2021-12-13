@@ -1,7 +1,9 @@
 pyilper (1.8.5~beta1) focal; urgency=medium
 
   * beta version
-  * raw drive device tab added
+  * new virtual raw drive device tab added
+  * fixed crash when pasting text in the terminal
+  * configuration file version check on startup
 
  -- focal <achim@trillian>  Sun, 28 Nov 2021 20:38:03 +0100
 

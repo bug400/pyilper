@@ -33,6 +33,8 @@
 # - added get_dual method
 # 12.02.2018 jsi
 # - added the clean parameter to the open method
+# 12.12.2021 jsi
+# - add configversion parameter to open method
 #
 from .userconfig import cls_userconfig, ConfigError
 
@@ -48,8 +50,7 @@ class PilConfigError(Exception):
 
 class cls_pilconfig:
 #
-#  initialize: read in the configuration file into the dictionary
-#  if the configuration file does not exist, an empty file is created
+#  initialize: create instance
 #
    def __init__(self):
       self.__config__= { } 
@@ -61,8 +62,8 @@ class cls_pilconfig:
 #  if the configuration file does not exist, an empty file is created
 #  If clean is true do not read the config file
 #
-   def open(self,name,version,instance,clean):
-      self.__userconfig__= cls_userconfig(name,name,version,instance)
+   def open(self,name,configversion,instance,production,clean):
+      self.__userconfig__= cls_userconfig(name,name,configversion,instance,production)
       if clean:
          return
       try:
@@ -120,5 +121,7 @@ class cls_pilconfig:
          del(self.__config__[key])
       except KeyError:
          pass
-
+#
+#  create config instance
+#
 PILCONFIG=  cls_pilconfig()

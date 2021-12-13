@@ -25,6 +25,8 @@
 # - first version
 # 15.08.2018 jsi
 # - SHORTCUT_INSERT shortcut type added
+# 12.12.2021 jsi
+# - add configversion parameter to open method
 #
 import copy
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -247,8 +249,8 @@ class cls_shortcutconfig:
 #  exist, the default configuration is written to the shortcut config file
 #  If clean is true do not read an existing config file
 #
-   def open(self,name,version,instance,clean):
-      self.__userconfig__= cls_userconfig(name,"shortcutconfig",version,instance)
+   def open(self,name,configversion,instance,production,clean):
+      self.__userconfig__= cls_userconfig(name,"shortcutconfig",configversion,instance,clean)
       if clean:
          return
       try:

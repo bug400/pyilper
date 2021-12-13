@@ -36,10 +36,13 @@
 # - added filename parameter to __init__
 # 17.08.2016 jsi
 # - added diagnostics to JSON encode/decode error messages
+# 12.12.2021 jsi
+# - add configversion parameter to constructor
+# - use buildconfigfilename function from pilcore
 
 import json
 import os
-import platform
+from  .pilcore import buildconfigfilename
 
 class ConfigError(Exception):
    def __init__(self,msg,add_msg= None):
@@ -49,42 +52,11 @@ class ConfigError(Exception):
 
 class cls_userconfig:
 
-   def __init__(self,progname,filename,version,instance):
+   def __init__(self,progname,filename,configversion,instance,production):
 #
 #  determine config file name
 #
-      self.__configfilename__=filename+instance
-      for i in range(0,len(version)):
-         if version[i]!=".":
-            self.__configfilename__+= version[i]
-#
-#  determine path (os dependend)
-#
-      self.__userhome__=os.path.expanduser("~")
-
-      if platform.system()=="Linux":
-#
-#        LINUX
-#        
-         self.__configpath__=os.path.join(self.__userhome__,".config",progname)
-      elif platform.system()=="Windows":
-#
-#        Windows
-#
-         self.__configpath__=os.path.join(os.environ['APPDATA'],progname)
-      elif platform.system()=="Darwin":
-#
-#        Mac OS X
-#
-         self.__configpath__=os.path.join(self.__userhome__,"Library","Application Support",progname)
-#
-      else:
-#
-#        Fallback
-#
-         self.__configpath__=os.path.join(self.__userhome__,progname)
-
-      self.__configfile__=os.path.join(self.__configpath__,self.__configfilename__)
+      self.__configfile__,self.__configpath__=buildconfigfilename(progname,filename,configversion,instance,production)
 
 #
 #  read configuration, if no configuration exists write default configuration

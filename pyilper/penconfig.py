@@ -27,6 +27,8 @@
 # - added the clean parameter to the open method
 # 10.08.2018 jsi:
 # - cls_PenConfigWindow moved from pilplotter.py
+# 12.12.2021 jsi:
+# - add configversion parameter to open method
 #
 import copy
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -204,8 +206,8 @@ class cls_penconfig:
 #  exist, the default configuration is written to the pen config file
 #  If clean is true do not read an existing config file
 #
-   def open(self,name,version,instance,clean):
-      self.__userconfig__= cls_userconfig(name,"penconfig",version,instance)
+   def open(self,name,configversion,instance,production,clean):
+      self.__userconfig__= cls_userconfig(name,"penconfig",configversion,instance,production)
       if clean:
          return
       try:

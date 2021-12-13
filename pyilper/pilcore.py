@@ -129,9 +129,12 @@
 # - TAB_RAWDRIVE added
 # 28.11.2021 jsi
 # - prepare 1.8.5 beta 1
+# 12.12.2021 jsi
+# - function buildconfigfilename added
 # 
 #
 import platform
+import os
 #
 # Program constants --------------------------------------------------
 #
@@ -204,7 +207,6 @@ HP82162A_LINEBUFFERSIZE=2000
 #
 if not PRODUCTION:
    VERSION=VERSION+" (Development)"
-   CONFIG_VERSION= CONFIG_VERSION+"d"
 #
 # Tab types
 #
@@ -295,4 +297,42 @@ def disassemble_frame(frame):
        hbyt = ((frame >> 6) & 0x1E) | 0x20
        lbyt = (frame & 0x7F) | 0x80
     return(hbyt,lbyt)
+#
+#  assemble file name of config file
+#
+def buildconfigfilename(progname,filename,configversion,instance,production):
+#
+#  determine config file name
+#
+   fname=filename+instance+configversion
+   if not production:
+      fname+= "d"
+#
+#  determine path (os dependend)
+#
+   userhome=os.path.expanduser("~")
 
+   if platform.system()=="Linux":
+#
+#     LINUX
+#        
+      configpath=os.path.join(userhome,".config",progname)
+   elif platform.system()=="Windows":
+#
+#     Windows
+#
+      configpath=os.path.join(os.environ['APPDATA'],progname)
+   elif platform.system()=="Darwin":
+#
+#     Mac OS X
+#
+      configpath=os.path.join(userhome,"Library","Application Support",progname)
+#
+   else:
+#
+#     Fallback
+#
+      configpath=os.path.join(userhome,progname)
+   configfilename=os.path.join(configpath,fname)
+    
+   return configfilename,configpath
