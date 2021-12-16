@@ -727,7 +727,7 @@ def copy_config(args):
       print("copied to:")
       print(to_filename)
       count+=1
-   print(count,"file copied. Restart pyILPER without the 'cc' option now")
+   print(count,"files copied. Restart pyILPER without the 'cc' option now")
 
 #
 # dump stack if signalled externally (for debugging)
@@ -738,7 +738,7 @@ def dumpstacks(signal, frame):
     traceback.print_stack(f=stack)
 
 def main():
-   parser=argparse.ArgumentParser(description='pyILPER startup script')
+   parser=argparse.ArgumentParser(description='pyILPER command line invocation')
    parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE. This instance has an own configuration file.")
    parser.add_argument('--clean','-clean',action='store_true',help="Start pyILPER with a config file which is reset to defaults")
    parser.add_argument('--cc','-cc',action='store_true',help="Copy configuration from development to production version and vice versa")

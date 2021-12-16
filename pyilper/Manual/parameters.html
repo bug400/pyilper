@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>W3.CSS Template</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/w3.css">
+<link rel="stylesheet" href="css/w3-theme-black.css">
+<link rel="stylesheet" href="css/font-awesome.css">
+<script src="js/w3data.js"></script>
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif}
+.w3-sidenav a,.w3-sidenav h4 {padding: 12px;}
+.w3-bar a {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+</style>
+</head><body>
+<div w3-include-html="nav.html"></div>
+
+<!-- Overlay effect when opening sidenav on small screens -->
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<!-- Main: shift it to the right by 250 pixels when the sidenav is visible -->
+<div class="w3-main" style="margin-left:250px">
+<div class="w3-row w3-padding-64">
+<div class="w3-col w3-container">
+
+<!-- Begin content -->
+
+<h2 class="w3-text-teal">pyILPER command line parameters</h2>
+<h3 class="w3-text-teal">Introduction</h3>
+
+<p><em>pyILPER</em> supports command line parameters to carry out special actions.
+</p> 
+
+<p>Note: you must start <em>pyILPER</em> from the <b>command line</b> to specify command line parameters.</p>
+
+<p>Use the <em>-help</em> parameter to see the available arguments:</p>
+
+<p><code><pre>pyilper --help<br>
+usage: start.py [-h] [--instance INSTANCE] [--clean] [--cc]
+
+pyILPER command line invocation
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --instance INSTANCE, -instance INSTANCE
+                        Start a pyILPER instance INSTANCE. This instance has an
+                        own configuration file.
+  --clean, -clean       Start pyILPER with a config file which is reset to
+                        defaults
+  --cc, -cc             Copy configuration from development to production version
+                        and vice versa
+</code></pre></p>
+
+<h3 class="w3-text-teal">Starting another instance of pyILPER</h3>
+
+<p>The parameter <em>-instance INSTANCE-NAME</em> allows to start multiple independent instances of pyILPER. Each instance has its own configuration file and is identified by <em>INSTANCE-NAME</em>. Only letters or digits are allowed in an <em>INSTANCE-NAME</em>.</p>
+
+<h3 class="w3-text-teal">Reset the pyILPER configuration to default</h3>
+
+<p>If a <em>pyILPER</em> configuration became corrupted which can result in a crashing or misbehaving program then the configuration can be reset to default with the <em>-clean</em> parameter.</p>
+
+<h3 class="w3-text-teal">Copy configuration data between beta/development and production versions</h3>
+
+<p>The beta and production versions of <em>pyILPER</em> use different configuration files. In this way a beta or production version can be tested without affecting the configuration of an installed production version. But sometimes it is required to copy the configuration data between production and beta or development versions. With the <em>-cc</em> option:</b>
+<ul>
+<li>the production version pulls the configuration data of a development or beta version</li>
+<li>a beta or development version pulls the configuration data of the production version</li>
+</ul>
+
+<p>Note: You have to confirm the copy action. After completion, you must restart <em>pyILPER</em> without the <em>-cc</em> option.</p>
+<!-- End content -->
+
+</div>
+</div>
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l1">
+      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+    </div>
+  </footer>
+
+
+<!-- END MAIN -->
+</div>
+<script>
+w3IncludeHTML();
+</script>
+
+</body></html>
