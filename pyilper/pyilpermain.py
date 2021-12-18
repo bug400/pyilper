@@ -711,6 +711,9 @@ def copy_config(args):
    from_version=from_config.get("pyilper","version","0.0.0")
    to_config.open("pyilper",CONFIG_VERSION,args.instance, PRODUCTION,False)
    to_version=to_config.get("pyilper","version","0.0.0")
+   if from_version == "0.0.0":
+      print("There are no configuration files to copy")
+      return
 #
 #  ask for confirmation
 #
@@ -741,10 +744,10 @@ def copy_config(args):
          shutil.copy(from_filename,to_filename)
       except OSError as e:
          print("Error copying file "+from_filename+": "+e.strerror)
-         sys.exit(1)
+         return
       except  SameFileError as e:
          print("Error copying file "+from_filename+" "+"source and destination file are identical")
-         sys.exit(1)
+         return
       print(from_filename)
       print("copied to:")
       print(to_filename)
