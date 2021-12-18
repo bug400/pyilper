@@ -180,6 +180,8 @@
 # 12.12.2021 jsi
 # - copy config runtime option added
 # - check if the configuration are from a newer pyILPER version
+# 18.12.2021 jsi
+# - copy config: display versions
 #
 import os
 import sys
@@ -193,7 +195,7 @@ import time
 from PyQt5 import QtCore, QtWidgets
 from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilcore import *
-from .pilconfig import  PilConfigError, PILCONFIG
+from .pilconfig import  PilConfigError, PILCONFIG, cls_pilconfig
 from .penconfig import  PenConfigError, PENCONFIG, cls_PenConfigWindow
 from .shortcutconfig import  ShortcutConfigError, SHORTCUTCONFIG, cls_ShortcutConfigWindow
 from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThread, PilThreadError
@@ -700,16 +702,36 @@ class cls_pyilper(QtCore.QObject):
 #
 def copy_config(args):
    count=0
+#
+#  get version numbers
+#
+   from_config=cls_pilconfig()
+   to_config=cls_pilconfig()
+   from_config.open("pyilper",CONFIG_VERSION,args.instance, not PRODUCTION,False)
+   from_version=from_config.get("pyilper","version","0.0.0")
+   to_config.open("pyilper",CONFIG_VERSION,args.instance, PRODUCTION,False)
+   to_version=to_config.get("pyilper","version","0.0.0")
+#
+#  ask for confirmation
+#
+   print("\nW A R N I N G!")
+   print("This overwrites the configuration files")
    if PRODUCTION:
-      print("This overwrites the configuration files of the production version")
-      print("with the configuration files of the development/beta version")
+      print("of the production version: ", to_version)
    else:
-      print("This overwrites the configuration files of the development/beta version")
-      print("with the configuration files of the production version")
+      print("of the development/beta version: ", to_version)
+   print("with the configuration files")
+   if PRODUCTION:
+      print("of the development/beta version: ",from_version)
+   else:
+      print("of the production version: ",from_version)
    inp= input("Continue? (enter 'YES' uppercase): ")
    if inp !="YES":
       print("cancelled")
       return
+#
+#  now copy configuration files
+#
    for name in ['pyilper','penconfig','shortcutconfig']:
       from_filename=buildconfigfilename("pyilper",name,CONFIG_VERSION,args.instance,not PRODUCTION)[0]
       if not os.path.isfile(from_filename):
