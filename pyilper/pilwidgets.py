@@ -200,6 +200,8 @@
 # 13.02.2020 cg
 # - fixed wrong address view for addresses > 15 and changed device
 #   address view to HP71 style in cls_DevStatusWindow()
+# 19.12.2021 jsi
+# - tab title text color fixed (macOS problem)
 #
 import os
 import glob
@@ -524,6 +526,12 @@ class cls_Tabs(QtWidgets.QTabWidget):
 #  signal handler if tab index changes, handle visible/invisible stuff
 #
    def tab_current_changed(self,index):
+#
+#     on macOS bigSur the text of a selected tab is unreadable, so
+#     we need to force the text color here
+#
+      self.tabBar().setTabTextColor(self.old_index,QtGui.QColor("#000"))
+      self.tabBar().setTabTextColor(index,QtGui.QColor("#aaa"))
       if self.old_index >=0:
          self.widget(self.old_index).becomes_invisible()
       self.old_index=index
