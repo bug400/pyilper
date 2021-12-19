@@ -182,6 +182,8 @@
 # - check if the configuration are from a newer pyILPER version
 # 18.12.2021 jsi
 # - copy config: display versions
+# 19.12.2021 jsi
+# - copy config: error processing added
 #
 import os
 import sys
@@ -707,10 +709,14 @@ def copy_config(args):
 #
    from_config=cls_pilconfig()
    to_config=cls_pilconfig()
-   from_config.open("pyilper",CONFIG_VERSION,args.instance, not PRODUCTION,False)
-   from_version=from_config.get("pyilper","version","0.0.0")
-   to_config.open("pyilper",CONFIG_VERSION,args.instance, PRODUCTION,False)
-   to_version=to_config.get("pyilper","version","0.0.0")
+   try:
+      from_config.open("pyilper",CONFIG_VERSION,args.instance, not PRODUCTION,False)
+      from_version=from_config.get("pyilper","version","0.0.0")
+      to_config.open("pyilper",CONFIG_VERSION,args.instance, PRODUCTION,False)
+      to_version=to_config.get("pyilper","version","0.0.0")
+   except PilConfigError as e:
+      print(e.msg+': '+e.add_msg)
+      return
    if from_version == "0.0.0":
       print("There are no configuration files to copy")
       return
