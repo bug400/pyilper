@@ -120,6 +120,8 @@
 # 23.11.2021 jsi
 # - change image file was not forwarded to the pildevice in raw drive tab
 # - lock pildevice if medium changes in raw drive tab
+# 20.12.2021 jsi
+# - open raw file: only existing files are allowed
 #
 from PyQt5 import QtCore, QtGui, QtWidgets
 import time
@@ -411,13 +413,14 @@ class cls_RawDriveWidget(cls_GenericDriveWidget):
          self.pildevice.setlocked(False)
       self.lblFilename.setText(self.filename)
 #
-#  enter raw filename
+#  enter raw filename, file must exist because __wrec__ does not create a
+#  non existing file
 #
    def get_rawFilename(self):
       dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select RAW Image File")
       dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+      dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["RAW Image File (*.dat *.DAT *.img *.IMG)", "All Files (*)"] )
       dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
       if dialog.exec():
