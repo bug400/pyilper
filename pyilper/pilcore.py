@@ -131,17 +131,21 @@
 # - prepare 1.8.5 beta 1
 # 12.12.2021 jsi
 # - function buildconfigfilename added
+# 17.02.2022 jsi
+# - 1.8.5 release
+# - function to decode the pyILPER release number rewritten
 # 
 #
 import platform
 import os
+import re
 #
 # Program constants --------------------------------------------------
 #
 # General constants:
 #
-PRODUCTION=  False     # Production/Development Version
-VERSION="1.8.5b1"       # pyILPR version number
+PRODUCTION=  True     # Production/Development Version
+VERSION="1.8.5"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Python minimum version
@@ -267,13 +271,27 @@ def decode_version(version_number):
    minor=int(version[1:3])
    subversion=int(version[3:5])
    return "{:d}.{:d}.{:d}".format(major,minor,subversion)
-
-def encode_version(version_string):
-   v=version_string.split(".")
-   major="".join(filter(lambda x: x.isdigit(),v[0]))
-   minor="".join(filter(lambda x: x.isdigit(),v[1]))
-   subversion="".join(filter(lambda x: x.isdigit(),v[2]))
-   return int(major)*10000+ int(minor)*100 + int(subversion)
+#
+# decode version number of pyilper as a list
+#
+def decode_pyILPERVersion(version_string):
+#
+#  parse the pyILPER version string as a list:
+#  major version, minor version, subversion, a/b, devel-version
+#  only major version, minor version and subersion are returned as a
+#  single integer. Returns 0 if no valid release information was found.
+#
+   reg=re.compile('^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(b)([0-9]+)?)?.*$')
+   ret=reg.findall(version_string)
+   try:
+     major=int(ret[0][0])
+     minor=int(ret[0][1])
+     subversion=int(ret[0][2])
+     return major*10000+minor*100+subversion
+   except ValueError:
+      return 0
+   except IndexError:
+      return 0
 #
 #  assemble frame from low and high byte according to 7- oder 8-bit format
 #

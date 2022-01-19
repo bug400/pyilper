@@ -348,10 +348,10 @@ class cls_pyilper(QtCore.QObject):
 #     version check, warn user if the configuration files are of a newer
 #     version
 #
-      oldversion=encode_version(PILCONFIG.get(self.name,"version"))
-      thisversion=encode_version(VERSION)
+      oldversion=decode_pyILPERVersion(PILCONFIG.get(self.name,"version"))
+      thisversion=decode_pyILPERVersion(VERSION)
       if thisversion < oldversion:
-         reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"Your configuration files are of pyILPER version: "+PILCONFIG.get(self.name,"version")+" which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
+         reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"Your configuration files are of pyILPER version "+PILCONFIG.get(self.name,"version")+" which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
          if reply== QtWidgets.QMessageBox.Cancel:
             sys.exit(1) 
       PILCONFIG.put(self.name,"version",VERSION)

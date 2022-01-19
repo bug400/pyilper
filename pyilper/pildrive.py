@@ -1242,7 +1242,7 @@ class cls_pildrive(cls_pildevbase):
       self.__blocks__= 0          # no of blocks of medium
 
       self.__lif__= bytearray(12) # device info
-      self.__nbe__=0              # last record number
+      self.__nbe__=0              # max. number of sectors
       self.__buf0__= bytearray(256) # buffer 0
       self.__buf1__= bytearray(256) # buffer 1
       self.__hdiscfile__= ""        # disc file

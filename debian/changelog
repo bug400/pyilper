@@ -1,3 +1,9 @@
+pyilper (1.8.5) focal; urgency=medium
+
+  * release version 
+
+ -- focal <achim@trillian>  Mon, 17 Jan 2022 13:40:14 +0100
+
 pyilper (1.8.5~beta1) focal; urgency=medium
 
   * beta version
