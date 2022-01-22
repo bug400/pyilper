@@ -11,6 +11,8 @@ pyilper (1.8.5~beta1) focal; urgency=medium
   * fixed crash when pasting text in the terminal
   * configuration file version check on startup
   * tab title text color problem (macOS Big Sur) fixed
+  * pyILPER command line parameters documented in online manual
+  * new function to exchange config files between devel/beta and production versions (start with command line parameter)
 
  -- focal <achim@trillian>  Sun, 28 Nov 2021 20:38:03 +0100
 
