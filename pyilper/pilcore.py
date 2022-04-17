@@ -134,8 +134,6 @@
 # 17.02.2022 jsi
 # - 1.8.5 release
 # - function to decode the pyILPER release number rewritten
-# 16.04.22 jsi
-# - 1.8.6 release
 # 
 #
 import platform
@@ -147,7 +145,7 @@ import re
 # General constants:
 #
 PRODUCTION=  True     # Production/Development Version
-VERSION="1.8.6"       # pyILPR version number
+VERSION="1.8.5"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Python minimum version
