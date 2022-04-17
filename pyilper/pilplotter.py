@@ -96,8 +96,6 @@
 # 02.03.2021 jsi
 # - Enter button is deactivated in digi mode until a point was digitized or 
 #   entered (hint by cgh)
-# 16.04.2022 jsi
-# - assure that the return value of heightForWidth is an integer
 
 import sys
 import subprocess
@@ -401,7 +399,7 @@ class cls_AspectLayout(QtWidgets.QLayout):
         return True
 
     def heightForWidth(self, width):
-        height = int(width// self.aspect_ratio)
+        height = width/ self.aspect_ratio
         return height
 
     def setGeometry(self, rect):
