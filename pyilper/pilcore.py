@@ -134,7 +134,9 @@
 # 17.02.2022 jsi
 # - 1.8.5 release
 # - function to decode the pyILPER release number rewritten
-# 
+# 18.04.22 jsi
+# - 1.8.6 beta1 
+# - used raw string in re.compile to avoid DEPRECATED warning
 #
 import platform
 import os
@@ -144,8 +146,8 @@ import re
 #
 # General constants:
 #
-PRODUCTION=  True     # Production/Development Version
-VERSION="1.8.5"       # pyILPR version number
+PRODUCTION=  False     # Production/Development Version
+VERSION="1.8.6b1"       # pyILPR version number
 CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
 #
 # Python minimum version
@@ -281,7 +283,8 @@ def decode_pyILPERVersion(version_string):
 #  only major version, minor version and subersion are returned as a
 #  single integer. Returns 0 if no valid release information was found.
 #
-   reg=re.compile('^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(b)([0-9]+)?)?.*$')
+#  Fixed DEPRECATED escape sequence \. using raw string
+   reg=re.compile(r'^([0-9]+)\.([0-9]+)\.([0-9]+)(?:(b)([0-9]+)?)?.*$')
    ret=reg.findall(version_string)
    try:
      major=int(ret[0][0])

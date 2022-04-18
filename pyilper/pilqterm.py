@@ -173,6 +173,8 @@
 # - use inverse video instead of underline for HP-75 character set
 # 06.12.2021 jsi
 # - fixed _kbdfunc call in paste
+# 18.04.2022 jsi
+# - cast coorinates to int to avoid crash using Python 3.10
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -399,14 +401,15 @@ class TermCursor(QtWidgets.QGraphicsItem):
       self.blink_timer.setInterval(CURSOR_BLINK)
       self.blink_timer.timeout.connect(self.do_blink)
       self.blink_timer.start()
-      self.insertpolygon=QtGui.QPolygon([QtCore.QPoint(0,0+(self.h/2)), 
-                         QtCore.QPoint(0+(self.w*0.8),0+self.h), 
-                         QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.67)), 
-                         QtCore.QPoint(0+self.w,0+(self.h*0.67)), 
-                         QtCore.QPoint(0+self.w,0+(self.h*0.33)), 
-                         QtCore.QPoint(0+(self.w*0.8),0+(self.h*0.33)), 
-                         QtCore.QPoint(0+(self.w*0.8),0), 
-                         QtCore.QPoint(0,0+(self.h/2))])
+#     fixed DEPRECATED use of float argument for int parameter
+      self.insertpolygon=QtGui.QPolygon([QtCore.QPoint(0,int(self.h/2)), 
+                         QtCore.QPoint(int(self.w*0.8),self.h), 
+                         QtCore.QPoint(int(self.w*0.8),int(self.h*0.67)), 
+                         QtCore.QPoint(self.w,int(self.h*0.67)), 
+                         QtCore.QPoint(self.w,int(self.h*0.33)), 
+                         QtCore.QPoint(int(self.w*0.8),int(self.h*0.33)), 
+                         QtCore.QPoint(int(self.w*0.8),0), 
+                         QtCore.QPoint(0,int(self.h/2))])
 #
 #  called when terminal widget becomes invisible, stop cursor blink
 #

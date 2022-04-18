@@ -96,6 +96,10 @@
 # 02.03.2021 jsi
 # - Enter button is deactivated in digi mode until a point was digitized or 
 #   entered (hint by cgh)
+# 18.04.2022 jsi
+# - assure that the return value of heightForWidth is an integer
+# - assure that argument for pen.setWidth is int in update_PenDef
+# - improve shutdown of the plotter subprocess
 
 import sys
 import subprocess
@@ -399,7 +403,8 @@ class cls_AspectLayout(QtWidgets.QLayout):
         return True
 
     def heightForWidth(self, width):
-        height = width/ self.aspect_ratio
+#       fixed DEPRECATED use of float argument for int parameter
+        height = int(width// self.aspect_ratio)
         return height
 
     def setGeometry(self, rect):
@@ -983,7 +988,8 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       elif self.pen_number==2:
          pendef= PENCONFIG.get_pen(self.penconfig2)
       self.pen.setColor(QtGui.QColor(pendef[0],pendef[1],pendef[2],pendef[3]))
-      self.pen.setWidth(pendef[4])
+#     fixed DEPRECATED use of float argument for int parameter
+      self.pen.setWidth(round(pendef[4]))
 
 #
 #  process commands in the GUI command queue, this is called by a timer event
@@ -1327,6 +1333,9 @@ class cls_HP7470(QtCore.QObject):
          version=0
       if version < EMU7470_VERSION:
          self.proc.stdin.close()
+         self.proc.stdout.close()
+         self.proc.kill()
+         self.proc.wait()
          self.setInvalid(101,"incompatible version of emu7470")
          return
       self.cmdbuf.clear()
@@ -1340,6 +1349,9 @@ class cls_HP7470(QtCore.QObject):
    def disable(self):
       if not self.invalid:
          self.proc.stdin.close()
+         self.proc.stdout.close()
+         self.proc.kill()
+         self.proc.wait()
 #
 #  send a HP-GL command to the emu7470 subprocess and process the results:
 #  - plotter status, current termchar,
