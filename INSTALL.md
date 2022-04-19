@@ -17,7 +17,7 @@ General
 
 pyILPER requires:
 
-* Python 3.5 or higher (Python 3.10 is not supported at the moment)
+* Python 3.5 or higher (Python 3.10 is only supported for pyILPER 1.8.6 and above)
 * QT 5.6 or higher
 * PyQt compatible to the Python and Qt version
 * The Python bindings for either Qt Webkit or Qt Webengine
