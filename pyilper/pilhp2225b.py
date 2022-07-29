@@ -815,7 +815,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
    def pdf(self,filename,pdf_rows):
 
       self.printer=QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
-      self.printer.setPageOrientation(QtGui.QPageLayout.Landscape)
+      self.printer.setPageOrientation(QtGui.QPageLayout.Portrait)
       self.printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
       self.pdfscene=QtWidgets.QGraphicsScene()
 #
@@ -839,7 +839,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #     Letter format is 8.5 inches x 11 inches
 #
-         self.printer.setPageSize(QT_FORM_LANDSCAPE)
+         self.printer.setPageSize(QT_FORM_LETTER)
          lmargin= 173
          tmargin= 96 
          scene_w= 1280 + lmargin*2

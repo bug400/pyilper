@@ -74,7 +74,7 @@ class cls_pdfprinter(QtCore.QObject):
          self.scene_h=2970
          self.pdfscene.setSceneRect(0,0,self.scene_w,self.scene_h)
       else:
-         self.printer.setPageSize(QT_FORM_LANDSCAPE)
+         self.printer.setPageSize(QT_FORM_LETTER)
          self.scene_w= 2160
          self.scene_h= 2790
          self.pdfscene.setSceneRect(0,0,self.scene_w,self.scene_h)
