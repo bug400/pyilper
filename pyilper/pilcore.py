@@ -150,7 +150,7 @@ import sys
 # General constants:
 #
 PRODUCTION=  False     # Production/Development Version
-VERSION="1.8.7b2"      # pyILPR version number
+VERSION="1.8.6b2"      # pyILPR version number
 CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version
