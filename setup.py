@@ -16,12 +16,6 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version='1.8.6b2',
     
-    # Installation requirements
-    install_requires=[
-         "pyqt5",
-         "pyserial",
-    ],
-
     description='Virtual HP-IL devices for the PIL-Box',
     long_description=long_description,
 
