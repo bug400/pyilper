@@ -18,7 +18,7 @@ setup(
     
     # Installation requirements
     install_requires=[
-         "pyside6 | pyqt5",
+         "pyqt5",
          "pyserial",
     ],
 
