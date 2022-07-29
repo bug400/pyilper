@@ -184,6 +184,8 @@
 # - copy config: display versions
 # 19.12.2021 jsi
 # - copy config: error processing added
+# 04.05.2022 jsi
+# - PySide6 migration
 #
 import os
 import sys
@@ -194,9 +196,12 @@ import pyilper
 import re
 import argparse
 import time
-from PyQt5 import QtCore, QtWidgets
-from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilcore import *
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtWidgets
+from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilconfig import  PilConfigError, PILCONFIG, cls_pilconfig
 from .penconfig import  PenConfigError, PENCONFIG, cls_PenConfigWindow
 from .shortcutconfig import  ShortcutConfigError, SHORTCUTCONFIG, cls_ShortcutConfigWindow
@@ -223,10 +228,14 @@ TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tab
 
 class cls_pyilper(QtCore.QObject):
 
-   sig_show_message=QtCore.pyqtSignal(str)
-   sig_crash=QtCore.pyqtSignal()
-   sig_quit=QtCore.pyqtSignal()
-
+   if QTBINDINGS=="PySide6":
+       sig_show_message=QtCore.Signal(str)
+       sig_crash=QtCore.Signal()
+       sig_quit=QtCore.Signal()
+   if QTBINDINGS=="PyQt5":
+       sig_show_message=QtCore.pyqtSignal(str)
+       sig_crash=QtCore.pyqtSignal()
+       sig_quit=QtCore.pyqtSignal()
 
    def __init__(self,args):
  
@@ -618,19 +627,19 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_Init(self):
       workdir=  PILCONFIG.get(self.name,"workdir")
-      cls_lifinit.exec(workdir)
+      cls_lifinit.execute(workdir)
 
 #
 #  callback fix LIF Medium
 #
    def do_Fix(self):
       workdir=  PILCONFIG.get(self.name,"workdir")
-      cls_liffix.exec(workdir)
+      cls_liffix.execute(workdir)
 #
 #  callback check LIFUTILS installation
 #
    def do_InstallCheck(self):
-      cls_installcheck.exec()
+      cls_installcheck.execute()
 
 #
 #  callback copy PILIMAGE.DAT to working directory
@@ -782,7 +791,7 @@ def main():
       signal.signal(signal.SIGQUIT, dumpstacks)
    app = QtWidgets.QApplication(sys.argv)
    pyilper= cls_pyilper(args)
-   sys.exit(app.exec_())
+   sys.exit(app.exec())
 
 
 if __name__ == '__main__':

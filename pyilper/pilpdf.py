@@ -31,9 +31,14 @@
 # - update page number
 # 01.03.2018 - jsi
 # - use monospaced font defined in pilcore.py
+# 04.05.2022 jsi
+# - PySide6 migration
 #
-from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
 from .pilcore import *
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets,QtPrintSupport
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets,QtPrintSupport
 
 #
 # PDF printer class:
@@ -55,21 +60,21 @@ class cls_pdfprinter(QtCore.QObject):
 #
       self.printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
       if self.orientation== PDF_ORIENTATION_PORTRAIT:
-         self.printer.setOrientation(QtPrintSupport.QPrinter.Portrait)
+         self.printer.setPageOrientation(QtGui.QPageLayout.Portrait)
       else:
-         self.printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
+         self.printer.setPageOrientation(QtGui.QPageLayout.Landscape)
       self.printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
       self.pdfscene=QtWidgets.QGraphicsScene()
 #
 #     page set up, we use 1/10 mm as scene units
 #
       if self.papersize== PDF_FORMAT_A4:
-         self.printer.setPageSize(QtPrintSupport.QPrinter.A4)
+         self.printer.setPageSize(QT_FORM_A4)
          self.scene_w= 2100
          self.scene_h=2970
          self.pdfscene.setSceneRect(0,0,self.scene_w,self.scene_h)
       else:
-         self.printer.setPageSize(QtPrintSupport.QPrinter.Letter)
+         self.printer.setPageSize(QT_FORM_LANDSCAPE)
          self.scene_w= 2160
          self.scene_h= 2790
          self.pdfscene.setSceneRect(0,0,self.scene_w,self.scene_h)
@@ -204,7 +209,7 @@ class cls_textItem(QtWidgets.QGraphicsItem):
       self.font.setPointSize(2)
       metrics= QtGui.QFontMetrics(self.font)
       self.font_h= metrics.height()
-      self.font_w= metrics.width("A")
+      self.font_w= metrics.boundingRect("A").width()
       self.spacing=20
       self.h= self.font_h+self.spacing*2
       self.w= len(text)* self.font_w

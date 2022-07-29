@@ -100,12 +100,13 @@
 # - show HP-75 text files optional with or without line numbers
 # 04.01.2021 jsi
 # - exec_single did not get stderr output of executed program
+# 04.04.2022 jsi
+# - PySide6 migration
 #
 import subprocess
 import tempfile
 import os
 import pathlib
-from PyQt5 import QtCore, QtGui, QtWidgets
 from .lifcore import *
 from .pilcharconv import barrconv
 from .pilcore import isWINDOWS, FONT, decode_version, PDF_ORIENTATION_PORTRAIT
@@ -113,6 +114,12 @@ from .pilpdf import cls_pdfprinter
 from .pilconfig import PILCONFIG
 if isWINDOWS():
    import winreg
+from .pilcore import QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 PDF_MARGINS=100
 BARCODE_HEIGHT=100
@@ -281,7 +288,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
 #  execute second command
 #
       tmpfile.seek(0)
-      if  not cls_chk_import.exec(tmpfile.fileno(), None):
+      if  not cls_chk_import.execute(tmpfile.fileno(), None):
          tmpfile.close()
          return
       tmpfile.seek(0)
@@ -359,8 +366,8 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 class cls_LIF_validator(QtGui.QValidator):
 
    def validate(self,string,pos):
-      self.regexp = QtCore.QRegExp('[A-Za-z][A-Za-z0-9]*')
-      self.validator = QtGui.QRegExpValidator(self.regexp)
+      self.regexp = QtCore.QRegularExpression('[A-Za-z][A-Za-z0-9]*')
+      self.validator = QtGui.QRegularExpressionValidator(self.regexp)
       result=self.validator.validate(string,pos)
       return result[0], result[1].upper(), result[2]
 #
@@ -372,7 +379,7 @@ class cls_lifpack(QtWidgets.QDialog):
       super().__init__()
 
    @staticmethod
-   def exec(lifimagefile):
+   def execute(lifimagefile):
       d=cls_lifpack()
       reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to pack the LIF image file', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       if reply == QtWidgets.QMessageBox.Yes:
@@ -475,7 +482,7 @@ class cls_lifbarcode(QtWidgets.QDialog):
       super().__init__()
 
    @staticmethod
-   def exec (lifimagefile, liffilename, ft,papersize):
+   def execute (lifimagefile, liffilename, ft,papersize):
       d= cls_lifbarcode()
 #
 #     get output file name
@@ -533,7 +540,7 @@ class cls_lifpurge(QtWidgets.QDialog):
       super().__init__()
 
    @staticmethod
-   def exec(lifimagefile,liffile):
+   def execute(lifimagefile,liffile):
       d=cls_lifpurge()
       reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to purge '+liffile, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       if reply == QtWidgets.QMessageBox.Yes:
@@ -594,9 +601,9 @@ class cls_lifrename (QtWidgets.QDialog):
       super().reject()
 
    @staticmethod
-   def exec(lifimagefile,liffile):
+   def execute(lifimagefile,liffile):
       d=cls_lifrename(lifimagefile,liffile)
-      result= d.exec_()
+      result= d.exec()
 #
 # export file dialog
 #
@@ -768,9 +775,9 @@ class cls_lifexport (QtWidgets.QDialog):
       super().reject()
 
    @staticmethod
-   def exec(lifimagefile,liffilename,liffiletype,workdir):
+   def execute(lifimagefile,liffilename,liffiletype,workdir):
       d=cls_lifexport(lifimagefile,liffilename,liffiletype,workdir)
-      result= d.exec_()
+      result= d.exec()
 
 #
 # label lif image file dialog
@@ -812,9 +819,9 @@ class cls_liflabel (QtWidgets.QDialog):
       super().reject()
 
    @staticmethod
-   def exec(lifimagefile,oldlabel):
+   def execute(lifimagefile,oldlabel):
       d=cls_liflabel(lifimagefile,oldlabel)
-      result= d.exec_()
+      result= d.exec()
 #
 # import file dialog
 #
@@ -953,7 +960,7 @@ class cls_lifimport (QtWidgets.QDialog):
    def do_ok(self):
       if self.inputfile != "":
          if self.radioNone.isChecked():
-            if  cls_chk_import.exec(None, self.inputfile):
+            if  cls_chk_import.execute(None, self.inputfile):
                exec_single(self,[add_path("lifput"),self.lifimagefile,self.inputfile])
          else:
             self.liffilename=self.leditFileName.text()
@@ -980,9 +987,9 @@ class cls_lifimport (QtWidgets.QDialog):
       super().reject()
 
    @staticmethod
-   def exec(lifimagefile,workdir):
+   def execute(lifimagefile,workdir):
       d=cls_lifimport(lifimagefile,workdir)
-      result= d.exec_()
+      result= d.exec()
 #
 # check import dialog, ensure that we import a valid LIF transport file
 #
@@ -1053,8 +1060,8 @@ class cls_chk_import(QtWidgets.QDialog):
          if self.filetype=="Unknown":
             self.lblMessage.setText("Unknown file type")
             return
-         self.regexp = QtCore.QRegExp('[A-Z][A-Z0-9]*')
-         self.validator = QtGui.QRegExpValidator(self.regexp)
+         self.regexp = QtCore.QRegularExpression('[A-Z][A-Z0-9]*')
+         self.validator = QtGui.QRegularExpressionValidator(self.regexp)
          result=self.validator.validate(self.filename,0)[0]
          if result != QtGui.QValidator.Acceptable:
             self.lblMessage.setText("Illegal file name")
@@ -1077,9 +1084,9 @@ class cls_chk_import(QtWidgets.QDialog):
 
 
    @staticmethod
-   def exec(fd,inputfile):
+   def execute(fd,inputfile):
       d=cls_chk_import(fd,inputfile)
-      result= d.exec_()
+      result= d.exec()
       return d.get_retval()
 #
 # check xroms dialog
@@ -1163,9 +1170,9 @@ class cls_chkxrom(QtWidgets.QDialog):
       return self.call
 
    @staticmethod
-   def exec():
+   def execute():
       d=cls_chkxrom()
-      result= d.exec_()
+      result= d.exec()
       return d.get_call()
 #
 # view file dialog
@@ -1250,7 +1257,7 @@ class cls_lifview(QtWidgets.QDialog):
 # get file and pipe it to filter program, show output in editor window
 #
    @staticmethod
-   def exec(lifimagefile, liffilename, liffiletype,workdir,charset):
+   def execute(lifimagefile, liffilename, liffiletype,workdir,charset):
       d=cls_lifview(workdir)
       ft=get_finfo_name(liffiletype)
       call= get_finfo_type(ft)[1]
@@ -1258,7 +1265,7 @@ class cls_lifview(QtWidgets.QDialog):
 # decomp41 needs additional parameters (xmoms)
 #
       if call == "decomp41":
-         call= cls_chkxrom.exec()
+         call= cls_chkxrom.execute()
 #
 # liftext75 has the option to show line numbers
 #
@@ -1279,7 +1286,7 @@ class cls_lifview(QtWidgets.QDialog):
       if output is None:
          return
       d.set_text(barrconv(output,charset))
-      result= d.exec_()
+      result= d.exec()
 #
 # Init LIF image file dialog
 #      
@@ -1341,8 +1348,8 @@ class cls_lifinit (QtWidgets.QDialog):
       self.leditDirSize=QtWidgets.QLineEdit(self)
       self.leditDirSize.setText("500")
       self.leditDirSize.setMaxLength(4)
-      self.regexpDirSize = QtCore.QRegExp('[1-9][0-9]*')
-      self.validatorDirSize = QtGui.QRegExpValidator(self.regexpDirSize)
+      self.regexpDirSize = QtCore.QRegularExpression('[1-9][0-9]*')
+      self.validatorDirSize = QtGui.QRegularExpressionValidator(self.regexpDirSize)
       self.leditDirSize.setValidator(self.validatorDirSize)
       self.leditDirSize.textChanged.connect(self.do_checkenable)
       self.hbox1.addWidget(self.leditDirSize)
@@ -1455,9 +1462,9 @@ class cls_lifinit (QtWidgets.QDialog):
       super().reject()
 
    @staticmethod
-   def exec(workdir):
+   def execute(workdir):
       d=cls_lifinit(workdir)
-      result= d.exec_()
+      result= d.exec()
 #
 # fix LIF header dialog
 #
@@ -1593,9 +1600,9 @@ class cls_liffix (QtWidgets.QDialog):
       super().reject()
 
    @staticmethod
-   def exec(workdir):
+   def execute(workdir):
       d=cls_liffix(workdir)
-      result= d.exec_()
+      result= d.exec()
 #
 # Check installation of LIFUTILS dialog
 #
@@ -1634,6 +1641,6 @@ class cls_installcheck(QtWidgets.QDialog):
       super().accept()
 
    @staticmethod
-   def exec():
+   def execute():
       d=cls_installcheck()
-      result= d.exec_()
+      result= d.exec()

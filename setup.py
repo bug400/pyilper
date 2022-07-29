@@ -14,7 +14,13 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.8.6b1',
+    version='1.8.6b2',
+    
+    # Installation requirements
+    install_requires=[
+         "pyside6 | pyqt5",
+         "pyserial",
+    ],
 
     description='Virtual HP-IL devices for the PIL-Box',
     long_description=long_description,
@@ -35,8 +41,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
 
         # Indicate who your project is intended for
-        'Intended Audience :: HP Calculator enthusiasts',
-        'Topic :: Software Development :: Tools',
+        'Topic :: Utilities',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -51,6 +56,9 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
     ],
+
+    # required python versions
+    python_requires='>=3.6',
 
     # What does your project relate to?
     keywords='pyqt5 HP-IL PIL-Box HP-41 HP-71 HP-75',

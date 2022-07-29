@@ -175,6 +175,8 @@
 # - fixed _kbdfunc call in paste
 # 18.04.2022 jsi
 # - cast coorinates to int to avoid crash using Python 3.10
+# 04.05.2022 jsi
+# - PySide6 migration
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -184,9 +186,13 @@ import queue
 import threading
 import time
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS, KEYBOARD_DELAY, QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
 from .pilcharconv import icharconv, CHARSET_HP71, CHARSET_HP75, CHARSET_HP41
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS, KEYBOARD_DELAY
 from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT, SHORTCUT_INSERT
 from .pilconfig import PILCONFIG
 from .pilkeymap import *
@@ -562,7 +568,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         s=""
         self._true_w= []
         for i in range(self._cols+1):
-            self._true_w.append(metrics.width(s))
+            self._true_w.append(metrics.boundingRect(s).width())
             s+="A"
 #
 #       set minimum dimensions for "cols" columns and 24 rows
@@ -625,7 +631,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
        if self._kbdfunc is not None:
           pasteAction=menu.addAction("Paste")
-       action=menu.exec_(self.mapToGlobal(event.pos()))
+       action=menu.exec(self.mapToGlobal(event.pos()))
        if action is not None:
 #
 #      copy to system clipboard
@@ -660,6 +666,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         if button == QtCore.Qt.LeftButton:
             self._HPTerminal.selectionStop()
             self._selectionText=""
+#DEPRECATED pos call
             self._press_pos = event.pos()
             if not self._HPTerminal.selectionStart(self._press_pos,self._true_w, self._char_height):
                self._press_pos = None

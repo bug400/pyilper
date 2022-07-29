@@ -100,14 +100,20 @@
 # - assure that the return value of heightForWidth is an integer
 # - assure that argument for pen.setWidth is int in update_PenDef
 # - improve shutdown of the plotter subprocess
+# 04.05.2022 jsi
+# - PySide6 migration
 
 import sys
 import subprocess
 import queue
 import threading
 import array
-from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
-from .pilcore import UPDATE_TIMER, FONT, EMU7470_VERSION, decode_version, isWINDOWS
+from .pilcore import *
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtPrintSupport, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
+
 from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PENCONFIG
 from .pildevbase import cls_pildevbase
@@ -475,6 +481,7 @@ class cls_mygraphicsview(QtWidgets.QGraphicsView):
 #
    def mousePressEvent(self, event):
       if self.digitize:
+#DEPRECATED
          x=event.pos()
          p=self.mapToScene(x)
          x=p.x()
@@ -788,11 +795,11 @@ class cls_PlotterWidget(QtWidgets.QWidget):
          return
       printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
       if self.papersize==0:
-         printer.setPageSize(QtPrintSupport.QPrinter.A4)
+         printer.setPageSize(QT_FORM_A4)
       else:
-         printer.setPageSize(QtPrintSupport.QPrinter.Letter)
+         printer.setPageSize(QT_FORM_LETTER)
 
-      printer.setOrientation(QtPrintSupport.QPrinter.Landscape)
+      printer.setPageOrientation(QtGui.QPageLayout.Landscape)
       printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
       printer.setOutputFileName(flist[0])
       p = QtGui.QPainter(printer)
@@ -1247,7 +1254,7 @@ class cls_PlotterConfigWindow(QtWidgets.QDialog):
    @staticmethod
    def getPlotterConfig(parent):
       dialog= cls_PlotterConfigWindow(parent)
-      result= dialog.exec_()
+      result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
          return True
       else:

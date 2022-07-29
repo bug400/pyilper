@@ -10,6 +10,7 @@ Index
 * [Setup](#setup)
 * [Operation](#operation)
 * [Installation without the ANACONDA platform](#installation-without-the-anaconda-platform)
+* [Installation with Qt6 and PIP](#installation-with-qt6-and-pip)
 * [Installation of beta or development versions](#installation-of-beta-or-development-versions)
 
 General
@@ -17,11 +18,10 @@ General
 
 pyILPER requires:
 
-* Python 3.5 or higher (Python 3.10 is only supported for pyILPER 1.8.6 and above)
-* QT 5.6 or higher
-* PyQt compatible to the Python and Qt version
+* Python 3.5 or higher 
+* Qt 5.9 or higher with the PyQt5 language bindings or Qt 6.3 with the PySide6 language bindings
 * The Python bindings for either Qt Webkit or Qt Webengine
-* Pyserial  2.7 
+* Pyserial  2.7 or higher
 * [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
 
 It is recommended to use the [ANACONDA platform](https://www.continuum.io) 
@@ -163,6 +163,47 @@ directory and type:
      python3 setup.py install
 
 in a terminal window.
+
+
+Installation with Qt6 and PIP
+-----------------------------
+
+PySide6 is not available from the ANACONDA platform for now.
+
+Get a Python interpreter for your system first:
+
+* Windows: get it from the Microsoft Store
+* macOS: download it from the [www.python.org](https://www.python.org)  website
+* Linux: install it from your repositories if not already installed on your system
+
+Now create a virtual Python environment for pyILPER. This environment contains
+the additional software which is needed to run pyILPER. The virtual environment
+is created as a subdirectory in the user's home directory. It can be easily 
+removed.
+
+To create the virtual environmnent "pyilper" open a terminal windows (or command shell) and type:
+
+      python -m venv pyilper
+
+This creates a pyilper subdirectory in your home directory.
+
+Now activate the new environment:
+
+      source pyilper/bin/activate (Linux, mac OS)
+      pyilper\Scripts\acivate (Windows)
+
+Before you run this command, make sure that you’re in the folder that contains the virtual environment you just created. If you can see the name of the environment
+in your command prompt, then the environment is active.
+
+Now install additional software and type:
+
+      python -m pip install PySide6 pyserial
+
+Install and run the pyILPER software as described in the next section.
+
+You can deactivate the virtual environment with the command:
+
+      deactivate
 
 
 Installation of beta or development versions

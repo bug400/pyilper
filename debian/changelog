@@ -1,3 +1,10 @@
+pyilper (1.8.6~beta2) bullseye; urgency=medium
+
+  * enabled PySide6 language binding in addition to PyQt5
+  * tty device selection combo box improved 
+
+ -- focal <achim@trillian>  Fri, 29 Jul 2022 14:09:44 +0200
+
 pyilper (1.8.6~beta1) focal; urgency=medium
 
   * remove deprecated language features which are errors under Python 3.10

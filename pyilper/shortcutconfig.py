@@ -27,9 +27,16 @@
 # - SHORTCUT_INSERT shortcut type added
 # 12.12.2021 jsi
 # - add configversion parameter to open method
+# 04.05.2022 jsi
+# - PySide6 migration
 #
 import copy
-from PyQt5 import QtCore, QtGui, QtWidgets
+from .pilcore import QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
 from .userconfig import cls_userconfig, ConfigError
 
 SHORTCUT_INPUT=0
@@ -191,7 +198,7 @@ class cls_ShortcutConfigWindow(QtWidgets.QDialog):
    def getShortcutConfig():
       dialog= cls_ShortcutConfigWindow()
       dialog.resize(650,600)
-      result= dialog.exec_()
+      result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
          return True
       else:

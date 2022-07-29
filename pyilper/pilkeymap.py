@@ -34,9 +34,15 @@
 # - refactoring
 # 11.02.2019 jsi:
 # - fixed backtab key
+# 04.05.2022 jsi
+# - PySide6 migration
 
-from PyQt5 import QtCore
-from .pilcore import isMACOS
+from .pilcore import isMACOS, QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
 #
 # Modifier masks
 #

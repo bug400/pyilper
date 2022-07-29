@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+ #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # pyILPER 1.2.4 for Linux
 #
@@ -33,14 +33,22 @@
 # 04.01.2018 jsi:
 # - support zero length graphics chunks
 # - switchable print color
+# 04.05.2022 jsi:
+# - PySide6 migration
+# 04.05.2022 jsi
+# - force background of printer to be always white (dark mode!)
 #
 import copy
 import queue
 import threading
 import re
 from math import floor
-from PyQt5 import QtCore, QtWidgets, QtGui, QtPrintSupport
-from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT
+from .pilcore import *
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets,QtPrintSupport
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets,QtPrintSupport
+
 from .pilconfig import PILCONFIG
 from .pilcharconv import charconv, barrconv, CHARSET_HP2225
 from .pildevbase import cls_pildevbase
@@ -108,7 +116,7 @@ BUFFER_SIZE_VALUES=[2500, 5000, 10000, 25000]
 #
 HP2225_COLOR_BLACK=0
 HP2225_COLOR_RED=1
-HP2225_COLR_BLUE=2
+HP2225_COLOR_BLUE=2
 HP2225_COLOR_GREEN=3
 COLOR_NAMES= [ "black", "red", "blue", "green" ]
 HP2225_COLORS=[QtCore.Qt.black, QtCore.Qt.red, QtCore.Qt.blue, QtCore.Qt.green]
@@ -672,6 +680,13 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       self.name= name
       self.screenwidth= -1
       self.printcolor= QtCore.Qt.black
+#
+#     background of print area is always white
+#
+      self.setAutoFillBackground(True)
+      p=self.palette()
+      p.setColor(self.backgroundRole(),QtCore.Qt.white)
+      self.setPalette(p)
       self.w=-1
       self.h=-1
       self.rows= 0
@@ -800,7 +815,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
    def pdf(self,filename,pdf_rows):
 
       self.printer=QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
-      self.printer.setOrientation(QtPrintSupport.QPrinter.Portrait)
+      self.printer.setPageOrientation(QtGui.QPageLayout.Landscape)
       self.printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
       self.pdfscene=QtWidgets.QGraphicsScene()
 #
@@ -814,7 +829,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #     A4 format is 8,27 inches x 11,7 inches
 #
       if self.papersize== PDF_FORMAT_A4:
-         self.printer.setPageSize(QtPrintSupport.QPrinter.A4)
+         self.printer.setPageSize(QT_FORM_A4)
          lmargin= 151
          tmargin= 163 
          scene_w= 1280 + lmargin*2
@@ -824,7 +839,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #     Letter format is 8.5 inches x 11 inches
 #
-         self.printer.setPageSize(QtPrintSupport.QPrinter.Letter)
+         self.printer.setPageSize(QT_FORM_LANDSCAPE)
          lmargin= 173
          tmargin= 96 
          scene_w= 1280 + lmargin*2

@@ -41,13 +41,23 @@
 #   simulation interface when receiving byte data from the pil box
 # - removed ACK in pil box simulation after receiving a high byte
 # - fixed detection and acknowledge of a pil box command
+# 04.05.2022 jsi
+# - PySide6 migration
 #
-from PyQt5 import QtCore
+import sys
+import threading
 from .pilconfig import PILCONFIG
 from .pilbox import cls_pilbox, PilBoxError
 from .piltcpip import cls_piltcpip, TcpIpError
 from .pilcore import assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK
+from .pilcore import QTBINDINGS
 from .pilsocket import cls_pilsocket, SocketError
+from .pilcore import QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore
+
 #
 class PilThreadError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -191,6 +201,11 @@ class cls_pilthread_generic(QtCore.QThread):
    def get_addr_framecounter(self):
       return self.addr_framecounter
 #
+#  run method
+#
+   def run(self):
+      sys.settrace(threading._trace_hook)
+#
 # PIL-Box communications thread over serial port
 #
 class cls_PilBoxThread(cls_pilthread_generic):
@@ -221,6 +236,7 @@ class cls_PilBoxThread(cls_pilthread_generic):
 #  thread execution 
 #         
    def run(self):
+      super().run()
 #
       self.send_message("connected to PIL-Box at {:d} baud".format(self.__baudrate__))
       try:
@@ -324,6 +340,7 @@ class cls_PilTcpIpThread(cls_pilthread_generic):
 #  thread execution 
 #         
    def run(self):
+      super().run()
 #
       connected=False
       try:
@@ -388,6 +405,7 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #  thread execution 
 #         
    def run(self):
+      super().run()
 #
       try:
 #

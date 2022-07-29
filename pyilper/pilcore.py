@@ -20,7 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# pyILPER support and constants  ---------------------------------------------------
+# pyILPER support and constants  -----------------------------------------------
 #
 # Changelog
 # 08.07.16 - jsi:
@@ -137,18 +137,21 @@
 # 18.04.22 jsi
 # - 1.8.6 beta1 
 # - used raw string in re.compile to avoid DEPRECATED warning
+# 29.07.22 jsi
+# - added determination of Qt bindings
 #
 import platform
 import os
 import re
+import sys
 #
 # Program constants --------------------------------------------------
 #
 # General constants:
 #
 PRODUCTION=  False     # Production/Development Version
-VERSION="1.8.6b1"       # pyILPR version number
-CONFIG_VERSION="2"    # Version number of pyILPER config file, must be string
+VERSION="1.8.7b2"      # pyILPR version number
+CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version
 #
@@ -242,6 +245,56 @@ BARCODE_NARROW_W= 5
 BARCODE_WIDE_W= 10
 BARCODE_SPACING= 5
 
+#
+# determine QT Bindings
+#
+QTBINDINGS="None"
+HAS_WEBENGINE=False
+HAS_WEBKIT=False
+# already loaded
+for _b in('PyQt5','PySide6'):
+   if _b+'.QtCore' in sys.modules:
+      QTBINDINGS=_b
+      break
+else:
+   try:
+      import PySide6.QtCore
+   except ImportError:
+      if "PySide6" in sys.modules:
+         del sys.modules["Pyside6"]
+      try:
+         import PyQt5.QtCore
+      except ImportError:
+         if "PyQt5" in sys.modules:
+            del sys.modules["Pyside6"]
+         raise ImportError("No Qt bindings found")
+      else:
+         QTBINDINGS="PyQt5"
+         from PyQt5 import QtPrintSupport
+         QT_FORM_A4=QtPrintSupport.QPrinter.A4
+         QT_FORM_LETTER=QtPrintSupport.QPrinter.Letter
+         try:
+            from PyQt5 import QtWebKitWidgets
+            HAS_WEBKIT=True
+         except:
+            pass
+         try:
+            from PyQt5 import QtWebEngineWidgets
+            HAS_WEBENGINE=True
+         except:
+            pass
+         if HAS_WEBKIT and HAS_WEBENGINE:
+           HAS_WEBENGINE=False
+   else:
+      QTBINDINGS="PySide6"
+      from PySide6 import QtGui
+      QT_FORM_A4=QtGui.QPageSize.A4
+      QT_FORM_LETTER=QtGui.QPageSize.Letter
+      try:
+         from PySide6 import QtWebEngineWidgets
+         HAS_WEBENGINE=True
+      except:
+         pass
 #
 # utility functions --------------------------------------------------------------
 #

@@ -67,13 +67,21 @@
 # - shrink all parent widgets if the pixel size was changed
 # 22.02.2018 jsi
 # - disabled shrinking parent widgets becaus of errors on reconfiguration
+# 04.05.2022 jsi
+# - PySide6 migration
+# 04.05.2022 jsi
+# - force printer background to be always white (dark mode)
 #
 import copy
 import queue
 import threading
 import re
-from PyQt5 import QtCore, QtWidgets
-from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT
+from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT, QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtWidgets
+
 from .pilconfig import PILCONFIG
 from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
 from .pildevbase import cls_pildevbase
@@ -932,6 +940,14 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
       self.rows= 0
       self.linebuffersize= linebuffersize
       self.papersize= papersize
+#
+#     background is always white
+#
+      self.setAutoFillBackground(True)
+      p=self.palette()
+      p.setColor(self.backgroundRole(),QtCore.Qt.white)
+      self.setPalette(p)
+
 #
 #     initialize line bitmap buffer
 #

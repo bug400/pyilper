@@ -122,12 +122,18 @@
 # - lock pildevice if medium changes in raw drive tab
 # 20.12.2021 jsi
 # - open raw file: only existing files are allowed
+# 04.05.2022 jsi
+# - PySide6 migration
 #
-from PyQt5 import QtCore, QtGui, QtWidgets
 import time
 import threading
 import os
 from .pilcore import *
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, T_STRING, T_INTEGER, O_DEFAULT
 from .pilconfig import PilConfigError, PILCONFIG
@@ -710,17 +716,17 @@ class cls_DriveWidget(cls_GenericDriveWidget):
       self.toggle_controls()
 
    def do_pack(self):
-      cls_lifpack.exec(self.filename)
+      cls_lifpack.execute(self.filename)
       self.lifdir.refresh()
 
    def do_import(self):
       workdir=PILCONFIG.get('pyilper','workdir')
-      cls_lifimport.exec(self.filename, workdir)
+      cls_lifimport.execute(self.filename, workdir)
       self.lifdir.refresh()
 
    def do_label(self):
       oldlabel=self.lifdir.getLabel()
-      cls_liflabel.exec(self.filename, oldlabel)
+      cls_liflabel.execute(self.filename, oldlabel)
       self.lifdir.refresh()
 
    def do_dirlist(self):
@@ -889,6 +895,7 @@ class DirTableView(QtWidgets.QTableView):
 #
     def mousePressEvent(self, event):
         if event.button()== QtCore.Qt.LeftButton:
+#DEPRECATED pos
            row=self.indexAt(event.pos()).row()
            isSelected=False
 #
@@ -953,24 +960,24 @@ class DirTableView(QtWidgets.QTableView):
                if ft== 0xE080 or ft== 0xE0D0:
                   barcodeAction= menu.addAction("Barcode")
             
-            action = menu.exec_(self.mapToGlobal(event.pos()))
+            action = menu.exec(self.mapToGlobal(event.pos()))
             if action is None:
                event.accept()
                return
             workdir=PILCONFIG.get('pyilper','workdir')
             charset=PILCONFIG.get(self.parent.parent.name,"charset")
             if action ==exportAction:
-                cls_lifexport.exec(imagefile,liffilename,liffiletype,workdir)
+                cls_lifexport.execute(imagefile,liffilename,liffiletype,workdir)
             elif action== purgeAction:
-                cls_lifpurge.exec(imagefile,liffilename)
+                cls_lifpurge.execute(imagefile,liffilename)
                 self.parent.refresh()
             elif action== renameAction:
-                cls_lifrename.exec(imagefile,liffilename)
+                cls_lifrename.execute(imagefile,liffilename)
                 self.parent.refresh()
             elif action== viewAction:
-                cls_lifview.exec(imagefile, liffilename, liffiletype,workdir, charset)
+                cls_lifview.execute(imagefile, liffilename, liffiletype,workdir, charset)
             elif action== barcodeAction:
-                cls_lifbarcode.exec(imagefile,liffilename,ft,self.papersize)
+                cls_lifbarcode.execute(imagefile,liffilename,ft,self.papersize)
             event.accept()
 
 class cls_LifDirWidget(QtWidgets.QWidget):

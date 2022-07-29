@@ -29,9 +29,16 @@
 # - cls_PenConfigWindow moved from pilplotter.py
 # 12.12.2021 jsi:
 # - add configversion parameter to open method
+# 04.05.2022 jsi:
+# - PySide6 migration
 #
 import copy
-from PyQt5 import QtCore, QtGui, QtWidgets
+from .pilcore import QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
 from .userconfig import cls_userconfig, ConfigError
 #
 # Plotter pen table model class --------------------------------------------
@@ -159,7 +166,7 @@ class cls_PenConfigWindow(QtWidgets.QDialog):
    def getPenConfig():
       dialog= cls_PenConfigWindow()
       dialog.resize(650,600)
-      result= dialog.exec_()
+      result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
          return True
       else:

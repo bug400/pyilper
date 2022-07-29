@@ -22,13 +22,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-
-from PyQt5 import  QtWidgets
-import datetime
-from .pilconfig import PILCONFIG
-from .pilwidgets import cls_tabtermgeneric, T_BOOLEAN, T_STRING,O_DEFAULT
-from .pildevbase import cls_pildevbase
-
 #
 # Scope tab object classes ----------------------------------------------------
 #
@@ -63,6 +56,19 @@ from .pildevbase import cls_pildevbase
 # - added "**" to tag to find tags better in the logfile
 # 16.01.2018 jsi
 # - send int instead of char to terminal
+# 04.05.2022 jsi
+# - PySide6 migration
+
+import datetime
+from .pilconfig import PILCONFIG
+from .pilwidgets import cls_tabtermgeneric, T_BOOLEAN, T_STRING,O_DEFAULT
+from .pildevbase import cls_pildevbase
+from .pilcore import QTBINDINGS
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtWidgets
+
 
 LOG_INBOUND=0
 LOG_OUTBOUND=1

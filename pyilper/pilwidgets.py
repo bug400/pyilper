@@ -202,6 +202,10 @@
 #   address view to HP71 style in cls_DevStatusWindow()
 # 19.12.2021 jsi
 # - tab title text color fixed (macOS problem)
+# 04.05.2022 jsi
+# - PySide6 migration
+# 06.04.2022 jsi
+# - set index to old tty value in tty combobox
 #
 import os
 import glob
@@ -210,25 +214,21 @@ import re
 import sys
 import functools
 import pyilper
-from PyQt5 import QtCore, QtGui, QtWidgets
-HAS_WEBKIT=False
-HAS_WEBENGINE=False
-try:
-   from PyQt5 import QtWebKitWidgets
-   HAS_WEBKIT= True
-except:
-   pass
-try:
-   from PyQt5 import QtWebEngineWidgets
-   HAS_WEBENGINE=True
-except:
-   pass
-if HAS_WEBKIT and HAS_WEBENGINE:
-   HAS_WEBENGINE=False
+from .pilcore import *
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+   if HAS_WEBENGINE:
+      from PySide6 import QtWebEngineWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+   if HAS_WEBKIT:
+      from PyQt5 import QtWebKitWidgets
+   if HAS_WEBENGINE:
+      from PyQt5 import QtWebEngineWidgets
+
 from .pilqterm import QScrolledTerminalWidget
 from .pilcharconv import CHARSET_HP71, charsets
 from .pilconfig import PILCONFIG
-from .pilcore import *
 if isWINDOWS():
    import winreg
 #
@@ -252,7 +252,10 @@ O_DEFAULT= -1
 #
 class cls_config_tool_button(QtWidgets.QToolButton):
 
-   config_changed_signal= QtCore.pyqtSignal()
+   if QTBINDINGS=="PySide6":
+      config_changed_signal= QtCore.Signal()
+   if QTBINDINGS=="PyQt5":
+      config_changed_signal= QtCore.pyqtSignal()
 
    def __init__(self,name,text):
       super().__init__()
@@ -866,6 +869,7 @@ class cls_HelpWindow(QtWidgets.QDialog):
          self.view = QtWebEngineWidgets.QWebEngineView()
       if not HAS_WEBENGINE and not HAS_WEBKIT:
          raise HelpError("The Python bindings for QtWebKit and QtWebEngine are missing. Can not display manual")
+
       self.view.setMinimumWidth(600)
       self.vlayout.addWidget(self.view)
       self.buttonExit = QtWidgets.QPushButton('Exit')
@@ -933,7 +937,11 @@ class cls_AboutWindow(QtWidgets.QDialog):
 
    def __init__(self,version):
       super().__init__()
-      self.qtversion=QtCore.QT_VERSION_STR
+      if QTBINDINGS=="PySide6":
+         self.qtversion=QtCore.__version__
+      if QTBINDINGS=="PyQt5":
+         self.qtversion=QtCore.QT_VERSION_STR
+
       self.pyversion=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
       self.setWindowTitle('pyILPER About ...')
       self.vlayout = QtWidgets.QVBoxLayout()
@@ -960,9 +968,10 @@ class cls_AboutWindow(QtWidgets.QDialog):
 
 class cls_TtyWindow(QtWidgets.QDialog):
 
-   def __init__(self, parent=None):
+   def __init__(self, tty):
       super().__init__()
 
+      self.oldTty=tty
       self.setWindowTitle("Select serial device")
       self.vlayout= QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
@@ -1008,7 +1017,7 @@ class cls_TtyWindow(QtWidgets.QDialog):
          for port in devlist:
             self.__ComboBox__.addItem( port, port )
 
-      self.__ComboBox__.activated['QString'].connect(self.combobox_choosen)
+      self.__ComboBox__.activated[int].connect(self.combobox_choosen)
       self.__ComboBox__.editTextChanged.connect(self.combobox_textchanged)
       self.buttonBox = QtWidgets.QDialogButtonBox()
       self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
@@ -1021,6 +1030,10 @@ class cls_TtyWindow(QtWidgets.QDialog):
       self.hlayout.addWidget(self.buttonBox)
       self.vlayout.addWidget(self.buttonBox)
       self.__device__= ""
+      idx=self.__ComboBox__.findText(self.oldTty,QtCore.Qt.MatchExactly)
+      if idx  > 0 :
+         self.__ComboBox__.setCurrentIndex(idx)
+      
 
    def do_ok(self):
       if self.__device__=="":
@@ -1036,17 +1049,17 @@ class cls_TtyWindow(QtWidgets.QDialog):
    def combobox_textchanged(self, device):
       self.__device__= device
 
-   def combobox_choosen(self, device):
-      self.__device__= device
+   def combobox_choosen(self, idx):
+      self.__device__= self.__ComboBox__.itemText(idx)
 
    def getDevice(self):
       return self.__device__
 
    @staticmethod
-   def getTtyDevice(parent=None):
-      dialog= cls_TtyWindow(parent)
+   def getTtyDevice(tty_device):
+      dialog= cls_TtyWindow(tty_device)
       dialog.resize(200,100)
-      result= dialog.exec_()
+      result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
          return dialog.getDevice()
       else:
@@ -1404,7 +1417,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          self.comboBaud.setEnabled(False)
 
    def do_config_Interface(self):
-      interface= cls_TtyWindow.getTtyDevice()
+      interface= cls_TtyWindow.getTtyDevice(self.__tty__)
       if interface == "" :
          return
       self.__tty__= interface
@@ -1554,7 +1567,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
    @staticmethod
    def getPilConfig(parent):
       dialog= cls_PilConfigWindow(parent)
-      result= dialog.exec_()
+      result= dialog.exec()
       (reconnect,reconfigure)= dialog.get_status()
       if result== QtWidgets.QDialog.Accepted:
          return True, reconnect, reconfigure
@@ -1672,7 +1685,7 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
    def getDeviceConfig(parent):
       dialog= cls_DeviceConfigWindow(parent)
       dialog.resize(350,100)
-      result= dialog.exec_()
+      result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
          return True
       else:
@@ -1683,8 +1696,8 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
 class cls_Device_validator(QtGui.QValidator):
 
    def validate(self,string,pos):
-      self.regexp = QtCore.QRegExp('[A-Za-z][A-Za-z0-9]*')
-      self.validator = QtGui.QRegExpValidator(self.regexp)
+      self.regexp = QtCore.QRegularExpression('[A-Za-z][A-Za-z0-9]*')
+      self.validator = QtGui.QRegularExpressionValidator(self.regexp)
       result=self.validator.validate(string,pos)
       return result[0], result[1], result[2]
 #
@@ -1759,7 +1772,7 @@ class cls_AddDeviceWindow(QtWidgets.QDialog):
    def getAddDevice(parent):
       dialog= cls_AddDeviceWindow(parent)
       dialog.resize(250,100)
-      result= dialog.exec_()
+      result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
          return dialog.getResult()
       else:
