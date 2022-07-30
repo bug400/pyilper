@@ -37,7 +37,7 @@ a disk drive or a terminal and sends the processed frames back to the loop.
 Features
 --------
 
-* Entirely written in Python3 using the QT GUI-Framework
+* Entirely written in Python3 using the Qt GUI-Framework (Qt5 and Qt6)
 * Virtual mass storage drive with integrated directory list, file management  (import, export, rename, purge, view) and disk management functions (label, pack, initialize)
 * Virtual generic printer emulating the HP-71B, HP-41C, HP-75 and ROMAN-8 character sets
 * Terminal emulator with keyboard support for HP-71B and HP-75.
@@ -88,8 +88,8 @@ Acknowledgements
 ----------------
 
 Much code was taken from ILPER for Windows (Copyright (c) 2008-2013 
-J-F Garnier, Visual C++ version by Christoph Gießelink 2016. 
-The terminal emulator code was taken from the pyqterm console widget 
+J-F Garnier, Visual C++ version by Christoph Gießelink 2016). 
+The terminal emulator code was taken from the pyqterm console widget written
 by Henning Schroeder. The virtual TCP/IP support of pyILPER was significantly
 improved by Christoph Gießelink who also provided many other improvements. The virtual
 HP7470A plotter engine was derived from the HP2XX software (Heinz W. Werntges, Martin 
