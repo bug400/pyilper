@@ -178,18 +178,20 @@ Get a Python interpreter for your system first:
 
 Now create a virtual Python environment for pyILPER. This environment contains
 the additional software which is needed to run pyILPER. The virtual environment
-is created as a subdirectory in the user's home directory. It can be easily 
-removed.
+is created as a subdirectory tree. It can be easily removed.
 
-To create the virtual environmnent "pyilper" open a terminal windows (or command shell) and type:
+To create the virtual environmnent "pyilper" open a terminal windows (or command shell), go to an appropriate location in your file system and type:
 
       python -m venv pyilper
 
-This creates a pyilper subdirectory in your home directory.
+This creates a pyilper subdirectory in your current working directory.
 
-Now activate the new environment:
+Now activate the new environment by invoking:
 
       source pyilper/bin/activate (Linux, mac OS)
+
+or
+
       pyilper\Scripts\acivate (Windows)
 
 Before you run this command, make sure that you’re in the folder that contains the virtual environment you just created. If you can see the name of the environment
@@ -204,6 +206,14 @@ Install and run the pyILPER software as described in the next section.
 You can deactivate the virtual environment with the command:
 
       deactivate
+
+To create shortcuts, it is possible to start pyILPER without activating the environment:
+
+      <abs. path of environment dir>/bin/python3 <abs. path of pyIlper dir>/start.py
+or for Windows:
+
+      <abs. path of environment dir>/Scripts/python3 <abs. path of pyIlper dir>/start.py
+
 
 
 Installation of beta or development versions
