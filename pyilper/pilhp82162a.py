@@ -71,6 +71,8 @@
 # - PySide6 migration
 # 04.05.2022 jsi
 # - force printer background to be always white (dark mode)
+# 30.07.2022 jsi
+# - do not use a default filename for pdf output file
 #
 import copy
 import queue
@@ -1218,7 +1220,7 @@ class cls_PdfOptions(QtWidgets.QDialog):
       super().__init__()
       self.columns=columns
       self.title=title
-      self.filename="hp82162a.pdf"
+      self.filename=""
       self.setWindowTitle('HP82162A PDF output')
       self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
@@ -1227,7 +1229,6 @@ class cls_PdfOptions(QtWidgets.QDialog):
 
       self.glayout.addWidget(QtWidgets.QLabel("PDF Output Options"),0,0,1,3)
       self.glayout.addWidget(QtWidgets.QLabel("Output file:"),1,0)
-      self.filename="hp82162a.pdf"
       self.lfilename=QtWidgets.QLabel(self.filename)
       self.glayout.addWidget(self.lfilename,1,1)
       self.butchange=QtWidgets.QPushButton("Change")

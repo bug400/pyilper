@@ -1,4 +1,4 @@
- #!/usr/bin/python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # pyILPER 1.2.4 for Linux
 #
@@ -37,6 +37,8 @@
 # - PySide6 migration
 # 04.05.2022 jsi
 # - force background of printer to be always white (dark mode!)
+# 30.07.2022 jsi
+# - user cls_pdfprinter.get_pdfFilename method to get pdf file name
 #
 import copy
 import queue
@@ -53,7 +55,7 @@ from .pilconfig import PILCONFIG
 from .pilcharconv import charconv, barrconv, CHARSET_HP2225
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget, T_INTEGER, O_DEFAULT, T_STRING
-from .pilcore import *
+from .pilpdf import cls_pdfprinter
 
 #
 # constants --------------------------------------------------------------
@@ -387,10 +389,10 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
       return
 
    def do_pdf(self):
-      filename=cls_PdfOptions.getPdfOptions()
-      if filename== "":
+      flist=cls_pdfprinter.get_pdfFilename()
+      if flist is None:
          return
-      self.printview.pdf(filename,self.pdf_rows)
+      self.printview.pdf(flist[0],self.pdf_rows)
       return
 #
 #  put command into the GUI-command queue, this is called by the thread component
@@ -1124,74 +1126,6 @@ class cls_hp2225b_line(QtWidgets.QGraphicsItem):
                        mask= mask >> 1
         return
 
-#
-# custom class open pdf output file and set options
-#
-class cls_PdfOptions(QtWidgets.QDialog):
-
-   def __init__(self):
-      super().__init__()
-      self.filename="hp2225b.pdf"
-      self.setWindowTitle('HP2225B PDF output')
-      self.vlayout = QtWidgets.QVBoxLayout()
-      self.setLayout(self.vlayout)
-      self.glayout = QtWidgets.QGridLayout()
-      self.vlayout.addLayout(self.glayout)
-
-      self.glayout.addWidget(QtWidgets.QLabel("PDF Output Options"),0,0,1,3)
-      self.glayout.addWidget(QtWidgets.QLabel("Output file:"),1,0)
-      self.filename="hp2225b.pdf"
-      self.lfilename=QtWidgets.QLabel(self.filename)
-      self.glayout.addWidget(self.lfilename,1,1)
-      self.butchange=QtWidgets.QPushButton("Change")
-      self.butchange.setFixedWidth(60)
-      self.glayout.addWidget(self.butchange,1,2)
-
-      self.buttonBox = QtWidgets.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-      self.buttonBox.setCenterButtons(True)
-      self.buttonBox.accepted.connect(self.do_ok)
-      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-      self.buttonBox.rejected.connect(self.do_cancel)
-      self.hlayout = QtWidgets.QHBoxLayout()
-      self.hlayout.addWidget(self.buttonBox)
-      self.vlayout.addLayout(self.hlayout)
-      self.butchange.clicked.connect(self.change_pdffile)
-
-   def get_pdfFilename(self):
-      dialog=QtWidgets.QFileDialog()
-      dialog.setWindowTitle("Enter PDF file name")
-      dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-      dialog.setDefaultSuffix("pdf")
-      dialog.setNameFilters( ["PDF (*.pdf )", "All Files (*)"] )
-      dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
-      if dialog.exec():
-         return dialog.selectedFiles()
-
-   def change_pdffile(self):
-      flist= self.get_pdfFilename()
-      if flist is None:
-         return
-      self.filename= flist [0]
-      self.lfilename.setText(self.filename)
-      self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
-           
-
-   def do_ok(self):
-      super().accept()
-
-   def do_cancel(self):
-      super().reject()
-
-   @staticmethod
-   def getPdfOptions():
-      dialog= cls_PdfOptions()
-      result= dialog.exec()
-      if result== QtWidgets.QDialog.Accepted:
-         return dialog.lfilename.text()
-      else:
-         return ""
 #
 # HP2225B emulator (thread component) --------------------------------------
 #
