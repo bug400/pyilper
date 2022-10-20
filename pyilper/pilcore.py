@@ -139,6 +139,8 @@
 # - used raw string in re.compile to avoid DEPRECATED warning
 # 29.07.22 jsi
 # - added determination of Qt bindings
+# 20.10.22 jsi
+# - 1.8.6 release
 #
 import platform
 import os
@@ -149,8 +151,8 @@ import sys
 #
 # General constants:
 #
-PRODUCTION=  False     # Production/Development Version
-VERSION="1.8.6b2"      # pyILPR version number
+PRODUCTION=  True      # Production/Development Version
+VERSION="1.8.6"        # pyILPR version number
 CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version

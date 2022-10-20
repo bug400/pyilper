@@ -1,3 +1,9 @@
+pyilper (1.8.6) bullseye; urgency=medium
+
+  * 1.8.6 release 
+
+ -- focal <achim@trillian>  Thu, 20 Oct 2022 12:39:09 +0200
+
 pyilper (1.8.6~beta2) bullseye; urgency=medium
 
   * enabled PySide6 language binding in addition to PyQt5
