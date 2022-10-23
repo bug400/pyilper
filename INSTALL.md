@@ -165,8 +165,8 @@ directory and type:
 in a terminal window.
 
 
-Installation with Qt6 and PIP (pyILPER 1.8.6 and later)
--------------------------------------------------------
+Installation with Qt6 and PIP
+-----------------------------
 
 Starting from version 1.8.6 pyILPER supports both the legacy PyQt5 bindings for
 Qt5 and the new PySide6 interface for Qt6.
