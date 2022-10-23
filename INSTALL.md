@@ -168,11 +168,11 @@ in a terminal window.
 Installation with Qt6 and PIP (pyILPER 1.8.6 and later)
 -------------------------------------------------------
 
-Starting from version 1.8.6 pyILPER supports both the legacy PyQt5 bindings
-and the new PySide6 Qt Interface.
+Starting from version 1.8.6 pyILPER supports both the legacy PyQt5 bindings for
+Qt5 and the new PySide6 interface for Qt6.
 
 PySide6 is not available for the ANACONDA platform at the moment. Therefore it is
-necessary to install the Python Interpreter, Qt and Pyside6 from another source.
+necessary to install the Python Interpreter, Qt6 and Pyside6 from another source.
 
 Get a Python interpreter for your system first:
 
