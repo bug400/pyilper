@@ -201,11 +201,9 @@ or
 Before you run this command, make sure that you’re in the folder that contains the virtual environment you just created. If you can see the name of the environment
 in your command prompt, then the environment is active.
 
-Now install additional software and type:
+Now install pyILPER and the required additional software and type:
 
-      python -m pip install PySide6 pyserial
-
-Install and run the pyILPER software as described in the next section.
+      python -m pip install pyilper
 
 You can deactivate the virtual environment with the command:
 
