@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyilper"
+version = "1.8.6"
+description = "Virtual HP-IL devices for the PIL-Box"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.5"
+authors= [
+   {email="bug400@gmx.de"},
+   {name="Joachim Siebold"}
+]
+dependencies= [
+   "PySide6",
+   "pyserial"
+]
+classifiers=[
+        'Development Status :: 5 - Production/Stable',
+
+        # Indicate who your project is intended for
+        'Topic :: Utilities',
+
+        # Pick your license as you wish (should match "license" above)
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+
+        # Specify the Python versions you support here. In particular, ensure
+        # that you indicate whether you support Python 2, Python 3 or both.
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+    ]
+[project.scripts]
+pyilper="pyilper:main"
+
