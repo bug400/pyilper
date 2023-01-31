@@ -91,6 +91,4 @@ Much code was taken from ILPER for Windows (Copyright (c) 2008-2013
 J-F Garnier, Visual C++ version by Christoph Gießelink 2016). 
 The terminal emulator code was taken from the pyqterm console widget written
 by Henning Schroeder. The virtual TCP/IP support of pyILPER was significantly
-improved by Christoph Gießelink who also provided many other improvements. The virtual
-HP7470A plotter engine was derived from the HP2XX software (Heinz W. Werntges, Martin 
-Kroeker).
+improved by Christoph Gießelink who also provided many other improvements. The virtual HP7470A plotter engine was derived from the HP2XX software (Heinz W. Werntges, Martin Kroeker). Parts of the HP82162A printer emulation were taken from Eric Smith's Nonpareil emulator.

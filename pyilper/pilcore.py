@@ -134,13 +134,15 @@
 # 17.02.2022 jsi
 # - 1.8.5 release
 # - function to decode the pyILPER release number rewritten
-# 18.04.22 jsi
+# 18.04.2022 jsi
 # - 1.8.6 beta1 
 # - used raw string in re.compile to avoid DEPRECATED warning
-# 29.07.22 jsi
+# 29.07.2022 jsi
 # - added determination of Qt bindings
-# 20.10.22 jsi
+# 20.10.2022 jsi
 # - 1.8.6 release
+# 29.01.2023
+# - 1.8.7a1 development
 #
 import platform
 import os
@@ -151,8 +153,8 @@ import sys
 #
 # General constants:
 #
-PRODUCTION=  True      # Production/Development Version
-VERSION="1.8.6"        # pyILPR version number
+PRODUCTION=  False      # Production/Development Version
+VERSION="1.8.7a1"        # pyILPR version number
 CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version
