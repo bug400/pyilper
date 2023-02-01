@@ -55,7 +55,6 @@ setup(
 
     # What does your project relate to?
     keywords='pyqt5 HP-IL PIL-Box HP-41 HP-71 HP-75',
-    install_requires=['pyserial','PySide6']
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
