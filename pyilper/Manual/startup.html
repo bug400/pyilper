@@ -38,12 +38,21 @@ the HP7470A plotter the latest version of the
 <em>pyILPER</em> and check from the "Utilities" menu if a <em>LIFUTILS</em>
 version was detected by <em>pyILPER</em>.</p>
 
-<h3 class="w3-text-teal">Set up pyILPER with the PIL-Box</h3>
+<h3 class="w3-text-teal">Set the <em>pyILPER</em> working directory</h3>
+
+<p>Run "pyILPER configuration" from the "File" menu to set
+the <em>pyILPER</em> working directory.</p>
+
+<p><em>pyILPER</em> stores all log files in a working directory. The default
+of that directory is the users home directory. Change the working directory
+to an appropriate location.</p>
+
+<h3 class="w3-text-teal">Set up <em>pyILPER</em> with the PIL-Box</h3>
 
 <p>Connect the PIL-Box to your computer.</p>
 
 <p>Run "pyILPER configuration" from the "File" menu and configure the tty
-device of the PIL-Box and the <em>pyILPER</em> working directory.</p>
+device of the PIL-Box.</p>
 
 <p>Open the <em>pyILPER</em> configuration dialog from the file menu. Change the
 name of the PIL-Box device to the USB serial device the box is
@@ -55,9 +64,6 @@ the <a href="https://github.com/bug400/pyilper/blob/master/INSTALL.md" class="w3
 If that does not work, set the baud rate manually to the baud rate the
 PIL-Box is configured to. See the PIL-Box documentation for further details.</p>
 
-<p><em>pyILPER</em> stores all log files in a working directory. The default
-of that directory is the users home directory. Change the working directory
-to an appropriate location.</p>
 
 <p>Now initialize the loop with the HP-IL controller:<p>
 <ul class="w3-ul">
@@ -77,7 +83,10 @@ You may connect the
 <a href="http://hp.giesselink.com/emu71.htm" class="w3-hover-black">HP-71B Emulator of 
 Christoph Gie&szlig;elink</a> or the HP-41 Emulator V41 (available at <a href="http://www.hp41.org" class="w3-hover-black">www.hp41.org</a> - a registration is required to access the software) with <em>pyILPER</em>.</p>
 
-<p>Change the communication mode to TCP/IP in the pyILPER configuration.
+<p>Run "pyILPER configuration" from the "File" menu to set
+the <em>pyILPER</em> TCP/IP configuration.</p>
+
+<p>Change the communication mode to <em>TCP/IP</em>.
 Check if the TCP/IP configuration parameters (remote host, remote port, local port)
 are configured properly. See the documentation of the virtual HP-IL over
 TCP/IP and the documentation of EMU71 or V41 for further details.<p>
@@ -87,19 +96,19 @@ TCP/IP and the documentation of EMU71 or V41 for further details.<p>
 <p>The recommended procedure to connect Emu71 to <em>pyILPER</em> is:</p>
 
 <ul class="w3-ul">
-<li>Start pyILPER configured in TCP/IP communication mode. The status line
+<li>Start <em>pyILPER</em> configured in TCP/IP communication mode. The status line
 shows: "not connected to virtual HP-IL devices."</li>
 <li>Start Emu71 with the HP-IL module configured properly. Switch the calculator
-on and press the ATTN key until the pyILPER status line shows "connected to
+on and press the ATTN key until the <em>pyILPER</em> status line shows "connected to
 virtual HP-IL devices".
 <li>Initialize to loop as specified above.</li>
 </ul>
 
-<p>The recommended procedure to disconnect Emu71 from pyILPER is:</p>
+<p>The recommended procedure to disconnect Emu71 from <em>pyILPER</em> is:</p>
 
 <ul class="w3-ul">
 <li>Switch Emu71 off and close the program.</li>
-<li>Close pyILPER.</li>
+<li>Close <em>pyILPER</em>.</li>
 </ul>
 
 <h3 class="w3-text-teal">Set up <em>pyILPER</em> with Emulators running on DOSBox</h3>
@@ -120,8 +129,10 @@ virtual HP-IL devices".
 
 <code>XIL COM1</code>
 
+<p>Run "pyILPER configuration" from the "File" menu to set
+the <em>pyILPER</em> TCP/IP configuration.</p>
 
-<p>Change the communication configuration to <em>TCP/IP socket Server (PIL-Box emulator)</em> in the <em>pyILPER</em> configuration.</p>
+<p>Change the communication configuration to <em>TCP/IP socket Server (PIL-Box emulator)</em>.</p>
 
 <p>Start <em>pyILPER</em>. You should see the message "waiting for client" in the status bar. Start <em>DOSBox</em>. The <em>pyILPER</em> status line should now say "client connected". Now start the <em>EMUxx</em> program on <em>DOSBox</em>.
 
@@ -134,9 +145,9 @@ virtual HP-IL devices".
 
 
 
-<h3 class="w3-text-teal">Using pyILPER stand-alone</h3>
+<h3 class="w3-text-teal">Using <em>pyILPER</em> stand-alone</h3>
 
-<p>If you like to use pyILPER stand-alone without connection to a real or emulated calculator set up the program to use virtual HP-IL over TCP/IP (see above). Then you can use the <a href="drive.html" class="w3-hover-black">the virtual drive</a> to manage the content of LIF image files.</p>
+<p>If you would like to use <em>pyILPER</em> stand-alone without connection to a real or emulated calculator set up the program to use virtual HP-IL over TCP/IP (see above). Then you can use the <a href="drive.html" class="w3-hover-black">the virtual drive</a> to manage the content of LIF image files.</p>
 <!-- End content -->
 
 </div>
