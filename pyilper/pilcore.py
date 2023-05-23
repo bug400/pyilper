@@ -143,6 +143,8 @@
 # - 1.8.6 release
 # 29.01.2023
 # - 1.8.7a1 development
+# 23.05.2023
+# - 1.8.7a2 development
 #
 import platform
 import os
@@ -154,7 +156,7 @@ import sys
 # General constants:
 #
 PRODUCTION=  False      # Production/Development Version
-VERSION="1.8.7a1"        # pyILPR version number
+VERSION="1.8.7a2"        # pyILPR version number
 CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version
