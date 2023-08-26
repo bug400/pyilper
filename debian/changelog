@@ -1,3 +1,9 @@
+pyilper (1.8.7) bookworm; urgency=medium
+
+  * 1.8.7 release 
+
+ -- focal <achim@trillian>  Sat, 26 Aug 2023 19:09:22 +0200
+
 pyilper (1.8.7a1) bullseye; urgency=medium
 
   * 1.8.7 alpha1
