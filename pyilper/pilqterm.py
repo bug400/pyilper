@@ -177,6 +177,9 @@
 # - cast coorinates to int to avoid crash using Python 3.10
 # 04.05.2022 jsi
 # - PySide6 migration
+# 27.08.2023 jsi
+# - on some platform metrics.width() returned a width larger than an ASCII character which
+#   let to an incorrect cursor width
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -435,7 +438,7 @@ class TermCursor(QtWidgets.QGraphicsItem):
       self.draw= not self.draw
       self.update()
 #
-#  boundingRect and setPos are necessary for custim graphics items
+#  boundingRect and setPos are necessary for custom graphics items
 #
    def boundingRect(self):
       return self.rect
@@ -557,7 +560,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
         self._font.setPixelSize(self._font_size)
         metrics= QtGui.QFontMetrics(self._font)
-        self._char_width=metrics.maxWidth()
+        self._cursor_width=metrics.boundingRect('A').width()
+        self._cursor_height=metrics.boundingRect('A').height()
         self._char_height=metrics.height()
         self._ScrollUpAreaY= self._char_height
 #
@@ -1083,7 +1087,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
              cursor_foreground_color= self._color_scheme[0]
           else:
              cursor_foreground_color= self._color_scheme[1]
-          self._cursorItem= TermCursor(self._char_width,self._char_height,self._cursortype, cursor_foreground_color)
+          self._cursorItem= TermCursor(self._cursor_width,self._cursor_height,self._cursortype, cursor_foreground_color)
           self._cursorItem.setPos(self._true_w[self._cursor_col],self._cursor_row*self._char_height)
           self._scene.addItem(self._cursorItem)
        self._font.setUnderline(False)

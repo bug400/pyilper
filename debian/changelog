@@ -1,6 +1,7 @@
 pyilper (1.8.7) bookworm; urgency=medium
 
   * 1.8.7 release 
+  * fixed cursor width problem which was detected on DEBIAN bookworm
 
  -- focal <achim@trillian>  Sat, 26 Aug 2023 19:09:22 +0200
 
