@@ -98,13 +98,13 @@ You should issue occasionally:
 
 to clean the conda package cache and save disk space.
 
-Note: pyILPER requires at least Python 3.11. If you get no pyILPER updates check your Anaconda/Miniconda Python version with:
+Note: pyILPER requires at least Python 3.9. If you get no pyILPER updates check your Anaconda/Miniconda Python version with:
 
      conda list
 
-You can upgrade the Python version to 3.11 with:
+You can upgrade the Python version to 3.9 with:
 
-     conda install python=3.11
+     conda install python=3.9
 
 **Windows**:
 If an update to a current Python version fails, do a clean reinstallation of the
