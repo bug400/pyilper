@@ -1,6 +1,8 @@
 ﻿pyILPER installation instructions
 =================================
 
+Note: this document is o u t d a t e d and under revision!!
+
 Index
 -----
 
