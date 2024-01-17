@@ -1,3 +1,9 @@
+pyilper (1.8.8) UNRELEASED; urgency=medium
+
+  * online manual reformatted 
+
+ -- bookworm <achim@trillian>  Wed, 17 Jan 2024 15:27:49 +0100
+
 pyilper (1.8.7) bookworm; urgency=medium
 
   * 1.8.7 release 

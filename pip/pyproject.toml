@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyilper"
-version = "1.8.7"
+version = "1.8.8"
 description = "Virtual HP-IL devices for the PIL-Box"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.5"
+requires-python = ">=3.6"
 authors= [
    {email="bug400@gmx.de"},
    {name="Joachim Siebold"}
@@ -29,12 +29,13 @@ classifiers=[
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ]
 [project.scripts]
 pyilper="pyilper:main"
