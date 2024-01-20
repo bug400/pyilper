@@ -1,6 +1,7 @@
-pyilper (1.8.8) UNRELEASED; urgency=medium
+pyilper (1.8.8) bookworm; urgency=medium
 
   * online manual reformatted 
+  * PyPi packaging optimized
 
  -- bookworm <achim@trillian>  Wed, 17 Jan 2024 15:27:49 +0100
 
