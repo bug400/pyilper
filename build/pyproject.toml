@@ -2,9 +2,12 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+exclude = ['debian/','img/','*.md']
+
 [project]
 name = "pyilper"
-version = "1.8.8"
+version = "1.8.8a1"
 description = "Virtual HP-IL devices for the PIL-Box"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -37,6 +40,6 @@ classifiers=[
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
     ]
-[project.scripts]
+[project.gui-scripts]
 pyilper="pyilper:main"
 

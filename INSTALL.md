@@ -21,7 +21,7 @@ General
 
 pyILPER requires:
 
-* Python 3.5 or higher 
+* Python 3.6 or higher 
 * Qt 5.9 or higher with the PyQt5 language bindings or Qt 6.3 or higher (recommended) with the PySide6 language bindings
 * The Python bindings for either Qt Webkit (Qt5 only) or Qt Webengine (recommended)
 * Pyserial  2.7 or higher
