@@ -102,6 +102,8 @@
 # - improve shutdown of the plotter subprocess
 # 04.05.2022 jsi
 # - PySide6 migration
+# 28.01.2024 jsi
+# - force background to white (dark mode)
 
 import sys
 import subprocess
@@ -409,7 +411,6 @@ class cls_AspectLayout(QtWidgets.QLayout):
         return True
 
     def heightForWidth(self, width):
-#       fixed DEPRECATED use of float argument for int parameter
         height = int(width// self.aspect_ratio)
         return height
 
@@ -456,6 +457,14 @@ class cls_mygraphicsview(QtWidgets.QGraphicsView):
       self.restorecursor=None
       self.digitize=False
 #
+#     background is always white
+#     
+      self.setAutoFillBackground(True)
+      p=self.palette()
+      p.setColor(self.backgroundRole(),QtCore.Qt.white)
+      self.setPalette(p)
+
+#
 #  start digitizing, switch to crosshair cursor
 #
    def digi_start(self):
@@ -481,8 +490,7 @@ class cls_mygraphicsview(QtWidgets.QGraphicsView):
 #
    def mousePressEvent(self, event):
       if self.digitize:
-#DEPRECATED
-         x=event.pos()
+         x=getEventPosition(event)
          p=self.mapToScene(x)
          x=p.x()
          y=p.y()
@@ -995,7 +1003,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       elif self.pen_number==2:
          pendef= PENCONFIG.get_pen(self.penconfig2)
       self.pen.setColor(QtGui.QColor(pendef[0],pendef[1],pendef[2],pendef[3]))
-#     fixed DEPRECATED use of float argument for int parameter
       self.pen.setWidth(round(pendef[4]))
 
 #

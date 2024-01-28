@@ -180,6 +180,8 @@
 # 27.08.2023 jsi
 # - on some platform metrics.width() returned a width larger than an ASCII character which
 #   let to an incorrect cursor width
+# 28.01.2024 jsi
+# - replaced deprecated cursor position method calls
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -189,7 +191,7 @@ import queue
 import threading
 import time
 
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS, KEYBOARD_DELAY, QTBINDINGS
+from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS, KEYBOARD_DELAY, QTBINDINGS, getEventPosition
 if QTBINDINGS=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
 if QTBINDINGS=="PyQt5":
@@ -410,7 +412,6 @@ class TermCursor(QtWidgets.QGraphicsItem):
       self.blink_timer.setInterval(CURSOR_BLINK)
       self.blink_timer.timeout.connect(self.do_blink)
       self.blink_timer.start()
-#     fixed DEPRECATED use of float argument for int parameter
       self.insertpolygon=QtGui.QPolygon([QtCore.QPoint(0,int(self.h/2)), 
                          QtCore.QPoint(int(self.w*0.8),self.h), 
                          QtCore.QPoint(int(self.w*0.8),int(self.h*0.67)), 
@@ -635,7 +636,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
        if self._kbdfunc is not None:
           pasteAction=menu.addAction("Paste")
-       action=menu.exec(self.mapToGlobal(event.pos()))
+       action=menu.exec(event.globalPos())
        if action is not None:
 #
 #      copy to system clipboard
@@ -670,8 +671,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         if button == QtCore.Qt.LeftButton:
             self._HPTerminal.selectionStop()
             self._selectionText=""
-#DEPRECATED pos call
-            self._press_pos = event.pos()
+            self._press_pos = getEventPosition(event)
             if not self._HPTerminal.selectionStart(self._press_pos,self._true_w, self._char_height):
                self._press_pos = None
 #
@@ -679,7 +679,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
     def mouseMoveEvent(self, event):
         if self._press_pos:
-            move_pos = event.pos()
+            move_pos = getEventPosition(event)
             self._saved_pos= move_pos
             if move_pos.y() < self._ScrollUpAreaY and move_pos.y() >=0 :
                 self.set_autoscroll(AUTOSCROLL_UP)

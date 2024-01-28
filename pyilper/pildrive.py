@@ -895,8 +895,7 @@ class DirTableView(QtWidgets.QTableView):
 #
     def mousePressEvent(self, event):
         if event.button()== QtCore.Qt.LeftButton:
-#DEPRECATED pos
-           row=self.indexAt(event.pos()).row()
+           row=self.indexAt(getEventPosition(event)).row()
            isSelected=False
 #
 #       check if the row is already selected
@@ -960,7 +959,7 @@ class DirTableView(QtWidgets.QTableView):
                if ft== 0xE080 or ft== 0xE0D0:
                   barcodeAction= menu.addAction("Barcode")
             
-            action = menu.exec(self.mapToGlobal(event.pos()))
+            action = menu.exec(event.globalPos())
             if action is None:
                event.accept()
                return

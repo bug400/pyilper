@@ -148,7 +148,9 @@
 # 26.08.2023
 # - 1.8.7 release 
 # 18.01.2024
-# - 1.8.8 development
+# - 1.8.8 verion
+# 28.01.2024
+# - added getEventPosition function
 #
 import platform
 import os
@@ -305,6 +307,15 @@ else:
          HAS_WEBENGINE=True
       except:
          pass
+#
+#  portable function to get mouse cursor coordinate
+#
+   def getEventPosition(ev): 
+      if QTBINDINGS=="PyQt5":
+         return(ev.pos())
+      if QTBINDINGS== "PySide6":
+         return(ev.position().toPoint()) 
+
 #
 # utility functions --------------------------------------------------------------
 #

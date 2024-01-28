@@ -2,6 +2,8 @@ pyilper (1.8.8) bookworm; urgency=medium
 
   * online manual reformatted 
   * PyPi packaging optimized
+  * fixed Pyside6 deprecation warnings
+  * force plotter background to be always white
 
  -- bookworm <achim@trillian>  Wed, 17 Jan 2024 15:27:49 +0100
 
