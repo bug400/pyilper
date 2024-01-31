@@ -26,7 +26,7 @@ pyILPER requires:
 * Pyserial  2.7 or higher
 * [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
 
-Windows requires the installation of the FTDI USB serial driver first.
+Windows 10 requires the installation of the FTDI USB serial driver first.
 See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
 More recent macOS versions already provide a USB serial driver for the
@@ -72,6 +72,8 @@ See [Virtual environment maintenance](#virtual-environment-maintenance)
 
 
 ### Installation on Windows
+
+Note: use the "Command Line" instead of the "Terminal (PowerShell") application to enter the commands below.
 
 To install the Python interpreter open the Microsoft Store, search for Python and select the recommended version (see above) for installation. Python is installed for the current user.
 
@@ -137,7 +139,7 @@ You can invoke pyILPER without activating the environment by calling:
 
      node1-mac:~ bug400$ ~/py311/bin/pyilper
 
-Build a macOS Automator application to create a desktop shortcut. Use the "run shell script" action and enter the full path to the pyilper script in the virtual environment. Save it as a program and drag it to the desktop.
+Build a macOS Automator application to create a desktop shortcut. Use the "run shell script" action and enter the full path to the pyilper script in the virtual environment. Save it as a program and drag it to the desktop. See [this guide](https://www.hpmuseum.org/forum/thread-3824-post-150519.html#pid150519) for details, but enter your proper pyILPER path.
 
 
 ### Installation on Linux
