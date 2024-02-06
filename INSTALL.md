@@ -1,9 +1,9 @@
-﻿# pyILPER installation instructions
+﻿# pyILPER Installation Instructions
 
 Index
 -----
 
-* [Requirementsl](#requirements)
+* [Requirements](#requirements)
 * [Overview of the Installation from PyPi](#overview-of-the-installation-from-pypi)
      * [Installation on Windows](#installation-on-windows)
      * [Installation on macOS](#installation-on-macos)
@@ -18,31 +18,31 @@ Index
 
 ## Requirements
 
-pyILPER requires:
+To run pyILPER you need:
 
-* Python 3.6 or higher. Python version 3.11 is currently recommended.
-* Qt 5.9 or higher with the PyQt5 language bindings or Qt 6.3 or higher (recommended) with the PySide6 language bindings
+* Python version 3.6 or higher. Version 3.11 is currently recommended.
+* Qt version 5.9 or higher with the PyQt5 language bindings or Qt version 6.3 or higher (recommended) with the PySide6 language bindings
 * The Python bindings for either Qt Webkit (Qt5 only) or Qt Webengine (recommended)
-* Pyserial  2.7 or higher
+* pySerial  2.7 or higher
 * [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
 
-Windows 10 requires the installation of the FTDI USB serial driver first.
+Windows 10 requires the installation of the FTDI USB serial driver first. 
 See the [FTDI website](http://www.ftdichip.com/Drivers/VCP.htm) for details.
 
-More recent macOS versions already provide a USB serial driver for the
-PIL-Box.  By experience, you get better results if you use the original FTDI driver. 
+More recent macOS versions already provide an USB serial driver for the
+PIL-Box.
 
 LINUX does not require to install any driver software.
 
 
 ## Overview of the Installation from PyPi
 
-This installation of pyILPER and the required Python runtime requires the following steps:
+The installation of pyILPER and the required runtime software from PyPi requires the following steps:
 
 1. Get a Python interpreter for your system:
 
-* Windows: install it from Microsoft Store (free)
-* macOS: download it from the [www.python.org](https://www.python.org) website and install the pkg file
+* Windows: download and install it from Microsoft Store (free)
+* macOS: download and install the universal installer from the [www.python.org](https://www.python.org) website
 * Linux: install it from system repositories if not already installed on your system
 
 
@@ -51,18 +51,21 @@ This installation of pyILPER and the required Python runtime requires the follow
 A virtual environment is a directory tree that contains a dedicated Python runtime version with pyILPER 
 and all the necessary library and software components to run this software for the current user. This environment must be "activated" (see below) and it works isolated from the operating systems or other environments.
 
-A virtual environment can be removed by simply removing the directory in question.
+Installing pyILPER in a virtual environment does not affect your system configuration.
+
+A virtual environment can be removed by simply removing the directory in question. This does not affect the pyILPER configuration files.
+
+See [this guide](https://docs.python.org/3/library/venv.html#how-venvs-work) if you want to know more about virtual Python environments.
 
 3. Activate the virtual Python environment
 
-The virtual environment is activated by calling an activation script. An activated environment is indicated
+To use a virtual Python environment an activation script must be called. An activated environment is indicated
 in the prompt string. 
 
 4. Install pyILPER and runtime components
 
-This step fetches pyILPER and the necessary runtime components (Qt6, PySide6 language bindings, pyserial)
-from the [Python Package Index](https://pypi.org), which is the official third-party software repository
-for Python. You can also install additional software in the environment from the Python Package Index.
+This step fetches pyILPER and the necessary runtime components (Qt6, PySide6 language bindings, pySerial)
+from the [Python Package Index (PyPi)](https://pypi.org), which is the official third-party software repository for Python. You can also install additional software in the environment from the Python Package Index.
 
 <b>Warning: always call the Python interpreter "python3" if you create a virtual environment and "python" after the environment has been activated!!!</b>
 
@@ -73,9 +76,11 @@ See [Virtual environment maintenance](#virtual-environment-maintenance)
 
 ### Installation on Windows
 
-Note: use the "Command Line" instead of the "Terminal (PowerShell") application to enter the commands below.
+Note: use the "Command Line" instead of the "Terminal (PowerShell") application to enter the commands below. Using the "Activate.ps1" PowerShell" script requires issuing the PowerShell command:
 
-To install the Python interpreter open the Microsoft Store, search for Python and select the recommended version (see above) for installation. Python is installed for the current user.
+     PS C:> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
+To install the Python interpreter open the Microsoft Store, enter the search term "Python" and select the recommended version (see above) for installation. Python is installed for the current user.
 
 Example: create a virtual environment "py311" in the home directory of the current user, install and start pyILPER:
 
@@ -113,7 +118,7 @@ Create a desktop shortcut for %USERPROFILE\py311\scripts\pyilper.exe to convenie
 
 ### Installation on macOS
 
-Install Python for macOS from the [Python website](https://www.python.org/). Choose the recommended Python version (see above) on the Downloads page. Download and install the macOS 64-bit universal installer. You need administrator privileges for that.
+Install Python for macOS from the [Python website](https://www.python.org/). Choose the recommended Python version (see above), download and install the macOS 64-bit universal installer. You need administrator privileges for that.
 
 See [Using Python on a Mac](https://docs.python.org/3/using/mac.html) for further details.
 
@@ -146,26 +151,22 @@ Build a macOS Automator application to create a desktop shortcut. Use the "run s
 
 Generally, it is recommended to use the Python Interpreter provided by the Linux distribution. 
 
-Install pyILPER from the Python Package Index. See the macOS installation instructions for details.
+To install pyILPER from PyPI, follow the macOS installation instructions.
+
 
 ## Installation from GitHub
 
 To install pyILPER this way, the above mentioned system requirements must be installed on your computer.
 
-Download the latest pyILPER source code from the [pyILPER Releases page](https://github.com/bug400/pyilper/releases/) and unzip the pyILPER source code in an arbitrary location. You get the pyILPER directory pyilper-x.y.z, where x.y.z is the version number.
+Download the latest pyILPER source code zip-file from the [pyILPER Releases page](https://github.com/bug400/pyilper/releases/) and unzip it in an arbitrary location. You get the pyILPER directory pyilper-x.y.z, where x.y.z is the version number.
 
 Now you can start the assembler with:
 
       python <Path to the pyILPER directory>/start.py 
 
+Note: it depends on your operaing system configuration whether the Python interpreter is invoked as "python" or "python3".
 
-Note: it depends on your Linux distribution and system configuration whether the Python interpreter is invoked as "python" or "python3".
-
-
-Create a desktop file to invoke the pyILPER from the desktop. Use the Python interpreter as program and the path to the start.py file as argument.
-
-The [pyILPER Releases page](https://github.com/bug400/pyilper/releases/) also provides an installation package for the current Debian release. Installing this package will add the necessary dependencies to the system and create a menu entry to start the program. This package might also be installable on Linux distributions which were derived from the Debian release in question.
-
+The [pyILPER Releases page](https://github.com/bug400/pyilper/releases/) also provides an installation package for the current Debian release. Installing this package will add the necessary dependencies to the system and create a menu entry to start the program. This package might also be installable on Linux distributions which were derived from the Debian release in question (Ubuntu, Raspberry PI OS).
      
 ## Installation of the LIFUTILS
 
@@ -210,6 +211,8 @@ they are disabled by default.
 
 See the online documentation which can be launched from the Help menu.
 
+If the user manual is not available in pyilper due to missing language bindings, you can also display it with your web browser. Search for the pyilper installation in the virtual environment (usually below the site-packages directory) and open the file pyilper/Manual/index.html.
+
 
 ## Installation of development versions
 
@@ -223,7 +226,7 @@ Now you can start the beta or development version with:
 
       python <Path to the unzipped directory>/start.py
 
-If you get the error message "This script requires Python 3.5 or newer!" use python3 instead.
+If you get the error message "This script requires Python 3.6 or newer!" use python3 instead.
 
 Note:
 * Development versions are work in progress and were tested roughly. They are not testet on all platforms.  They may crash and may ruin your data at worst.
