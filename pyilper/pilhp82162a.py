@@ -77,6 +77,10 @@
 # - fixed some character definitions in charactersets
 # 29.01.2023 jsi
 # - fixed width of cls_HP82162aView for pixelsize=1
+# 31.05.2024 cg
+# - changed PRINTER_CHARACTER_HEIGHT_PIXELS from 13 to 11 to get a line
+#   gap of 4 instead of 6 pixel
+
 #
 import copy
 import queue
@@ -84,9 +88,9 @@ import threading
 import re
 from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT, QTBINDINGS
 if QTBINDINGS=="PySide6":
-   from PySide6 import QtCore, QtWidgets
+   from PySide6 import QtCore, QtWidgets, QtGui
 if QTBINDINGS=="PyQt5":
-   from PyQt5 import QtCore, QtWidgets
+   from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .pilconfig import PILCONFIG
 from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
@@ -101,7 +105,7 @@ from .pilcore import HP82162A_LINEBUFFERSIZE
 PRINTER_CHARACTER_WIDTH_PIXELS= 7
 PRINTER_WIDTH_CHARS= 24
 PRINTER_WIDTH= (PRINTER_WIDTH_CHARS * PRINTER_CHARACTER_WIDTH_PIXELS)
-PRINTER_CHARACTER_HEIGHT_PIXELS= 13
+PRINTER_CHARACTER_HEIGHT_PIXELS= 11
 DISPLAY_LINE_SPACING=0
 
 PDF_LINES=70           # number of lines in pdf output

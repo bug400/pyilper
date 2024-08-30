@@ -206,14 +206,18 @@
 # - PySide6 migration
 # 06.04.2022 jsi
 # - set index to old tty value in tty combobox
+# 02.05.2024 jsi
+# - do not enable logging, if log file open fails
+# 28.08.2024 jsi
+# - use pathlib instead of os and glob
+# - add ACM tty devices to PIL-Box device selector for Linux
 #
-import os
-import glob
 import datetime
 import re
 import sys
 import functools
 import pyilper
+from pathlib import Path
 from .pilcore import *
 if QTBINDINGS=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
@@ -558,6 +562,7 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
       self.buffer_log= buffer_log
 #
 #   open log file, output BOM only on Windows at the beginning of the file
+#   return true if open and write header succeeded, false otherwise
 #
    def logOpen(self):
       try:
@@ -568,10 +573,14 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
          self.log.write("\nBegin log "+self.filename+" at ")
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
          self.log.write("\n")
+         return True
       except OSError as e:
          reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot open log file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return False
 
    def logClose(self):
+      if self.log is None:
+         return
       try:
          self.log.write("\nEnd log "+self.filename+" at ")
          self.log.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -724,8 +733,8 @@ class cls_tabgeneric(QtWidgets.QWidget):
       self.cbActive.setEnabled(True)
       if self.cbLogging is not None:
          if self.logging:
-            self.cbLogging.logOpen()
-         self.cbLogging.setEnabled(True)
+            if self.cbLogging.logOpen():
+               self.cbLogging.setEnabled(True)
 #
 #  toggle active/inactive
 #
@@ -899,11 +908,10 @@ class cls_HelpWindow(QtWidgets.QDialog):
 
    def loadDocument(self,subdir,document):
       if subdir=="":
-         docpath=os.path.join(os.path.dirname(pyilper.__file__),"Manual",document)
+         docPath=Path(pyilper.__file__).parent / "Manual" / document
       else:
-         docpath=os.path.join(os.path.dirname(pyilper.__file__),"Manual",subdir,document)
-      docpath=re.sub("//","/",docpath,1)
-      self.view.load(QtCore.QUrl.fromLocalFile(docpath))
+         docPath=Path(pyilper.__file__).parent / "Manual" / subdir / document
+      self.view.load(QtCore.QUrl.fromLocalFile(str(docPath.resolve())))
 #
 # Release Info Dialog class --------------------------------------------------
 #
@@ -994,28 +1002,26 @@ class cls_TtyWindow(QtWidgets.QDialog):
                   self.__ComboBox__.addItem( port, port )
          except FileNotFoundError:
             pass
-      elif isLINUX():
+      else:
 #
-#        Linux /dev/ttyUSB?
+#        Linux /dev/ttyUSBxx /dev/ttyACMxx
 #
-         devlist=glob.glob("/dev/ttyUSB*")
-         for port in devlist:
-            self.__ComboBox__.addItem( port, port )
+         if isLINUX():
+            r=re.compile("(ttyACM\\d+)|(ttyUSB\\d+)")
 #
 #        Mac OS X /dev/tty.usbserial-*
 #
-      elif isMACOS():
-         devlist=glob.glob("/dev/tty.usbserial-*")
-         for port in devlist:
-            self.__ComboBox__.addItem( port, port )
-
-      else:
+         elif isMACOS():
+            r=re.compile("tty.usbserial-*")
 #
 #        Other
 #
-         devlist=glob.glob("/dev/tty*")
-         for port in devlist:
-            self.__ComboBox__.addItem( port, port )
+         else:
+            r=re.compile("ttyUSB\\d+")
+         
+         mainPath="/dev"
+         for port in (p.resolve() for p in Path(mainPath).iterdir() if r.match(p.name)):
+            self.__ComboBox__.addItem( str(port), str(port) )
 
       self.__ComboBox__.activated[int].connect(self.combobox_choosen)
       self.__ComboBox__.editTextChanged.connect(self.combobox_textchanged)

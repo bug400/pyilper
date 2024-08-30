@@ -1,3 +1,11 @@
+pyilper (1.8.9a1) bookworm; urgency=medium
+
+  * Fix: do not enable logging, if open logfile fails.
+  * HP 82162A line spacing fix (contributed by Christoph Gießelink).
+  * Added /dev/tty/ACMxx to PIL-Box device dropdown list for Linux.
+
+ -- bookworm <achim@trillian>  Wed, 28 Aug 2024 13:37:51 +0200
+
 pyilper (1.8.8) bookworm; urgency=medium
 
   * online manual reformatted 
