@@ -575,7 +575,7 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
          self.log.write("\n")
          return True
       except OSError as e:
-         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot open log file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot open log file "+self.filename+": "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return False
 
    def logClose(self):
@@ -732,9 +732,10 @@ class cls_tabgeneric(QtWidgets.QWidget):
    def enable(self):
       self.cbActive.setEnabled(True)
       if self.cbLogging is not None:
+         self.cbLogging.setEnabled(True)
          if self.logging:
-            if self.cbLogging.logOpen():
-               self.cbLogging.setEnabled(True)
+            if not self.cbLogging.logOpen():
+               self.cbLogging.setEnabled(False)
 #
 #  toggle active/inactive
 #

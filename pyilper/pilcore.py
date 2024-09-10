@@ -151,9 +151,10 @@
 # - 1.8.8 verion
 # 28.01.2024
 # - added getEventPosition function
-#
 # 28.08.2024
 # - 1.8.9a1 development
+# 10.09.2024
+# - 1.8.9a2 development
 #
 import platform
 import os
@@ -165,7 +166,7 @@ import sys
 # General constants:
 #
 PRODUCTION=  False      # Production/Development Version
-VERSION="1.8.9a1"        # pyILPR version number
+VERSION="1.8.9a2"        # pyILPR version number
 CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version

@@ -1,3 +1,9 @@
+pyilper (1.8.9a2) bookworm; urgency=medium
+
+  * Fix: logging checkbox not activated 
+
+ -- bookworm <achim@trillian>  Tue, 10 Sep 2024 10:02:33 +0200
+
 pyilper (1.8.9a1) bookworm; urgency=medium
 
   * Fix: do not enable logging, if open logfile fails.
