@@ -14,7 +14,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.8.9a2',
+    version='1.8.9',
     
     description='Virtual HP-IL devices for the PIL-Box',
     long_description=long_description,
