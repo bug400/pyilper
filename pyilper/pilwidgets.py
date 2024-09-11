@@ -757,7 +757,10 @@ class cls_tabgeneric(QtWidgets.QWidget):
       self.logging= self.cbLogging.isChecked()
       self.pildevice.setlocked(True)
       if self.logging:
-         self.cbLogging.logOpen()
+         if not self.cbLogging.logOpen():
+            self.cbLogging.setChecked(False)
+            self.pildevice.setlocked(False)
+            return
       else:
          self.cbLogging.logClose()
       PILCONFIG.put(self.name,"logging",self.logging)
