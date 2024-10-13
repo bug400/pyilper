@@ -1,3 +1,10 @@
+pyilper (1.8.10.dev1) bookworm; urgency=medium
+
+  * add HP-41 FOCAL source code compile and import to disk (Drive Tab)
+  * add selection of more xrom files for HP-41 FOCAL compile and decompile (Drive Tab)
+
+ -- bookworm <achim@trillian>  Sun, 13 Oct 2024 13:05:21 +0200
+
 pyilper (1.8.9) bookworm; urgency=medium
 
   * Fix: do not enable logging, if open logfile fails.

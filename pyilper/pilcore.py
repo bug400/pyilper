@@ -157,6 +157,8 @@
 # - 1.8.9a2 development
 # 11.09.2024
 # - 1.8.9
+# 6.10.2024
+# - 1.8.10 development
 #
 import platform
 import os
@@ -167,8 +169,8 @@ import sys
 #
 # General constants:
 #
-PRODUCTION=  True      # Production/Development Version
-VERSION="1.8.9"        # pyILPR version number
+PRODUCTION=  False      # Production/Development Version
+VERSION="1.8.10"        # pyILPR version number
 CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version
@@ -201,6 +203,15 @@ COMTMOUTWRITE=1       # tine out for write
 #
 REFRESH_RATE=1000     # period to check whether a drive was altered and is idle
 NOT_TALKER_SPAN=3     # time (s) a drive must be inactive to be concidered as idle
+#
+# Drive tab - predefined xroms
+#
+APPLICATION_XROMS=[["Advantage","advantage"],["Aviation","aviation"],["CCD","ccd"],["Circuit Analysis","circuit"],["Clinical Lab","clinical"],["Data Acquisition","dataacq"],["Financial Decisions","finance"],["Home Management","homemgmt"],["Machine Design","machine"],["Math","math"],["MELROM","melrom"],["Navigation","navigation"],["Petroleum","petroleum"],["PPC","ppc"],["Real Estate","realestate"],["Standard Pac","standard"],["Statistics","statistics"],["Stress Analysis","stress"],["Structural Analysis","struct"],["Surveying","surveying"],["Thermal Science","thermal"]]
+
+DEVICE_XROMS=[["Card Reader","cardrdr"],["HP-IL Development","devil"],["HEPAX","hepax"],["HP-IL","hpil"],["Plotter","plotter"],["Printer","Thermal Printer","printer"],["Time Module (Cx)","timecx"],["Time Module","time"],["Wand","wand"],["X-Functions (CX)","xfncx"],["X-Functions","xfn"],["Extended I/O","xio"]]
+
+ALLDEVICE_XROM=["All HP Devices","hpdevices"]
+
 #
 # Terminal tab
 #

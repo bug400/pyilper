@@ -102,6 +102,9 @@
 # - exec_single did not get stderr output of executed program
 # 04.04.2022 jsi
 # - PySide6 migration
+# 13.10.2024 jsi
+# - new cls_chkxrom class
+# - added comp41 preprocessing
 #
 import subprocess
 import tempfile
@@ -222,7 +225,7 @@ def check_errormessages(parent,ret):
 #  truncate message if length > 150 
 #
    if len(msg)  >150:
-      msg=msg[:75] + '.. (truncated)'
+      msg=msg[:150] + '.. (truncated)'
 #
 #  display an error if returncode !=0 otherwise a warning
 #
@@ -857,7 +860,8 @@ class cls_lifimport (QtWidgets.QDialog):
       self.radioTxt75Numbers= QtWidgets.QRadioButton("convert from ASCII to HP-75 text, take existing line numbers")
       self.radioHepax= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
       self.radioEramco= QtWidgets.QRadioButton("convert HP-41 rom file to XM-41 file (Eramco MLDL-OS)")
-      self.radioFocal= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
+      self.radio41LIF= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
+      self.radioFocal= QtWidgets.QRadioButton("compile HP41 FOCAL source file  file")
       self.radioNone= QtWidgets.QRadioButton("None")
       self.radioNone.setChecked(True)
       self.bGroup.addButton(self.radioLif41) 
@@ -866,6 +870,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.bGroup.addButton(self.radioTxt75Numbers)
       self.bGroup.addButton(self.radioHepax)
       self.bGroup.addButton(self.radioEramco)
+      self.bGroup.addButton(self.radio41LIF)
       self.bGroup.addButton(self.radioFocal)
       self.bGroup.addButton(self.radioNone)
       self.bGroup.buttonClicked.connect(self.do_butclicked)
@@ -877,6 +882,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.vbox.addWidget(self.radioTxt75Numbers)
       self.vbox.addWidget(self.radioHepax)
       self.vbox.addWidget(self.radioEramco)
+      self.vbox.addWidget(self.radio41LIF)
       self.vbox.addWidget(self.radioFocal)
 
       self.hbox2=QtWidgets.QHBoxLayout()
@@ -976,8 +982,14 @@ class cls_lifimport (QtWidgets.QDialog):
                exec_double_import(self,[add_path("rom41hx"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
             elif self.radioEramco.isChecked():
                exec_double_import(self,[add_path("rom41er"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
-            elif self.radioFocal.isChecked():
+            elif self.radio41LIF.isChecked():
                exec_double_import(self,[add_path("raw41lif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+            elif self.radioFocal.isChecked():
+               call= [add_path("comp41")]
+               call.extend(cls_chkxrom.execute())
+               call.extend(["-f",self.liffilename])
+               exec_double_import(self,call,[add_path("lifput"),self.lifimagefile],self.inputfile)
+
       super().accept()
 
 #
@@ -1091,89 +1103,117 @@ class cls_chk_import(QtWidgets.QDialog):
 #
 # check xroms dialog
 #
+class XromCheckBox(QtWidgets.QCheckBox):
+
+   def __init__(self,text,file,checkState):
+        super().__init__(text)
+        self.file=file
+        self.setCheckState(checkState)
+
 class cls_chkxrom(QtWidgets.QDialog):
+    
+    xromDialog= None
 
-   def __init__(self,parent=None):
-      super().__init__()
-      self.call=[add_path("decomp41")]
+    def  __init__(self,nCols,parent=None):
+        super().__init__()
+        self.setWindowTitle("Check ROM Modules")
+        self.grid= QtWidgets.QGridLayout()
+        self.nCols=nCols
+        self.col=0
+        self.row=0
+        self.members= []
+        self.addHeader("Application ROMs")
+        for d in APPLICATION_XROMS:
+           self.addItem(d[0],d[1],QtCore.Qt.CheckState.Unchecked)
+        self.addHeader("Device ROMs")
+        for d in DEVICE_XROMS:
+           self.addItem(d[0],d[1],QtCore.Qt.CheckState.Unchecked)
+        self.addHeader("All Device ROMs")
+        self.addItem(ALLDEVICE_XROM[0],ALLDEVICE_XROM[1],QtCore.Qt.CheckState.Checked)
+        if(self.col==self.nCols-1):
+           self.row+=1
 
-      self.setWindowTitle("Check ROM Modules")
-      self.vlayout= QtWidgets.QVBoxLayout()
-      self.setLayout(self.vlayout)
+        self.resetButton= QtWidgets.QPushButton("Reset")
+        self.resetButton.setFixedWidth(60)
+        self.resetButton.clicked.connect(self.do_reset)
+        self.exitButton= QtWidgets.QPushButton("Exit")
+        self.exitButton.setFixedWidth(60)
+        self.exitButton.clicked.connect(self.do_exit)
+        self.hlayout= QtWidgets.QHBoxLayout()
+        self.hlayout.addWidget(self.resetButton)
+        self.hlayout.addWidget(self.exitButton)
+        self.hlayout.setAlignment(QtCore.Qt.AlignCenter)
+        self.vlayout= QtWidgets.QVBoxLayout()
+        self.vlayout.addLayout(self.grid)
+        self.vlayout.addLayout(self.hlayout)
+        self.setLayout(self.vlayout)
 
-      self.cardrdr= QtWidgets.QCheckBox("Card Reader")
-      self.vlayout.addWidget(self.cardrdr)
-      self.printer= QtWidgets.QCheckBox("Printer")
-      self.vlayout.addWidget(self.printer)
-      self.wand= QtWidgets.QCheckBox("Wand")
-      self.vlayout.addWidget(self.wand)
-      self.hpil= QtWidgets.QCheckBox("HP-IL")
-      self.vlayout.addWidget(self.hpil)
-      self.hpil.setChecked(True)
-      self.xfunc= QtWidgets.QCheckBox("X-Function")
-      self.vlayout.addWidget(self.xfunc)
-      self.xfunc.setChecked(True)
-      self.time= QtWidgets.QCheckBox("Time")
-      self.vlayout.addWidget(self.time)
-      self.hepax= QtWidgets.QCheckBox("HEPAX")
-      self.vlayout.addWidget(self.hepax)
-      self.xio= QtWidgets.QCheckBox("Extended IO")
-      self.vlayout.addWidget(self.xio)
-      self.devil= QtWidgets.QCheckBox("HP-IL Devel")
-      self.vlayout.addWidget(self.devil)
-      self.plotter= QtWidgets.QCheckBox("Plotter")
-      self.vlayout.addWidget(self.plotter)
 
-      self.exitButton= QtWidgets.QPushButton("Exit")
-      self.exitButton.setFixedWidth(60)
-      self.exitButton.clicked.connect(self.do_exit)
-      self.hlayout= QtWidgets.QHBoxLayout()
-      self.hlayout.addWidget(self.exitButton)
-      self.vlayout.addLayout(self.hlayout)
-#
-# exit, return the parameters of the selected modules
-#
-   def do_exit(self):
-      if self.cardrdr.isChecked():
-         self.call.append("-x")
-         self.call.append("cardrdr")
-      if self.printer.isChecked():
-         self.call.append("-x")
-         self.call.append("printer")
-      if self.wand.isChecked():
-         self.call.append("-x")
-         self.call.append("wand")
-      if self.hpil.isChecked():
-         self.call.append("-x")
-         self.call.append("hpil")
-      if self.xfunc.isChecked():
-         self.call.append("-x")
-         self.call.append("xfn")
-      if self.time.isChecked():
-         self.call.append("-x")
-         self.call.append("time")
-      if self.hepax.isChecked():
-         self.call.append("-x")
-         self.call.append("hepax")
-      if self.xio.isChecked():
-         self.call.append("-x")
-         self.call.append("xio")
-      if self.devil.isChecked():
-         self.call.append("-x")
-         self.call.append("devil")
-      if self.plotter.isChecked():
-         self.call.append("-x")
-         self.call.append("plotter")
-      super().accept()
+    def addHeader(self,text):
+        if(self.col!=self.nCols):
+           self.row+=1
+        self.col=0
+        self.grid.addWidget(QtWidgets.QLabel(text),self.row,0,1,3)
+        self.row+=1
 
-   def get_call(self):
-      return self.call
+    def addItem(self,name,file,checkState):
+        xw=XromCheckBox(name,file,checkState)
+        self.members.append(xw)
+        self.grid.addWidget(xw,self.row,self.col)
+        self.col+=1
+        if(self.col==self.nCols):
+            self.col=0
+            self.row+=1
 
-   @staticmethod
-   def execute():
-      d=cls_chkxrom()
-      result= d.exec()
-      return d.get_call()
+    def getFiles(self):
+        fileList=[]
+        for xw in self.members:
+           if xw.checkState()== QtCore.Qt.CheckState.Checked:
+               fileList.append("-x")
+               fileList.append(xw.file)
+        return fileList
+
+    def do_reset(self):
+        for xw in self.members:
+           if xw.checkState()== QtCore.Qt.CheckState.Checked:
+              xw.setCheckState(QtCore.Qt.CheckState.Unchecked)
+
+    def do_exit(self):
+        super().accept()
+
+    @staticmethod
+    def execute():
+        if cls_chkxrom.xromDialog is None:
+           cls_chkxrom.xromDialog=cls_chkxrom(3)
+        cls_chkxrom.xromDialog.exec()
+        return(cls_chkxrom.xromDialog.getFiles())
+
+
+class Widget(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QtWidgets.QVBoxLayout()
+        self.execButton= QtWidgets.QPushButton("Execute")
+        self.execButton.clicked.connect(self.do_execute)
+        layout.addWidget(self.execButton)
+        self.setLayout(layout)
+        self.xromDialog= None
+
+
+if __name__ == "__main__":
+    import sys
+
+    app = QtWidgets.QApplication(sys.argv)
+    widget = Widget()
+    widget.show()
+    app.exec_()
+
+
+#  @staticmethod
+#  def execute():
+#     d=cls_chkxrom()
+#     result= d.exec()
+#     return d.get_call()
 #
 # view file dialog
 #
@@ -1262,10 +1302,11 @@ class cls_lifview(QtWidgets.QDialog):
       ft=get_finfo_name(liffiletype)
       call= get_finfo_type(ft)[1]
 #
-# decomp41 needs additional parameters (xmoms)
+# decomp41 needs additional parameters (xroms)
 #
       if call == "decomp41":
-         call= cls_chkxrom.execute()
+         call= [add_path(call)]
+         call.extend(cls_chkxrom.execute())
 #
 # liftext75 has the option to show line numbers
 #
