@@ -105,6 +105,8 @@
 # 13.10.2024 jsi
 # - new cls_chkxrom class
 # - added comp41 preprocessing
+# 15.10.2024 jsi
+# - enable the lifutils message dialog to show long messages
 #
 import subprocess
 import tempfile
@@ -215,24 +217,29 @@ def check_lifutils():
       required_version_installed=True
    return required_version_installed, installed_version
 #
-#  check and display messages of lifutils
+#  check and display messages of lifutils. If the length of the message exceeds 150 chars a
+#  "show details" function is enabled to show the full message
 #
 def check_errormessages(parent,ret):
    msg= ret.stderr.decode()
    if msg == "":
       return
-#
-#  truncate message if length > 150 
-#
-   if len(msg)  >150:
-      msg=msg[:150] + '.. (truncated)'
-#
-#  display an error if returncode !=0 otherwise a warning
-#
-   if ret.returncode == 0:
-      reply=QtWidgets.QMessageBox.warning(parent,'Warning',msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+   msgBox=QtWidgets.QMessageBox()
+   if len(msg) > 150:
+      msgBox.setText(msg[:150] + '.. (truncated)')
+      msgBox.setDetailedText(msg)
    else:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      msgBox.setText(msg)
+
+   if ret.returncode == 0:
+      msgBox.setIcon(QtWidgets.QMessageBox.Warning)
+      msgBox.setWindowTitle("Warning")
+   else:
+      msgBox.setIcon(QtWidgets.QMessageBox.Critical)
+      msgBox.setWindowTitle("Error")
+       
+   msgBox.exec()
+   msgBox.destroy()
    return
 #
 # exec single command
