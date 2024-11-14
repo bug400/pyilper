@@ -107,6 +107,10 @@
 # - added comp41 preprocessing
 # 15.10.2024 jsi
 # - enable the lifutils message dialog to show long messages
+# 01.11.2024 jsi
+# - lifutils 2.0 changes
+# 01.11.2024
+# - fix view HP-75 txt file with line numbers did not work
 #
 import subprocess
 import tempfile
@@ -132,12 +136,12 @@ BARCODE_NARROW_W= 5
 BARCODE_WIDE_W= 10
 BARCODE_SPACING= 5
 #
-# get lif version if 0 is returned then lifversion was not found
+# get lif version if 0 is returned then lifutils was not found
 #
-def get_lifversion(cmd):
+def get_lifutils_version(cmd):
    retval=0
    try:
-      ret=subprocess.run(cmd,stdout=subprocess.PIPE)
+      ret=subprocess.run([cmd,"-v"],stdout=subprocess.PIPE)
       retval=int(ret.stdout.decode())
    finally:
       return retval
@@ -149,16 +153,16 @@ def check_lifutils():
    required_version_installed=False
    installed_version= 0
 #
-#  check if we have a configured path to lifversion
+#  check if we have a configured path to lifutils
 #
-   lifversionpath=PILCONFIG.get("pyilper","lifutilspath")
-   if lifversionpath != "":
-      installed_version=get_lifversion(lifversionpath)
+   lifutilspath=PILCONFIG.get("pyilper","lifutilspath")
+   if lifutilspath != "":
+      installed_version=get_lifutils_version(lifutilspath)
 #
 #  not found, check if we have lifversion in the path
 #
    if installed_version == 0:
-      installed_version=get_lifversion("lifversion")
+      installed_version=get_lifutils_version("lifutils")
 #
 #  not found, use well known default locations
 #
@@ -186,23 +190,23 @@ def check_lifutils():
          if path!="":
             p=pathlib.Path(path)
             p=p / "lifversion"
-            lifversionpath=str(p)
-            installed_version=get_lifversion(lifversionpath)
+            lifutilspath=str(p)
+            installed_version=get_lifutils_version(lifutulspath)
       else:
 #
 #      Linux / mac OS: try /usr/ or /usr/local
 #
-         lifversionpath="/usr/bin/lifversion"
-         installed_version=get_lifversion(lifversionpath)
+         lifutulspath="/usr/bin/lifutils"
+         installed_version=get_lifutils_version(lifutilspath)
          if installed_version == 0:
-            lifversionpath="/usr/local/bin/lifversion"
-            installed_version=get_lifversion(lifversionpath)
+            lifutilspath="/usr/local/bin/lifutils"
+            installed_version=get_lifutils_version(lifutilspath)
 #
 #  lifutils path found, set lifutils_path as prefix for calling the 
 #  executables and set LIFUTILSXROMDIR as environment variable
 #
-   if installed_version != 0 and lifversionpath !="" :
-      p= pathlib.Path(lifversionpath)
+   if installed_version != 0 and lifutilspath !="" :
+      p= pathlib.Path(lifutilspath)
       set_lifutils_path(str(p.parent))
       if isWINDOWS():
          xromdir=p.parent / "xroms"
@@ -393,7 +397,7 @@ class cls_lifpack(QtWidgets.QDialog):
       d=cls_lifpack()
       reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to pack the LIF image file', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       if reply == QtWidgets.QMessageBox.Yes:
-         exec_single(d,[add_path("lifpack"),lifimagefile])
+         exec_single(d,[add_path("lifutils"),"lifpack",lifimagefile])
 #
 # custom class for text item
 #
@@ -505,10 +509,10 @@ class cls_lifbarcode(QtWidgets.QDialog):
 #     generate binary barcode data from lifutils prog41bar or sdatabar
 #
       if ft== 0xE080:
-         output=exec_double_export(d,[add_path("lifget"),"-r",lifimagefile,liffilename],[add_path("prog41bar")],"")
+         output=exec_double_export(d,[add_path("lifutils"),"lifget","-r",lifimagefile,liffilename],[add_path("lifutils"),"prog41bar"],"")
          title="Barcodes for HP-41 program file: "+liffilename
       else:
-         output=exec_double_export(d,[add_path("lifget"),"-r",lifimagefile,liffilename],[add_path("sdatabar")],"")
+         output=exec_double_export(d,[add_path("lifutils"),"lifget","-r",lifimagefile,liffilename],[add_path("lifutils"),"sdatabar"],"")
          title="Barcodes for HP-41 data file: "+liffilename
       if output is None:
          return
@@ -554,7 +558,7 @@ class cls_lifpurge(QtWidgets.QDialog):
       d=cls_lifpurge()
       reply = QtWidgets.QMessageBox.question(d, 'Message', 'Do you really want to purge '+liffile, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       if reply == QtWidgets.QMessageBox.Yes:
-         exec_single(d,[add_path("lifpurge"),lifimagefile, liffile])
+         exec_single(d,[add_path("lifutils"),"lifpurge",lifimagefile, liffile])
 
 #
 # rename file dialog
@@ -601,7 +605,7 @@ class cls_lifrename (QtWidgets.QDialog):
    def do_ok(self):
       newfilename=self.leditFileName.text()
       if newfilename != "":
-         exec_single(self,[add_path("lifrename"),self.lifimagefile,self.oldfilename,newfilename])
+         exec_single(self,[add_path("lifutils"),"lifrename",self.lifimagefile,self.oldfilename,newfilename])
       super().accept()
 
 #
@@ -764,19 +768,19 @@ class cls_lifexport (QtWidgets.QDialog):
       if self.outputfile != "":
 
          if self.radioLifAscii.isChecked():
-            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("liftext"),self.outputfile)
+            exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename],add_path("lifutils"),"liftext",self.outputfile)
          elif self.radioTxt75Ascii.isChecked():
             exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("liftext75"),self.outputfile)
          elif self.radioTxt75AsciiNumbers.isChecked():
-            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename], [add_path("liftext75"),"-n"],self.outputfile)
+            exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename], [add_path("lifutils"),"liftext75","-n"],self.outputfile)
          elif self.radioEramco.isChecked():
-            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("er41rom"),self.outputfile)
+            exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename],[add_path("lifutils"),"er41rom"],self.outputfile)
          elif self.radioHepax.isChecked():
-            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("hx41rom"),self.outputfile)
+            exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename],[add_path("lifutils"),"hx41rom"],self.outputfile)
          elif self.radioRaw.isChecked():
-            exec_single(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename,self.outputfile])
+            exec_single(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename,self.outputfile])
          elif self.radioNone.isChecked():
-            exec_single(self,[add_path("lifget"),self.lifimagefile,self.liffilename,self.outputfile])
+            exec_single(self,[add_path("lifutils"),"lifget",self.lifimagefile,self.liffilename,self.outputfile])
       super().accept()
 #
 #  cancel: do nothing
@@ -820,9 +824,9 @@ class cls_liflabel (QtWidgets.QDialog):
    def do_ok(self):
       newlabel=self.leditLabel.text()
       if newlabel != "":
-         exec_single(self,[add_path("liflabel"),self.lifimagefile, newlabel])
+         exec_single(self,[add_path("lifutils"),"liflabel",self.lifimagefile, newlabel])
       else:
-         exec_single(self,[add_path("liflabel"),"-c",self.lifimagefile])
+         exec_single(self,[add_path("lifutils"),"liflabel","-c",self.lifimagefile])
       super().accept()
 
    def do_cancel(self):
@@ -974,28 +978,28 @@ class cls_lifimport (QtWidgets.QDialog):
       if self.inputfile != "":
          if self.radioNone.isChecked():
             if  cls_chk_import.execute(None, self.inputfile):
-               exec_single(self,[add_path("lifput"),self.lifimagefile,self.inputfile])
+               exec_single(self,[add_path("lifutils"),"lifput",self.lifimagefile,self.inputfile])
          else:
             self.liffilename=self.leditFileName.text()
             if self.radioLif41.isChecked():
-               exec_double_import(self,[add_path("textlif"),"-r 0",self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("lifutils"),"textlif","-s 0",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioLif71.isChecked():
-               exec_double_import(self,[add_path("textlif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("lifutils"),"textlif",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioTxt75.isChecked():
-               exec_double_import(self,[add_path("textlif75"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("lifutils"),"textlif75",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioTxt75Numbers.isChecked():
-               exec_double_import(self,[add_path("textlif75"),"-n",self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("lifutils"),"textlif75","-n",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioHepax.isChecked():
-               exec_double_import(self,[add_path("rom41hx"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("lifutils"),"rom41hx",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioEramco.isChecked():
-               exec_double_import(self,[add_path("rom41er"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("lifutils"),"rom41er",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radio41LIF.isChecked():
-               exec_double_import(self,[add_path("raw41lif"),self.liffilename],[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,[add_path("lifutils"),"raw41lif",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioFocal.isChecked():
-               call= [add_path("comp41")]
+               call= [add_path("lifutils"),"comp41"]
                call.extend(cls_chkxrom.execute())
                call.extend(["-f",self.liffilename])
-               exec_double_import(self,call,[add_path("lifput"),self.lifimagefile],self.inputfile)
+               exec_double_import(self,call,[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
 
       super().accept()
 
@@ -1143,9 +1147,9 @@ class cls_chkxrom(QtWidgets.QDialog):
         self.resetButton= QtWidgets.QPushButton("Reset")
         self.resetButton.setFixedWidth(60)
         self.resetButton.clicked.connect(self.do_reset)
-        self.exitButton= QtWidgets.QPushButton("Exit")
+        self.exitButton= QtWidgets.QPushButton("Ok")
         self.exitButton.setFixedWidth(60)
-        self.exitButton.clicked.connect(self.do_exit)
+        self.exitButton.clicked.connect(self.do_ok)
         self.hlayout= QtWidgets.QHBoxLayout()
         self.hlayout.addWidget(self.resetButton)
         self.hlayout.addWidget(self.exitButton)
@@ -1185,7 +1189,7 @@ class cls_chkxrom(QtWidgets.QDialog):
            if xw.checkState()== QtCore.Qt.CheckState.Checked:
               xw.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
-    def do_exit(self):
+    def do_ok(self):
         super().accept()
 
     @staticmethod
@@ -1312,22 +1316,23 @@ class cls_lifview(QtWidgets.QDialog):
 # decomp41 needs additional parameters (xroms)
 #
       if call == "decomp41":
-         call= [add_path(call)]
+         call= [add_path("lifutils"),call]
          call.extend(cls_chkxrom.execute())
 #
 # liftext75 has the option to show line numbers
 #
       elif call == "liftext75":
-         call= add_path(call)
          reply=QtWidgets.QMessageBox.question(None,'',"Show line numbers?",QtWidgets.QMessageBox.Yes,QtWidgets.QMessageBox.No)
          if reply== QtWidgets.QMessageBox.Yes:
-            call= [ add_path(call), "-n"]
+            call= [ add_path("lifutils"),call, "-n"]
+         else:
+            call=  [add_path("lifutils"),call]
 #
 # all other lifutil progs
 #
       else:
-         call= add_path(call)
-      output=exec_double_export(d,[add_path("lifget"),"-r",lifimagefile,liffilename],call,"")
+         call= [add_path("lifutils"),call]
+      output=exec_double_export(d,[add_path("lifutils"),"lifget","-r",lifimagefile,liffilename],call,"")
 #
 # convert and show the file content
 #
@@ -1498,9 +1503,9 @@ class cls_lifinit (QtWidgets.QDialog):
             reply=QtWidgets.QMessageBox.warning(self,'Warning',"Do you really want to overwrite file "+self.lifimagefile,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
             if reply== QtWidgets.QMessageBox.Cancel:
                return
-         exec_single(self,[add_path("lifinit"),"-m",self.mt,self.lifimagefile,self.leditDirSize.text()])
+         exec_single(self,[add_path("lifutils"),"lifinit","-m",self.mt,self.lifimagefile,self.leditDirSize.text()])
          if self.leditLabel.text() != "":
-            exec_single(self,[add_path("liflabel"),self.lifimagefile,self.leditLabel.text()])
+            exec_single(self,[add_path("lifutils"),"liflabel",self.lifimagefile,self.leditLabel.text()])
       super().accept()
 
 #
@@ -1639,7 +1644,7 @@ class cls_liffix (QtWidgets.QDialog):
 #
    def do_ok(self):
       if self.lifimagefile != "":
-         exec_single(self,[add_path("liffix"),"-m",self.mt,self.lifimagefile])
+         exec_single(self,[add_path("lifutils"),"liffix","-m",self.mt,self.lifimagefile])
       super().accept()
 #
 #  cancel

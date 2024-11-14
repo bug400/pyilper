@@ -211,6 +211,8 @@
 # 28.08.2024 jsi
 # - use pathlib instead of os and glob
 # - add ACM tty devices to PIL-Box device selector for Linux
+# 01.11.2024 jsi
+# - lifutils 2.0 changes
 #
 import datetime
 import re
@@ -1258,7 +1260,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.vboxgboxlifpath= QtWidgets.QVBoxLayout()
       self.gboxlifpath.setLayout(self.vboxgboxlifpath)
       self.hboxlifpath= QtWidgets.QHBoxLayout()
-      self.lbltxt7=QtWidgets.QLabel("Path to lifversion program: ")
+      self.lbltxt7=QtWidgets.QLabel("Path to lifutils program: ")
       self.hboxlifpath.addWidget(self.lbltxt7)
       self.lbllifpath=QtWidgets.QLabel()
       self.lbllifpath.setText(self.__lifutilspath__)
@@ -1457,7 +1459,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 
    def getLifutilsDirName(self):
       dialog=QtWidgets.QFileDialog()
-      dialog.setWindowTitle("Select Path to lifversion executable")
+      dialog.setWindowTitle("Select Path to lifutils executable")
       dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
       dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
       if dialog.exec():

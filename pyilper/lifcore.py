@@ -50,6 +50,8 @@
 # - lexcat75 added to display information of HP-75 lex files
 # 13.10.2024 jsi
 # - added xrom definitions
+# 01.11.2024 jsi
+# - set required version of lifutils to 2.0.0
 #
 # core constants and functions to handle lif image files
 #
@@ -70,7 +72,7 @@ ALLDEVICE_XROM=["All HP Devices","hpdevices"]
 #
 # Minimum Version number of LIFUTILS
 #
-LIFUTILS_REQUIRED_VERSION=10712
+LIFUTILS_REQUIRED_VERSION=20000
 #
 # GUID of a lifutils > 1.7.x windows installation
 #
@@ -88,7 +90,7 @@ def set_lifutils_path(path):
 def get_lifutils_path():
    return LIFUTILS_PATH
 #
-#  add LIFUTILS_PATH to program
+#  build path for lifutils
 #
 def add_path(cmd):
    lifutils_path= get_lifutils_path()

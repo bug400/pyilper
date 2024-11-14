@@ -426,7 +426,8 @@ class cls_RawDriveWidget(cls_GenericDriveWidget):
       dialog=QtWidgets.QFileDialog()
       dialog.setWindowTitle("Select RAW Image File")
       dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptOpen)
-      dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+      dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+#     dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
       dialog.setNameFilters( ["RAW Image File (*.dat *.DAT *.img *.IMG)", "All Files (*)"] )
       dialog.setOptions(QtWidgets.QFileDialog.DontUseNativeDialog)
       if dialog.exec():
