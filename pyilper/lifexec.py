@@ -111,6 +111,8 @@
 # - lifutils 2.0 changes
 # 01.11.2024
 # - fix view HP-75 txt file with line numbers did not work
+# 04.12.2024
+# - fixed lifutils 2.0 detection on windows
 #
 import subprocess
 import tempfile
@@ -159,7 +161,7 @@ def check_lifutils():
    if lifutilspath != "":
       installed_version=get_lifutils_version(lifutilspath)
 #
-#  not found, check if we have lifversion in the path
+#  not found, check if we have "lifutils" in the path
 #
    if installed_version == 0:
       installed_version=get_lifutils_version("lifutils")
@@ -189,9 +191,9 @@ def check_lifutils():
                pass
          if path!="":
             p=pathlib.Path(path)
-            p=p / "lifversion"
+            p=p / "lifutils"
             lifutilspath=str(p)
-            installed_version=get_lifutils_version(lifutulspath)
+            installed_version=get_lifutils_version(lifutilspath)
       else:
 #
 #      Linux / mac OS: try /usr/ or /usr/local

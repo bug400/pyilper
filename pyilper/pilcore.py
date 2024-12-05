@@ -159,6 +159,8 @@
 # - 1.8.9
 # 6.10.2024
 # - 1.8.10 development
+# 5.12.2024
+# - 1.8.10 production
 #
 import platform
 import os
@@ -169,8 +171,8 @@ import sys
 #
 # General constants:
 #
-PRODUCTION=  False      # Production/Development Version
-VERSION="1.8.10"        # pyILPR version number
+PRODUCTION=  True      # Production/Development Version
+VERSION="1.8.10"       # pyILPR version number
 CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 # Python minimum version
