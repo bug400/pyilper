@@ -1,5 +1,6 @@
-pyilper (1.8.10.dev1) bookworm; urgency=medium
+pyilper (1.8.10) bookworm; urgency=medium
 
+  * now requires LIFUTILS 2.0.0
   * add HP-41 FOCAL source code compile and import to disk (Drive Tab)
   * add selection of more xrom files for HP-41 FOCAL compile and decompile (Drive Tab)
 
