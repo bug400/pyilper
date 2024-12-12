@@ -113,6 +113,7 @@
 # - fix view HP-75 txt file with line numbers did not work
 # 04.12.2024
 # - fixed lifutils 2.0 detection on windows
+# 12.12.2024 hepax xrom moved to new category "system extension"
 #
 import subprocess
 import tempfile
@@ -1137,6 +1138,9 @@ class cls_chkxrom(QtWidgets.QDialog):
         self.members= []
         self.addHeader("Application ROMs")
         for d in APPLICATION_XROMS:
+           self.addItem(d[0],d[1],QtCore.Qt.CheckState.Unchecked)
+        self.addHeader("Extension ROMs")
+        for d in EXTENSION_XROMS:
            self.addItem(d[0],d[1],QtCore.Qt.CheckState.Unchecked)
         self.addHeader("Device ROMs")
         for d in DEVICE_XROMS:

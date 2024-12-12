@@ -52,6 +52,8 @@
 # - added xrom definitions
 # 01.11.2024 jsi
 # - set required version of lifutils to 2.0.0
+# 12.12.2024 jsi
+# - hepax xrom file moved to new "category system extensions"
 #
 # core constants and functions to handle lif image files
 #
@@ -65,7 +67,9 @@ dict_finfo_name={"TEXT":0x0001,"D-LEX":0x00FF,"WAXM41":0xE020,"XM41":0xE030,"ALL
 
 APPLICATION_XROMS=[["Advantage","advantage"],["Aviation","aviation"],["CCD","ccd"],["Circuit Analysis","circuit"],["Clinical Lab","clinical"],["Data Acquisition","dataacq"],["Financial Decisions","finance"],["Home Management","homemgmt"],["Machine Design","machine"],["Math","math"],["MELROM","melrom"],["Navigation","navigation"],["Petroleum","petroleum"],["PPC","ppc"],["Real Estate","realestate"],["Standard Pac","standard"],["Statistics","statistics"],["Stress Analysis","stress"],["Structural Analysis","struct"],["Surveying","surveying"],["Thermal Science","thermal"]]
 
-DEVICE_XROMS=[["Card Reader","cardrdr"],["HP-IL Development","devil"],["HEPAX","hepax"],["HP-IL","hpil"],["Plotter","plotter"],["Printer","Thermal Printer","printer"],["Time Module (Cx)","timecx"],["Time Module","time"],["Wand","wand"],["X-Functions (CX)","xfncx"],["X-Functions","xfn"],["Extended I/O","xio"]]
+EXTENSION_XROMS=[["HEPAX","hepax"]]
+
+DEVICE_XROMS=[["Card Reader","cardrdr"],["HP-IL Development","devil"],["HP-IL","hpil"],["Plotter","plotter"],["Printer","Thermal Printer","printer"],["Time Module (Cx)","timecx"],["Time Module","time"],["Wand","wand"],["X-Functions (CX)","xfncx"],["X-Functions","xfn"],["Extended I/O","xio"]]
 
 ALLDEVICE_XROM=["All HP Devices","hpdevices"]
 
