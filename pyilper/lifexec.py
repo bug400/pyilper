@@ -113,7 +113,11 @@
 # - fix view HP-75 txt file with line numbers did not work
 # 04.12.2024
 # - fixed lifutils 2.0 detection on windows
-# 12.12.2024 hepax xrom moved to new category "system extension"
+# 12.12.2024 
+# - hepax xrom moved to new category "system extension"
+# 14.12.2024
+# - fixed missing lifutils calls
+# - added HP41 rom conversion to sdata (HP-41CL)
 #
 import subprocess
 import tempfile
@@ -771,9 +775,9 @@ class cls_lifexport (QtWidgets.QDialog):
       if self.outputfile != "":
 
          if self.radioLifAscii.isChecked():
-            exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename],add_path("lifutils"),"liftext",self.outputfile)
+            exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename],[add_path("lifutils"),"liftext"],self.outputfile)
          elif self.radioTxt75Ascii.isChecked():
-            exec_double_export(self,[add_path("lifget"),"-r",self.lifimagefile,self.liffilename],add_path("liftext75"),self.outputfile)
+            exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename],[add_path("lifutils"),"liftext75"],self.outputfile)
          elif self.radioTxt75AsciiNumbers.isChecked():
             exec_double_export(self,[add_path("lifutils"),"lifget","-r",self.lifimagefile,self.liffilename], [add_path("lifutils"),"liftext75","-n"],self.outputfile)
          elif self.radioEramco.isChecked():
@@ -873,6 +877,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.radioTxt75= QtWidgets.QRadioButton("convert from ASCII to HP-75 text, create new line numbers")
       self.radioTxt75Numbers= QtWidgets.QRadioButton("convert from ASCII to HP-75 text, take existing line numbers")
       self.radioHepax= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HEPAX)")
+      self.radio41CL= QtWidgets.QRadioButton("convert HP-41 rom file to SDATA file (HP-41CL)")
       self.radioEramco= QtWidgets.QRadioButton("convert HP-41 rom file to XM-41 file (Eramco MLDL-OS)")
       self.radio41LIF= QtWidgets.QRadioButton("add LIF header to HP41 FOCAL raw file")
       self.radioFocal= QtWidgets.QRadioButton("compile HP41 FOCAL source file  file")
@@ -883,6 +888,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.bGroup.addButton(self.radioTxt75)
       self.bGroup.addButton(self.radioTxt75Numbers)
       self.bGroup.addButton(self.radioHepax)
+      self.bGroup.addButton(self.radio41CL)
       self.bGroup.addButton(self.radioEramco)
       self.bGroup.addButton(self.radio41LIF)
       self.bGroup.addButton(self.radioFocal)
@@ -895,6 +901,7 @@ class cls_lifimport (QtWidgets.QDialog):
       self.vbox.addWidget(self.radioTxt75)
       self.vbox.addWidget(self.radioTxt75Numbers)
       self.vbox.addWidget(self.radioHepax)
+      self.vbox.addWidget(self.radio41CL)
       self.vbox.addWidget(self.radioEramco)
       self.vbox.addWidget(self.radio41LIF)
       self.vbox.addWidget(self.radioFocal)
@@ -994,6 +1001,8 @@ class cls_lifimport (QtWidgets.QDialog):
                exec_double_import(self,[add_path("lifutils"),"textlif75","-n",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioHepax.isChecked():
                exec_double_import(self,[add_path("lifutils"),"rom41hx",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
+            elif self.radio41CL.isChecked():
+               exec_double_import(self,[add_path("lifutils"),"rom41lif",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radioEramco.isChecked():
                exec_double_import(self,[add_path("lifutils"),"rom41er",self.liffilename],[add_path("lifutils"),"lifput",self.lifimagefile],self.inputfile)
             elif self.radio41LIF.isChecked():
