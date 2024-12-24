@@ -259,7 +259,7 @@ Check for packages that can be updated:
 
 Update pyILPER:
 
-     python -m pip upgrade pyilper
+     python -m pip install --upgrade pyilper
 
 
 Further maintenance commands:
@@ -286,7 +286,7 @@ Check for new versions of a package
 
 Upgrade a package (pip itself can be upgraded with pip)
 
-     python -m pip install --upgrade pyilper
+     python -m pip install --upgrade <packagename>
 
 Clear package cache (saves space on disk):
 
