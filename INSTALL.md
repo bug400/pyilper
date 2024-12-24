@@ -286,7 +286,7 @@ Check for new versions of a package
 
 Upgrade a package (pip itself can be upgraded with pip)
 
-     python -m pip upgrade pyilper
+     python -m pip install --upgrade pyilper
 
 Clear package cache (saves space on disk):
 
