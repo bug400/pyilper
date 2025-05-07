@@ -39,9 +39,11 @@
 # - force background of printer to be always white (dark mode!)
 # 30.07.2022 jsi
 # - user cls_pdfprinter.get_pdfFilename method to get pdf file name
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
+
 #
 import copy
-import queue
 import threading
 import re
 from math import floor
@@ -295,11 +297,6 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
       self.hbox.addStretch(1)
       self.setLayout(self.hbox)
 #
-#     initialize GUI command queue and lock
-#
-      self.gui_queue= queue.Queue()
-      self.gui_queue_lock= threading.Lock()
-#
 #     initialize refresh timer
 #
       self.UpdateTimer=QtCore.QTimer()
@@ -327,14 +324,8 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #     disable, clear the GUI queue, stop the timer
 #
    def disable(self):
-      self.gui_queue_lock.acquire()
-      while True:
-         try:
-            self.gui_queue.get_nowait()
-            self.gui_queue.task_done()
-         except queue.Empty:
-            break
-      self.gui_queue_lock.release()
+      if self.pildevice is not None:
+         self.pildevice.clearGuiQueue()
       self.UpdateTimer.stop()
       return
 #
@@ -372,16 +363,16 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #
    def do_clear(self):
       self.printview.reset()
-      self.pildevice.put_cmd(CMD_CLEAR)
+      self.pildevice.putDeviceQueueItem(CMD_CLEAR)
       return
 
    def do_FF_pressed(self):
-      self.put_cmd([REMOTECMD_FF])
+      self.pildevice.putGuiQueueItem([REMOTECMD_FF])
       return
 
    def do_LF_pressed(self):
       self.repeatedLFpressedTimer.start()
-      self.put_cmd([REMOTECMD_LF])
+      self.pildevice.putGuiQueueItem([REMOTECMD_LF])
       return
 
    def do_LF_released(self):
@@ -395,31 +386,15 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
       self.printview.pdf(flist[0],self.pdf_rows)
       return
 #
-#  put command into the GUI-command queue, this is called by the thread component
-#
-   def put_cmd(self,item):
-       self.gui_queue_lock.acquire()
-       self.gui_queue.put(item)
-       self.gui_queue_lock.release()
-#
 #  repeated LF pressed action
 #
    def repeated_LFpressed(self):
-      self.put_cmd([REMOTECMD_LF])
+      self.pildevice.putGuiQueueItem([REMOTECMD_LF])
 #
 #  process commands in the GUI command queue, this is called by a timer event
 #
    def process_queue(self):
-       items=[]
-       self.gui_queue_lock.acquire()
-       while True:
-          try:
-             i=self.gui_queue.get_nowait()
-             items.append(i)
-             self.gui_queue.task_done()
-          except queue.Empty:
-             break
-       self.gui_queue_lock.release()
+       items=self.pildevice.getGuiQueueItems()
        if len(items):
           for c in items:
              self.process(c)
@@ -1205,7 +1180,7 @@ class cls_hp2225b(QtCore.QObject):
 #
 #     send clear command to GUI
 #
-      self.guiobject.put_cmd([REMOTECMD_CLEAR])
+      self.pildevice.putGuiQueueItem([REMOTECMD_CLEAR])
       self.put_status()
       return
 #
@@ -1222,10 +1197,10 @@ class cls_hp2225b(QtCore.QObject):
            return
        data_copy= copy.deepcopy(self.buf_data)
        if self.buf_status == self.BUF_TEXT:
-           self.guiobject.put_cmd([REMOTECMD_TEXT,data_copy])
+           self.pildevice.putGuiQueueItem([REMOTECMD_TEXT,data_copy])
 #          print("put cmd text",data_copy)
        else:
-           self.guiobject.put_cmd([REMOTECMD_GRAPHICS,data_copy])
+           self.pildevice.putGuiQueueItem([REMOTECMD_GRAPHICS,data_copy])
 #          print("put cmd graphics",data_copy)
        self.buf_clear()
 # 
@@ -1239,7 +1214,7 @@ class cls_hp2225b(QtCore.QObject):
 #
 #      send printer status to GUI
 #
-       self.guiobject.put_cmd([REMOTECMD_STATUS,[self.pdf_rows,self.char_attr,self.char_bold,self.char_underline,self.hiRes,self.lpi6,self.wrapEOL]])
+       self.pildevice.putGuiQueueItem([REMOTECMD_STATUS,[self.pdf_rows,self.char_attr,self.char_bold,self.char_underline,self.hiRes,self.lpi6,self.wrapEOL]])
 
 #
 #  set/clear alternate control mode (has no effect)
@@ -1388,7 +1363,7 @@ class cls_hp2225b(QtCore.QObject):
 #
       elif self.esc_seq=="*rB":
          self.ignore_crlf= False
-         self.guiobject.put_cmd([REMOTECMD_TERMGRAPHICS])
+         self.pildevice.putGuiQueueItem([REMOTECMD_TERMGRAPHICS])
          return
 #
 #     line termination mode 0
@@ -1585,7 +1560,7 @@ class cls_hp2225b(QtCore.QObject):
           if self.ignore_crlf:
               return
           self.buf_flush()
-          self.guiobject.put_cmd([REMOTECMD_BS])
+          self.pildevice.putGuiQueueItem([REMOTECMD_BS])
 #
 #     CR
 #
@@ -1679,30 +1654,30 @@ class cls_hp2225b(QtCore.QObject):
 #
    def cr(self):
        self.buf_flush()
-       self.guiobject.put_cmd([REMOTECMD_CR])
+       self.pildevice.putGuiQueueItem([REMOTECMD_CR])
        return
 
    def lf(self):
        self.buf_flush()
-       self.guiobject.put_cmd([REMOTECMD_LF])
+       self.pildevice.putGuiQueueItem([REMOTECMD_LF])
        if self.log_line != "":
            self.log_line+="\n"
-           self.guiobject.put_cmd([REMOTECMD_LOG,self.log_line])
+           self.pildevice.putGuiQueueItem([REMOTECMD_LOG,self.log_line])
            self.log_line=""
        return
 
    def half_lf(self):
        self.buf_flush()
-       self.guiobject.put_cmd([REMOTECMD_HLF])
+       self.pildevice.putGuiQueueItem([REMOTECMD_HLF])
        return
 
 
    def ff(self):
        self.buf_flush()
-       self.guiobject.put_cmd([REMOTECMD_FF])
+       self.pildevice.putGuiQueueItem([REMOTECMD_FF])
        if self.log_line != "":
            self.log_line+="\n"
-           self.guiobject.put_cmd([REMOTECMD_LOG,self.log_line])
+           self.pildevice.putGuiQueueItem([REMOTECMD_LOG,self.log_line])
            self.log_line=""
        return
 #
@@ -1740,11 +1715,6 @@ class cls_pilhp2225b(cls_pildevbase):
 #
       self.__guiobject__= guiobject
 #
-#     initialize remote command queue and lock
-#
-      self.__print_queue__= queue.Queue()
-      self.__print_queue_lock__= threading.Lock()
-#
 #     printer processor
 #
       self.__printer__=cls_hp2225b(self,self.__guiobject__)
@@ -1765,52 +1735,13 @@ class cls_pilhp2225b(cls_pildevbase):
       self.__printer__.reset()
       return
 #
-#  disable: clear the printer command queue
-#
-   def disable(self):
-      self.__print_queue_lock__.acquire()
-      while True:
-         try:
-            self.__print_queue__.get_nowait()
-            self.__print_queue__.task_done()
-         except queue.Empty:
-            break
-      self.__print_queue_lock__.release()
-#
-#  process frames 
-#
-   def process(self,frame):
-
-      if self.__isactive__:
-         self.process_print_queue()
-      frame= super().process(frame)
-      return frame
-#
 #  process the printer command queue
 #
-   def process_print_queue(self):
-       items=[]
-       self.__print_queue_lock__.acquire()
-       while True:
-          try:
-             i=self.__print_queue__.get_nowait()
-             items.append(i)
-             self.__print_queue__.task_done()
-          except queue.Empty:
-             break
-       self.__print_queue_lock__.release()
+   def process_device_queue(self,items):
        if len(items):
           for c in items:
              self.__printer__.process(c)
        return
-
-#
-#  put command into the print-command queue
-#
-   def put_cmd(self,item):
-       self.__print_queue_lock__.acquire()
-       self.__print_queue__.put(item)
-       self.__print_queue_lock__.release()
 #
 #  set status (2 byte status information)
 #
@@ -1859,17 +1790,6 @@ class cls_pilhp2225b(cls_pildevbase):
 #
    def __clear_device__(self):
       super().__clear_device__()
-#
-#     clear printer queue
-#
-      self.__print_queue_lock__.acquire()
-      while True:
-         try:
-            self.__print_queue__.get_nowait()
-            self.__print_queue__.task_done()
-         except queue.Empty:
-            break
-      self.__print_queue_lock__.release()
 #
 #     reset device 
 #

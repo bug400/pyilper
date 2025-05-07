@@ -1,3 +1,10 @@
+pyilper (1.9.0.dev1) bookworm; urgency=medium
+
+  * refactoring of queues and locks 
+  * minimum Python version is now 3.7
+
+ -- bookworm <achim@trillian>  Sat, 21 Dec 2024 09:31:56 +0100
+
 pyilper (1.8.10) bookworm; urgency=medium
 
   * now requires LIFUTILS 2.0.0

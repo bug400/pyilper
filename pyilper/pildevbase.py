@@ -54,9 +54,41 @@
 # Both changes are courtesy of Christoph Gießelink
 # 16.01.2018 jsi:
 # - adapted to new local config parameters for color scheme and terminal width
+# 21.12.2024 jsi:
+# - added queue custom class using queue.SimpleQueue (requires Python 3.7) because of less overhead
+# - all queues, locks and shared variables are now part of the pildevbase class
 
 
 import threading
+import queue
+#
+# pyILPER queue custom class
+#
+class cls_pilqueue(queue.SimpleQueue):
+
+   def __init__(self):
+      super().__init__()
+
+   def putItem(self,item):
+      self.put(item)
+
+   def getItems(self):
+       items=[]
+       while True:
+          try:
+             i=self.get_nowait()
+             items.append(i)
+          except queue.Empty:
+             break
+       return  items
+
+   def clear(self):
+      while True:
+         try:
+            self.get_nowait()
+         except queue.Empty:
+            break
+
 
 class cls_pildevbase:
 
@@ -65,7 +97,6 @@ class cls_pildevbase:
       self.__aid__ = 0x00          # accessory id 
       self.__defaddr__ = 0         # default address alter AAU
       self.__did__ = ""            # device id
-      self.__status__ = 0          # HP-IL status
       self.__addr__ = 0            # HP-IL primary address (by TAD,LAD)
                                    # bits 0-5=AAD or AEP, bit 7=1 means
                                    # auto address taken
@@ -87,25 +118,84 @@ class cls_pildevbase:
       self.__ptsdi__ = 0           # output pointer for device id
       self.__status_len__=1        # length of device status in bytes
       self.__ptssi__ = 0           # output pointer for hp-il status
-      self.__isactive__= False     # device active in loop
       self.__addr_framecounter__=0 # framecounter when device got an address
       self.__threadobject__=None   # reference to the thread object
+#
+#     queues to share data between device thread and gui
+#
+      self.__guiqueue__= cls_pilqueue()     # queue for data from device thread to gui
+      self.__devicequeue__ = cls_pilqueue() # queue for data from gui to device thread
+      self.__outqueue__ = cls_pilqueue()    # queue for data to by sent to HP-IL
+#
+# --- shared variables between gui and device thread
+#
+      self.__isactive__= False     # device active in loop
+      self.__isactive_lock__ = threading.Lock()
+      self.__status__ = 0          # HP-IL status byte, read and written by the gui
       self.__status_lock__= threading.Lock()
-      self.__islocked__= False
-      self.__access_lock__= threading.Lock()
+      self.__ilstate2__ = 0        # HP-IL status, shown in the virtual HP-IL devices status window
+      self.__ilstate2_lock__ = threading.Lock()
 #
 # --- public functions ---
+#
+#  gui queue functions
+#
+   def clearGuiQueue(self):
+      self.__guiqueue__.clear()
+
+   def putGuiQueueItem(self,item):
+      self.__guiqueue__.putItem(item)
+
+   def getGuiQueueItems(self):
+      return self.__guiqueue__.getItems()
+#
+# device queue functions
+#
+   def putDeviceQueueItem(self,item):
+      self.__devicequeue__.putItem(item)
+
+#
+# output queue functions
+#
+   def clearOutQueue(self):
+      self.__outqueue__.clear()
+      self.__status_lock__.acquire()
+      self.__status__= self.__status__ & 0xEF # clear ready for data
+      self.__status_lock__.release()
+#
+#  put Data to HP-IL, set status bits (either: 0x10 - rdy for data or 0x50 - rdy for data with srq bit set)
+#
+   def putDataToHPIL(self,item,setSrq):
+      self.__status_lock__.acquire()
+      self.__outqueue__.putItem(item)
+      if setSrq:
+         self.__status__ = self.__status__ | 0x50
+      else:
+         self.__status__ = self.__status__ | 0x10
+      self.__status_lock__.release()
+
 #
 #  set device active/inactive. If the device becomes active check if an AAU,
 #  AAD, AEP or AES happened in the mean time. In this case reset the device
 #  address
 #
    def setactive(self, active):
+      self.__isactive_lock__.acquire()
       if not self.__isactive__ and active:
          if self.__addr_framecounter__ != self.__threadobject__.get_addr_framecounter():
             self.__addr__=0
             self.__addr2nd__=0
       self.__isactive__= active
+      self.__isactive_lock__.release()
+
+#
+# get decive active status
+#
+   def getactive(self):
+      self.__isactive_lock__.acquire()
+      active= self.__isactive__
+      self.__isactive_lock__.release()
+      return active
 #
 #  set object reference to thread object
 #
@@ -118,31 +208,37 @@ class cls_pildevbase:
       self.__addr_framecounter__= self.__threadobject__.get_framecounter()
       self.__threadobject__.update_addr_framecounter(self.__addr_framecounter__)
 #
-#  return device status
+#  get virtual HP-IL device status from ilstate2 which is the HP-IL status after processing
+#  a frame
 #
    def getstatus(self):
-      self.__access_lock__.acquire()
       status="idle"
-      if self.__ilstate__ & 0x03:
+      self.__ilstate2_lock__.acquire()
+      if self.__ilstate2__ & 0x03:
          status="act. talker"
       else:
-         if self.__ilstate__ & 0xA0:
+         if self.__ilstate2__ & 0xA0:
             status="addr. listener"
-         elif self.__ilstate__ & 0x50:
+         elif self.__ilstate2__ & 0x50:
             status="addr. talker"
-
-      ret= [self.__isactive__, self.__did__, self.__aid__, self.__addr__, self.__addr2nd__, status]
-      self.__access_lock__.release()
+#
+###   lock in lock??
+#
+      ret= [self.getactive(), self.__did__, self.__aid__, self.__addr__, self.__addr2nd__, status]
+      self.__ilstate2_lock__.release()
       return ret
+#
+#  process device queue (stub)
+#
+   def process_device_queue(self,items):
+      return
 
 #
-#  lock device, all output is disabled
+#  disable device
 #
-   def setlocked(self,locked):
-      self.__access_lock__.acquire()
-      self.__islocked__= locked
-      self.__access_lock__.release()
-
+   def disable(self):
+      self.__devicequeue__.clear()
+      return
 #
 #  Process device
 #
@@ -151,8 +247,13 @@ class cls_pildevbase:
 #
 #     if device is not active, return
 #
-      if not self.__isactive__:
+      if not self.getactive():
          return(frame)
+#
+#     process device queue
+#
+      if not self.__devicequeue__.empty():
+         self.process_device_queue(self.__devicequeue__.getItems())
 #
 #     process frames
 #
@@ -162,6 +263,10 @@ class cls_pildevbase:
          frame= self.__do_cmd__(frame)
       elif (frame & 0x700) == 0x500:
          frame= self.__do_rdy__(frame)
+      self.__ilstate2_lock__.acquire()
+      self.__ilstate2__= self.__ilstate__
+      self.__ilstate2_lock__.release()
+
 #
 #     set service request bit if data available status bit set
 #
@@ -208,6 +313,8 @@ class cls_pildevbase:
 #  device clear stub
 #
    def __clear_device__(self):
+      # clear device queue
+      self.__devicequeue__.clear()
       # reset service request bit
       s= self.__getstatus__()
       s &= ~ 0x40

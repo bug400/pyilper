@@ -104,10 +104,11 @@
 # - PySide6 migration
 # 28.01.2024 jsi
 # - force background to white (dark mode)
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
 
 import sys
 import subprocess
-import queue
 import threading
 import array
 from .pilcore import *
@@ -712,11 +713,6 @@ class cls_PlotterWidget(QtWidgets.QWidget):
       self.plotview.setSceneRect(self.plotscene.sceneRect())
 #     self.plotview.ensureVisible(0,0,self.width,self.height,0,0)
 #
-#     initialize GUI command queue and lock
-#
-      self.gui_queue= queue.Queue()
-      self.gui_queue_lock= threading.Lock()
-#
 #     initialize refresh timer
 #
       self.UpdateTimer= QtCore.QTimer()
@@ -738,14 +734,8 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     disable: reset LED, clear the GUI command queue, stop the timer
 #
    def disable(self):
-      self.gui_queue_lock.acquire()
-      while True:
-         try:
-            self.gui_queue.get_nowait()
-            self.gui_queue.task_done()
-         except queue.Empty:
-            break
-      self.gui_queue_lock.release()
+      if self.pildevice is not None:
+         self.pildevice.clearGuiQueue()
       self.led.setColor(QtGui.QColor(0xff,0xff,0xff,0xff))
       self.UpdateTimer.stop()
       return
@@ -970,27 +960,20 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #  send digitized coordinates to plotter emulator
 #
    def send_digitize(self,x,y):
-      self.pildevice.put_cmd("ZY %d %d" % (x,y))
+      self.pildevice.putDeviceQueueItem("ZY %d %d" % (x,y))
       return
 #
 #  send initialize command to plotter emulator
 #
    def send_initialize(self):
-      self.pildevice.put_cmd("IN")
+      self.pildevice.putDeviceQueueItem("IN")
       return
 #
 # send IP command to plotter emulator
 #
    def send_p1p2(self,xp1,yp1,xp2,yp2):
-      self.pildevice.put_cmd("IP%d,%d,%d,%d;" % (xp1,yp1,xp2,yp2))
+      self.pildevice.putDeviceQueueItem("IP%d,%d,%d,%d;" % (xp1,yp1,xp2,yp2))
       return
-#
-#  put command into the GUI-command queue, this is called by the thread component
-#
-   def put_cmd(self,item):
-       self.gui_queue_lock.acquire()
-       self.gui_queue.put(item)
-       self.gui_queue_lock.release()
 #
 # update pen definition
 #
@@ -1009,16 +992,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #  process commands in the GUI command queue, this is called by a timer event
 #
    def process_queue(self):
-       items=[]
-       self.gui_queue_lock.acquire()
-       while True:
-          try:
-             i=self.gui_queue.get_nowait()
-             items.append(i)
-             self.gui_queue.task_done()
-          except queue.Empty:
-             break
-       self.gui_queue_lock.release()
+       items=self.pildevice.getGuiQueueItems()
        if len(items):
           for c in items:
              self.process(c)
@@ -1284,7 +1258,7 @@ class cls_HP7470(QtCore.QObject):
 
    def __init__(self,parent,guiobject,papersize):
       super().__init__()
-      self.parent=parent
+      self.pildevice=parent
       self.guiobject= guiobject
       self.papersize= papersize
       self.cmdbuf=[]
@@ -1310,15 +1284,15 @@ class cls_HP7470(QtCore.QObject):
       self.error=errno
       self.illcmd=""
       self.errmsg=errmsg
-      self.guiobject.put_cmd([CMD_EXT_ERROR,self.error,self.illcmd,self.errmsg])
+      self.pildevice.putGuiQueueItem([CMD_EXT_ERROR,self.error,self.illcmd,self.errmsg])
 #
 #     send to GUI: switch LED to red
 #
-      self.guiobject.put_cmd([CMD_ON_ERROR_RED])
+      self.pildevice.putGuiQueueItem([CMD_ON_ERROR_RED])
 #
 #     disable HP-IL device permanently
 #
-      self.parent.disable_permanently()
+      self.pildevice.disable_permanently()
 #
 #  start the subprocess of the plotter emulator, check required version,
 #  set papeersize according to  config 
@@ -1353,10 +1327,10 @@ class cls_HP7470(QtCore.QObject):
          self.setInvalid(101,"incompatible version of emu7470")
          return
       self.cmdbuf.clear()
-      self.guiobject.put_cmd([CMD_EMU_VERSION,line])
+      self.pildevice.putGuiQueueItem([CMD_EMU_VERSION,line])
       self.parse_state=0
       self.invalid=False
-      self.parent.put_cmd("ZZ%d" % self.papersize)
+      self.pildevice.putDeviceQueueItem("ZZ%d" % self.papersize)
 #
 #  stop the subprocess of the plotter emulator
 #
@@ -1407,7 +1381,7 @@ class cls_HP7470(QtCore.QObject):
          self.proc.stdin.write("\n")
          self.proc.stdin.flush()
          log_line+="\n"
-         self.guiobject.put_cmd([CMD_LOG,0,log_line])
+         self.pildevice.putGuiQueueItem([CMD_LOG,0,log_line])
       except OSError as e:
          self.proc.stdin.close()
          self.setInvalid(102,"ipc input/output error")
@@ -1437,54 +1411,55 @@ class cls_HP7470(QtCore.QObject):
 #        end of output of a command
 #
          if cmd== CMD_EOF: 
-            self.guiobject.put_cmd([CMD_EOF])
-            self.guiobject.put_cmd([CMD_EXT_ERROR,self.error,self.illcmd,self.errmsg])
-            self.guiobject.put_cmd([CMD_SET_STATUS,self.status])
+            self.pildevice.putGuiQueueItem([CMD_EOF])
+            self.pildevice.putGuiQueueItem([CMD_EXT_ERROR,self.error,self.illcmd,self.errmsg])
+            self.pildevice.putGuiQueueItem([CMD_SET_STATUS,self.status])
             break
 #
 #        clear
 #
          elif cmd== CMD_CLEAR:
-            self.guiobject.put_cmd([CMD_CLEAR])
-            self.parent.clear_outbuf()
+            self.pildevice.putGuiQueueItem([CMD_CLEAR])
+            self.pildevice.clearOutQueue()
 #
 #        set pen 
 #
          elif cmd== CMD_SET_PEN:
-            self.guiobject.put_cmd([CMD_SET_PEN, int(ret[1])])
-            self.guiobject.put_cmd([CMD_LOG,2,"Set Pen %s\n" % ret[1]])
+            self.pildevice.putGuiQueueItem([CMD_SET_PEN, int(ret[1])])
+            self.pildevice.putGuiQueueItem([CMD_LOG,2,"Set Pen %s\n" % ret[1]])
 #
 #        move
 #
          elif cmd== CMD_MOVE_TO:
             self.x= float(ret[1])
             self.y= float(ret[2])
-            self.guiobject.put_cmd([CMD_MOVE_TO,self.x,self.y])
-            self.guiobject.put_cmd([CMD_LOG,2,"Move To %d %d\n" % (self.x,self.y)])
+            self.pildevice.putGuiQueueItem([CMD_MOVE_TO,self.x,self.y])
+            self.pildevice.putGuiQueueItem([CMD_LOG,2,"Move To %d %d\n" % (self.x,self.y)])
 #
 #        draw
 #
          elif cmd== CMD_DRAW_TO:
             self.x= float(ret[1])
             self.y= float(ret[2])
-            self.guiobject.put_cmd([CMD_DRAW_TO,self.x,self.y])
-            self.guiobject.put_cmd([CMD_LOG,2,"Draw To %d %d\n" % (self.x,self.y)])
+            self.pildevice.putGuiQueueItem([CMD_DRAW_TO,self.x,self.y])
+            self.pildevice.putGuiQueueItem([CMD_LOG,2,"Draw To %d %d\n" % (self.x,self.y)])
 #
 #        draw dot
 #
          elif cmd== CMD_PLOT_AT:
             self.x= float(ret[1])
             self.y= float(ret[2])
-            self.guiobject.put_cmd([CMD_PLOT_AT, self.x,self.y])
-            self.guiobject.put_cmd([CMD_LOG,2,"Plot At %d %d\n" % (self.x,self.y)])
+            self.pildevice.putGuiQueueItem([CMD_PLOT_AT, self.x,self.y])
+            self.pildevice.putGuiQueueItem([CMD_LOG,2,"Plot At %d %d\n" % (self.x,self.y)])
 #
 #        output from plotter to HP-IL, use the cls_pilplotter putDataToHPIL 
 #        method. This puts the data to an output data buffer of pilotter
 #
          elif cmd== CMD_OUTPUT:
             result=ret[1]+chr(0x0D)+chr(0x0A)
-            self.parent.putDataToHPIL(result)
-            self.guiobject.put_cmd([CMD_LOG,1,"Plotter to HP-IL: %s\n" % ret[1]])
+            for c in result:
+               self.pildevice.putDataToHPIL(ord(c),False)  # set ready for data in status
+            self.pildevice.putGuiQueueItem([CMD_LOG,1,"Plotter to HP-IL: %s\n" % ret[1]])
 #
 #        status, error, termchar
 #
@@ -1496,29 +1471,29 @@ class cls_HP7470(QtCore.QObject):
 #           error bit set?
 #
             if self.status & 0x20:
-               self.guiobject.put_cmd([CMD_ON_ERROR_YELLOW])
+               self.pildevice.putGuiQueueItem([CMD_ON_ERROR_YELLOW])
             else:
                self.errmsg=""
                self.illcmd=""
-               self.guiobject.put_cmd([CMD_OFF_ERROR])
-            self.guiobject.put_cmd([CMD_LOG,1,"Status %x, Error %d\n" % (self.status,self.error)])
+               self.pildevice.putGuiQueueItem([CMD_OFF_ERROR])
+            self.pildevice.putGuiQueueItem([CMD_LOG,1,"Status %x, Error %d\n" % (self.status,self.error)])
 #
 #        extended error message
 #
          elif cmd== CMD_ERRMSG:
             self.errmsg= line[2:-1]
             self.illcmd="".join(self.cmdbuf)
-            self.guiobject.put_cmd([CMD_LOG,1,"Error message %s\n" % (self.errmsg)])
+            self.pildevice.putGuiQueueItem([CMD_LOG,1,"Error message %s\n" % (self.errmsg)])
 #
 #        enter digitizing mode, status bit is handled by emu7470
 #
          elif cmd== CMD_DIGI_START:
-            self.guiobject.put_cmd([CMD_DIGI_START])
+            self.pildevice.putGuiQueueItem([CMD_DIGI_START])
 #
 #        clear digitizing mode, status bit is handled by emu7470
 #
          elif cmd== CMD_DIGI_CLEAR:
-            self.guiobject.put_cmd([CMD_DIGI_CLEAR])
+            self.pildevice.putGuiQueueItem([CMD_DIGI_CLEAR])
 #
 #        P1, P2 set
 #
@@ -1527,7 +1502,7 @@ class cls_HP7470(QtCore.QObject):
             y1= float(ret[2])
             x2= float(ret[3])
             y2= float(ret[4])
-            self.guiobject.put_cmd([CMD_P1P2,x1,y1,x2,y2])
+            self.pildevice.putGuiQueueItem([CMD_P1P2,x1,y1,x2,y2])
          else:
             eprint("Unknown command %s" % ret)
 #
@@ -1593,7 +1568,7 @@ class cls_HP7470(QtCore.QObject):
          self.inparam= False
          self.numparam=0
          self.separator=False
-         self.parent.put_cmd("".join(self.cmdbuf))
+         self.pildevice.putDeviceQueueItem("".join(self.cmdbuf))
          if c.isalpha():
             self.cmdbuf.clear()
             self.cmdbuf.append(c)
@@ -1607,7 +1582,7 @@ class cls_HP7470(QtCore.QObject):
 #
          if c == self.termchar:
             self.cmdbuf.append(self.termchar)
-            self.parent.put_cmd("".join(self.cmdbuf))
+            self.pildevice.putDeviceQueueItem("".join(self.cmdbuf))
             self.cmdbuf.clear()
             self.parse_state=0
          else:
@@ -1617,7 +1592,7 @@ class cls_HP7470(QtCore.QObject):
 #        process single character of DT or SM command
 #
          self.cmdbuf.append(c)
-         self.parent.put_cmd("".join(self.cmdbuf))
+         self.pildevice.putDeviceQueueItem("".join(self.cmdbuf))
          self.cmdbuf.clear()
          self.parse_state=0
 #
@@ -1641,19 +1616,9 @@ class cls_pilplotter(cls_pildevbase):
 #
       self.__disabled__=False     # flag to disable device permanently
 #
-#     initialize remote command queue and lock
-#
-      self.__plot_queue__= queue.Queue()
-      self.__plot_queue_lock__= threading.Lock()
-#
 #     plotter processor
 #
       self.__plotter__=cls_HP7470(self,self.__guiobject__,self.__papersize__)
-#
-#     initialize HP-IL outdata buffer
-#
-      self.__outbuf__= array.array('i')
-      self.__oc__=0
 #
 # public (overloaded) --------
 #
@@ -1666,74 +1631,18 @@ class cls_pilplotter(cls_pildevbase):
 #  disable: clear the remote HP-GL command queue
 #
    def disable(self):
-      self.__plot_queue_lock__.acquire()
-      while True:
-         try:
-            self.__plot_queue__.get_nowait()
-            self.__plot_queue__.task_done()
-         except queue.Empty:
-            break
-      self.__plot_queue_lock__.release()
+      super().disable()
       self.__plotter__.disable()
-      self.clear_outbuf()
+      self.clearOutQueue()
 #
-#  clear output buffer
+#  process device queue
 #
-   def clear_outbuf(self):
-      self.__status_lock__.acquire()
-      self.__oc__=0
-      self.__outbuf__= array.array('i')
-      self.__status__= self.__status__ & 0xEF # clear ready for data
-      self.__status_lock__.release()
-
-#
-#  process frames 
-#
-   def process(self,frame):
-
-      if self.__isactive__:
-         self.process_plot_queue()
-      frame= super().process(frame)
-      return frame
-#
-#  process the remote HPGL command queue
-#
-   def process_plot_queue(self):
-       items=[]
-       self.__plot_queue_lock__.acquire()
-       while True:
-          try:
-             i=self.__plot_queue__.get_nowait()
-             items.append(i)
-             self.__plot_queue__.task_done()
-          except queue.Empty:
-             break
-       self.__plot_queue_lock__.release()
-       if len(items):
-          for c in items:
-             self.__plotter__.process(c)
+   def process_device_queue(self,items):
+       for c in items:
+          self.__plotter__.process(c)
        return
 #
-#  put remote HP-GL command into the plot-command queue
-#
-   def put_cmd(self,item):
-       self.__plot_queue_lock__.acquire()
-       self.__plot_queue__.put(item)
-       self.__plot_queue_lock__.release()
-#
 # public --------
-#
-#  put data to the HP-IL outdata buffer, called by the plotter processor
-#
-   def putDataToHPIL(self,s):
-      self.__status_lock__.acquire()
-      self.__oc__=0
-      for c in s:
-         self.__outbuf__.insert(0,ord(c))
-         self.__oc__+=1
-      self.__status__ = self.__status__ | 0x10 # set ready for data bit
-      self.__status_lock__.release()
-
 #
 #  disable permanently, if emu7470 is not available
 #
@@ -1762,28 +1671,13 @@ class cls_pilplotter(cls_pildevbase):
 #
    def __indata__(self,frame):
 
-      self.__access_lock__.acquire()
-      locked= self.__islocked__
-      self.__access_lock__.release()
-      if not locked:
-         self.__plotter__.process_char(chr(frame & 0xFF))
+      self.__plotter__.process_char(chr(frame & 0xFF))
 #
 #  clear device: empty HP-IL outdata buffer and reset plotter
 #
    def __clear_device__(self):
       super().__clear_device__()
-      self.clear_outbuf()
-#
-#     clear plotter queue
-#
-      self.__plot_queue_lock__.acquire()
-      while True:
-         try:
-            self.__plot_queue__.get_nowait()
-            self.__plot_queue__.task_done()
-         except queue.Empty:
-            break
-      self.__plot_queue_lock__.release()
+      self.clearOutQueue()
 #
 #     reset device 
 #
@@ -1793,13 +1687,10 @@ class cls_pilplotter(cls_pildevbase):
 #  send data from HP-IL outdata buffer to the loop
 #
    def __outdata__(self,frame):
-      self.__status_lock__.acquire()
-      if self.__oc__== 0:
+      if self.__outqueue__.empty():
          frame= 0x540 # EOT
       else:
-         frame= self.__outbuf__.pop()
-         self.__oc__-=1
-         if self.__oc__== 0:
+         frame= self.__outqueue__.get_nowait()
+         if self.__outqueue__.empty():
             self.__status__= self.__status__ & 0xEF # clear ready for data bit
-      self.__status_lock__.release()
       return(frame)

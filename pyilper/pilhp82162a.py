@@ -80,10 +80,10 @@
 # 31.05.2024 cg
 # - changed PRINTER_CHARACTER_HEIGHT_PIXELS from 13 to 11 to get a line
 #   gap of 4 instead of 6 pixel
-
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
 #
 import copy
-import queue
 import threading
 import re
 from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT, QTBINDINGS
@@ -656,11 +656,6 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.hbox.addStretch(1)
       self.setLayout(self.hbox)
 #
-#     initialize GUI command queue and lock
-#
-      self.gui_queue= queue.Queue()
-      self.gui_queue_lock= threading.Lock()
-#
 #     initialize refresh timer
 #
       self.UpdateTimer=QtCore.QTimer()
@@ -684,25 +679,19 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.UpdateTimer.start(UPDATE_TIMER)
       self.setCheckBoxes()
       if self.printer_modeswitch== MODESWITCH_MAN:
-         self.pildevice.put_cmd(CMD_MAN)
+         self.pildevice.putDeviceQueueItem(CMD_MAN)
       if self.printer_modeswitch== MODESWITCH_TRACE:
-         self.pildevice.put_cmd(CMD_TRACE)
+         self.pildevice.putDeviceQueueItem(CMD_TRACE)
       if self.printer_modeswitch== MODESWITCH_NORM:
-         self.pildevice.put_cmd(CMD_NORM)
+         self.pildevice.putDeviceQueueItem(CMD_NORM)
       self.toggle_active()
       return
 #
 #     disable, clear the GUI queue, stop the timer
 #
    def disable(self):
-      self.gui_queue_lock.acquire()
-      while True:
-         try:
-            self.gui_queue.get_nowait()
-            self.gui_queue.task_done()
-         except queue.Empty:
-            break
-      self.gui_queue_lock.release()
+      if self.pildevice is not None:
+         self.pildevice.clearGuiQueue()
       self.UpdateTimer.stop()
       return
 #
@@ -746,24 +735,24 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
    def do_clear(self):
       self.printview.reset()
-      self.pildevice.put_cmd(CMD_CLEAR)
+      self.pildevice.putDeviceQueueItem(CMD_CLEAR)
       return
 
    def do_print_pressed(self):
-      self.pildevice.put_cmd(CMD_PRINT_PRESSED)
+      self.pildevice.putDeviceQueueItem(CMD_PRINT_PRESSED)
       return
 
    def do_advance_pressed(self):
-      self.pildevice.put_cmd(CMD_ADV_PRESSED)
+      self.pildevice.putDeviceQueueItem(CMD_ADV_PRESSED)
       self.repeatedAdvpressedTimer.start()
       return
 
    def do_print_released(self):
-      self.pildevice.put_cmd(CMD_PRINT_RELEASED)
+      self.pildevice.putDeviceQueueItem(CMD_PRINT_RELEASED)
       return
 
    def do_advance_released(self):
-      self.pildevice.put_cmd(CMD_ADV_RELEASED)
+      self.pildevice.putDeviceQueueItem(CMD_ADV_RELEASED)
       self.repeatedAdvpressedTimer.stop()
       return
 
@@ -780,15 +769,15 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
    def toggledCheckBoxes(self):
       if self.radbutMan.isChecked():
-         self.pildevice.put_cmd(CMD_MAN)
+         self.pildevice.putDeviceQueueItem(CMD_MAN)
          self.printer_modeswitch= MODESWITCH_MAN
          self.setCheckBoxes()
       if self.radbutTrace.isChecked():
-         self.pildevice.put_cmd(CMD_TRACE)
+         self.pildevice.putDeviceQueueItem(CMD_TRACE)
          self.printer_modeswitch= MODESWITCH_TRACE
          self.setCheckBoxes()
       if self.radbutNorm.isChecked():
-         self.pildevice.put_cmd(CMD_NORM)
+         self.pildevice.putDeviceQueueItem(CMD_NORM)
          self.printer_modeswitch= MODESWITCH_NORM
          self.setCheckBoxes()
       PILCONFIG.put(self.name,"modeswitch",self.printer_modeswitch)
@@ -810,32 +799,16 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
          self.radbutTrace.setChecked(True)
       return
 #
-#  put command into the GUI-command queue, this is called by the thread component
-#
-   def put_cmd(self,item):
-       self.gui_queue_lock.acquire()
-       self.gui_queue.put(item)
-       self.gui_queue_lock.release()
-#
 #  repeated adv pressed action
 #
    def repeated_advpressed(self):
       b=bytes(0)
-      self.put_cmd([REMOTECMD_PRINT,b,1])
+      self.pildevice.putGuiQueueItem([REMOTECMD_PRINT,b,1])
 #
 #  process commands in the GUI command queue, this is called by a timer event
 #
    def process_queue(self):
-       items=[]
-       self.gui_queue_lock.acquire()
-       while True:
-          try:
-             i=self.gui_queue.get_nowait()
-             items.append(i)
-             self.gui_queue.task_done()
-          except queue.Empty:
-             break
-       self.gui_queue_lock.release()
+       items=self.pildevice.getGuiQueueItems()
        if len(items):
           for c in items:
              self.process(c)
@@ -1367,8 +1340,8 @@ class cls_printer_buffer(object):
 #
 class cls_line_buffer(object):
 
-   def __init__(self,guiobject):
-      self.guiobject= guiobject                 # reference to GUI object 
+   def __init__(self,pildevice):
+      self.pildevice= pildevice                 # reference to pildevice object 
       self.linebuffer= bytearray(PRINTER_WIDTH) # the line buffer
       self.linebuffer_index=0                   # current index in line buffer
       self.wrap_position=-1                     # pointer to wrap line position
@@ -1383,7 +1356,7 @@ class cls_line_buffer(object):
 #
    def prt(self):
       linebuffer_copy=copy.deepcopy(self.linebuffer)
-      self.guiobject.put_cmd([REMOTECMD_PRINT,linebuffer_copy,self.linebuffer_index])
+      self.pildevice.putGuiQueueItem([REMOTECMD_PRINT,linebuffer_copy,self.linebuffer_index])
       self.linebuffer_index=0
       self.wrap_position= -1
 #
@@ -1396,7 +1369,7 @@ class cls_line_buffer(object):
       if self.linebuffer_index== PRINTER_WIDTH:
          if mode & mode_parse and self.wrap_position>0:
             linebuffer_copy=copy.deepcopy(self.linebuffer[:self.wrap_position-1])
-            self.guiobject.put_cmd([REMOTECMD_PRINT,linebuffer_copy,self.wrap_position-1])
+            self.pildevice.putGuiQueueItem([REMOTECMD_PRINT,linebuffer_copy,self.wrap_position-1])
 #           next data
             do_copy=False
             j=1
@@ -1414,7 +1387,7 @@ class cls_line_buffer(object):
             self.wrap_positon= -1
          else:
             linebuffer_copy=copy.deepcopy(self.linebuffer)
-            self.guiobject.put_cmd([REMOTECMD_PRINT,linebuffer_copy,self.linebuffer_index])
+            self.pildevice.putGuiQueueItem([REMOTECMD_PRINT,linebuffer_copy,self.linebuffer_index])
             self.linebuffer_index=0
             self.wrap_position= -1
 
@@ -1431,7 +1404,7 @@ class cls_special_k(QtCore.QObject):
       self.pildevice=parent
       self.guiobject= guiobject
       self.printer_buffer= cls_printer_buffer()         # printer buffer
-      self.line_buffer= cls_line_buffer(self.guiobject) # line buffer
+      self.line_buffer= cls_line_buffer(self.pildevice) # line buffer
       self.char_gen= hp82162a_char() # character generator
       self.esc= False                # escape mode
       self.esc_seq=""                # escape sequence
@@ -1458,7 +1431,7 @@ class cls_special_k(QtCore.QObject):
 #
 #     issue clear to GUI
 #
-      self.guiobject.put_cmd([REMOTECMD_CLEAR])
+      self.pildevice.putGuiQueueItem([REMOTECMD_CLEAR])
 #
 #     we are idle and buffer is empty
 #
@@ -1646,7 +1619,7 @@ class cls_special_k(QtCore.QObject):
 #
       if log_line !="":
          log_line+="\n"
-         self.guiobject.put_cmd([REMOTECMD_LOG,log_line])
+         self.pildevice.putGuiQueueItem([REMOTECMD_LOG,log_line])
 #
 # clear line buffer and printer buffer
 #
@@ -2062,11 +2035,6 @@ class cls_pilhp82162a(cls_pildevbase):
 #
       self.__guiobject__= guiobject
 #
-#     initialize remote command queue and lock
-#
-      self.__print_queue__= queue.Queue()
-      self.__print_queue_lock__= threading.Lock()
-#
 #     printer processor
 #
       self.__printer__=cls_special_k(self,self.__guiobject__)
@@ -2080,53 +2048,14 @@ class cls_pilhp82162a(cls_pildevbase):
       self.__printer__.reset()
       return
 #
-#  disable: clear the printer command queue
+#  process the device queue
 #
-   def disable(self):
-      self.__print_queue_lock__.acquire()
-      while True:
-         try:
-            self.__print_queue__.get_nowait()
-            self.__print_queue__.task_done()
-         except queue.Empty:
-            break
-      self.__print_queue_lock__.release()
-#
-#  process frames 
-#
-   def process(self,frame):
-
-      if self.__isactive__:
-         self.process_print_queue()
-      frame= super().process(frame)
-      return frame
-#
-#  process the printer command queue
-#
-   def process_print_queue(self):
-       items=[]
-       self.__print_queue_lock__.acquire()
-       while True:
-          try:
-             i=self.__print_queue__.get_nowait()
-             items.append(i)
-             self.__print_queue__.task_done()
-          except queue.Empty:
-             break
-       self.__print_queue_lock__.release()
+   def process_device_queue(self,items):
        if len(items):
           for c in items:
              self.__printer__.process(c)
        return
 
-#
-#  put command into the print-command queue
-#
-   def put_cmd(self,item):
-       self.__print_queue_lock__.acquire()
-       self.__print_queue__.put(item)
-       self.__print_queue_lock__.release()
-#
 #  set status (2 byte status information)
 #
    def set_status(self,s):
@@ -2156,16 +2085,8 @@ class cls_pilhp82162a(cls_pildevbase):
 #
 #     clear printer queue
 #
-      self.__print_queue_lock__.acquire()
-      while True:
-         try:
-            self.__print_queue__.get_nowait()
-            self.__print_queue__.task_done()
-         except queue.Empty:
-            break
-      self.__print_queue_lock__.release()
+      self.__printqueue__.clear()
 #
 #     reset device 
 #
       self.__printer__.reset()
-

@@ -213,6 +213,9 @@
 # - add ACM tty devices to PIL-Box device selector for Linux
 # 01.11.2024 jsi
 # - lifutils 2.0 changes
+# 21.12.2024 jsi:
+# - implemented gui queue for the generic terminal widget
+# - writing logfiles was moved from thread component to gui component
 #
 import datetime
 import re
@@ -757,16 +760,13 @@ class cls_tabgeneric(QtWidgets.QWidget):
    def do_cbLogging(self):
       self.cbLogging.setEnabled(False)
       self.logging= self.cbLogging.isChecked()
-      self.pildevice.setlocked(True)
       if self.logging:
          if not self.cbLogging.logOpen():
             self.cbLogging.setChecked(False)
-            self.pildevice.setlocked(False)
             return
       else:
          self.cbLogging.logClose()
       PILCONFIG.put(self.name,"logging",self.logging)
-      self.pildevice.setlocked(False)
       self.cbLogging.setEnabled(True)
 #
 # generic terminal tab widget ------------------------------------------------
@@ -807,6 +807,13 @@ class cls_tabtermgeneric(cls_tabgeneric):
       self.statuswidget.setText("Display size :")
       self.add_statuswidget(self.statuswidget)
 #
+#     initialize refresh timer
+#
+      self.UpdateTimer= QtCore.QTimer()
+      self.UpdateTimer.setSingleShot(True)
+      self.UpdateTimer.timeout.connect(self.process_queue)
+
+#
 #  handle changes of tab configuration
 #
    def do_tabconfig_changed(self):
@@ -842,8 +849,10 @@ class cls_tabtermgeneric(cls_tabgeneric):
    def enable(self):
       super().enable()
       self.guiobject.enable()
+      self.UpdateTimer.start(UPDATE_TIMER)
 
    def disable(self):
+      self.UpdateTimer.stop()
       super().disable()
       self.guiobject.disable()
 #
@@ -858,6 +867,17 @@ class cls_tabtermgeneric(cls_tabgeneric):
    def becomes_invisible(self):
       self.guiobject.becomes_invisible()
       return
+#
+#  process gui queue and trigger update terminalwidget
+#
+   def process_queue(self):
+      items=self.pildevice.getGuiQueueItems()
+      if len(items):
+         self.out_device(items)
+      self.guiobject.HPTerminal.refresh()
+      self.UpdateTimer.start(UPDATE_TIMER)
+      return
+
 #
 # Help Dialog class ----------------------------------------------------------
 #

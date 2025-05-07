@@ -42,6 +42,8 @@ from .pilcharconv import CHARSET_HP71, charsets, icharconv
 # - fixed charset configuration
 # 16.01.2018 jsi
 # - use int instead char for printer data
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
@@ -86,14 +88,15 @@ class cls_tabprinter(cls_tabtermgeneric):
       self.parent.commthread.register(self.pildevice,self.name)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active"))
 #
-#   output a character to the terminal and perform logging
+#   output gui queue items to the terminal and perform logging
 #
-   def out_printer(self,t):
-      self.guiobject.out_terminal(t)
-      if t !=8 and t != 13:
-         self.cbLogging.logWrite(icharconv(t,self.charset))
-      if t== 10:
-         self.cbLogging.logFlush()
+   def out_device(self,items):
+      for i in items:
+         self.guiobject.HPTerminal.process(i)
+         if i !=8 and  i!= 13:
+            self.cbLogging.logWrite(icharconv(i,self.charset))
+         if i== 10:
+            self.cbLogging.logFlush()
 #
 #  callback reset terminal
 #
@@ -152,11 +155,7 @@ class cls_pilprinter(cls_pildevbase):
          if t == 27:
             self.__fesc__ = True
          if not self.__fesc__:
-            self.__access_lock__.acquire()
-            locked= self.__islocked__
-            self.__access_lock__.release()
-            if not locked:
-               self.__parent__.out_printer(t)
+            self.putGuiQueueItem(t)
 #
 #     ignore escape sequences
 #

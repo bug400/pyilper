@@ -58,6 +58,8 @@
 # - send int instead of char to terminal
 # 04.05.2022 jsi
 # - PySide6 migration
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
 
 import datetime
 from .pilconfig import PILCONFIG
@@ -133,12 +135,8 @@ class cls_tabscope(cls_tabtermgeneric):
          self.pildevice2.set_displayMode(self.displayMode)
       elif param=="logmode":
          self.logMode= PILCONFIG.get(self.name,"logmode")
-         self.pildevice.setlocked(True)
          self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
-         self.pildevice.setlocked(False)
-         self.pildevice2.setlocked(True)
          self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
-         self.pildevice2.setlocked(False)
       super().do_tabconfig_changed()
 
    def enable(self):
@@ -162,13 +160,8 @@ class cls_tabscope(cls_tabtermgeneric):
    def do_cbActive(self):
       self.active= self.cbActive.isChecked()
       PILCONFIG.put(self.name,"active",self.active)
-      self.pildevice.setlocked(True)
       self.pildevice.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_OUTBOUND))
-      self.pildevice.setlocked(False)
-      self.pildevice2.setlocked(True)
       self.pildevice2.setactive(PILCONFIG.get(self.name,"active") and not (self.logMode == LOG_INBOUND))
-      self.pildevice2.setlocked(False)
-
       try:
          self.toggle_active()
       except AttributeError:
@@ -205,20 +198,22 @@ class cls_tabscope(cls_tabtermgeneric):
              self.parent.commthread.resume()
 #
 #
-#  forward character to the terminal frontend widget and do logging
+#  Forward items to the terminal frontend widget and do logging
+#  Note: for the scope a single item is a string not the integer representation of a character
 #
-   def out_scope(self,s):
-      l=len(s)
-      if self.scope_charpos+l>=self.guiobject.get_cols() :
-         self.guiobject.out_terminal(0x0D)
-         self.guiobject.out_terminal(0x0A)
-         self.cbLogging.logWrite("\n")
-         self.cbLogging.logFlush()
-         self.scope_charpos=0
-      for i in range(0,len(s)):
-         self.guiobject.out_terminal(ord(s[i]))
-      self.cbLogging.logWrite(s)
-      self.scope_charpos+=l
+   def out_device(self,items):
+      for s in items:
+         l=len(s)
+         if self.scope_charpos+l>=self.guiobject.get_cols() :
+            self.guiobject.HPTerminal.process(0x0D)
+            self.guiobject.HPTerminal.process(0x0A)
+            self.cbLogging.logWrite("\n")
+            self.cbLogging.logFlush()
+            self.scope_charpos=0
+         for i in range(0,l):
+            self.guiobject.HPTerminal.process(ord(s[i]))
+         self.cbLogging.logWrite(s)
+         self.scope_charpos+=l
 #
 # HP-IL scope class -----------------------------------------------------------
 #
@@ -240,8 +235,13 @@ class cls_tabscope(cls_tabtermgeneric):
 # - refactoring
 # 05.05.2023 cg
 # - new implementation with single table
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
 
 class cls_pilscope(cls_pildevbase):
+
+   CONF_SHOW_IDY=1
+   CONF_DISPLAYMODE=2
 
    def __init__ (self, inbound,parent):
       super().__init__()
@@ -294,28 +294,41 @@ class cls_pilscope(cls_pildevbase):
                        [0x600, 0x700, "IDY"],
                        [0x700, 0x700, "ISR"]]
 
-      self.__show_idy__= False
-      self.__displayMode__= DISPLAY_MNEMONIC
+      self.__show_idy__=False
+      self.__displayMode__=DISPLAY_MNEMONIC
       self.__parent__= parent
-
 #
 # public -------
 #
 
    def set_show_idy(self,flag):
-      self.__show_idy__= flag
+      self.putDeviceQueueItem([cls_pilscope.CONF_SHOW_IDY,flag])
 
    def set_displayMode(self,flag):
-      self.__displayMode__= flag
+      self.putDeviceQueueItem([cls_pilscope.CONF_DISPLAYMODE,flag])
+
 #
 #  public (overloaded) -------
+#
+#  process device queue with config commands
+#
+   def process_device_queue(self,items):
+      for i in items:
+         if i[0]== cls_pilscope.CONF_SHOW_IDY:
+            self.__show_idy__= i[1]
+         if i[0]== cls_pilscope.CONF_DISPLAYMODE:
+            self.__displayMode__= i[1]
 #
 #  convert frame to readable text and call the parent method out_scope
 #
    def process (self,frame):
-      if not self.__isactive__:
+      if not self.getactive():
          return(frame)
-
+#
+#     process device queue
+#
+      if not self.__devicequeue__.empty():
+         self.process_device_queue(self.__devicequeue__.getItems())
 #
 #     ignore IDY frames
 #
@@ -341,15 +354,11 @@ class cls_pilscope(cls_pildevbase):
 #
       if self.__displayMode__== DISPLAY_MNEMONIC:
          s="{:6s}  ".format(s)
-      elif self.__displayMode__== DISPLAY_HEX:
+      elif self.__displayMode__ == DISPLAY_HEX:
          s="{:03X}  ".format(frame)
       elif self.__displayMode__== DISPLAY_BOTH:
          s="{:6s} ({:03X}) ".format(s,frame)
       if not self.__inbound__:
          s= s.lower()
-      self.__access_lock__.acquire()
-      locked= self.__islocked__
-      self.__access_lock__.release()
-      if not locked:
-         self.__parent__.out_scope(s)
+      self.putGuiQueueItem(s)
       return (frame)

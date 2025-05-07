@@ -182,12 +182,16 @@
 #   let to an incorrect cursor width
 # 28.01.2024 jsi
 # - replaced deprecated cursor position method calls
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
+# 06.05.2025 jsi
+# - introduced 0.2s delay when return key is pressed (stabilizes HP71 keyboard emulation)
+
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
 
 import array
-import queue
 import threading
 import time
 
@@ -651,10 +655,10 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
              for c in paste_text:
                  t=ord(c)
                  if t >= 0x20 and t <= 0x7E:
-                    self._kbdfunc(t)
+                    self._kbdfunc(t,True)
                  elif t == 0x0A:
-                    self._kbdfunc(0x1B)
-                    self._kbdfunc(82)
+                    self._kbdfunc(0x1B,True)
+                    self._kbdfunc(82,True)
        self._press_pos = None
        self._HPTerminal.selectionStop()
        self._selectionText=""
@@ -825,7 +829,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                  if self._alt_seq_length == 3:
                     if self._alt_seq_value <= 127:
 #                      print("keyboard alt value: ",self._alt_seq_value)
-                       self._kbdfunc(self._alt_seq_value)
+                       self._kbdfunc(self._alt_seq_value,True)
                     self._alt_sequence= False
               else:
                  self._alt_sequence= False
@@ -847,7 +851,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
                     alt_mode_lookup= keyboard_lookup(key | self._modifier_flags, self._keyboard_type)
 #                   print("lookup result",alt_mode_lookup)
                     for i in alt_mode_lookup:
-                       self._kbdfunc(i)
+                       self._kbdfunc(i,True)
 #
 #                proces shortcuts
 #
@@ -886,9 +890,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #             found key replacement, send it
 #
 #             print("Keyboard lookup ", lookup, event.isAutoRepeat())
+              if key == QtCore.Qt.Key_Return:
+                 time.sleep(0.2)  # TEST
               if lookup:
                  for i in lookup:
-                    self._kbdfunc(i)
+                    self._kbdfunc(i,True)
 #
 #             no keyboard replacement, use text (if any)
 #
@@ -907,7 +913,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
             t=ord(c)
 #           if t >= 0x20 and t <= 0x7E:
             if t <= 0x7E:
-               self._kbdfunc(t)
+               self._kbdfunc(t,True)
         return
 #
 #   send a faked key to HP-IL
@@ -915,7 +921,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
     def fake_key(self,key):
        lookup= keyboard_lookup(key, self._keyboard_type)
        for c in lookup:
-          self._kbdfunc(c)
+          self._kbdfunc(c,True)
        return
 #
 #   External interface
@@ -1148,17 +1154,6 @@ class HPTerminal:
         self.showSelection=False          # display a selection area
         self.reconfigure()
 #
-#       Queue with input data that will be displayed
-#
-        self.termqueue= queue.Queue()
-        self.termqueue_lock= threading.Lock()
-#
-#       Timer that triggers the processing of the input queue
-#
-        self.UpdateTimer= QtCore.QTimer()
-        self.UpdateTimer.setSingleShot(True)
-        self.UpdateTimer.timeout.connect(self.process_queue)
-#
 #  reconfigure: changing the number of columns or the scrollup buffersize 
 #  result in a hard reset of the screen
 #
@@ -1216,7 +1211,6 @@ class HPTerminal:
 #   enable: start update timer (one shot timer)
 #
     def enable(self):
-       self.UpdateTimer.start(UPDATE_TIMER)
        pass
 #
 #   disable: do nothing
@@ -1635,37 +1629,17 @@ class HPTerminal:
 #
 #   process terminal output queue and refresh display
 #        
-    def process_queue(self):
-#
-#      get items from terminal input queue
-#
-       items=[]
-       self.termqueue_lock.acquire()
-       while True:
-          try:
-             i=self.termqueue.get_nowait()
-             items.append(i)
-             self.termqueue.task_done()
-          except queue.Empty:
-             break
-       self.termqueue_lock.release()
-#
-#      process items and generate new terminal screen dump
-#
-       if len(items):
-          self.needsUpdate=True
-          for c in items:
-             self.process(c)
+    def refresh(self):
        if self.needsUpdate:
           self.win.terminalwidget.update_term(self.dump)
        self.needsUpdate=False
-       self.UpdateTimer.start(UPDATE_TIMER)
-       return
+       
 #
 #   process output to display
 # 
     def process(self,t):
  
+       self.needsUpdate=True
 #
 #      start of ESC sequence, set flag and return
 #
@@ -1786,20 +1760,11 @@ class HPTerminal:
     def set_charset(self,charset):
        self.charset= charset
 #
-#   put character into terminal output buffer
-# 
-    def out_terminal (self,t):
-       self.termqueue_lock.acquire()
-       self.termqueue.put(t)
-       self.termqueue_lock.release()
-#
 #   reset terminal, send ESC e
 # 
     def reset_terminal(self):
-       self.termqueue_lock.acquire()
-       self.termqueue.put(0x1b)
-       self.termqueue.put(0x65)
-       self.termqueue_lock.release()
+       self.win.pildevice.putGuiQueueItem(0x1b)
+       self.win.pildevice.putGuiQueueItem(0x65)
 #
 #    becomes visible, call update_term to redraw the view
 #

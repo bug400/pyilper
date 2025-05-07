@@ -124,6 +124,8 @@
 # - open raw file: only existing files are allowed
 # 04.05.2022 jsi
 # - PySide6 migration
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase or pildrive class
 #
 import time
 import threading
@@ -202,6 +204,7 @@ class cls_tabdrive(cls_tabdrivegeneric):
 #
       self.charset= PILCONFIG.get(self.name,"charset",CHARSET_HP71)
       self.terminalcharsize= PILCONFIG.get(self.name,"directorycharsize",-1)
+
 #
 #     create drive GUI object
 #
@@ -383,9 +386,7 @@ class cls_RawDriveWidget(cls_GenericDriveWidget):
       self.medium=self.comboMedium.currentIndex()
       deviceName,self.tracks,self.surfaces,self.blocks=self.mediainfo[self.medium]
       self.lblMediumText.setText(self.mediumText())
-      self.pildevice.setlocked(True)
       self.pildevice.sethdisk(self.filename,self.tracks,self.surfaces,self.blocks)
-      self.pildevice.setlocked(False)
       PILCONFIG.put(self.name,'medium',self.medium)
       try:
          PILCONFIG.save()
@@ -414,9 +415,7 @@ class cls_RawDriveWidget(cls_GenericDriveWidget):
          reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
       if self.pildevice is not None:
-         self.pildevice.setlocked(True)
          self.pildevice.sethdisk(self.filename,self.tracks,self.surfaces,self.blocks)
-         self.pildevice.setlocked(False)
       self.lblFilename.setText(self.filename)
 #
 #  enter raw filename, file must exist because __wrec__ does not create a
@@ -677,9 +676,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
          reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 
       if self.pildevice is not None:
-         self.pildevice.setlocked(True)
          self.pildevice.sethdisk(self.filename,tracks,surfaces,blocks)
-         self.pildevice.setlocked(False)
       self.lblFilename.setText(self.filename)
       self.lifdir.setFileName(self.filename)
       if self.filename=="":
@@ -711,9 +708,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.parent.parent.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       if self.pildevice is not None:
-         self.pildevice.setlocked(True)
          self.pildevice.setdevice(did,aid)
-         self.pildevice.setlocked(False)
       self.toggle_controls()
 
    def do_pack(self):
@@ -785,9 +780,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
    def refreshDirList(self):
       if self.filename=="":
          return
-      self.pildevice.acquireaccesslock()
       self.lifdir.refresh()
-      self.pildevice.releaseaccesslock()
 #
 #  enter lif filename
 #
@@ -1099,12 +1092,16 @@ class cls_LifDirWidget(QtWidgets.QWidget):
     def refresh(self):
         if self.__filename__== "":
            return
+        if self.parent.pildevice is None:
+           return
         self.clear()
+        self.parent.pildevice.acquiredisklock()
         try:
            lif=cls_LifFile()
            lif.set_filename(self.__filename__)
            lif.lifopen()
         except LifError:
+           self.parent.pildevice.releasedisklock()
            return
         lifdir= cls_LifDir(lif)
         lifdir.open()
@@ -1141,6 +1138,7 @@ class cls_LifDirWidget(QtWidgets.QWidget):
                 self.__model__.setItem(self.__rowcount__, column, item)
             self.__rowcount__+=1
         lif.lifclose()
+        self.parent.pildevice.releasedisklock()
 #
 #       go to end of scroll area
 #
@@ -1214,10 +1212,15 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 # - call self.__setstatus__ instead of setting the status variable directly
 # - return write protect error in wrec if write to file fails instead of 
 #   error code 29
-#
+# 21.12.2024 jsi:
+# - introduced  disk_lock and modified_lock, all other queues, locks and shared variables are now part of 
+#   the pildevbase class
 
 
 class cls_pildrive(cls_pildevbase):
+
+   CONF_HDISK=0
+   CONF_DEVICE=1
 
 #
 #  Note: if we would like to implement a true "raw" device then we must
@@ -1243,7 +1246,6 @@ class cls_pildrive(cls_pildevbase):
       self.__fpt__ = False        # flag pointer
       self.__flpwr__ = 0          # flag partial write
       self.__ptout__ = 0          # pointer out
-      self.__modified__= False    # medium modification flag
       self.__tracks__= 0          # no of tracks of medium
       self.__surfaces__= 0        # no of surfaces of medium
       self.__blocks__= 0          # no of blocks of medium
@@ -1253,16 +1255,23 @@ class cls_pildrive(cls_pildevbase):
       self.__buf0__= bytearray(256) # buffer 0
       self.__buf1__= bytearray(256) # buffer 1
       self.__hdiscfile__= ""        # disc file
-      self.__isactive__= False    # device active in loop
-      self.__access_lock__= threading.Lock() 
       self.__timestamp__= time.time() # last time of beeing talker
 
       self.__isWindows__= isWindows # true, if Windows platform
       self.__isRawDevice__= isRawDevice # true, if drive is used as raw device
 
 #
+# --- shared variables between threads
+#
+      self.__modified_lock__= threading.Lock() 
+      self.__modified__= False    # medium modification flag
+#     lock for image file access
+      self.__disk_lock__= threading.Lock() 
+
+#
 # public ------------
 #
+
 
 #
 # enable/disable (do nothing)
@@ -1276,66 +1285,72 @@ class cls_pildrive(cls_pildevbase):
 #  was image modified since last timestamp
 #
    def ismodified(self):
-      self.__access_lock__.acquire()
+      self.__modified_lock__.acquire()
       if self.__modified__:
         self.__modified__= False
-        self.__access_lock__.release()
+        self.__modified_lock__.release()
         return (True, self.__timestamp__)
       else:
-        self.__access_lock__.release()
+        self.__modified_lock__.release()
         return (False, self.__timestamp__)
 #
 #  lock device
 #
-   def acquireaccesslock(self):
-      self.__access_lock__.acquire()
+   def acquiredisklock(self):
+      self.__disk_lock__.acquire()
 
 #
 #  release device
 #
-   def releaseaccesslock(self):
-      self.__access_lock__.release()
+   def releasedisklock(self):
+      self.__disk_lock__.release()
 
 
 #
 #  set new filename (disk change) and medium information
 #
    def sethdisk(self,filename,tracks,surfaces,blocks):
-      self.__hdiscfile__= filename
-      self.__tracks__= tracks
-      self.__surfaces__= surfaces
-      self.__blocks__= blocks
-      self.__nbe__= tracks*surfaces*blocks
+      self.putDeviceQueueItem ([cls_pildrive.CONF_HDISK,filename, tracks, surfaces, blocks])
 
-      k=0
-      for i in (24,16,8,0):
-         self.__lif__[k]= tracks >> i & 0xFF
-         k+=1
-      for i in (24,16,8,0):
-         self.__lif__[k]= surfaces >> i & 0xFF
-         k+=1
-      for i in (24,16,8,0):
-         self.__lif__[k]= blocks >> i & 0xFF
-         k+=1
-      self.__clear_device__()
-      self.__setstatus__(0)   
+#
+# set aid and did of device
+#
+   def setdevice(self,did,aid):
+      self.putDeviceQueueItem([cls_pildrive.CONF_DEVICE,did,aid])
+
+#
+# check config change
+#
+   def process_device_queue(self,items):
+      for i in items:
+         if i[0]== cls_pildrive.CONF_HDISK:
+            self.__hdiscfile__= i[1]
+            self.__tracks__= i[2]
+            self.__surfaces__= i[3]
+            self.__blocks__= i[4]
+            self.__nbe__= self.__tracks__* self.__surfaces__* self.__blocks__
+
+            k=0
+            for j in (24,16,8,0):
+               self.__lif__[k]= self.__tracks__ >> j & 0xFF
+               k+=1
+            for j in (24,16,8,0):
+               self.__lif__[k]= self.__surfaces__ >> j & 0xFF
+               k+=1
+            for j in (24,16,8,0):
+               self.__lif__[k]= self.__blocks__ >> j & 0xFF
+               k+=1
+            self.__clear_device__()
+            self.__setstatus__(0)   
 #
 #     Note: the device status should be 23 (new media) here. This status
 #     is reset to zero after a SST was processed by the real drive which has not
 #     been implemented in pildevbase.py so far. Without that at least the
 #     HP-71B hangs on media initialization.
 #
-      return
-#
-# set aid and did of device
-#
-   def setdevice(self,did,aid):
-      self.__aid__= aid
-      if did== "":
-         self.__did__= ""
-      else:
-         self.__did__=did
-      self.__clear_device__()
+         if i[0]== cls_pildrive.CONF_DEVICE:
+            self.__did__=i[1]
+            self.__aid__=i[2]
       return
 #
 # private
@@ -1363,11 +1378,8 @@ class cls_pildrive(cls_pildevbase):
 # read one sector n* pe (256 bytes) into buf0
 #
    def __rrec__(self):
-      self.__access_lock__.acquire()
-      if self.__islocked__:
-         self.__access_lock__.release()
-         self.__setstatus__(20)   # no medium error
-         return
+
+      self.acquiredisklock()
       try:
          if self.__isWindows__:
             fd= os.open(self.__hdiscfile__,os.O_RDONLY | os.O_BINARY)
@@ -1386,7 +1398,7 @@ class cls_pildrive(cls_pildevbase):
                self.__buf0__[i]=0x00
       except OSError as e:
          self.__setstatus__(20)  # failed read always returns no medium error
-      self.__access_lock__.release()
+      self.releasedisklock()
       return
 #
 # fix the header if record 0 (LIF header) is written
@@ -1431,11 +1443,8 @@ class cls_pildrive(cls_pildevbase):
 # write buffer 0 to one sector n* pe (256 bytes)
 #
    def __wrec__(self):
-      self.__access_lock__.acquire()
-      if self.__islocked__:
-         self.__access_lock__.release()
-         self.__setstatus__(20) # no medium error
-         return
+
+      self.acquiredisklock()
       try:
          if self.__isWindows__:
             fd= os.open(self.__hdiscfile__, os.O_WRONLY | os.O_BINARY)
@@ -1447,7 +1456,9 @@ class cls_pildrive(cls_pildevbase):
                self.__fix_header__()
 #           print("wrec record %d" % (self.__pe__))
             os.write(fd,self.__buf0__)
+            self.__modified_lock__.acquire()
             self.__modified__= True
+            self.__modified_lock__.release()
             self.__timestamp__= time.time()
             self.__setstatus__(0)   # success, clear status
          except OSError as e:
@@ -1457,7 +1468,7 @@ class cls_pildrive(cls_pildevbase):
       except OSError as e:
          self.__setstatus__(29) # file open failed always returns write 
                                 # protect error
-      self.__access_lock__.release()
+      self.releasedisklock()
       return
 
 #
@@ -1469,11 +1480,8 @@ class cls_pildrive(cls_pildevbase):
       for i in range (0, len(b)):
                b[i]= 0xFF
 
-      self.__access_lock__.acquire()
-      if self.__islocked__:
-         self.__access_lock__.release()
-         self.__setstatus__(20) # no medium error
-         return
+
+      self.acquiredisklock()
       try:
          if self.__isWindows__:
             fd= os.open(self.__hdiscfile__, os.O_WRONLY | os.O_BINARY |  os.O_TRUNC | os.O_CREAT, 0o644)
@@ -1487,7 +1495,7 @@ class cls_pildrive(cls_pildevbase):
       except OSError:
          self.__setstatus__(29)  # failed file creation and initialization 
                                  # always returns write protect error
-      self.__access_lock__.release()
+      self.releasedisklock()
       return
 #
 #  private (overloaded) -------------------------
@@ -1498,9 +1506,9 @@ class cls_pildrive(cls_pildevbase):
       self.__fpt__= False
       self.__pe__ = 0    
       self.__oc__ = 0   
-      self.__access_lock__.acquire()
+      self.__modified_lock__.acquire()
       self.__modified__= False
-      self.__access_lock__.release()
+      self.__modified_lock__.release()
 #
 #     Initialize/Invalidate buffer content. The HP-41 as controller uses
 #     buf 1 as a directory cache.

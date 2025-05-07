@@ -22,7 +22,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import queue
 import threading
 import array
 from .pilconfig import PILCONFIG
@@ -49,6 +48,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - added keyboard type configuration
 # 16.02.2019 jsi
 # - put int not char on termqueue
+# 21.12.2024 jsi:
+# - all queues, locks and shared variables are now part of the pildevbase class
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -110,6 +111,12 @@ class cls_tabterminal(cls_tabtermgeneric):
       else:
          self.guiobject.disable_keyboard()
 #
+#  output guiqueue content to terminal
+#
+   def out_device(self,items):
+      for i in items:
+         self.guiobject.HPTerminal.process(i)
+#
 # HP-IL virtual terminal object class ---------------------------------------
 #
 # Initial release derived from ILPER 1.43 for Windows
@@ -170,44 +177,18 @@ class cls_pilterminal(cls_pildevbase):
       self.__did__ = "PILTERM"         # device id
       self.__guiobject__= guiobject    # terminal gui object
 #
-#     initialize HP-IL outdata buffer
-#
-      self.__outbuf__= array.array('i')
-      self.__oc__=0
-
-#
-# public --------
-#
-#  put character or escape sequence to HP-IL outdata queue, called by terminal frontend
-#
-   def putDataToHPIL(self,c):
-      self.__status_lock__.acquire()
-      self.__outbuf__.insert(0, c)
-      self.__oc__+=1
-      self.__status__ = self.__status__ | 0x50 # set ready for data and srq bit
-      self.__status_lock__.release()
-#
 # private (overloaded) --------
 #
 #  forward data coming from HP-IL to the terminal frontend widget
 #
    def __indata__(self,frame):
-      self.__access_lock__.acquire()
-      locked= self.__islocked__
-      self.__access_lock__.release()
-      if not locked:
-         self.__guiobject__.out_terminal(frame & 0xFF)
+        self.putGuiQueueItem(frame & 0xFF)
 #
 #  clear device: empty HP-IL outdata buffer and reset terminal
 #
    def __clear_device__(self):
       super().__clear_device__()              # this clears srq
-      self.__status_lock__.acquire()
-      self.__oc__=0
-      self.__outbuf__= array.array('i')
-      self.__status__= self.__status__ & 0xEF # clear ready for data
-      self.__status_lock__.release()
-
+      self.clearOutQueue()
 #
 #     reset device
 #
@@ -219,12 +200,11 @@ class cls_pilterminal(cls_pildevbase):
    def __outdata__(self,frame):
       self.__status_lock__.acquire()
       self.__status__= self.__status__ & 0xBF # clear srq bit
-      if self.__oc__== 0:
+      if self.__outqueue__.empty():
          frame= 0x540 # EOT
       else:
-         frame= self.__outbuf__.pop()
-         self.__oc__-=1
-         if self.__oc__== 0:
+         frame= self.__outqueue__.get_nowait()
+         if self.__outqueue__.empty():
             self.__status__= self.__status__ & 0xEF # clear ready for data bit
       self.__status_lock__.release()
       return(frame)
