@@ -149,9 +149,26 @@ Build a macOS Automator application to create a desktop shortcut. Use the "run s
 
 ### Installation on Linux
 
-Generally, it is recommended to use the Python Interpreter provided by the Linux distribution. 
+Generally, it is recommended to use the Python Interpreter and the Qt software provided by the Linux distribution. 
 
-To install pyILPER from PyPI, follow the macOS installation instructions.
+The [releases section](https://github.com/bug400/pyilper/releases) provides an installer (.deb file) for 
+DEBIAN Linux and compatible distributions. 
+See the release comments, which DEBIAN version is currently supported. To install the .deb file, issue the 
+following command as root in the directory containing the installer file:
+
+    apt install ./pyilper_X.Y.Z_all.deb 
+
+This will also install additional software components, which are necessary to run pyILPER. After that, pyILPER
+cann be called with:
+
+    pyiler
+
+from the command line.
+
+For non DEBIAN Linux systems you should try to install the [required components](#requirements) from
+the distribution repositories.
+
+If you would linke to install pyILPER from PyPI, follow the macOS installation instructions. Please note, that there may be problems with incompatible system libraries.
 
 
 ## Installation from GitHub
