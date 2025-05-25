@@ -890,8 +890,6 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #             found key replacement, send it
 #
 #             print("Keyboard lookup ", lookup, event.isAutoRepeat())
-              if key == QtCore.Qt.Key_Return:
-                 time.sleep(0.2)  # TEST
               if lookup:
                  for i in lookup:
                     self._kbdfunc(i,True)

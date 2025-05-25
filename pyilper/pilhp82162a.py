@@ -2083,10 +2083,6 @@ class cls_pilhp82162a(cls_pildevbase):
    def __clear_device__(self):
       super().__clear_device__()
 #
-#     clear printer queue
-#
-      self.__printqueue__.clear()
-#
 #     reset device 
 #
       self.__printer__.reset()
