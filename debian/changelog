@@ -1,7 +1,8 @@
-pyilper (1.9.0.dev1) bookworm; urgency=medium
+pyilper (1.9.0.dev2) bookworm; urgency=medium
 
   * refactoring of queues and locks 
   * minimum Python version is now 3.7
+  * Thinkjet printer: bug fixes and page processing improvements
 
  -- bookworm <achim@trillian>  Sat, 21 Dec 2024 09:31:56 +0100
 

@@ -46,7 +46,7 @@
 import copy
 import threading
 import re
-from math import floor
+from math import floor, ceil
 from .pilcore import *
 if QTBINDINGS=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets,QtPrintSupport
@@ -62,12 +62,10 @@ from .pilpdf import cls_pdfprinter
 #
 # constants --------------------------------------------------------------
 #
-
-PDF_LINES=70           # number of lines in pdf output
-PDF_MARGINS=50         # margins (top,bot,left,right) of pdf output
-PDF_MAX_COLS=3         # max number of columns in pdf output
-PDF_COLUMN_SPACING=80  # spacing between columns
-PDF_LINE_SPACING=0     # linespacing in (relative) pixel
+PDF_LINES_PER_PAGE_A4=63
+PDF_LINES_PER_PAGE_LETTER=60
+PDF_PRINT_AREA_WIDTH=6.7
+PDF_DPI=192
 
 # GUI commands
 CMD_LF_PRESSED=     0
@@ -233,17 +231,16 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #
 #     printer status that controls the appearance of the printer output 
 #
-      self.pdf_rows=480           # text length in rows
       self.char_attr=0            # character pitch
       self.char_bold=False        # bold mode
       self.char_underline=False   # underline mode
       self.hiRes=False            # high resolution of graphics output
-      self.lpi6=True              # lines/inch
+      self.lpi=6                  # lines/inch
       self.wrapEOL=False          # EOL wrap
+      self.lines_per_page= 0      # 0 means max number of lines that will fit on the page
 #
 #     line coordinates
 #
-      self.pos_y=0                # in 4 dots (1280dpi) steps
       self.pos_x=0                # in 1280dpi steps
 
       self.graphics_counter=0     # number of graphics lines 
@@ -258,6 +255,7 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
       self.printview=cls_ScrolledHp2225bView(self,self.name,self.papersize)
       self.hbox.addWidget(self.printview)
       self.vbox=QtWidgets.QVBoxLayout()
+      self.printview.page_config(self.lines_per_page,self.lpi)
 #
 #     Clear Button
 #
@@ -383,7 +381,7 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
       flist=cls_pdfprinter.get_pdfFilename()
       if flist is None:
          return
-      self.printview.pdf(flist[0],self.pdf_rows)
+      self.printview.pdf(flist[0])
       return
 #
 #  repeated LF pressed action
@@ -450,33 +448,23 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #     line feed advance according to line spacing
 #
       elif cmd== REMOTECMD_LF:
-#        print("GUI: lf")
-         if self.lpi6:
-             self.printview.advance(8)
-         else:
-             self.printview.advance(6)
+#        print("GUI: lf") ##
+         self.advance_line()
          self.graphics_counter=0
 #
 #     Form feed, we need that for the PDF output later
 #
       elif cmd== REMOTECMD_FF:
-#        print("GUI: ff")
-         if self.lpi6:
-             self.printview.advance(8)
-         else:
-             self.printview.advance(6)
+#        print("GUI: ff") ##
          self.graphics_counter=0
-         self.printview.add([ELEMENT_FF])
+         self.printview.formfeed(0)
 #
 #     advance one half line feed
 #
       elif cmd== REMOTECMD_HLF:
-#        print("GUI: half lf")
+#        print("GUI: half lf") ##
          self.graphics_counter=0
-         if self.lpi6:
-             self.printview.advance(4)
-         else:
-             self.printview.advance(3)
+         self.advance_half_line()
 #
 #     Backspace, go back one character, use current font width
 #
@@ -491,21 +479,22 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #     update configuration triggered by an escape sequence
 #
       elif cmd== REMOTECMD_STATUS:
-#        print("GUI status", item[1])
-         self.pdf_rows=item[1][0] 
+#        print("GUI status", item[1]) ##
+         self.lines_per_page=item[1][0] 
          self.char_attr=item[1][1]
          self.char_bold=item[1][2]
          self.char_underline=item[1][3]
          self.hiRes=item[1][4]
-         self.lpi6=item[1][5]
+         self.lpi=item[1][5]
          self.wrapEOL=item[1][6]
+         self.printview.page_config(self.lines_per_page,self.lpi)
 #
 #     text element, we do not support EOL wrap at the moment and ignore any text
-#     that exceeds a sinlge line
+#     that exceeds a single line
 #
       elif cmd== REMOTECMD_TEXT:
          self.graphics_counter=0
-#        print("GUI text", self.pos_x, item[1])
+#        print("GUI text", self.pos_x, item[1]) ##
          txt_list= item[1]
 
          while txt_list is not None:
@@ -548,10 +537,8 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #           if we have remaining text in txt_list then do a cr/lf
 #
             if txt_list is not None:
-               if self.lpi6:
-                  self.printview.advance(8)
-               else:
-                  self.printview.advance(6)
+#              print("remaining text +++")
+               self.advance_line()
                self.graphics_counter=0
                self.pos_x=0
 #
@@ -559,7 +546,7 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #
       elif cmd== REMOTECMD_GRAPHICS:
          self.pos_x=0
-#        print("GUI: graphics",self.graphics_counter, item[1])
+#        print("GUI: graphics",self.graphics_counter, item[1]) ##
          self.printview.add([ELEMENT_GRAPHICS,self.graphics_counter,self.hiRes,item[1]])
          self.graphics_counter+=1
          if self.graphics_counter == 2:
@@ -569,14 +556,31 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #     terminate graphics, advance 4 dots
 #
       elif cmd== REMOTECMD_TERMGRAPHICS:
-          self.graphics_counter=0
-          self.printview.advance(1)
+#        print("GUI: terminate graphics") ##
+         self.graphics_counter=0
+         self.printview.advance(1)
 #
 #     log line
 #
       elif cmd== REMOTECMD_LOG:
          self.parent.cbLogging.logWrite(item[1])
          self.parent.cbLogging.logFlush()
+#
+#  advance full line
+#
+   def advance_line(self):
+         if self.lpi==6:
+             self.printview.advance(8)
+         else:
+             self.printview.advance(6)
+#
+#  advance half line
+#
+   def advance_half_line(self):
+         if self.lpi==6:
+             self.printview.advance(4)
+         else:
+             self.printview.advance(3)
 #
 # custom class for scrolled hp2225b output widget ----------------------------
 #
@@ -619,8 +623,8 @@ class cls_ScrolledHp2225bView(QtWidgets.QWidget):
 #
 #   generate pdf output
 #
-   def pdf(self,filename,pdf_rows):
-      self.hp2225bwidget.pdf(filename,pdf_rows)
+   def pdf(self,filename):
+      self.hp2225bwidget.pdf(filename)
 #
 #  becomes visible/invisible: nothing to do
 #
@@ -645,6 +649,16 @@ class cls_ScrolledHp2225bView(QtWidgets.QWidget):
 #
    def advance(self,n):
       self.hp2225bwidget.advance(n)
+#
+#  form feed
+#
+   def formfeed(self,n):
+      self.hp2225bwidget.formfeed(n)
+#
+#  page config
+#
+   def page_config(self,lines_per_page,lpi):
+      self.hp2225bwidget.page_config(lines_per_page,lpi)
       
 #
 # custom class for hp2225b output  -----------------------------------------
@@ -664,8 +678,8 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       p=self.palette()
       p.setColor(self.backgroundRole(),QtCore.Qt.white)
       self.setPalette(p)
-      self.w=-1
-      self.h=-1
+      self.w=0
+      self.h=0 
       self.rows= 0
 
       self.linebuffersize= -1
@@ -686,6 +700,13 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       self.lb_position=0
 
       self.printscene=None
+#
+#     page configuration
+#
+      self.lpi=6
+      self.lines_per_page=0
+      self.max_h= self.text_length()
+      self.h=0
       self.reconfigure()
       return
 
@@ -745,6 +766,10 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       self.lb_current= 0
       self.lb_anz=0
       self.lb_position=0
+      self.lpi=6
+      self.h=0
+      self.lines_per_page=0
+      self.max_h= self.text_length()
       self.printscene.reset()
 #
 #  resize event, adjust the scene size, reposition everything and redraw
@@ -789,7 +814,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #  PDF output. Text length configuration is not supported at the moment
 #
-   def pdf(self,filename,pdf_rows):
+   def pdf(self,filename):
 
       self.printer=QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
       self.printer.setPageOrientation(QtGui.QPageLayout.Portrait)
@@ -798,29 +823,30 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #     page set up, we use 192 dpi dots as scene units and set the left
 #     and right margins so that we get a print width of 6.7 inches
-#     The height of 60 lines is 10 inches
-#     DINA4:  0,79 inches= 151 dots
-#     Letter: 0.9 inches = 173 dots
-#
+#     The height of the text area is 60 lines (Letter) or 63 lines (A4) at 6lpi
 #
 #     A4 format is 8,27 inches x 11,7 inches
 #
       if self.papersize== PDF_FORMAT_A4:
          self.printer.setPageSize(QT_FORM_A4)
-         lmargin= 151
-         tmargin= 163 
-         scene_w= 1280 + lmargin*2
-         scene_h= 1920 + tmargin*2
+         lmargin= ceil((8.27- PDF_PRINT_AREA_WIDTH)/2*PDF_DPI)
+         scene_w= ceil(PDF_PRINT_AREA_WIDTH*PDF_DPI)
+         t_height= PDF_LINES_PER_PAGE_A4* 32
+         tmargin= ceil(((11.7*PDF_DPI) - t_height)/2)
+         max_h= t_height+ tmargin
+         scene_h= max_h + tmargin
          self.pdfscene.setSceneRect(0,0,scene_w,scene_h)
       else:
 #
 #     Letter format is 8.5 inches x 11 inches
 #
          self.printer.setPageSize(QT_FORM_LETTER)
-         lmargin= 173
-         tmargin= 96 
-         scene_w= 1280 + lmargin*2
-         scene_h= 1920 + tmargin*2
+         lmargin= int((8.5- PDF_PRINT_AREA_WIDTH)/2*PDF_DPI)
+         scene_w= ceil(PDF_PRINT_AREA_WIDTH*PDF_DPI)
+         t_height= PDF_LINES_PER_PAGE_LETTER* 32
+         tmargin= ceil(((11*PDF_DPI) - t_height)/2)
+         max_h= t_height+ tmargin
+         scene_h= max_h + tmargin
          self.pdfscene.setSceneRect(0,0,scene_w,scene_h)
 
       self.painter= QtGui.QPainter()
@@ -828,67 +854,62 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       self.printer.setOutputFileName(filename)
       self.painter.begin(self.printer)
 
-      pdfitems=[]
-      anzitems=0
+      self.pdfitems=[]
+      self.anzitems=0
       delta= BUFFER_LINE_H*2
-      horizontal_margin=floor((480-pdf_rows)/2)*delta
+#     print("begin pdf") ##
 
-      rowcount=0
-      y=tmargin + horizontal_margin
+      y=0
+      page_head_y=0
 #
 #     print all items to pdf
 #
       for i in range(0,self.lb_anz):
           s= self.lb[i]
-#
-#         we have a form feed element, issue new page
-#
           if s is not None:
-              if s[0][0]== ELEMENT_FF:
-#                print("FF ",rowcount, pdf_rows)
-                 self.pdfscene.render(self.painter)
-                 self.printer.newPage()
-                 for l in reversed(range(anzitems)):
-                    self.pdfscene.removeItem(pdfitems[l])
-                    del pdfitems[-1]
-                 anzitems=0
-                 y=tmargin + horizontal_margin
-                 rowcount=0
-#                print("reset y to ",y,tmargin,horizontal_margin)
-              item=cls_hp2225b_line(s,self.font,self.printcolor)
-              pdfitems.append(item)
+#
+#             check for form feed
+#
+              for e in s:
+                 if e[0]== ELEMENT_FF:
+                    page_head_y= y
+#                   print("FF page_head_y ",page_head_y ) ##
+                    if page_head_y > 0:
+                       self.pdf_draw_page(True)
+              dy=y- page_head_y
+              if dy > self.max_h:
+                 page_head_y=y
+#                print("forced page break ") ##
+                 self.pdf_draw_page(True)
+                 dy=0
+              item=cls_hp2225b_line(s,self.font,self.printcolor,True)
+              self.pdfitems.append(item)
               self.pdfscene.addItem(item)
-              item.setPos(lmargin,y)
-#             print("pdf item added ",rowcount,y,s)
-              anzitems+=1
+              item.setPos(lmargin,dy+tmargin)
+#             print("pdf item added ",lmargin, dy+tmargin,s) ##
+              self.anzitems+=1
 #         else:
-#             print("none element")
-          rowcount+=1
+#             print("none element") ##
           y+= delta
-#
-#         does the next line fit into the page, if not issue page break
-#         The character height is always 16px.
-#
-          if rowcount > pdf_rows:
-#             print("page break ",rowcount, pdf_rows)
-              self.pdfscene.render(self.painter)
-              self.printer.newPage()
-              for l in reversed(range(anzitems)):
-                  self.pdfscene.removeItem(pdfitems[l])
-                  del pdfitems[-1]
-              anzitems=0
-              rowcount=0
-              y=tmargin + horizontal_margin
-#             print("reset y to ",y,tmargin,horizontal_margin)
 #
 #     output remaining data and terminate printing
 #
-      if anzitems > 0:
-          self.pdfscene.render(self.painter)
-          for l in reversed(range(anzitems)):
-              self.pdfscene.removeItem(pdfitems[l])
-              del pdfitems[-1]
+      if self.anzitems > 0:
+         self.pdf_draw_page(False)
       self.painter.end()
+#
+#     pdf draw page
+#
+   def pdf_draw_page(self,newpage):
+      self.pdfscene.render(self.painter)
+      if newpage:
+         self.printer.newPage()
+      for l in reversed(range(self.anzitems)):
+         self.pdfscene.removeItem(self.pdfitems[l])
+         del self.pdfitems[-1]
+      self.anzitems=0
+      return
+
 #
 #
 #  Mouse wheel event
@@ -919,16 +940,27 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #     add element
 #
    def add(self,elem):
-#     print("View add element: ",self.lb_current,elem)
+#     print("View add element: ",self.lb_current,elem) ##
       if self.lb[self.lb_current] is None:
           self.lb[self.lb_current]= [ ]
       self.lb[self.lb_current].append(elem)
       self.printscene.update_scene()
       return
 #
+#  form feed
+#
+   def formfeed(self,n):
+      self.add([ELEMENT_FF])
+      self.h= n*4
+#
 #  advance
 #
    def advance(self,n):
+#     print("advance ",n,self.h+(n*4),self.max_h) ##
+      if self.h+(n*4) > self.max_h:
+         self.formfeed(n)
+      else:
+         self.h+=n*4
       if self.lb_anz+n < self.linebuffersize:
           self.lb_anz+=n
           self.lb_current+=n
@@ -940,7 +972,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       self.lb_position= self.lb_current- (self.rows) 
       if self.lb_position < 0:
           self.lb_position=0
-#     print("View advance: ",n,self.lb_current, self.lb_position)
+#     print("View advance: ",n,self.lb_current, self.lb_position, self.lb_anz, self.h, self.max_h) ##
       self.parent.scrollbar.setMaximum(self.lb_position)
       self.parent.scrollbar.setValue(self.lb_position)
       self.printscene.update_scene()
@@ -955,6 +987,33 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #     pdf output
 #
    def do_pdf(self,filename):
+      return
+#
+#  return current vertical text length in pixel, depends on current lpi and text length settings
+#
+   def text_length(self):
+      if self.papersize== PDF_FORMAT_A4:
+         lpp=PDF_LINES_PER_PAGE_A4
+      else:
+         lpp=PDF_LINES_PER_PAGE_LETTER
+      if self.lpi==8:
+         lpp*=4/3
+      if (self.lines_per_page > 0) and (self.lines_per_page <= lpp):
+         lpp= self.lines_per_page
+
+      if self.lpi==6:
+         return lpp* 32
+      else: 
+         return lpp* 24 
+
+#
+#  update lpi and text length settings
+#
+   def page_config(self,lines_per_page,lpi):
+      self.lines_per_page= lines_per_page
+      self.lpi=lpi
+      self.max_h= self.text_length()
+#     print("page length reconfigured ",lines_per_page," ",lpi) ##
       return
 #
 # custom class for HP2225B graphics scene
@@ -988,7 +1047,7 @@ class cls_hp2225b_scene(QtWidgets.QGraphicsScene):
       self.rows= rows
       self.si= [None] * rows
       self.setSceneRect(0,0,self.w,(self.h*(self.rows)))
-#     print("Scene size ",self.w,self.h*self.rows)
+#     print("Scene size ",self.w,self.h*self.rows) ##
 #
 #  clear window and reset
 #
@@ -1019,18 +1078,22 @@ class cls_hp2225b_scene(QtWidgets.QGraphicsScene):
             self.si[j].setPos(0,y)
          y+=self.h
          j+=1
-#     print("Scene updated: ",start,end)
+#     print("Scene updated: ",start,end) ##
 
 #
 # custum class HP2225 print line
 #
 class cls_hp2225b_line(QtWidgets.QGraphicsItem):
 
-    def __init__(self,itemlist, font, color):
+#
+#   do_pdf is True if PDF output, do not draw separator line
+#
+    def __init__(self,itemlist, font, color,do_pdf=False):
         super().__init__()
         self.itemlist= itemlist
         self.font=font
         self.color=color
+        self.do_pdf=do_pdf
         metrics=QtGui.QFontMetrics(self.font)
         self.font_height=metrics.height()
         self.rect= QtCore.QRectF(0,0,PRINTER_WIDTH_HIGH,self.font_height)
@@ -1051,9 +1114,15 @@ class cls_hp2225b_line(QtWidgets.QGraphicsItem):
         posx=0
         for item in self.itemlist:
 #
-#       Ignore element form feed
+#       Element form feed
 #
             if item[0]== ELEMENT_FF:
+                painter.setPen(self.color)
+                posy=0
+                posx=0
+                posx2=PRINTER_WIDTH_HIGH
+                if not self.do_pdf:
+                   painter.drawLine(QtCore.QLine(posx,posy,posx2,posy))
                 continue
 #
 #       Paint text, align each character so that we get exactly the
@@ -1082,7 +1151,7 @@ class cls_hp2225b_line(QtWidgets.QGraphicsItem):
 #
             elif item[0]==ELEMENT_GRAPHICS:
                 painter.setPen(self.color)
-                posy=item[1]*2
+                posy=item[1]*2 
                 hiRes=item[2]
                 posx=0
                 for i in item[3]:
@@ -1115,33 +1184,6 @@ class cls_hp2225b(QtCore.QObject):
       super().__init__()
       self.pildevice=parent
       self.guiobject= guiobject
-
-      self.esc= False             # escape mode
-      self.esc_seq=""             # escape sequence
-      self.esc_prefix=""          # prefix of combined esc sequences
-      self.num_graphics=-1        # number of graphics bytes
-      self.ignore_crlf=False      # flag to ignore cr/lf between graphics chunks
-      self.apgot=False            # flag avoid printing graphics over text
-#
-#     printer status that controls the appearance of the printer output and
-#     is therefore handled in the GUI component
-#
-      self.text_legnth= 60        # text length given in lines
-      self.char_attr=0            # character pitch
-      self.char_bold=False        # bold mode
-      self.char_underline=False   # underline mode
-      self.hiRes=False            # high resolution of graphics output
-      self.lpi6=False             # lines/inch
-      self.pdf_rows=480           # number of rows for pdf output
-      self.wrapEOL=False          # EOL wrap
-      self.empty_line=False       # detect empty text lines, this disables
-                                  # ignoring cr/lf.
-#
-#     printer status which is handled here
-#
-      self.ltermMode=0           # line termination mode
-      self.altMode= False         # alternate control mode
-      self.displayFunctions=False # display functions mode
 #
 #     buffer for accumulated text and graphics data b e t w e e n control 
 #     characters or escape sequences
@@ -1162,19 +1204,25 @@ class cls_hp2225b(QtCore.QObject):
       self.num_graphics=-1
       self.ignore_crlf=False
       self.apgot=False
-      self.text_length=60
-      self.pdf_rows=480
+
       self.char_attr=0
       self.char_bold= False
       self.char_underline=False
       self.ltermMode=0
       self.hiRes=False
-      self.lpi6=True
+      self.lpi=6
       self.wrapEOL=False
 
       self.displayFunctions=False
       self.log_line=""
       self.empty_line=False
+      self.lines_per_page=0
+#
+#     printer status which is handled here
+#
+      self.ltermMode=0           # line termination mode
+      self.altMode= False         # alternate control mode
+      self.displayFunctions=False # display functions mode
       self.buf_clear()
 
 #
@@ -1198,10 +1246,10 @@ class cls_hp2225b(QtCore.QObject):
        data_copy= copy.deepcopy(self.buf_data)
        if self.buf_status == self.BUF_TEXT:
            self.pildevice.putGuiQueueItem([REMOTECMD_TEXT,data_copy])
-#          print("put cmd text",data_copy)
+#          print("put cmd text",data_copy) ##
        else:
            self.pildevice.putGuiQueueItem([REMOTECMD_GRAPHICS,data_copy])
-#          print("put cmd graphics",data_copy)
+#          print("put cmd graphics",data_copy) ##
        self.buf_clear()
 # 
 #  send status
@@ -1214,7 +1262,7 @@ class cls_hp2225b(QtCore.QObject):
 #
 #      send printer status to GUI
 #
-       self.pildevice.putGuiQueueItem([REMOTECMD_STATUS,[self.pdf_rows,self.char_attr,self.char_bold,self.char_underline,self.hiRes,self.lpi6,self.wrapEOL]])
+       self.pildevice.putGuiQueueItem([REMOTECMD_STATUS,[self.lines_per_page,self.char_attr,self.char_bold,self.char_underline,self.hiRes,self.lpi,self.wrapEOL]])
 
 #
 #  set/clear alternate control mode (has no effect)
@@ -1290,14 +1338,14 @@ class cls_hp2225b(QtCore.QObject):
 #     6 lines/inch
 #
       elif self.esc_seq=="&l6D":
-         self.lpi6=True
+         self.lpi=6
          self.put_status()
          return
 #
 #     8 lines/inch
 #
       elif self.esc_seq=="&l8D":
-         self.lpi6=False
+         self.lpi=8
          self.put_status()
          return
 #
@@ -1449,29 +1497,15 @@ class cls_hp2225b(QtCore.QObject):
             n=int(ret[0])
          except ValueError:
             return
-         self.text_length=n
-#
-#        the text length can not exceed 80 lines at 8lpi or 60 lines at
-#        6lpi. The maximum print area is limited to 10 inches in this
-#        emulator. We now compute the numbes of rows the new text length
-#        will occupy in the pdf file
-#
-         if self.text_length < 1:
-             self.text_length=1
-         if self.lpi6:
-             if self.text_length> 60:
-                 self.text_length=60
-             self.pdf_rows= self.text_length* 8
-         else:
-             if self.text_length> 80:
-                 self.text_length=80
-             self.pdf_rows= self.text_length * 6
-         self.pdf_rows-=1
+         if n > 0:
+             self.lines_per_page=n
          self.put_status()
          return
       else:
           print("hp2225: illegal escape sequence ignored: ", self.esc_seq)
       return
+
+
 #
 #  begin graphics
 #
@@ -1479,7 +1513,7 @@ class cls_hp2225b(QtCore.QObject):
 #
 #     flush any pending text and go to BOL
 #
-#     print("begin new graphics ",self.num_graphics)
+#     print("begin new graphics ",self.num_graphics) ##
       if self.buf_status== self.BUF_TEXT:
          self.cr()
 #
@@ -1509,7 +1543,7 @@ class cls_hp2225b(QtCore.QObject):
 #
       if self.num_graphics==0:
          self.buf_flush()
-#        print("graphics flushed ", self.buf_status)
+#        print("graphics flushed ", self.buf_status) ##
          self.num_graphics= -1
 #
 #     process ESC sequences

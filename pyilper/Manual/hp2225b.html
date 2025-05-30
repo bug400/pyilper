@@ -94,7 +94,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <li>Generate a PDF file from the content of the scollable printer output window.</li>
 </ul>
 
-<p><em>Note:</em> Form feeds are not visible in the printer output window. However they create corresponding page breaks in the PDF file.</p>
+<p>A solid line in the printer output window indicates a form feed.</p>
 
 <h3 class="w3-text-teal">Differences compared to the real device</h3>
 
@@ -107,7 +107,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 <li>Printable output is generated as PDF file. The page size is limited to the dimensions of either the <em>Letter</em> or the <em>A4</em> format which is specified in the <em>pyILPER</em> system settings. Therefore the control codes for page length and perforation skip have no effect.</li>
 
-<li>The maximum horizontal size of the text area is 10 inches, which is equivalent to 80 lines at 8 lines/inch or 60 lines at 6 lines/inch. The text length can be changed within these limits. A smaller text area is vertically centered in the PDF file. Note: The PDF file is generated <em>only with the endmost text length setting!</em>. 
+<li>The maximum horizontal size of the text area is 60 (6 lpi) or 80 (8 lpi) lines for the letter and 63 (6 lpi) or 84 (8 lpi) lines for the A4 paper size. The text length can be changed within these limits.</li> 
 
 <li>The HP-IL printer status bytes always return the condition "ready to receive data" because the error conditions of the real device do not apply to the emulator.</li>
 
@@ -116,13 +116,14 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <li>The control codes for selftest or bidirectional printing have no effect.</li>
 </ul>
 
+<p>Note: it is recommended to set the printer line width to indefinite to avoid undesirable effects because escape sequences are included in the text length.
 
 <h3 class="w3-text-teal">Issues</h3>
 
 <ul class="w3-ul">
 <li>On macOS stretched characters do not render correctly. This seems to be a problem with the Qt version for this operating system. As a work around the expanded font is displayed with unstretched characters but the correct character spacing.</li>
 
-<li>The alternate controls mode is not implemented. The emulator ignores all data in this mode.</li>
+<li>The alternate controls mode is not and will not be implemented. The emulator ignores all data in this mode.</li>
 </ul>
 
 <h3 class="w3-text-teal">Device controls</h3>
