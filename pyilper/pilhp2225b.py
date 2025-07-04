@@ -41,6 +41,8 @@
 # - user cls_pdfprinter.get_pdfFilename method to get pdf file name
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
+# 30.05.0205 jsi:
+# - various improvements and fixes for page processing
 
 #
 import copy
@@ -95,7 +97,6 @@ BUFFER_LINE_H=2             # number of dots for a buffer line height
 PRINTER_WIDTH_HIGH= 1280    # width in dots for high resolution
 PRINTER_WIDTH_LOW= 640      # width in dots for low resolution
 HP2225B_FONT_PIXELSIZE=28   # pixel size of the font used
-HP2225B_MAX_LINES= 69       # maximum number of lines for a page
 
 # Font widths
 # Print mode norm                 : 80 chars/line, character width 16 dots
@@ -692,7 +693,8 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
       self.font.setPixelSize(HP2225B_FONT_PIXELSIZE)
       metrics=QtGui.QFontMetrics(self.font)
 #
-#     Initialize line bitmap buffer
+#     Initialize the scrollup buffer. Each buffer line holds the data of items that shall be rendered
+#     at the buffer line position. 
 #
       self.lb= [ ]
       self.lb_current= 0
@@ -701,7 +703,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 
       self.printscene=None
 #
-#     page configuration
+#     default page configuration (6lpi)
 #
       self.lpi=6
       self.lines_per_page=0

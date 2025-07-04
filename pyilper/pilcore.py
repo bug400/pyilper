@@ -161,11 +161,15 @@
 # - 1.8.10 development
 # 5.12.2024
 # - 1.8.10 production
+# 01.07.2025
+# - refactoring of interface constants
 #
 import platform
 import os
 import re
 import sys
+
+
 #
 # Program constants --------------------------------------------------
 #
@@ -179,13 +183,13 @@ CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
 #
 PYTHON_REQUIRED_MAJOR=3
 PYTHON_REQUIRED_MINOR=5
-#
-# Communication modes and classes
-#
-MODE_PILBOX=0         # connect to PIL-Box
-MODE_TCPIP=1          # connect to virtual HP-IL over TCP/IP
-MODE_SOCKET=2         # conect via Unix domain socket
 
+#
+# Interface classes
+#
+CLASS_INTERFACE_BOX=0
+CLASS_INTERFACE_NET=1
+#
 #
 # PIL-Box communication
 #

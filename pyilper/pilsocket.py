@@ -22,16 +22,32 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# tcpip single socket communication object class  -----------------------------
+# tcpip single socket communication object class and thread class  -----------------------------
 #
 # Initial version derived from ILPER 1.43
 #
 # Changelog
 # 03.02.2020 jsi:
 # - fixed Python 3.8 syntax warning
+# 13.11.2017 cg
+# - made code more robust against illegal ACK in the pil box and pil box
+#   simulation interface when receiving byte data from the pil box
+# - removed ACK in pil box simulation after receiving a high byte
+# 29.06.2025 jsi
+# - Refactoring: moved socket thread class from pilthreads to this file
+# - Moved interface configuration GUI from pilwidgets to this file
 
 import select
 import socket
+from .pilcore import QTBINDINGS,assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK,CLASS_INTERFACE_NET
+from .pilconfig import PILCONFIG
+from .pilthreads import PilThreadError, cls_pilthread_generic, cls_ConfigInterfaceGeneric
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
+MODE_SOCKET=2
 
 class SocketError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -126,4 +142,148 @@ class cls_pilsocket:
          self.__clientlist__[0].sendall(buf) ## correct ?
       except OSError as e:
          raise SocketError("cannot send data:",e.strerror)
+
+
+#
+# TCP/IP socket communication thread with DOSBox or virtualbox serial port
+#
+class cls_PilSocketThread(cls_pilthread_generic):
+
+   def __init__(self, parent,mode):
+      super().__init__(parent,mode,CLASS_INTERFACE_NET)
+
+   def enable(self):
+      self.send_message("Not connected to socket")
+      socket_name=PILCONFIG.get("pyilper","serverport")
+      try:
+         self.commobject= cls_pilsocket(socket_name)
+         self.commobject.open()
+      except SocketError as e:
+         self.commobject.close()
+         self.commobject=None
+         raise PilThreadError(e.msg, e.add_msg)
+      return
+#
+#  thread execution 
+#         
+   def run(self):
+      super().run()
+#
+      try:
+#
+#        Thread main loop    
+#
+         while True:
+            if self.check_pause_stop():
+               break
+            if self.commobject.isConnected():
+               self.send_message('client connected')
+            else:
+               self.send_message('waiting for client')
+#
+#           read byte from socket
+#
+            ret=self.commobject.read(COMTMOUTREAD)
+            if ret is None:
+               continue
+      
+            byt=ord(ret)
+#
+#           is not a low byte
+#
+            if (byt & 0xC0) == 0x00:
+#
+#              check for high byte, else ignore
+#
+               if (byt & 0x20) != 0:
+#
+#                 got high byte, save it and continue
+#
+                  self.__lasth__ = byt & 0xFF
+               continue
+#
+#           low byte, assemble frame according to 7- oder 8 bit format
+#
+            frame= assemble_frame(self.__lasth__,byt)
+#
+#           send acknowledge if we received a pil box command
+#
+            if frame & 0x7F4 == 0x494:
+#
+#              send only original low byte as acknowledge
+#
+               lbyt = byt
+#
+#           process virtual HP-IL devices 
+#
+            else:
+               self.update_framecounter()
+               for i in self.devices:
+                  frame=i[0].process(frame)
+#
+#              disassemble answer frame
+#
+               hbyt, lbyt= disassemble_frame(frame)
+
+               if  hbyt != self.__lasth__:
+#
+#                 send high part if different from last one
+#
+                  self.__lasth__ = hbyt
+                  self.commobject.write(hbyt)
+#
+#                 read acknowledge
+#
+                  b= self.commobject.read(COMTMOUTACK)
+                  if b is None:
+                     raise PilThreadError("cannot get acknowledge: ","timeout")
+                  if ord(b)!= 0x0D:
+                     raise PilThreadError("cannot get acknowledge: ","unexpected value")
+#
+#        otherwise send only low part
+#
+            self.commobject.write(lbyt)
+
+      except SocketError as e:
+         self.send_message('socket disconnected after error. '+e.msg+': '+e.add_msg)
+         self.signal_crash()
+      self.running=False
+
+class cls_PILSOCKET_Config(cls_ConfigInterfaceGeneric):
+
+   def __init__(self,configName,configNumber, interfaceText):
+
+      super().__init__(configName,configNumber,interfaceText)
+      self.serverport= PILCONFIG.get(configName,"serverport")
+
+      self.intvalidator= QtGui.QIntValidator()
+      self.splayout=QtWidgets.QGridLayout()
+      self.splayout.addWidget(QtWidgets.QLabel("Server port:"),0,0)
+      self.edtServerport=QtWidgets.QLineEdit()
+      self.edtServerport.setValidator(self.intvalidator)
+      self.splayout.addWidget(self.edtServerport,0,1)
+      self.edtServerport.setText(str(self.serverport))
+      self.vb.addLayout(self.splayout)
+
+      if cls_ConfigInterfaceGeneric.interfaceMode == self.configNumber:
+         self.radBut.setChecked(True)
+         self.setActive(True)
+      else:
+         self.radBut.setChecked(False)
+         self.setActive(False)
+
+   def setActive(self,flag):
+      self.edtServerport.setEnabled(flag)
+      self.radBut.setChecked(flag)
+
+   def check_reconnect(self):
+      needs_reconnect= False
+      needs_reconnect |= self.check_param("serverport", int(self.edtServerport.text()))
+      return needs_reconnect
+         
+   def store_config(self):
+      PILCONFIG.put(self.configName,"serverport",int(self.edtServerport.text()))
+
+
+
 

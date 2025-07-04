@@ -186,6 +186,8 @@
 # - copy config: error processing added
 # 04.05.2022 jsi
 # - PySide6 migration
+# 04.07.2025 jsi
+# - refactoring of interfaces configuration
 #
 import os
 import sys
@@ -201,26 +203,45 @@ if QTBINDINGS=="PySide6":
    from PySide6 import QtCore, QtWidgets
 if QTBINDINGS=="PyQt5":
    from PyQt5 import QtCore, QtWidgets
+
 from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilconfig import  PilConfigError, PILCONFIG, cls_pilconfig
 from .penconfig import  PenConfigError, PENCONFIG, cls_PenConfigWindow
 from .shortcutconfig import  ShortcutConfigError, SHORTCUTCONFIG, cls_ShortcutConfigWindow
-from .pilthreads import cls_PilBoxThread, cls_PilTcpIpThread, cls_PilSocketThread, PilThreadError
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck, check_lifutils
-from .pilhp82162a import cls_tabhp82162a
+
+#
+# Devices
+#
 from .pilplotter import cls_tabplotter
 from .pildrive import cls_tabdrive,cls_tabrawdrive
 from .pilscope import cls_tabscope
 from .pilprinter import cls_tabprinter
 from .pilterminal import cls_tabterminal
 from .pilhp2225b import cls_tabhp2225b
+from .pilhp82162a import cls_tabhp82162a
+
+TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a,TAB_HP2225B: cls_tabhp2225b, TAB_RAWDRIVE: cls_tabrawdrive}
+#
+
+# Interfaces
+#
+from .pilbox import cls_PilBoxThread, cls_PILBOX_Config, MODE_PILBOX
+from .piltcpip import cls_PilTcpIpThread, cls_PILTCPIP_Config, MODE_TCPIP
+from .pilsocket import cls_PilSocketThread, cls_PILSOCKET_Config, MODE_SOCKET
+from .pilthreads import PilThreadError
+
+INTERFACES= {MODE_PILBOX:[cls_PilBoxThread,cls_PILBOX_Config,"","PIL-Box"],\
+MODE_TCPIP:[cls_PilTcpIpThread, cls_PILTCPIP_Config,"","HP-IL over TCP/IP" ],\
+MODE_SOCKET:[cls_PilSocketThread, cls_PILSOCKET_Config,"","TCP/IP Socket Server (PIL-Box Emulation)"]}
+
+if 'PYILPER_EXPERIMENTAL' in os.environ:
+   b=compile(os.environ['PYILPER_EXPERIMENTAL'],"<string>","exec")
+   exec(b)
 
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
 
-COMMTHREAD_CLASSES={MODE_PILBOX:cls_PilBoxThread,MODE_TCPIP:cls_PilTcpIpThread,MODE_SOCKET:cls_PilSocketThread}
-
-TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a,TAB_HP2225B: cls_tabhp2225b, TAB_RAWDRIVE: cls_tabrawdrive}
 
 #
 # Main application ------------------------------------------------------ 
@@ -439,9 +460,13 @@ class cls_pyilper(QtCore.QObject):
 #     create and enable thread
 #
       mode=PILCONFIG.get(self.name,"mode")
+      if not mode in INTERFACES:
+         mode=MODE_PILBOX
+         PILCONFIG.put(self.name,"mode",MODE_PILBOX)
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"unknown interface selected, defaulting to PIL-Box",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       try:
-         commthread_class= COMMTHREAD_CLASSES[mode]
-         self.commthread= commthread_class(self.ui)
+         commthread_class= INTERFACES[mode][0]
+         self.commthread= commthread_class(self.ui,mode)
          self.commthread.enable()
       except PilThreadError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
@@ -519,7 +544,7 @@ class cls_pyilper(QtCore.QObject):
 #  callback pyilper configuration, reset the communication only if needed
 #
    def do_pyilperConfig(self):
-      (accept, needs_reconnect, needs_reconfigure)= cls_PilConfigWindow.getPilConfig(self)
+      (accept, needs_reconnect, needs_reconfigure)= cls_PilConfigWindow.getPilConfig(self,INTERFACES)
       if accept:
          if needs_reconnect:
             self.disable()

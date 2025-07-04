@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# tcpip object class  ---------------------------------------------
+# tcpip object class  and tcpip thread object class ---------------------------------------------
 #
 # Initial version derived from ILPER 1.43
 #
@@ -63,9 +63,21 @@
 #   to thread object
 # 03.02.2020 jsi:
 # - fixed Python 3.8 syntax warning
+# 29.06.2025 jsi:
+# - Refactoring: moved tcpip thread class from pilthreads to this file
+# - Moved interface configuration GUI from pilwidgets to this file
 
 import select
 import socket
+from .pilconfig import PILCONFIG
+from .pilcore import QTBINDINGS,assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK,CLASS_INTERFACE_NET
+if QTBINDINGS=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if QTBINDINGS=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+from .pilthreads import PilThreadError, cls_pilthread_generic, cls_ConfigInterfaceGeneric
+
+MODE_TCPIP=1
 
 class TcpIpError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -208,3 +220,134 @@ class cls_piltcpip:
                self.__outconnected__ = False
          else:
             bRetry = self.openclient()
+
+#
+# HP-IL over TCP-IP communication thread (see http://hp.giesselink.com/hpil.htm)
+#
+class cls_PilTcpIpThread(cls_pilthread_generic):
+
+   def __init__(self, parent,mode):
+      super().__init__(parent,mode,CLASS_INTERFACE_NET)
+
+   def enable(self):
+      port= PILCONFIG.get("pyilper","port")
+      remote_host=PILCONFIG.get("pyilper","remotehost")
+      remote_port=PILCONFIG.get("pyilper","remoteport")
+      self.send_message('Not connected to virtual HP-IL devices')
+      try:
+         self.commobject= cls_piltcpip(port, remote_host, remote_port)
+         self.commobject.open()
+      except TcpIpError as e:
+         self.commobject.close()
+         self.commobject=None
+         raise PilThreadError(e.msg, e.add_msg)
+      return
+
+   def disable(self):
+      super().disable()
+      return
+#
+#  thread execution 
+#         
+   def run(self):
+      super().run()
+#
+      connected=False
+      try:
+#
+#        Thread main loop    
+#
+         while True:
+            if self.check_pause_stop():
+               break
+#
+#           read frame from Network
+#
+            frame=self.commobject.read(COMTMOUTREAD)
+            if self.commobject.isConnected():
+               if not connected:
+                  connected=True
+                  self.send_message('connected to virtual HP-IL devices')
+            else:
+               if connected:
+                  connected= False
+                  self.commobject.close_outsocket()
+                  self.send_message('not connected to virtual HP-IL devices')
+               
+            if frame is None:
+               continue
+#
+#           process frame and return it to loop
+#
+            self.update_framecounter()
+            for i in self.devices:
+               frame=i[0].process(frame)
+#
+#           send frame
+#
+            self.commobject.write(frame)
+
+      except TcpIpError as e:
+         self.send_message('disconnected after error. '+e.msg+': '+e.add_msg)
+         self.send_message(e.msg)
+         self.signal_crash()
+      self.running=False
+
+class cls_PILTCPIP_Config(cls_ConfigInterfaceGeneric):
+
+   def __init__(self,configName,configNumber, interfaceText):
+
+      super().__init__(configName,configNumber,interfaceText)
+      self.configNumber=configNumber
+      self.configName=configName
+
+      self.port= PILCONFIG.get(configName,"port")
+      self.remoteport= PILCONFIG.get(configName,"remoteport")
+      self.remotehost= PILCONFIG.get(configName,"remotehost")
+
+      self.intvalidator= QtGui.QIntValidator()
+      self.glayout=QtWidgets.QGridLayout()
+      self.lbltxt3=QtWidgets.QLabel("Port:")
+      self.glayout.addWidget(self.lbltxt3,0,0)
+      self.lbltxt4=QtWidgets.QLabel("Remote host:")
+      self.glayout.addWidget(self.lbltxt4,1,0)
+      self.lbltxt5=QtWidgets.QLabel("Remote port:")
+      self.glayout.addWidget(self.lbltxt5,2,0)
+      self.edtPort= QtWidgets.QLineEdit()
+      self.glayout.addWidget(self.edtPort,0,1)
+      self.edtPort.setText(str(self.port))
+      self.edtPort.setValidator(self.intvalidator)
+      self.edtRemoteHost= QtWidgets.QLineEdit()
+      self.glayout.addWidget(self.edtRemoteHost,1,1)
+      self.edtRemoteHost.setText(self.remotehost)
+      self.edtRemotePort= QtWidgets.QLineEdit()
+      self.glayout.addWidget(self.edtRemotePort,2,1)
+      self.edtRemotePort.setText(str(self.remoteport))
+      self.edtRemotePort.setValidator(self.intvalidator)
+      self.vb.addLayout(self.glayout)
+
+      if cls_ConfigInterfaceGeneric.interfaceMode == self.configNumber:
+         self.radBut.setChecked(True)
+         self.setActive(True)
+      else:
+         self.radBut.setChecked(False)
+         self.setActive(False)
+
+
+   def setActive(self,flag):
+      self.edtPort.setEnabled(flag)
+      self.edtRemoteHost.setEnabled(flag)
+      self.edtRemotePort.setEnabled(flag)
+      self.radBut.setChecked(flag)
+
+   def check_reconnect(self):
+      needs_reconnect= False
+      needs_reconnect |= self.check_param("port", int(self.edtPort.text()))
+      needs_reconnect |= self.check_param("remotehost", self.edtRemoteHost.text())
+      needs_reconnect |= self.check_param("remoteport", int(self.edtRemotePort.text()))
+      return needs_reconnect
+
+   def store_config(self):
+      PILCONFIG.put(self.configName,"port", int(self.edtPort.text()))
+      PILCONFIG.put(self.configName,"remotehost", self.edtRemoteHost.text())
+      PILCONFIG.put(self.configName,"remoteport", int(self.edtRemotePort.text()))

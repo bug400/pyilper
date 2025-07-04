@@ -103,10 +103,10 @@ class cls_rs232:
       except:
          raise Rs232Error('cannot write to serial device')
 
-   def rcv(self,timeout):
+   def rcv(self,timeout,n):
       self.__settimeout__(timeout)
       try:
-         c= self.__ser__.read(1)
+         c= self.__ser__.read(n)
       except:
          raise Rs232Error('cannot read from serial device')
       return c

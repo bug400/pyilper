@@ -216,6 +216,8 @@
 # 21.12.2024 jsi:
 # - implemented gui queue for the generic terminal widget
 # - writing logfiles was moved from thread component to gui component
+# 04.07.2025 jsi
+# - refactoring of interfaces configuration
 #
 import datetime
 import re
@@ -238,6 +240,13 @@ if QTBINDINGS=="PyQt5":
 from .pilqterm import QScrolledTerminalWidget
 from .pilcharconv import CHARSET_HP71, charsets
 from .pilconfig import PILCONFIG
+
+from .pilthreads import cls_ConfigInterfaceGeneric
+#from .pilbox import cls_PILBOX_Config
+#from .piltcpip import cls_PILTCPIP_Config
+#from .pilsocket import cls_PILSOCKET_Config
+#from .pililusb import cls_PILILUSB_Config
+
 if isWINDOWS():
    import winreg
 #
@@ -996,126 +1005,23 @@ class cls_AboutWindow(QtWidgets.QDialog):
 
    def do_exit(self):
       self.hide()
-#
-# Get TTy  Dialog class ------------------------------------------------------
-#
 
-class cls_TtyWindow(QtWidgets.QDialog):
-
-   def __init__(self, tty):
-      super().__init__()
-
-      self.oldTty=tty
-      self.setWindowTitle("Select serial device")
-      self.vlayout= QtWidgets.QVBoxLayout()
-      self.setLayout(self.vlayout)
-
-      self.label= QtWidgets.QLabel()
-      self.label.setText("Select or enter serial port")
-#     self.label.setAlignment(QtCore.Qt.AlignCenter)
-
-      self.__ComboBox__ = QtWidgets.QComboBox() 
-      self.__ComboBox__.setEditable(True)
-
-      if isWINDOWS():
-#
-#        Windows COM ports from registry
-#
-         try:
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r"Hardware\DeviceMap\SerialComm",0,winreg.KEY_QUERY_VALUE|winreg.KEY_ENUMERATE_SUB_KEYS) as key:
-               for i in range (0, winreg.QueryInfoKey(key)[1]):
-                  port = winreg.EnumValue(key, i)[1]
-                  self.__ComboBox__.addItem( port, port )
-         except FileNotFoundError:
-            pass
-      else:
-#
-#        Linux /dev/ttyUSBxx /dev/ttyACMxx
-#
-         if isLINUX():
-            r=re.compile("(ttyACM\\d+)|(ttyUSB\\d+)")
-#
-#        Mac OS X /dev/tty.usbserial-*
-#
-         elif isMACOS():
-            r=re.compile("tty.usbserial-*")
-#
-#        Other
-#
-         else:
-            r=re.compile("ttyUSB\\d+")
-         
-         mainPath="/dev"
-         for port in (p.resolve() for p in Path(mainPath).iterdir() if r.match(p.name)):
-            self.__ComboBox__.addItem( str(port), str(port) )
-
-      self.__ComboBox__.activated[int].connect(self.combobox_choosen)
-      self.__ComboBox__.editTextChanged.connect(self.combobox_textchanged)
-      self.buttonBox = QtWidgets.QDialogButtonBox()
-      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-      self.buttonBox.setCenterButtons(True)
-      self.buttonBox.accepted.connect(self.do_ok)
-      self.buttonBox.rejected.connect(self.do_cancel)
-      self.vlayout.addWidget(self.label)
-      self.vlayout.addWidget(self.__ComboBox__)
-      self.hlayout = QtWidgets.QHBoxLayout()
-      self.hlayout.addWidget(self.buttonBox)
-      self.vlayout.addWidget(self.buttonBox)
-      self.__device__= ""
-      idx=self.__ComboBox__.findText(self.oldTty,QtCore.Qt.MatchExactly)
-      if idx  > 0 :
-         self.__ComboBox__.setCurrentIndex(idx)
-      
-
-   def do_ok(self):
-      if self.__device__=="":
-         self.__device__= self.__ComboBox__.currentText()
-         if self.__device__=="":
-            return
-      super().accept()
-
-   def do_cancel(self):
-      super().reject()
-
-
-   def combobox_textchanged(self, device):
-      self.__device__= device
-
-   def combobox_choosen(self, idx):
-      self.__device__= self.__ComboBox__.itemText(idx)
-
-   def getDevice(self):
-      return self.__device__
-
-   @staticmethod
-   def getTtyDevice(tty_device):
-      dialog= cls_TtyWindow(tty_device)
-      dialog.resize(200,100)
-      result= dialog.exec()
-      if result== QtWidgets.QDialog.Accepted:
-         return dialog.getDevice()
-      else:
-         return ""
 #
 # Main pyILPER configuration dialog ------------------------------------------
 #
 class cls_PilConfigWindow(QtWidgets.QDialog):
 
-   def __init__(self,parent): 
+   def __init__(self,parent,interfaces): 
       super().__init__()
       self.__needs_reconnect__= False
       self.__needs_reconfigure__= False
       self.__needs_restart__= False
       self.__name__=parent.name
       self.__parent__= parent
+      self.__interfaces__= interfaces
       self.__mode__=  PILCONFIG.get(self.__name__,"mode")
-      self.__tty__= PILCONFIG.get(self.__name__,"tty")
-      self.__ttyspeed__= PILCONFIG.get(self.__name__,"ttyspeed")
-      self.__port__= PILCONFIG.get(self.__name__,"port")
-      self.__idyframe__= PILCONFIG.get(self.__name__,"idyframe")
-      self.__remotehost__= PILCONFIG.get(self.__name__,"remotehost")
-      self.__remoteport__= PILCONFIG.get(self.__name__,"remoteport")
-      self.__serverport__= PILCONFIG.get(self.__name__,"serverport")
+      cls_ConfigInterfaceGeneric.interfaceMode= self.__mode__
+      
       self.__workdir__=  PILCONFIG.get(self.__name__,"workdir")
       self.__termcharsize__=PILCONFIG.get(self.__name__,"terminalcharsize")
       self.__dircharsize__=PILCONFIG.get(self.__name__,"directorycharsize")
@@ -1144,110 +1050,21 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gbox.setTitle("Communication configuration")
       self.vboxgbox= QtWidgets.QVBoxLayout()
       self.gbox.setLayout(self.vboxgbox)
-#
-#     Section PIL-Box
-#
-      self.radbutPIL = QtWidgets.QRadioButton(self.gbox)
-      self.radbutPIL.setText("PIL-Box")
-      self.radbutPIL.clicked.connect(self.setCheckBoxes)
-      self.vboxgbox.addWidget(self.radbutPIL)
-#
-#     serial device
-#
-      self.hboxtty= QtWidgets.QHBoxLayout()
-      self.lbltxt1=QtWidgets.QLabel("Serial Device: ")
-      self.hboxtty.addWidget(self.lbltxt1)
-      self.lblTty=QtWidgets.QLabel()
-      self.lblTty.setText(self.__tty__)
-      self.hboxtty.addWidget(self.lblTty)
-      self.hboxtty.addStretch(1)
-      self.butTty=QtWidgets.QPushButton()
-      self.butTty.setText("change")
-      self.butTty.pressed.connect(self.do_config_Interface)
-      self.hboxtty.addWidget(self.butTty)
-      self.vboxgbox.addLayout(self.hboxtty)
-#
-#     tty speed combo box
-#
-      self.hboxbaud= QtWidgets.QHBoxLayout()
-      self.lbltxt2=QtWidgets.QLabel("Baud rate ")
-      self.hboxbaud.addWidget(self.lbltxt2)
-      self.comboBaud=QtWidgets.QComboBox()
-      i=0
-      for baud in BAUDRATES:
-         self.comboBaud.addItem(baud[0])
-         if self.__ttyspeed__== baud[1]:
-            self.comboBaud.setCurrentIndex(i)
-         i+=1
- 
-      self.hboxbaud.addWidget(self.comboBaud)
-      self.hboxbaud.addStretch(1)
-      self.vboxgbox.addLayout(self.hboxbaud)
-
-#
-#     idy frames
-#
-      self.cbIdyFrame= QtWidgets.QCheckBox('Enable IDY frames')
-      self.cbIdyFrame.setChecked(self.__idyframe__)
-      self.cbIdyFrame.setEnabled(True)
-      self.cbIdyFrame.stateChanged.connect(self.do_cbIdyFrame)
-      self.vboxgbox.addWidget(self.cbIdyFrame)
-#
-#     section TCP/IP communication
-#
-      self.radbutTCPIP = QtWidgets.QRadioButton(self.gbox)
-      self.radbutTCPIP.setText("HP-IL over TCP/IP")
-      self.radbutTCPIP.clicked.connect(self.setCheckBoxes)
-      self.vboxgbox.addWidget(self.radbutTCPIP)
-#
-#     TCP/IP Parameter input (port, remote host, remote port)
-#
-      self.intvalidator= QtGui.QIntValidator()
-      self.glayout=QtWidgets.QGridLayout()
-      self.lbltxt3=QtWidgets.QLabel("Port:")
-      self.glayout.addWidget(self.lbltxt3,0,0)
-      self.lbltxt4=QtWidgets.QLabel("Remote host:")
-      self.glayout.addWidget(self.lbltxt4,1,0)
-      self.lbltxt5=QtWidgets.QLabel("Remote port:")
-      self.glayout.addWidget(self.lbltxt5,2,0)
-      self.edtPort= QtWidgets.QLineEdit()
-      self.glayout.addWidget(self.edtPort,0,1)
-      self.edtPort.setText(str(self.__port__))
-      self.edtPort.setValidator(self.intvalidator)
-      self.edtRemoteHost= QtWidgets.QLineEdit()
-      self.glayout.addWidget(self.edtRemoteHost,1,1)
-      self.edtRemoteHost.setText(self.__remotehost__)
-      self.edtRemotePort= QtWidgets.QLineEdit()
-      self.glayout.addWidget(self.edtRemotePort,2,1)
-      self.edtRemotePort.setText(str(self.__remoteport__))
-      self.edtRemotePort.setValidator(self.intvalidator)
-      self.vboxgbox.addLayout(self.glayout)
       self.vbox1.addWidget(self.gbox)
-#
-#     Section TCP/IP server port
-#
-      self.radbutServerport = QtWidgets.QRadioButton(self.gbox)
-      self.radbutServerport.setText("TCP/IP socket Server (PIL-Box emulator)")
-      self.radbutServerport.clicked.connect(self.setCheckBoxes)
-      self.vboxgbox.addWidget(self.radbutServerport)
-      self.splayout=QtWidgets.QGridLayout()
-      self.splayout.addWidget(QtWidgets.QLabel("Server port:"),0,0)
-      self.edtServerport=QtWidgets.QLineEdit()
-      self.edtServerport.setValidator(self.intvalidator)
-      self.splayout.addWidget(self.edtServerport,0,1)
-      self.edtServerport.setText(str(self.__serverport__))
-      self.vboxgbox.addLayout(self.splayout)
 
 #
-#     Init radio buttons
+#     Interface config frames
 #
-      if self.__mode__==0:
-         self.radbutPIL.setChecked(True)
-      elif self.__mode__==1:
-         self.radbutTCPIP.setChecked(True)
-      else:
-         self.radbutServerport.setChecked(True)
-      self.setCheckBoxes()
+      
+      cls_ConfigInterfaceGeneric.reset()
+
+      for mode,interface in self.__interfaces__.items():
+         self.vboxgbox.addWidget(interface[1](self.__name__,mode,interface[3]))
+#     self.vboxgbox.addWidget(cls_PILBOX_Config(self.__name__,0,"PIL-Box"))
+#     self.vboxgbox.addWidget(cls_PILTCPIP_Config(self.__name__,1,"HP-IL over TCP/IP"))
+#     self.vboxgbox.addWidget(cls_PILSOCKET_Config(self.__name__,2,"TCP/IP Socket Server (PIL-Box Emulation)"))
+#     self.vboxgbox.addWidget(cls_PILILUSB_Config(self.__name__,3,"ILUSB device"))
+    
 #
 #     Section Working Directory
 #
@@ -1408,7 +1225,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
 #     add ok/cancel buttons
 #
-      self.gbox_buttonlist=[self.radbutPIL, self.radbutTCPIP]
+#     self.gbox_buttonlist=[self.radbutPIL, self.radbutTCPIP]
 
       self.buttonBox = QtWidgets.QDialogButtonBox()
       self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
@@ -1419,41 +1236,9 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.hlayout.addWidget(self.buttonBox)
       self.vbox0.addLayout(self.hlayout)
 
-   def setCheckBoxes(self):
-      if self.radbutPIL.isChecked():
-         self.__mode__=0
-         self.butTty.setEnabled(True)
-         self.edtPort.setEnabled(False)
-         self.edtRemoteHost.setEnabled(False)
-         self.edtRemotePort.setEnabled(False)
-         self.cbIdyFrame.setEnabled(True)
-         self.edtServerport.setEnabled(False)
-         self.comboBaud.setEnabled(True)
-      elif self.radbutTCPIP.isChecked():
-         self.__mode__=1
-         self.butTty.setEnabled(False)
-         self.edtPort.setEnabled(True)
-         self.edtRemoteHost.setEnabled(True)
-         self.edtRemotePort.setEnabled(True)
-         self.cbIdyFrame.setEnabled(True)
-         self.edtServerport.setEnabled(False)
-         self.comboBaud.setEnabled(False)
-      elif self.radbutServerport.isChecked():
-         self.__mode__=2
-         self.butTty.setEnabled(False)
-         self.edtPort.setEnabled(False)
-         self.edtRemoteHost.setEnabled(False)
-         self.edtRemotePort.setEnabled(False)
-         self.cbIdyFrame.setEnabled(False)
-         self.edtServerport.setEnabled(True)
-         self.comboBaud.setEnabled(False)
-
+   
    def do_config_Interface(self):
-      interface= cls_TtyWindow.getTtyDevice(self.__tty__)
-      if interface == "" :
-         return
-      self.__tty__= interface
-      self.lblTty.setText(self.__tty__)
+      return
 
    def getWorkDirName(self):
       dialog=QtWidgets.QFileDialog()
@@ -1463,9 +1248,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       dialog.setOption(QtWidgets.QFileDialog.ShowDirsOnly,True)
       if dialog.exec():
          return dialog.selectedFiles() 
-
-   def do_cbIdyFrame(self):
-      self.__idyframe__= self.cbIdyFrame.isChecked()
 
    def do_cbUseBom(self):
       self.__usebom__= self.cbUseBom.isChecked()
@@ -1510,13 +1292,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #     check if we need to restart the pyILPER communication
 #
       self.__needs_reconnect__= False
-      self.__needs_reconnect__ |= self.check_param("mode",self.__mode__)
-      self.__needs_reconnect__ |= self.check_param("tty", self.lblTty.text())
-      self.__needs_reconnect__ |= self.check_param("ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
-      self.__needs_reconnect__ |= self.check_param("idyframe",self.__idyframe__)
-      self.__needs_reconnect__ |= self.check_param("port", int(self.edtPort.text()))
-      self.__needs_reconnect__ |= self.check_param("remotehost", self.edtRemoteHost.text())
-      self.__needs_reconnect__ |= self.check_param("serverport", int(self.edtServerport.text()))
+      self.__needs_reconnect__ |= cls_ConfigInterfaceGeneric.check_reconnect(PILCONFIG.get(self.__name__,"mode"))
       self.__needs_reconnect__ |= self.check_param("workdir", self.lblwdir.text())
 #
 #     we need to reconnect, so get confirmation
@@ -1540,14 +1316,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #
 #     store parameters
 #
-      PILCONFIG.put(self.__name__,"mode",self.__mode__)
-      PILCONFIG.put(self.__name__,"tty", self.lblTty.text())
-      PILCONFIG.put(self.__name__,"ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
-      PILCONFIG.put(self.__name__,"idyframe",self.__idyframe__)
-      PILCONFIG.put(self.__name__,"port", int(self.edtPort.text()))
-      PILCONFIG.put(self.__name__,"remotehost", self.edtRemoteHost.text())
-      PILCONFIG.put(self.__name__,"remoteport", int(self.edtRemotePort.text()))
-      PILCONFIG.put(self.__name__,"serverport", int(self.edtServerport.text()))
+      cls_ConfigInterfaceGeneric.store_config(self.__name__)
       PILCONFIG.put(self.__name__,"workdir", self.lblwdir.text())
 #
 #     these parameters require a reconfiguration 
@@ -1597,8 +1366,8 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 
 
    @staticmethod
-   def getPilConfig(parent):
-      dialog= cls_PilConfigWindow(parent)
+   def getPilConfig(parent,interfaces):
+      dialog= cls_PilConfigWindow(parent,interfaces)
       result= dialog.exec()
       (reconnect,reconfigure)= dialog.get_status()
       if result== QtWidgets.QDialog.Accepted:

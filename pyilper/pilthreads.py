@@ -43,20 +43,24 @@
 # - fixed detection and acknowledge of a pil box command
 # 04.05.2022 jsi
 # - PySide6 migration
+# 29.06.2025 jsi
+# - refactoring: moved device specific thread classes to the device specific files
+# - created base class for interface configuration GUI
 #
 import sys
 import threading
-from .pilconfig import PILCONFIG
-from .pilbox import cls_pilbox, PilBoxError
-from .piltcpip import cls_piltcpip, TcpIpError
-from .pilcore import assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK
-from .pilcore import QTBINDINGS
-from .pilsocket import cls_pilsocket, SocketError
-from .pilcore import QTBINDINGS
+import re
+from pathlib import Path
+from .pilcore import QTBINDINGS, isWINDOWS, isLINUX
 if QTBINDINGS=="PySide6":
-   from PySide6 import QtCore
+   from PySide6 import QtCore, QtGui, QtWidgets
 if QTBINDINGS=="PyQt5":
-   from PyQt5 import QtCore
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
+if isWINDOWS():
+   import winreg
+from .pilconfig import PILCONFIG
+
 
 #
 class PilThreadError(Exception):
@@ -69,9 +73,11 @@ class PilThreadError(Exception):
 #
 class cls_pilthread_generic(QtCore.QThread):
 
-   def __init__(self, parent):
+   def __init__(self, parent,mode,ifclass):
       super().__init__(parent)
       self.parent=parent
+      self.mode=mode
+      self.ifclass=ifclass
       self.pause= False
       self.running=True
       self.cond=QtCore.QMutex()
@@ -205,284 +211,171 @@ class cls_pilthread_generic(QtCore.QThread):
 #
    def run(self):
       sys.settrace(threading._trace_hook)
-#
-# PIL-Box communications thread over serial port
-#
-class cls_PilBoxThread(cls_pilthread_generic):
-
-   def __init__(self,parent):
-      super().__init__(parent) 
-      self.__lasth__=0
-      self.__baudrate__=0
-
-
-   def enable(self):
-      super().enable()
-      self.send_message("Not connected to PIL-Box")
-      baud=PILCONFIG.get("pyilper",'ttyspeed')
-      ttydevice=PILCONFIG.get("pyilper",'tty')
-      idyframe=PILCONFIG.get("pyilper",'idyframe')
-      self.__lasth__=0
-      if ttydevice== "":
-         raise PilThreadError("Serial device not configured ","Run pyILPER configuration")
-      try:
-         self.commobject=cls_pilbox(ttydevice,baud,idyframe)
-         self.commobject.open()
-      except PilBoxError as e:
-         raise PilThreadError(e.msg,e.add_msg)
-      self.__baudrate__= self.commobject.getBaudRate()
-      return
-#
-#  thread execution 
-#         
-   def run(self):
-      super().run()
-#
-      self.send_message("connected to PIL-Box at {:d} baud".format(self.__baudrate__))
-      try:
-#
-#        Thread main loop    
-#
-         while True:
-            if self.check_pause_stop():
-               break
-#
-#           read byte from PIL-Box
-#
-            ret=self.commobject.read()
-            if ret== b'':
-               continue
-            byt=ord(ret)
-#
-#           process byte read from the PIL-Box, is not a low byte
-#
-            if (byt & 0xC0) == 0x00:
-#
-#              check for high byte, else ignore
-#
-               if (byt & 0x20) != 0:
-#
-#                 got high byte, save it
-#
-                  self.__lasth__ = byt & 0xFF
-#
-#                 send acknowledge only at 9600 baud connection
-#
-                  if self.__baudrate__ == 9600:
-                     self.commobject.write(0x0d)
-               continue
-#
-#           low byte, build frame 
-#
-            frame= assemble_frame(self.__lasth__,byt)
-#
-#           process virtual HP-IL devices
-#
-            self.update_framecounter()
-            for i in self.devices:
-               frame=i[0].process(frame)
-#
-#           If received a cmd frame from the PIL-Box send RFC frame to virtual
-#           HPIL-Devices
-#
-            if (frame & 0x700) == 0x400:
-               self.update_framecounter()
-               for i in self.devices:
-                  i[0].process(0x500)
-#
-#           disassemble into low and high byte 
-#
-            hbyt, lbyt= disassemble_frame(frame)
-
-            if hbyt != self.__lasth__:
-#
-#              send high part if different from last one and low part
-#
-               self.__lasth__ = hbyt
-               self.commobject.write(lbyt,hbyt)
-            else:
-#
-#              otherwise send only low part
-#
-               self.commobject.write(lbyt)
-
-      except PilBoxError as e:
-         self.send_message('PIL-Box disconnected after error. '+e.msg+': '+e.add_msg)
-         self.signal_crash()
-      self.running=False
 
 #
-# HP-IL over TCP-IP communication thread (see http://hp.giesselink.com/hpil.htm)
+# Get TTy  Dialog class ------------------------------------------------------
 #
-class cls_PilTcpIpThread(cls_pilthread_generic):
 
-   def __init__(self, parent):
-      super().__init__(parent)
+class cls_TtyWindow(QtWidgets.QDialog):
 
-   def enable(self):
-      port= PILCONFIG.get("pyilper","port")
-      remote_host=PILCONFIG.get("pyilper","remotehost")
-      remote_port=PILCONFIG.get("pyilper","remoteport")
-      self.send_message('Not connected to virtual HP-IL devices')
-      try:
-         self.commobject= cls_piltcpip(port, remote_host, remote_port)
-         self.commobject.open()
-      except TcpIpError as e:
-         self.commobject.close()
-         self.commobject=None
-         raise PilThreadError(e.msg, e.add_msg)
-      return
+   def __init__(self, tty):
+      super().__init__()
 
-   def disable(self):
-      super().disable()
-      return
-#
-#  thread execution 
-#         
-   def run(self):
-      super().run()
-#
-      connected=False
-      try:
-#
-#        Thread main loop    
-#
-         while True:
-            if self.check_pause_stop():
-               break
-#
-#           read frame from Network
-#
-            frame=self.commobject.read(COMTMOUTREAD)
-            if self.commobject.isConnected():
-               if not connected:
-                  connected=True
-                  self.send_message('connected to virtual HP-IL devices')
-            else:
-               if connected:
-                  connected= False
-                  self.commobject.close_outsocket()
-                  self.send_message('not connected to virtual HP-IL devices')
-               
-            if frame is None:
-               continue
-#
-#           process frame and return it to loop
-#
-            self.update_framecounter()
-            for i in self.devices:
-               frame=i[0].process(frame)
-#
-#           send frame
-#
-            self.commobject.write(frame)
+      self.oldTty=tty
+      self.setWindowTitle("Select serial device")
+      self.vlayout= QtWidgets.QVBoxLayout()
+      self.setLayout(self.vlayout)
 
-      except TcpIpError as e:
-         self.send_message('disconnected after error. '+e.msg+': '+e.add_msg)
-         self.send_message(e.msg)
-         self.signal_crash()
-      self.running=False
-#
-# TCP/IP socket communication thread with DOSBox or virtualbox serial port
-#
-class cls_PilSocketThread(cls_pilthread_generic):
+      self.label= QtWidgets.QLabel()
+      self.label.setText("Select or enter serial port")
+#     self.label.setAlignment(QtCore.Qt.AlignCenter)
 
-   def __init__(self, parent):
-      super().__init__(parent)
+      self.__ComboBox__ = QtWidgets.QComboBox() 
+      self.__ComboBox__.setEditable(True)
 
-   def enable(self):
-      self.send_message("Not connected to socket")
-      socket_name=PILCONFIG.get("pyilper","serverport")
-      try:
-         self.commobject= cls_pilsocket(socket_name)
-         self.commobject.open()
-      except SocketError as e:
-         self.commobject.close()
-         self.commobject=None
-         raise PilThreadError(e.msg, e.add_msg)
-      return
+      if isWINDOWS():
 #
-#  thread execution 
-#         
-   def run(self):
-      super().run()
+#        Windows COM ports from registry
 #
-      try:
+         try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r"Hardware\DeviceMap\SerialComm",0,winreg.KEY_QUERY_VALUE|winreg.KEY_ENUMERATE_SUB_KEYS) as key:
+               for i in range (0, winreg.QueryInfoKey(key)[1]):
+                  port = winreg.EnumValue(key, i)[1]
+                  self.__ComboBox__.addItem( port, port )
+         except FileNotFoundError:
+            pass
+      else:
 #
-#        Thread main loop    
+#        Linux /dev/ttyUSBxx /dev/ttyACMxx
 #
-         while True:
-            if self.check_pause_stop():
-               break
-            if self.commobject.isConnected():
-               self.send_message('client connected')
-            else:
-               self.send_message('waiting for client')
+         if isLINUX():
+            r=re.compile("(ttyACM\\d+)|(ttyUSB\\d+)")
 #
-#           read byte from socket
+#        Mac OS X /dev/tty.usbserial-*
 #
-            ret=self.commobject.read(COMTMOUTREAD)
-            if ret is None:
-               continue
+         elif isMACOS():
+            r=re.compile("tty.usbserial-*")
+#
+#        Other
+#
+         else:
+            r=re.compile("ttyUSB\\d+")
+         
+         mainPath="/dev"
+         for port in (p.resolve() for p in Path(mainPath).iterdir() if r.match(p.name)):
+            self.__ComboBox__.addItem( str(port), str(port) )
+
+      self.__ComboBox__.activated[int].connect(self.combobox_choosen)
+      self.__ComboBox__.editTextChanged.connect(self.combobox_textchanged)
+      self.buttonBox = QtWidgets.QDialogButtonBox()
+      self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+      self.buttonBox.setCenterButtons(True)
+      self.buttonBox.accepted.connect(self.do_ok)
+      self.buttonBox.rejected.connect(self.do_cancel)
+      self.vlayout.addWidget(self.label)
+      self.vlayout.addWidget(self.__ComboBox__)
+      self.hlayout = QtWidgets.QHBoxLayout()
+      self.hlayout.addWidget(self.buttonBox)
+      self.vlayout.addWidget(self.buttonBox)
+      self.__device__= ""
+      idx=self.__ComboBox__.findText(self.oldTty,QtCore.Qt.MatchExactly)
+      if idx  > 0 :
+         self.__ComboBox__.setCurrentIndex(idx)
       
-            byt=ord(ret)
-#
-#           is not a low byte
-#
-            if (byt & 0xC0) == 0x00:
-#
-#              check for high byte, else ignore
-#
-               if (byt & 0x20) != 0:
-#
-#                 got high byte, save it and continue
-#
-                  self.__lasth__ = byt & 0xFF
-               continue
-#
-#           low byte, assemble frame according to 7- oder 8 bit format
-#
-            frame= assemble_frame(self.__lasth__,byt)
-#
-#           send acknowledge if we received a pil box command
-#
-            if frame & 0x7F4 == 0x494:
-#
-#              send only original low byte as acknowledge
-#
-               lbyt = byt
-#
-#           process virtual HP-IL devices 
-#
-            else:
-               self.update_framecounter()
-               for i in self.devices:
-                  frame=i[0].process(frame)
-#
-#              disassemble answer frame
-#
-               hbyt, lbyt= disassemble_frame(frame)
 
-               if  hbyt != self.__lasth__:
-#
-#                 send high part if different from last one
-#
-                  self.__lasth__ = hbyt
-                  self.commobject.write(hbyt)
-#
-#                 read acknowledge
-#
-                  b= self.commobject.read(COMTMOUTACK)
-                  if b is None:
-                     raise PilThreadError("cannot get acknowledge: ","timeout")
-                  if ord(b)!= 0x0D:
-                     raise PilThreadError("cannot get acknowledge: ","unexpected value")
-#
-#        otherwise send only low part
-#
-            self.commobject.write(lbyt)
+   def do_ok(self):
+      if self.__device__=="":
+         self.__device__= self.__ComboBox__.currentText()
+         if self.__device__=="":
+            return
+      super().accept()
 
-      except SocketError as e:
-         self.send_message('socket disconnected after error. '+e.msg+': '+e.add_msg)
-         self.signal_crash()
-      self.running=False
+   def do_cancel(self):
+      super().reject()
+
+
+   def combobox_textchanged(self, device):
+      self.__device__= device
+
+   def combobox_choosen(self, idx):
+      self.__device__= self.__ComboBox__.itemText(idx)
+
+   def getDevice(self):
+      return self.__device__
+
+   @staticmethod
+   def getTtyDevice(tty_device):
+      dialog= cls_TtyWindow(tty_device)
+      dialog.resize(200,100)
+      result= dialog.exec()
+      if result== QtWidgets.QDialog.Accepted:
+         return dialog.getDevice()
+      else:
+         return ""
+
+#
+# generic interface configuration class
+#
+class cls_ConfigInterfaceGeneric(QtWidgets.QFrame):
+
+   if QTBINDINGS=="PySide6":
+      buttonCheckedSignal= QtCore.Signal()
+   if QTBINDINGS=="PyQt5":
+      buttonCheckedSignal= QtCore.pyqtSignal()
+
+   interfaceConfigWidgets= []
+
+   interfaceMode= 0
+
+   def __init__(self,configName,configNumber,interfaceText):
+      super().__init__()
+      cls_ConfigInterfaceGeneric.interfaceConfigWidgets.append(self)
+      self.configName= configName
+      self.configNumber= configNumber
+      self.isChecked = False
+      self.vb= QtWidgets.QVBoxLayout(self)
+      self.radBut= QtWidgets.QRadioButton()
+      self.radBut.setText(interfaceText)
+      self.radBut.clicked.connect(self.do_checked)
+      self.vb.addWidget(self.radBut)
+
+   def setActive(self,flag):
+      return
+
+   def check_reconnect(self):
+      return False
+
+   def store_config(self):
+      return
+      
+   def do_checked(self):
+      cls_ConfigInterfaceGeneric.interfaceMode=self.configNumber
+      for w in cls_ConfigInterfaceGeneric.interfaceConfigWidgets:
+         if w is self:
+            w.setActive(True)
+         else:
+            w.setActive(False)
+
+   def check_param(self,param,value):
+      oldvalue= PILCONFIG.get(self.configName,param,value)
+      return (value!= oldvalue)
+     
+   @staticmethod
+   def check_reconnect(old_mode):
+      needs_reconnect = False
+      if cls_ConfigInterfaceGeneric.interfaceMode != old_mode:
+         needs_reconnect = True
+      for w in cls_ConfigInterfaceGeneric.interfaceConfigWidgets:
+         needs_reconnect |= w.check_reconnect()
+      
+      return needs_reconnect
+
+   @staticmethod
+   def store_config(configName):
+      PILCONFIG.put(configName,"mode",cls_ConfigInterfaceGeneric.interfaceMode)
+      for w in cls_ConfigInterfaceGeneric.interfaceConfigWidgets:
+         w.store_config()
+
+   @staticmethod
+   def reset():
+      cls_ConfigInterfaceGeneric.interfaceConfigWidgets= []

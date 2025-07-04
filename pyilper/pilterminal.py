@@ -24,11 +24,13 @@
 
 import threading
 import array
+import time
 from .pilconfig import PILCONFIG
-from .pilwidgets import cls_tabtermgeneric, T_STRING
+from .pilwidgets import cls_tabtermgeneric, T_STRING, T_INTEGER
 from .pilkeymap import KEYBOARD_TYPE_HP71, keyboardtypes
 from .pildevbase import cls_pildevbase
 from .pilcharconv import CHARSET_HP71, charsets
+from .pilcore import CLASS_INTERFACE_BOX
 #
 # Terminal tab object classes ----------------------------------------------
 #
@@ -50,6 +52,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - put int not char on termqueue
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
+# 13.05.2025 jsi:
+# - keyboard send delay config parameter 
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -60,11 +64,14 @@ class cls_tabterminal(cls_tabtermgeneric):
 #
       self.charset=PILCONFIG.get(self.name,"charset",CHARSET_HP71)
       self.keyboardtype=PILCONFIG.get(self.name,"keyboardtype",KEYBOARD_TYPE_HP71)
+      self.keyboardsenddelay=PILCONFIG.get(self.name,"keyboardsenddelay",50)
 #
 #     add terminal config options to cascading menu
 #
       self.cBut.add_option("Character set","charset",T_STRING,charsets)
       self.cBut.add_option("Keyboard type","keyboardtype",T_STRING,keyboardtypes)
+      self.cBut.add_option("Keyboard send delay (ms)","keyboardsenddelay",T_INTEGER,[50,25,10,0])
+
 #
 #     create HP-IL device and let the GUI object know it
 #
@@ -72,6 +79,7 @@ class cls_tabterminal(cls_tabtermgeneric):
       self.guiobject.set_pildevice(self.pildevice)
       self.guiobject.set_charset(self.charset)
       self.guiobject.set_keyboardtype(self.keyboardtype)
+      self.pildevice.set_senddelay(self.keyboardsenddelay)
       self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
 #  handle changes of the character set
@@ -88,6 +96,11 @@ class cls_tabterminal(cls_tabtermgeneric):
       if param=="keyboardtype":
          self.keyboardtype= PILCONFIG.get(self.name,"keyboardtype")
          self.guiobject.set_keyboardtype(self.keyboardtype)
+
+      if param=="keyboardsenddelay":
+         self.keyboardsenddelay= PILCONFIG.get(self.name,"keyboardsenddelay")
+         self.pildevice.set_senddelay(self.keyboardsenddelay)
+
 
       super().do_tabconfig_changed()
 #
@@ -176,6 +189,7 @@ class cls_pilterminal(cls_pildevbase):
       self.__defaddr__ = 8             # default address alter AAU
       self.__did__ = "PILTERM"         # device id
       self.__guiobject__= guiobject    # terminal gui object
+      self.__send_delay__= 0           # keyboard send delay
 #
 # private (overloaded) --------
 #
@@ -207,4 +221,12 @@ class cls_pilterminal(cls_pildevbase):
          if self.__outqueue__.empty():
             self.__status__= self.__status__ & 0xEF # clear ready for data bit
       self.__status_lock__.release()
+      if self.__threadobject__.ifclass== CLASS_INTERFACE_BOX:
+         time.sleep(self.__senddelay__/1000)
       return(frame)
+#
+# set keyboard send delay
+#
+   def set_senddelay(self,delay):
+      self.__senddelay__= delay
+      return
