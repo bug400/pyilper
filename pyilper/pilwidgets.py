@@ -218,6 +218,8 @@
 # - writing logfiles was moved from thread component to gui component
 # 04.07.2025 jsi
 # - refactoring of interfaces configuration
+# 27.08.2025 jsi
+# - added Qt Style configuration
 #
 import datetime
 import re
@@ -1030,6 +1032,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.__hp82162a_pixelsize__=PILCONFIG.get(self.__name__,"hp82162a_pixelsize")
       self.__hp2225b_screenwidth__=PILCONFIG.get(self.__name__,"hp2225b_screenwidth")
       self.__usebom__= PILCONFIG.get(self.__name__,"usebom")
+      self.__qtstyle__= PILCONFIG.get(self.__name__,"qtstyle")
 
       self.setWindowTitle("pyILPER configuration")
       self.vbox0= QtWidgets.QVBoxLayout()
@@ -1207,7 +1210,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gboxps.setLayout(self.gridps)
       self.vbox2.addWidget(self.gboxps)
 #
-#     section log file options (Windows only)
+#     Section log file options (Windows only)
 #
       self.gboxbom= QtWidgets.QGroupBox()
       self.gboxbom.setFlat(True)
@@ -1220,6 +1223,30 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.gboxbom.setLayout(self.vboxbom)
       if isWINDOWS():
          self.vbox2.addWidget(self.gboxbom)
+#
+#     Section qt style
+#
+      self.gboxst= QtWidgets.QGroupBox()
+      self.gboxst.setFlat(True)
+      self.gboxst.setTitle("Qt Style")
+      self.gridst=QtWidgets.QGridLayout()
+      self.gridst.setSpacing(3)
+
+      self.gridst.addWidget(QtWidgets.QLabel("Style:"),0,0)
+      self.combost=QtWidgets.QComboBox()
+      self.combost.addItem("Default")
+      curIdx=0
+      curCount=0
+      for availableStyle in QtWidgets.QStyleFactory.keys():
+         self.combost.addItem(availableStyle)
+         curCount+=1
+         if self.__qtstyle__== availableStyle:
+            curIdx=curCount
+      self.combost.setCurrentIndex(curIdx)
+      self.combost.currentIndexChanged.connect(self.do_styleChanged)
+      self.gridst.addWidget(self.combost,0,1)
+      self.gboxst.setLayout(self.gridst)
+      self.vbox2.addWidget(self.gboxst)
 
       self.vbox2.addStretch(1)
 #
@@ -1251,6 +1278,17 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 
    def do_cbUseBom(self):
       self.__usebom__= self.cbUseBom.isChecked()
+
+   def do_styleChanged(self):
+      text= self.combost.currentText()
+      self.__qtstyle__= text
+      if text == "Default":
+         if self.__parent__.defaultStyle !="":
+            QtWidgets.QApplication.setStyle(self.__parent__.defaultStyle)
+         else:
+            reply=QtWidgets.QMessageBox.warning(self,'Warning',"Resetting to default style requires restart of the application",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      else:
+         QtWidgets.QApplication.setStyle(text)
 
    def do_config_Workdir(self):
       flist=self.getWorkDirName()
@@ -1356,6 +1394,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       PILCONFIG.put(self.__name__,"hp82162a_pixelsize",self.spinHP82162APixelsize.value())
       PILCONFIG.put(self.__name__,"hp2225b_screenwidth",self.spinHP2225Bscreenwidth.value())
       PILCONFIG.put(self.__name__,"usebom",self.__usebom__)
+      PILCONFIG.put(self.__name__,"qtstyle",self.__qtstyle__)
       super().accept()
 
    def do_cancel(self):

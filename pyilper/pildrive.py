@@ -1215,6 +1215,10 @@ class cls_LifDirWidget(QtWidgets.QWidget):
 # 21.12.2024 jsi:
 # - introduced  disk_lock and modified_lock, all other queues, locks and shared variables are now part of 
 #   the pildevbase class
+# 21.07.2025 jsi:
+# - return maximum sector address instead of maximum number of sectors in the SEND MAXIMUM ADDRESS (DDT 7)
+#   command. Note: this is an extended DDT command of the HP9114B disk drive which is probalby not used in the
+#   HP-41 or HP-71 HP-IL module firmware.
 
 
 class cls_pildrive(cls_pildevbase):
@@ -1606,12 +1610,13 @@ class cls_pildrive(cls_pildevbase):
          else:
             frame= 0x540 # EOT
 
-      elif self.__devt__ == 7:  # send max record
+      elif self.__devt__ == 7:  # send max address
+         print("DDT 7")
          if self.__ptout__ == 0:
-            frame= self.__nbe__ >> 8
+            frame= (self.__nbe__-1) >> 8
             self.__ptout__+=1
          elif self.__ptout__ == 1:
-            frame= self.__nbe__ & 255
+            frame= (self.__nbe__-1) & 255
             self.__ptout__+=1
          else:
             frame = 0x540 # EOT

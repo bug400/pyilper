@@ -77,15 +77,14 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <h2 class="w3-text-teal">pyILPER command line parameters</h2>
 <h3 class="w3-text-teal">Introduction</h3>
 
-<p><em>pyILPER</em> supports command line parameters to carry out special actions.
-</p> 
+<p><em>pyILPER</em> supports command line parameters to carry out special actions (not for Windows).</p> 
 
 <p>Note: you must start <em>pyILPER</em> from the <b>command line</b> to specify command line parameters.</p>
 
 <p>Use the <em>-help</em> parameter to see the available arguments:</p>
 
 <pre>pyilper --help
-usage: start.py [-h] [--instance INSTANCE] [--clean] [--cc]
+usage: pyilper [-h] [--instance INSTANCE] [--clean] [--cc]
 
 pyILPER command line invocation
 
@@ -98,7 +97,12 @@ optional arguments:
                         defaults
   --cc, -cc             Copy configuration from development to production version
                         and vice versa
+  --style, -style       set a specific Qt style
 </pre>
+
+<p><b>Note:</b> If <em>pyILPER</em> is invoked from the command line with the <em>pyilper</em> command
+there will be no output to the terminal. No help text is displayed and if there are any errors in
+command line parameters, the program will terminate silently.</p>
 
 <h3 class="w3-text-teal">Starting another instance of pyILPER</h3>
 

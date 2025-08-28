@@ -188,6 +188,8 @@
 # - PySide6 migration
 # 04.07.2025 jsi
 # - refactoring of interfaces configuration
+# 27.08.2025 jsi
+# - added Qt style configuration
 #
 import os
 import sys
@@ -281,6 +283,12 @@ class cls_pyilper(QtCore.QObject):
       self.msgTimer=QtCore.QTimer()
       self.msgTimer.timeout.connect(self.show_refresh_message)
 #
+#     get name of default style Qt6 only
+#
+      self.defaultStyle=""
+      if QTBINDINGS=="PySide6":
+         self.defaultStyle= QtWidgets.QApplication.style().name()
+#
 #     create user interface instance
 #
       self.ui= cls_ui(self,VERSION,self.instance)
@@ -347,6 +355,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"hp82162a_pixelsize",1)
          PILCONFIG.get(self.name,"hp2225b_screenwidth",640)
          PILCONFIG.get(self.name,"usebom",False)
+         PILCONFIG.get(self.name,"qtstyle","Default")
 
          PILCONFIG.save()
       except PilConfigError as e:
@@ -368,6 +377,21 @@ class cls_pyilper(QtCore.QObject):
       except ShortcutConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
+#
+#     check Qt Style, if available, otherwise reset to "Default"
+#
+      qtstyle=PILCONFIG.get(self.name,"qtstyle")
+      if qtstyle != "Default":
+         styleFound= False
+         for availableStyle in QtWidgets.QStyleFactory.keys():
+            if qtstyle == availableStyle:
+               QtWidgets.QApplication.setStyle(qtstyle)
+               styleFound = True
+               break
+         if not styleFound:
+            PILCONFIG.put(self.name,"qtstyle","Default")
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error','Style '+qtstyle+' not available. Resetting to system default',QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+          
 #
 #     check lifutils
 #

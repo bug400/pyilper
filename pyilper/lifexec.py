@@ -118,6 +118,9 @@
 # 14.12.2024
 # - fixed missing lifutils calls
 # - added HP41 rom conversion to sdata (HP-41CL)
+# 14.08.2025
+# - added the CREATE_NO_WINDOW flag to the subprocess.run creationflags (Windows only) to
+#   prevent creation of a window when invoking the lifutils
 #
 import subprocess
 import tempfile
@@ -130,6 +133,10 @@ from .pilpdf import cls_pdfprinter
 from .pilconfig import PILCONFIG
 if isWINDOWS():
    import winreg
+   SUBPROCESS_FLAG= subprocess.CREATE_NO_WINDOW
+else:
+   SUBPROCESS_FLAG=0
+
 from .pilcore import QTBINDINGS
 if QTBINDINGS=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
@@ -148,7 +155,7 @@ BARCODE_SPACING= 5
 def get_lifutils_version(cmd):
    retval=0
    try:
-      ret=subprocess.run([cmd,"-v"],stdout=subprocess.PIPE)
+      ret=subprocess.run([cmd,"-v"],stdout=subprocess.PIPE,creationflags=SUBPROCESS_FLAG)
       retval=int(ret.stdout.decode())
    finally:
       return retval
@@ -257,7 +264,7 @@ def check_errormessages(parent,ret):
 #
 def exec_single(parent,cmd):
    try:
-      ret=subprocess.run(cmd,stderr=subprocess.PIPE)
+      ret=subprocess.run(cmd,stderr=subprocess.PIPE,creationflags=SUBPROCESS_FLAG)
       check_errormessages(parent,ret)
    except OSError as e:
       reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
@@ -269,7 +276,7 @@ def exec_single(parent,cmd):
 def exec_single_export(parent,cmd):
    returnvalue=None
    try:
-      ret= subprocess.run(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      ret= subprocess.run(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=SUBPROCESS_FLAG)
       check_errormessages(parent,ret)
       if ret.returncode==0:
          returnvalue= ret.stdout
@@ -299,7 +306,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
 #
 #  execute first command
 #
-      ret= subprocess.run(cmd1,stdin=fd,stdout=tmpfile,stderr=subprocess.PIPE)
+      ret= subprocess.run(cmd1,stdin=fd,stdout=tmpfile,stderr=subprocess.PIPE, creationflags=SUBPROCESS_FLAG)
       check_errormessages(parent,ret)
       os.close(fd)
       if ret.returncode!=0:
@@ -313,7 +320,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
          tmpfile.close()
          return
       tmpfile.seek(0)
-      ret= subprocess.run(cmd2,stdin=tmpfile,stderr=subprocess.PIPE)
+      ret= subprocess.run(cmd2,stdin=tmpfile,stderr=subprocess.PIPE, creationflags=SUBPROCESS_FLAG)
       check_errormessages(parent,ret)
 #
 #  catch errors
@@ -351,7 +358,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 #
 # execute first command
 #
-      ret= subprocess.run(cmd1,stdout=tmpfile,stderr=subprocess.PIPE)
+      ret= subprocess.run(cmd1,stdout=tmpfile,stderr=subprocess.PIPE, creationflags=SUBPROCESS_FLAG)
       check_errormessages(parent,ret)
       if ret.returncode!=0:
          tmpfile.close()
@@ -363,9 +370,9 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 #
       tmpfile.seek(0)
       if outputfile != "":
-         ret= subprocess.run(cmd2,stdin=tmpfile,stdout=fd,stderr=subprocess.PIPE)
+         ret= subprocess.run(cmd2,stdin=tmpfile,stdout=fd,stderr=subprocess.PIPE, creationflags=SUBPROCESS_FLAG)
       else:
-         ret= subprocess.run(cmd2,stdin=tmpfile,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+         ret= subprocess.run(cmd2,stdin=tmpfile,stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=SUBPROCESS_FLAG)
          if ret.returncode==0:
             returnvalue= ret.stdout
       check_errormessages(parent,ret)

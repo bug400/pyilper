@@ -1,3 +1,10 @@
+pyilper (1.9.0.dev3) trixie; urgency=medium
+
+  * Qt style configurable
+  * prevent opening command window when invoking lifutils (Windows only)
+
+ -- trixie <achim@trillian>  Wed, 27 Aug 2025 22:00:48 +0200
+
 pyilper (1.9.0.dev2) bookworm; urgency=medium
 
   * refactoring of queues and locks 
