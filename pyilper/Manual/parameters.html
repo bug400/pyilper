@@ -104,6 +104,20 @@ optional arguments:
 there will be no output to the terminal. No help text is displayed and if there are any errors in
 command line parameters, the program will terminate silently.</p>
 
+<p>To get around this problem you can create a file <em>start_pyilper.py</em> with the following content:</p>
+
+<pre>
+import sys; 
+from pyilper import main; 
+sys.exit(main())
+</pre>
+
+<p>Now you can start <em>pyILPER</em> to get the help text:</p>
+
+<pre>
+python start_pyilper.py --help
+</pre>
+
 <h3 class="w3-text-teal">Starting another instance of pyILPER</h3>
 
 <p>The parameter <em>-instance INSTANCE-NAME</em> allows to start multiple independent instances of pyILPER. Each instance has its own configuration file and is identified by <em>INSTANCE-NAME</em>. Only letters or digits are allowed in an <em>INSTANCE-NAME</em>.</p>
