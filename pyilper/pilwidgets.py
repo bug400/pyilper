@@ -220,6 +220,8 @@
 # - refactoring of interfaces configuration
 # 27.08.2025 jsi
 # - added Qt Style configuration
+# 01.09.2025 ji
+# - change Qt style only on OK button pressed
 #
 import datetime
 import re
@@ -1282,13 +1284,6 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
    def do_styleChanged(self):
       text= self.combost.currentText()
       self.__qtstyle__= text
-      if text == "Default":
-         if self.__parent__.defaultStyle !="":
-            QtWidgets.QApplication.setStyle(self.__parent__.defaultStyle)
-         else:
-            reply=QtWidgets.QMessageBox.warning(self,'Warning',"Resetting to default style requires restart of the application",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-      else:
-         QtWidgets.QApplication.setStyle(text)
 
    def do_config_Workdir(self):
       flist=self.getWorkDirName()
@@ -1384,6 +1379,17 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
          msgbox.setWindowTitle("Information")
          reply=msgbox.exec()
          PILCONFIG.put("pyilper","show_msg_restartparams_changed",cb.checkState()!=QtCore.Qt.Checked)
+#
+#     Apply style changes
+#
+      if self.__qtstyle__ != PILCONFIG.get(self.__name__,"qtstyle"):
+         if self.__qtstyle__ == "Default":
+            if self.__parent__.defaultStyle !="":
+               QtWidgets.QApplication.setStyle(self.__parent__.defaultStyle)
+            else:
+               reply=QtWidgets.QMessageBox.warning(self,'Warning',"Resetting to default style requires restart of the application",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      else:
+         QtWidgets.QApplication.setStyle(self.__qtstyle__)
 #
 #     store parameters
 #
