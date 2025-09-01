@@ -1,3 +1,9 @@
+pyilper (1.9.0.dev4) trixie; urgency=medium
+
+  * removed an experimental feature 
+
+ -- trixie <achim@trillian>  Mon, 01 Sep 2025 14:51:53 +0200
+
 pyilper (1.9.0.dev3) trixie; urgency=medium
 
   * Qt style configurable
