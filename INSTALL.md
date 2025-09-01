@@ -158,12 +158,17 @@ following command as root in the directory containing the installer file:
 
     apt install ./pyilper_X.Y.Z_all.deb 
 
-This will also install additional software components, which are necessary to run pyILPER. After that, pyILPER
-cann be called with:
+This will also install additional software components, which are necessary to run pyILPER. 
+
+**Note:** This command installs the software package from a downloaded file, not from a repository. To obtain a new version of the software, you must download the corresponding deb package and install it using the command above. The previous program version will then be overwritten.
+
+
+After installing the .deb package, pyILPER cann be called with:
 
     pyiler
 
 from the command line.
+
 
 For non DEBIAN Linux systems you should try to install the [required components](#requirements) from
 the distribution repositories.
