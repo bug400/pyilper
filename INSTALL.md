@@ -20,7 +20,7 @@ Index
 
 To run pyILPER you need:
 
-* Python version 3.6 or higher. Version 3.11 is currently recommended.
+* Python version 3.6 or higher. Version 3.13 is currently recommended.
 * Qt version 5.9 or higher with the PyQt5 language bindings or Qt version 6.3 or higher (recommended) with the PySide6 language bindings
 * The Python bindings for either Qt Webkit (Qt5 only) or Qt Webengine (recommended)
 * pySerial  2.7 or higher
@@ -82,16 +82,16 @@ Note: use the "Command Line" instead of the "Terminal (PowerShell") application 
 
 To install the Python interpreter open the Microsoft Store, enter the search term "Python" and select the recommended version (see above) for installation. Python is installed for the current user.
 
-Example: create a virtual environment "py311" in the home directory of the current user, install and start pyILPER:
+Example: create a virtual environment "pytest" in the home directory of the current user, install and start pyILPER:
 
 
      C:\>cd %USERPROFILE%                                  (change to users home directory)
      
-     C:\Users\bug400>python3 -m venv py311                 (create environment %USERPROFILE%\py311, use python3 to call the interpreter here!!!)
+     C:\Users\bug400>python3 -m venv pytest                 (create environment %USERPROFILE%\py311, use python3 to call the interpreter here!!!)
 
-     C:\Users\bug400>py311\scripts\activate                (activate the environment, the environment name becomes component of the prompt string)
+     C:\Users\bug400>pytest\scripts\activate                (activate the environment, the environment name becomes component of the prompt string)
      
-     (py311) C:\Users\bug400>python -m pip install pyilper (install pyILPER with the required runtime dependecies)
+     (pytest) C:\Users\bug400>python -m pip install pyilper (install pyILPER with the required runtime dependecies)
      Collecting pyilper
        Obtaining dependency information for pyilper from https://files.pythonhosted.org/packages/3e/
      
@@ -103,7 +103,7 @@ Example: create a virtual environment "py311" in the home directory of the curre
      [notice] A new release of pip is available: 23.2.1 -> 23.3.2
      [notice] To update, run: python.exe -m pip install --upgrade pip
      
-     (py311) C:\Users\bug400>pyilper                        (start pyILPER)
+     (pytest) C:\Users\bug400>pyilper                        (start pyILPER)
 
 
 
@@ -111,9 +111,9 @@ If the Python interpreter is run for the first time, a window opens and requests
 
 You can invoke pyILPER without activating the environment by calling:
 
-     %USERPROFILE%\py311\scripts\pyilper
+     %USERPROFILE%\pytest\scripts\pyilper
 
-Create a desktop shortcut for %USERPROFILE\py311\scripts\pyilper.exe to conveniently start pyILPER.
+Create a desktop shortcut for %USERPROFILE\pytest\scripts\pyilper.exe to conveniently start pyILPER.
 
 
 ### Installation on macOS
@@ -122,11 +122,11 @@ Install Python for macOS from the [Python website](https://www.python.org/). Cho
 
 See [Using Python on a Mac](https://docs.python.org/3/using/mac.html) for further details.
 
-Example: create a virtual environment "py311" in the home directory of the current user, install and start pyILPER:
+Example: create a virtual environment "pytest" in the home directory of the current user, install and start pyILPER:
 
-     node1-mac:~ bug400$ python3 -m venv py311                  (create virtual environment ~/py311)
-     node1-mac:~ bug400$ source py311/bin/activate              (activate virtual environment ~/py311)
-     (py311) node1-mac:~ bug400$ python -m pip install pyilper  (install pyILPER and required runtime components)
+     node1-mac:~ bug400$ python3 -m venv pytest                  (create virtual environment ~/py311)
+     node1-mac:~ bug400$ source pytest/bin/activate              (activate virtual environment ~/py311)
+     (pytest) node1-mac:~ bug400$ python -m pip install pyilper  (install pyILPER and required runtime components)
      Collecting pyilper
        Obtaining dependency information for pyilper from https://files.pythonhosted.org/packages/3e
 
@@ -138,11 +138,11 @@ Example: create a virtual environment "py311" in the home directory of the curre
      
      [notice] A new release of pip is available: 23.2.1 -> 23.3.2
      [notice] To update, run: pip install --upgrade pip
-     (py311) node1-mac:~ bug400$ pyilper                        (start pyILPER)
+     (pytest) node1-mac:~ bug400$ pyilper                        (start pyILPER)
      
 You can invoke pyILPER without activating the environment by calling:
 
-     node1-mac:~ bug400$ ~/py311/bin/pyilper
+     node1-mac:~ bug400$ ~/pytest/bin/pyilper
 
 Build a macOS Automator application to create a desktop shortcut. Use the "run shell script" action and enter the full path to the pyilper script in the virtual environment. Save it as a program and drag it to the desktop. See [this guide](https://www.hpmuseum.org/forum/thread-3824-post-150519.html#pid150519) for details, but enter your proper pyILPER path.
 
