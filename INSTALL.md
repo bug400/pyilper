@@ -74,7 +74,7 @@ from the [Python Package Index (PyPi)](https://pypi.org), which is the official 
 See [Virtual environment maintenance](#virtual-environment-maintenance)
 
 
-### Installation on Windows
+### Installation on Windows 11
 
 Note: use the "Command Line" instead of the "Terminal (PowerShell") application to enter the commands below. Using the "Activate.ps1" PowerShell" script requires issuing the PowerShell command:
 

@@ -59,7 +59,7 @@ See the [pyILPER virtual devices gallery](https://github.com/bug400/pyilper/blob
 Compatibility
 -------------
 
-pyILPER has been successful tested with LINUX, Windows 10 and macOS.
+pyILPER has been successful tested with LINUX, Windows 11 and macOS.
 
 
 Installation

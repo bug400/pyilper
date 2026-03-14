@@ -163,6 +163,8 @@
 # - 1.8.10 production
 # 01.07.2025
 # - refactoring of interface constants
+# 03.10.2025
+# - use Qt5 bindings instead of PySide6, if FORCE_QT5 environment variable is set
 #
 import platform
 import os
@@ -301,7 +303,7 @@ else:
          import PyQt5.QtCore
       except ImportError:
          if "PyQt5" in sys.modules:
-            del sys.modules["Pyside6"]
+            del sys.modules["PyQt5"]
          raise ImportError("No Qt bindings found")
       else:
          QTBINDINGS="PyQt5"
@@ -330,6 +332,8 @@ else:
          HAS_WEBENGINE=True
       except:
          pass
+
+
 #
 #  portable function to get mouse cursor coordinate
 #
@@ -339,6 +343,8 @@ else:
       if QTBINDINGS== "PySide6":
          return(ev.position().toPoint()) 
 
+if "FORCE_QT5" in os.environ:
+   QTBINDINGS="PyQt5"
 #
 # utility functions --------------------------------------------------------------
 #

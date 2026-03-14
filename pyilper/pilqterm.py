@@ -184,8 +184,8 @@
 # - replaced deprecated cursor position method calls
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
-# 06.05.2025 jsi
-# - introduced 0.2s delay when return key is pressed (stabilizes HP71 keyboard emulation)
+# 14.03.2024 jsi
+# - fix processing of the cursor positioning escape sequence. Credits go to github user McGandolf
 
 #
 # to do:
@@ -1641,14 +1641,13 @@ class HPTerminal:
 #
 #      start of ESC sequence, set flag and return
 #
-       if t == 27:
+       if t == 27 and self.movecursor==0:
           self.fesc= True
           return
 #
 #      process escape sequences, translate to pyqterm
 #
        if self.fesc:
-#         print("Esc sequence %d %s " % (t,chr(t)))
           if t== 67: # cursor right (ESC C)
              self.cursor_right()
           elif t== 68: # cursor left (ESC D)

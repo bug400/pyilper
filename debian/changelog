@@ -1,3 +1,9 @@
+pyilper (1.9.0.dev5) trixie; urgency=medium
+
+  * fixed escape sequence processing in terminal emulation 
+
+ -- trixie <achim@trillian>  Sat, 14 Mar 2026 09:50:40 +0100
+
 pyilper (1.9.0.dev4) trixie; urgency=medium
 
   * removed an experimental feature 
