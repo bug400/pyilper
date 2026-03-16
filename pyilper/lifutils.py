@@ -43,10 +43,12 @@
 # - use functions from pilcore.py for platform detection
 # 04.12.2016 jsi
 # - allow directory not starting at record 2
+# 16.03.2026 jsi
+# - global variables refactoring
 #
 import os
+from .pilglobals import PILGLOBALS
 from .lifcore import *
-from .pilcore import isWINDOWS
 
 class LifError(Exception):
    def __init__(self,msg,add_msg=None):
@@ -248,7 +250,6 @@ class cls_LifFile:
    def __init__(self):
       self.filename= None           # Name of LIF File
       self.filehd= None             # File descriptor
-      self.isWindows=False          # platform idicator for i/o
       self.isLifFile= False         # Valid lif file
       self.buffer= bytearray(256)   # read write buffer
       self.header= bytearray(256)   # lif header
@@ -258,8 +259,6 @@ class cls_LifFile:
       self.no_tracks=0
       self.no_surfaces=0
       self.no_blocks=0
-      if isWINDOWS():
-         self.isWindows= True
 
    def set_filename(self,name):
       self.filename= name
@@ -268,7 +267,7 @@ class cls_LifFile:
       if self.filename is None:
          raise LifError("No file specified","")
       try:
-         if self.isWindows:
+         if PILGLOBALS.isWindows:
             self.filefd= os.open(self.filename,os.O_RDONLY | os.O_BINARY)
          else:
             self.filefd= os.open(self.filename,os.O_RDONLY)

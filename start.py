@@ -9,9 +9,9 @@
 import sys
 import os
 import warnings
-from pyilper.pilcore import PYTHON_REQUIRED_MAJOR, PYTHON_REQUIRED_MINOR
+from pyilper.pilglobals import PILGLOBALS
 
-if sys.version_info < ( PYTHON_REQUIRED_MAJOR, PYTHON_REQUIRED_MINOR):
+if sys.version_info < ( PILGLOBALS.Python_Required_Major, PILGLOBALS.Python_Required_Minor):
     # python too old, kill the script
     sys.exit("This script requires Python "+str(PYTHON_REQUIRED_MAJOR)+"."+str(PYTHON_REQUIRED_MINOR)+" or newer!")
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))

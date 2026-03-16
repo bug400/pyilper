@@ -60,16 +60,20 @@
 # - PySide6 migration
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
+# 16.03.2026 jsi
+# - refactoring of global variables
+
 
 import datetime
+
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
+   from PySide6 import QtWidgets
+if PILGLOBALS.QT_Bindings=="PyQt5":
+   from PyQt5 import QtWidgets
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric, T_BOOLEAN, T_STRING,O_DEFAULT
 from .pildevbase import cls_pildevbase
-from .pilcore import QTBINDINGS
-if QTBINDINGS=="PySide6":
-   from PySide6 import QtWidgets
-if QTBINDINGS=="PyQt5":
-   from PyQt5 import QtWidgets
 
 
 LOG_INBOUND=0

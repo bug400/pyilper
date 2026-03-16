@@ -33,11 +33,13 @@
 # - use monospaced font defined in pilcore.py
 # 04.05.2022 jsi
 # - PySide6 migration
+# 16.03.2026 jis
+# - refactoring of global variables
 #
-from .pilcore import *
-if QTBINDINGS=="PySide6":
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets,QtPrintSupport
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets,QtPrintSupport
 
 #
@@ -59,7 +61,7 @@ class cls_pdfprinter(QtCore.QObject):
 #     initialize printer and printer scene
 #
       self.printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
-      if self.orientation== PDF_ORIENTATION_PORTRAIT:
+      if self.orientation== PILGLOBALS.PDF_Orientation_Portrait:
          self.printer.setPageOrientation(QtGui.QPageLayout.Portrait)
       else:
          self.printer.setPageOrientation(QtGui.QPageLayout.Landscape)
@@ -68,13 +70,13 @@ class cls_pdfprinter(QtCore.QObject):
 #
 #     page set up, we use 1/10 mm as scene units
 #
-      if self.papersize== PDF_FORMAT_A4:
-         self.printer.setPageSize(QT_FORM_A4)
+      if self.papersize== PILGLOBALS.PDF_Format_A4:
+         self.printer.setPageSize(PILGLOBALS.QT_Form_A4)
          self.scene_w= 2100
          self.scene_h=2970
          self.pdfscene.setSceneRect(0,0,self.scene_w,self.scene_h)
       else:
-         self.printer.setPageSize(QT_FORM_LETTER)
+         self.printer.setPageSize(PILGLOBALS.QT_Form_Letter)
          self.scene_w= 2160
          self.scene_h= 2790
          self.pdfscene.setSceneRect(0,0,self.scene_w,self.scene_h)
@@ -96,8 +98,8 @@ class cls_pdfprinter(QtCore.QObject):
       self.topy=0
       self.x=0
       self.y=0
-      self.max_y= self.scene_h-PDF_MARGINS
-      self.columnshift=(self.scene_w- 2* PDF_MARGINS)/ self.columns
+      self.max_y= self.scene_h-PILGLOBALS.PDF_Margin
+      self.columnshift=(self.scene_w- 2* PILGLOBALS.PDF_Margin)/ self.columns
 #
 #     start printing
 #
@@ -106,13 +108,13 @@ class cls_pdfprinter(QtCore.QObject):
       self.titleitem=QtWidgets.QGraphicsSimpleTextItem(self.title)
       self.titleitem.setFont(self.font)
       self.pdfscene.addItem(self.titleitem)
-      self.titleitem.setPos(PDF_MARGINS,PDF_MARGINS)
+      self.titleitem.setPos(PILGLOBALS.PDF_Margin,PILGLOBALS.PDF_Margin)
       self.pageno=1
       if self.pagenumbering:
          self.pagenumberitem=QtWidgets.QGraphicsSimpleTextItem("Page "+str(self.pageno))
          self.pagenumberitem.setFont(self.font)
          self.pdfscene.addItem(self.pagenumberitem)
-         self.pagenumberitem.setPos(self.scene_w-self.pagenumberitem.boundingRect().width(),PDF_MARGINS)
+         self.pagenumberitem.setPos(self.scene_w-self.pagenumberitem.boundingRect().width(),PILGLOBALS.PDF_Margin)
 #
 #    init variables
 #
@@ -120,8 +122,8 @@ class cls_pdfprinter(QtCore.QObject):
       self.anzitems=0
       self.row=0
       self.column=0
-      self.top_y=PDF_MARGINS+self.titleitem.boundingRect().height()+40
-      self.x= PDF_MARGINS
+      self.top_y=PILGLOBALS.PDF_Margin+self.titleitem.boundingRect().height()+40
+      self.x= PILGLOBALS.PDF_Margin
       self.y= self.top_y
 
    def print_item(self,item):
@@ -135,7 +137,7 @@ class cls_pdfprinter(QtCore.QObject):
          if self.column == self.columns-1:
             self.pdfscene.render(self.pdfpainter)
             self.printer.newPage()
-            self.x=PDF_MARGINS
+            self.x=PILGLOBALS.PDF_Margin
             self.y= self.top_y
 
             for l in reversed(range(self.anzitems)):
@@ -205,7 +207,7 @@ class cls_textItem(QtWidgets.QGraphicsItem):
       self.text=text
 #     self.font= QtGui.QFontDatabase.systemFont(QtGui.QFontDatabase.FixedFont)
 #     self.font.setStyleHint(QtGui.QFont.TypeWriter)
-      self.font= QtGui.QFont(FONT)
+      self.font= QtGui.QFont(PILGLOBALS.Font)
       self.font.setPointSize(2)
       metrics= QtGui.QFontMetrics(self.font)
       self.font_h= metrics.height()

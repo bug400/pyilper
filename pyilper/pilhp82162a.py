@@ -82,14 +82,16 @@
 #   gap of 4 instead of 6 pixel
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
+# 16.03.2026 jsi
+# -refactoring of global variables
 #
 import copy
 import threading
 import re
-from .pilcore import UPDATE_TIMER, PDF_ORIENTATION_PORTRAIT, QTBINDINGS
-if QTBINDINGS=="PySide6":
+from .pilglobals import *
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtWidgets, QtGui
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtWidgets, QtGui
 
 from .pilconfig import PILCONFIG
@@ -97,7 +99,6 @@ from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget, T_INTEGER, O_DEFAULT
 from .pilpdf import cls_pdfprinter
-from .pilcore import HP82162A_LINEBUFFERSIZE
 
 #
 # constants --------------------------------------------------------------
@@ -109,7 +110,6 @@ PRINTER_CHARACTER_HEIGHT_PIXELS= 11
 DISPLAY_LINE_SPACING=0
 
 PDF_LINES=70           # number of lines in pdf output
-PDF_MARGINS=50         # margins (top,bot,left,right) of pdf output
 PDF_MAX_COLS=3         # max number of columns in pdf output
 PDF_COLUMN_SPACING=80  # spacing between columns
 PDF_LINE_SPACING=0     # linespacing in (relative) pixel
@@ -569,7 +569,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #
       self.pdfpixelsize=3
       self.pixelsize=PILCONFIG.get_dual(self.name,"hp82162a_pixelsize")
-      self.linebuffersize=HP82162A_LINEBUFFERSIZE
+      self.linebuffersize=PILGLOBALS.HP82162A_Linebuffersize
       self.printer_modeswitch= PILCONFIG.get(self.name,"modeswitch",MODESWITCH_MAN)
 #
 #     create user interface of printer widget
@@ -676,7 +676,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
 #     enable: start timer, send mode to virtual device, update check boxes
 #
    def enable(self):
-      self.UpdateTimer.start(UPDATE_TIMER)
+      self.UpdateTimer.start(PILGLOBALS.Update_Timer)
       self.setCheckBoxes()
       if self.printer_modeswitch== MODESWITCH_MAN:
          self.pildevice.putDeviceQueueItem(CMD_MAN)
@@ -812,7 +812,7 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
        if len(items):
           for c in items:
              self.process(c)
-       self.UpdateTimer.start(UPDATE_TIMER)
+       self.UpdateTimer.start(PILGLOBALS.Update_Timer)
        return
 #
 #  GUI command processing, commands issued by the HP-IL thread
@@ -1065,7 +1065,7 @@ class cls_HP82162aView(QtWidgets.QGraphicsView):
 #
    def pdf(self,filename,columns,title):
       
-      self.pdfprinter= cls_pdfprinter(self.papersize,PDF_ORIENTATION_PORTRAIT,filename, title, True, columns)
+      self.pdfprinter= cls_pdfprinter(self.papersize,PILGLOBALS.PDF_Orientation_Portrait,filename, title, True, columns)
       self.pdfprinter.begin()
 # 
 #     process lines

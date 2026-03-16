@@ -73,6 +73,8 @@
 # 29.06.2025 jsi
 # - refactoring, moved PIL-Box thread class from pilthreads to this file
 # - moved interface configuration GUI part from pilwidgets to this file
+# 16.03.2026 jsi
+# - global variables refactoring
 
 MODE_PILBOX=0
 #
@@ -82,13 +84,14 @@ COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if PILGLOBALS.QT_Bindings=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilrs232 import Rs232Error, cls_rs232
 from .pilconfig import PILCONFIG
-from .pilcore import QTBINDINGS,assemble_frame, disassemble_frame, TMOUTCMD, TMOUTFRM, BAUDRATES,CLASS_INTERFACE_BOX
-if QTBINDINGS=="PySide6":
-   from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
-   from PyQt5 import QtCore, QtGui, QtWidgets
+from .pilcore import assemble_frame, disassemble_frame
 from .pilthreads import PilThreadError, cls_pilthread_generic, cls_TtyWindow, cls_ConfigInterfaceGeneric
 
 class PilBoxError(Exception):
@@ -158,21 +161,21 @@ class cls_pilbox:
             self.__tty__.open(self.__ttydevice__, self.__baudrate__)
          except Rs232Error as e:
             raise PilBoxError("Cannot connect to PIL-Box", e.value)
-         self.__sendCmd__(cmd,TMOUTCMD)
+         self.__sendCmd__(cmd,PILGLOBALS.Tmout_Cmd)
 
       else:
 #
 #     open serial device, detect baud rate, use predefined baudrates in
-#     BAUDRATES list in reverse order
+#     PILGLOBALS.Baudrates list in reverse order
 #
          success= False
          errmsg=""
-         for i in range(len(BAUDRATES)-1,0,-1):
+         for i in range(len(PILGLOBALS.Baudrates)-1,0,-1):
 #
 #           open device at the beginning of the loop, if error throw exception and exit
 #
-            baudrate= BAUDRATES[i][1]
-            if i== len(BAUDRATES)-1:
+            baudrate= PILGLOBALS.Baudrates[i][1]
+            if i== len(PILGLOBALS.Baudrates)-1:
                try:
                   self.__tty__.open(self.__ttydevice__, baudrate)
                except Rs232Error as e:
@@ -190,7 +193,7 @@ class cls_pilbox:
 #           initialize PIL-Box with current baud rates
 #
             try:
-               self.__sendCmd__(COFF,TMOUTCMD)
+               self.__sendCmd__(COFF,PILGLOBALS.Tmout_Cmd)
                success= True
                self.__baudrate__=baudrate
                break
@@ -208,7 +211,7 @@ class cls_pilbox:
 #
    def close(self):
       try:
-         self.__sendCmd__(TDIS,TMOUTCMD)
+         self.__sendCmd__(TDIS,PILGLOBALS.Tmout_Cmd)
       finally:
          self.__tty__.close()
 #
@@ -216,7 +219,7 @@ class cls_pilbox:
 #
    def read(self):
       try:
-         bytrx= self.__tty__.rcv(TMOUTFRM,1)
+         bytrx= self.__tty__.rcv(PILGLOBALS.Tmout_Frm,1)
       except Rs232Error as e:
          raise PilBoxError("PIL-Box read frame error", e.value)
       return bytrx
@@ -238,7 +241,7 @@ class cls_pilbox:
 class cls_PilBoxThread(cls_pilthread_generic):
 
    def __init__(self,parent,mode):
-      super().__init__(parent,mode,CLASS_INTERFACE_BOX) 
+      super().__init__(parent,mode,PILGLOBALS.Class_Interface_Box) 
       self.__lasth__=0
       self.__baudrate__=0
 
@@ -371,7 +374,7 @@ class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
       self.hboxbaud.addWidget(self.lbltxt2)
       self.comboBaud=QtWidgets.QComboBox()
       i=0
-      for baud in BAUDRATES:
+      for baud in PILGLOBALS.Baudrates:
          self.comboBaud.addItem(baud[0])
          if self.ttyspeed== baud[1]:
             self.comboBaud.setCurrentIndex(i)
@@ -417,11 +420,11 @@ class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
    def check_reconnect(self):
       needs_reconnect= False
       needs_reconnect |= self.check_param("tty", self.lblTty.text())
-      needs_reconnect |= self.check_param("ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
+      needs_reconnect |= self.check_param("ttyspeed", PILGLOBALS.Baudrates[self.comboBaud.currentIndex()][1])
       needs_reconnect |= self.check_param("idyframe",self.idyframe)
       return needs_reconnect
 
    def store_config(self):
       PILCONFIG.put(self.configName,"tty", self.tty)
-      PILCONFIG.put(self.configName,"ttyspeed", BAUDRATES[self.comboBaud.currentIndex()][1])
+      PILCONFIG.put(self.configName,"ttyspeed", PILGLOBALS.Baudrates[self.comboBaud.currentIndex()][1])
       PILCONFIG.put(self.configName,"idyframe",self.idyframe)

@@ -121,34 +121,29 @@
 # 14.08.2025
 # - added the CREATE_NO_WINDOW flag to the subprocess.run creationflags (Windows only) to
 #   prevent creation of a window when invoking the lifutils
+# 15.10.2026
+# - refactoring of global variables
 #
 import subprocess
 import tempfile
 import os
 import pathlib
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if PILGLOBALS.QT_Bindings=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
 from .lifcore import *
 from .pilcharconv import barrconv
-from .pilcore import isWINDOWS, FONT, decode_version, PDF_ORIENTATION_PORTRAIT
 from .pilpdf import cls_pdfprinter
 from .pilconfig import PILCONFIG
-if isWINDOWS():
+if PILGLOBALS.isWindows:
    import winreg
    SUBPROCESS_FLAG= subprocess.CREATE_NO_WINDOW
 else:
    SUBPROCESS_FLAG=0
 
-from .pilcore import QTBINDINGS
-if QTBINDINGS=="PySide6":
-   from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
-   from PyQt5 import QtCore, QtGui, QtWidgets
-
-
-PDF_MARGINS=100
-BARCODE_HEIGHT=100
-BARCODE_NARROW_W= 5
-BARCODE_WIDE_W= 10
-BARCODE_SPACING= 5
 #
 # get lif version if 0 is returned then lifutils was not found
 #
@@ -186,7 +181,7 @@ def check_lifutils():
 #     local user installation preceeds system wide installation
 #     Note: this requires at least lifutils version 1.7.7 (nsis package build)
 #
-      if isWINDOWS():
+      if PILGLOBALS.isWindows:
          path=""
          try:
             hkey=winreg.OpenKey(winreg.HKEY_CURRENT_USER,r"Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\"+LIFUTILS_UUID)
@@ -222,7 +217,7 @@ def check_lifutils():
    if installed_version != 0 and lifutilspath !="" :
       p= pathlib.Path(lifutilspath)
       set_lifutils_path(str(p.parent))
-      if isWINDOWS():
+      if PILGLOBALS.isWindows:
          xromdir=p.parent / "xroms"
       else:
          xromdir=p.parents[1] / "share" / "lifutils" / "xroms"
@@ -295,7 +290,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
 
    tmpfile=None
    try:
-      if isWINDOWS():
+      if PILGLOBALS.isWindows:
          fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
       else:
          fd= os.open(inputfile, os.O_RDONLY)
@@ -347,7 +342,7 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
             reply=QtWidgets.QMessageBox.warning(parent,'Warning',"Do you really want to overwrite file "+outputfile,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
             if reply== QtWidgets.QMessageBox.Cancel:
                return
-         if isWINDOWS():
+         if PILGLOBALS.isWindows:
             fd= os.open(outputfile, os.O_WRONLY | os.O_BINARY |  os.O_TRUNC | os.O_CREAT, 0o644)
          else:
             fd= os.open(outputfile, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0o644)
@@ -534,7 +529,7 @@ class cls_lifbarcode(QtWidgets.QDialog):
 #
 #     initialize pdf printer
 #
-      pdfprinter=cls_pdfprinter(papersize,PDF_ORIENTATION_PORTRAIT, output_filename,title,True,1)
+      pdfprinter=cls_pdfprinter(papersize,PILGLOBALS.PDF_Orientation_Portrait, output_filename,title,True,1)
       pdfprinter.begin()
 #
 #     process binary barcode data and generate PDF file
@@ -554,7 +549,7 @@ class cls_lifbarcode(QtWidgets.QDialog):
            barcode_row.append(output[i])
            i+=1
          barcode_header="Row: "+str(row)
-         barcode_item= cls_barcodeItem(barcode_header,barcode_row,BARCODE_HEIGHT, BARCODE_NARROW_W, BARCODE_WIDE_W, BARCODE_SPACING)
+         barcode_item= cls_barcodeItem(barcode_header,barcode_row,PILGLOBALS.Barcode_Height, PILGLOBALS.Barcode_Narrow_W, PILGLOBALS.Barcode_Wide_W, PILGLOBALS.Barcode_Spacing)
          pdfprinter.print_item(barcode_item)
 #
       pdfprinter.end()
@@ -1072,7 +1067,7 @@ class cls_chk_import(QtWidgets.QDialog):
 #
       try:
          if inputfile is not None:
-            if isWINDOWS():
+            if PILGLOBALS.isWindows:
                fd= os.open(inputfile, os.O_RDONLY | os.O_BINARY )
             else:
                fd= os.open(inputfile, os.O_RDONLY)
@@ -1153,13 +1148,13 @@ class cls_chkxrom(QtWidgets.QDialog):
         self.row=0
         self.members= []
         self.addHeader("Application ROMs")
-        for d in APPLICATION_XROMS:
+        for d in PILGLOBALS.Application_Xroms:
            self.addItem(d[0],d[1],QtCore.Qt.CheckState.Unchecked)
         self.addHeader("Extension ROMs")
         for d in EXTENSION_XROMS:
            self.addItem(d[0],d[1],QtCore.Qt.CheckState.Unchecked)
         self.addHeader("Device ROMs")
-        for d in DEVICE_XROMS:
+        for d in PILGLOBALS.Device_Xroms:
            self.addItem(d[0],d[1],QtCore.Qt.CheckState.Unchecked)
         self.addHeader("All Device ROMs")
         self.addItem(ALLDEVICE_XROM[0],ALLDEVICE_XROM[1],QtCore.Qt.CheckState.Checked)
@@ -1265,7 +1260,7 @@ class cls_lifview(QtWidgets.QDialog):
       self.viewer.setMinimumWidth(600)
       self.viewer.setMinimumHeight(600)
       self.viewer.setReadOnly(True)
-      self.font=QtGui.QFont(FONT)
+      self.font=QtGui.QFont(PILGLOBALS.Font)
       self.font.setPixelSize(12)
       self.viewer.setFont(self.font)
 
@@ -1309,7 +1304,7 @@ class cls_lifview(QtWidgets.QDialog):
          if reply== QtWidgets.QMessageBox.Cancel:
             return
       try:
-         if isWINDOWS() and PILCONFIG.get("pyilper","usebom"):
+         if PILGLOBALS.isWindows and PILCONFIG.get("pyilper","usebom"):
             outfile=open(outputfile,"a",encoding="UTF-8-SIG")
          else:
             outfile=open(outputfile,"a",encoding="UTF-8")

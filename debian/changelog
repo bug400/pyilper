@@ -1,3 +1,9 @@
+pyilper (1.9.0.dev6) trixie; urgency=medium
+
+  * refactoring of global variables 
+
+ -- trixie <achim@trillian>  Mon, 16 Mar 2026 08:36:02 +0100
+
 pyilper (1.9.0.dev5) trixie; urgency=medium
 
   * fixed escape sequence processing in terminal emulation 

@@ -80,7 +80,7 @@
 # - set config file version to 2
 # 21.04.2016 jsi
 # - development version uses other config file than the production version. This 
-#   is controlled by the PRODUCTION constant
+#   is controlled by the PILGLOBALS.Production constant
 # 26.04.2016 jsi
 # - IDY frame processing now enabled by default
 # - remove baudrate config parameter
@@ -190,6 +190,8 @@
 # - refactoring of interfaces configuration
 # 27.08.2025 jsi
 # - added Qt style configuration
+# 16.03.2026 jsi
+# - refactoring of global variables
 #
 import os
 import sys
@@ -200,12 +202,14 @@ import pyilper
 import re
 import argparse
 import time
-from .pilcore import *
-if QTBINDINGS=="PySide6":
+from .pilglobals import *
+
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtWidgets
 
+from .pilcore import *
 from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilconfig import  PilConfigError, PILCONFIG, cls_pilconfig
 from .penconfig import  PenConfigError, PENCONFIG, cls_PenConfigWindow
@@ -223,7 +227,7 @@ from .pilterminal import cls_tabterminal
 from .pilhp2225b import cls_tabhp2225b
 from .pilhp82162a import cls_tabhp82162a
 
-TAB_CLASSES={TAB_SCOPE:cls_tabscope,TAB_PRINTER:cls_tabprinter,TAB_DRIVE:cls_tabdrive,TAB_TERMINAL:cls_tabterminal,TAB_PLOTTER:cls_tabplotter,TAB_HP82162A:cls_tabhp82162a,TAB_HP2225B: cls_tabhp2225b, TAB_RAWDRIVE: cls_tabrawdrive}
+TAB_CLASSES={PILGLOBALS.Tab_Scope:cls_tabscope,PILGLOBALS.Tab_Printer:cls_tabprinter,PILGLOBALS.Tab_Drive:cls_tabdrive,PILGLOBALS.Tab_Terminal:cls_tabterminal,PILGLOBALS.Tab_Plotter:cls_tabplotter,PILGLOBALS.Tab_HP82162A:cls_tabhp82162a,PILGLOBALS.Tab_HP2225B: cls_tabhp2225b, PILGLOBALS.Tab_Rawdrive: cls_tabrawdrive}
 #
 
 # Interfaces
@@ -251,11 +255,11 @@ STAT_ENABLED = 1      # Application in warm state:  running
 
 class cls_pyilper(QtCore.QObject):
 
-   if QTBINDINGS=="PySide6":
+   if PILGLOBALS.QT_Bindings=="PySide6":
        sig_show_message=QtCore.Signal(str)
        sig_crash=QtCore.Signal()
        sig_quit=QtCore.Signal()
-   if QTBINDINGS=="PyQt5":
+   if PILGLOBALS.QT_Bindings=="PyQt5":
        sig_show_message=QtCore.pyqtSignal(str)
        sig_crash=QtCore.pyqtSignal()
        sig_quit=QtCore.pyqtSignal()
@@ -286,17 +290,17 @@ class cls_pyilper(QtCore.QObject):
 #     get name of default style Qt6 only
 #
       self.defaultStyle=""
-      if QTBINDINGS=="PySide6":
+      if PILGLOBALS.QT_Bindings=="PySide6":
          self.defaultStyle= QtWidgets.QApplication.style().name()
 #
 #     create user interface instance
 #
-      self.ui= cls_ui(self,VERSION,self.instance)
+      self.ui= cls_ui(self,PILGLOBALS.Version,self.instance)
 #
 #     check minimum python version
 #
-      if sys.version_info < ( PYTHON_REQUIRED_MAJOR, PYTHON_REQUIRED_MINOR):
-         required_version= str(PYTHON_REQUIRED_MAJOR)+"."+str(PYTHON_REQUIRED_MINOR)
+      if sys.version_info < ( PILGLOBALS.Python_Required_Major, PILGLOBALS.Python_Required_Minor):
+         required_version= str(PILGLOBALS.Python_Required_Major)+"."+str(PILGLOBALS.Python_Required_Minor)
          found_version=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error','pyILPER requires at least Python version '+required_version+". You rund Python version "+found_version,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -332,7 +336,7 @@ class cls_pyilper(QtCore.QObject):
 #     1. pyILPER config
 #
       try:
-         PILCONFIG.open(self.name,CONFIG_VERSION,self.instance,PRODUCTION,self.clean)
+         PILCONFIG.open(self.name,PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
          PILCONFIG.get(self.name,"active_tab",0)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
          PILCONFIG.get(self.name,"tty","")
@@ -345,7 +349,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"workdir",os.path.expanduser('~'))
          PILCONFIG.get(self.name,"position","")
          PILCONFIG.get(self.name,"serverport",59999)
-         PILCONFIG.get(self.name,"tabconfig",[[TAB_PRINTER,"Printer1"],[TAB_TERMINAL,"Terminal1"],[TAB_PLOTTER,"Plotter1"],[TAB_DRIVE,"Drive1"],[TAB_DRIVE,"Drive2"]])
+         PILCONFIG.get(self.name,"tabconfig",[[PILGLOBALS.Tab_Printer,"Printer1"],[PILGLOBALS.Tab_Terminal,"Terminal1"],[PILGLOBALS.Tab_Plotter,"Plotter1"],[PILGLOBALS.Tab_Drive,"Drive1"],[PILGLOBALS.Tab_Drive,"Drive2"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
          PILCONFIG.get(self.name,"papersize",0)
@@ -365,7 +369,7 @@ class cls_pyilper(QtCore.QObject):
 #     2. pen configuration
 #
       try:
-         PENCONFIG.open(self.name,CONFIG_VERSION,self.instance,PRODUCTION,self.clean)
+         PENCONFIG.open(self.name,PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
       except PenConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -373,7 +377,7 @@ class cls_pyilper(QtCore.QObject):
 #     3. terminal keyboard shortcuts
 #
       try:
-         SHORTCUTCONFIG.open(self.name,CONFIG_VERSION,self.instance,PRODUCTION,self.clean)
+         SHORTCUTCONFIG.open(self.name,PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
       except ShortcutConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -403,12 +407,12 @@ class cls_pyilper(QtCore.QObject):
 #     version
 #
       oldversion=decode_pyILPERVersion(PILCONFIG.get(self.name,"version"))
-      thisversion=decode_pyILPERVersion(VERSION)
+      thisversion=decode_pyILPERVersion(PILGLOBALS.Version)
       if thisversion < oldversion:
          reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"Your configuration files are of pyILPER version "+PILCONFIG.get(self.name,"version")+" which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
          if reply== QtWidgets.QMessageBox.Cancel:
             sys.exit(1) 
-      PILCONFIG.put(self.name,"version",VERSION)
+      PILCONFIG.put(self.name,"version",PILGLOBALS.Version)
 #
 #     create tab objects, scope is fixed all others are configured by tabconfig
 #
@@ -465,7 +469,8 @@ class cls_pyilper(QtCore.QObject):
 #     if we run a new version for the first time, show release notes
 #
          if thisversion > oldversion:
-            self.show_ReleaseInfo(VERSION)
+            if PILGLOBALS.Has_Webengine or PILGLOBALS.Has_Webkit:
+               self.show_ReleaseInfo(PILGLOBALS.Version)
 #
 #  start application into warm state
 #
@@ -716,7 +721,7 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_About(self):
       if self.aboutwin is None:
-         self.aboutwin= cls_AboutWindow(VERSION)
+         self.aboutwin= cls_AboutWindow(PILGLOBALS.Version)
       self.aboutwin.show()
       self.aboutwin.raise_()
 #
@@ -768,9 +773,9 @@ def copy_config(args):
    from_config=cls_pilconfig()
    to_config=cls_pilconfig()
    try:
-      from_config.open("pyilper",CONFIG_VERSION,args.instance, not PRODUCTION,False)
+      from_config.open("pyilper",PILGLOBALS.Version,args.instance, not PILGLOBALS.Production,False)
       from_version=from_config.get("pyilper","version","0.0.0")
-      to_config.open("pyilper",CONFIG_VERSION,args.instance, PRODUCTION,False)
+      to_config.open("pyilper",PILGLOBALS.Version,args.instance, PILGLOBALS.Production,False)
       to_version=to_config.get("pyilper","version","0.0.0")
    except PilConfigError as e:
       print(e.msg+': '+e.add_msg)
@@ -783,12 +788,12 @@ def copy_config(args):
 #
    print("\nW A R N I N G!")
    print("This overwrites the configuration files")
-   if PRODUCTION:
+   if PILGLOBALS.Production:
       print("of the production version: ", to_version)
    else:
       print("of the development/beta version: ", to_version)
    print("with the configuration files")
-   if PRODUCTION:
+   if PILGLOBALS.Production:
       print("of the development/beta version: ",from_version)
    else:
       print("of the production version: ",from_version)
@@ -800,10 +805,10 @@ def copy_config(args):
 #  now copy configuration files
 #
    for name in ['pyilper','penconfig','shortcutconfig']:
-      from_filename=buildconfigfilename("pyilper",name,CONFIG_VERSION,args.instance,not PRODUCTION)[0]
+      from_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Version,args.instance,not PILGLOBALS.Production)[0]
       if not os.path.isfile(from_filename):
          continue
-      to_filename=buildconfigfilename("pyilper",name,CONFIG_VERSION,args.instance, PRODUCTION)[0]
+      to_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Version,args.instance, PILGLOBALS.Production)[0]
       try:
          shutil.copy(from_filename,to_filename)
       except OSError as e:
@@ -831,12 +836,14 @@ def main():
    parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE. This instance has an own configuration file.")
    parser.add_argument('--clean','-clean',action='store_true',help="Start pyILPER with a config file which is reset to defaults")
    parser.add_argument('--cc','-cc',action='store_true',help="Copy configuration from development to production version and vice versa")
+   parser.add_argument('--nohelp','-nohelp',action='store_true',help="Disable online help")
    args=parser.parse_args()
    if args.cc:
       copy_config(args)
       sys.exit(1)
+   PILGLOBALS.setArgs(args)
 
-   if not isWINDOWS():
+   if not PILGLOBALS.isWindows:
       signal.signal(signal.SIGQUIT, dumpstacks)
    app = QtWidgets.QApplication(sys.argv)
    pyilper= cls_pyilper(args)

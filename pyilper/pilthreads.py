@@ -46,18 +46,21 @@
 # 29.06.2025 jsi
 # - refactoring: moved device specific thread classes to the device specific files
 # - created base class for interface configuration GUI
+# 16.03.2026 jsi
+# - refactoring of global variables
 #
 import sys
 import threading
 import re
 from pathlib import Path
-from .pilcore import QTBINDINGS, isWINDOWS, isLINUX
-if QTBINDINGS=="PySide6":
+
+from .pilglobals import *
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
-if isWINDOWS():
+if PILGLOBALS.isWindows:
    import winreg
 from .pilconfig import PILCONFIG
 
@@ -233,7 +236,7 @@ class cls_TtyWindow(QtWidgets.QDialog):
       self.__ComboBox__ = QtWidgets.QComboBox() 
       self.__ComboBox__.setEditable(True)
 
-      if isWINDOWS():
+      if PILGLOBALS.isWindows:
 #
 #        Windows COM ports from registry
 #
@@ -248,12 +251,12 @@ class cls_TtyWindow(QtWidgets.QDialog):
 #
 #        Linux /dev/ttyUSBxx /dev/ttyACMxx
 #
-         if isLINUX():
+         if PILGLOBALS.isLinux:
             r=re.compile("(ttyACM\\d+)|(ttyUSB\\d+)")
 #
 #        Mac OS X /dev/tty.usbserial-*
 #
-         elif isMACOS():
+         elif PILGLOBALS.isMacos:
             r=re.compile("tty.usbserial-*")
 #
 #        Other
@@ -318,9 +321,9 @@ class cls_TtyWindow(QtWidgets.QDialog):
 #
 class cls_ConfigInterfaceGeneric(QtWidgets.QFrame):
 
-   if QTBINDINGS=="PySide6":
+   if PILGLOBALS.QT_Bindings=="PySide6":
       buttonCheckedSignal= QtCore.Signal()
-   if QTBINDINGS=="PyQt5":
+   if PILGLOBALS.QT_Bindings=="PyQt5":
       buttonCheckedSignal= QtCore.pyqtSignal()
 
    interfaceConfigWidgets= []

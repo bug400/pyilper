@@ -66,15 +66,19 @@
 # 29.06.2025 jsi:
 # - Refactoring: moved tcpip thread class from pilthreads to this file
 # - Moved interface configuration GUI from pilwidgets to this file
+# 16.03.2026 jsi
+# - refactoring of global variables
 
 import select
 import socket
-from .pilconfig import PILCONFIG
-from .pilcore import QTBINDINGS,assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK,CLASS_INTERFACE_NET
-if QTBINDINGS=="PySide6":
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
+
+from .pilcore import assemble_frame, disassemble_frame
+from .pilconfig import *
 from .pilthreads import PilThreadError, cls_pilthread_generic, cls_ConfigInterfaceGeneric
 
 MODE_TCPIP=1
@@ -227,7 +231,7 @@ class cls_piltcpip:
 class cls_PilTcpIpThread(cls_pilthread_generic):
 
    def __init__(self, parent,mode):
-      super().__init__(parent,mode,CLASS_INTERFACE_NET)
+      super().__init__(parent,mode,PILGLOBALS.Class_Interface_Net)
 
    def enable(self):
       port= PILCONFIG.get("pyilper","port")
@@ -263,7 +267,7 @@ class cls_PilTcpIpThread(cls_pilthread_generic):
 #
 #           read frame from Network
 #
-            frame=self.commobject.read(COMTMOUTREAD)
+            frame=self.commobject.read(PILGLOBALS.Com_Tmout_Read)
             if self.commobject.isConnected():
                if not connected:
                   connected=True

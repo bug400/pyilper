@@ -43,16 +43,18 @@
 # - all queues, locks and shared variables are now part of the pildevbase class
 # 30.05.0205 jsi:
 # - various improvements and fixes for page processing
+# 16.03.2026 jsi
+# - refactoring of global variables
 
 #
 import copy
 import threading
 import re
 from math import floor, ceil
-from .pilcore import *
-if QTBINDINGS=="PySide6":
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets,QtPrintSupport
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets,QtPrintSupport
 
 from .pilconfig import PILCONFIG
@@ -107,7 +109,7 @@ FONT_WIDTH= [16, 32, 9, 18 ]
 #
 # this is a hack because Qt on Macos does not display expanded fonts correctly
 #
-if isMACOS():
+if PILGLOBALS.isMacos:
    FONT_STRETCH= [100, 110, 56, 110]
 else:
    FONT_STRETCH= [100, 200, 56, 113]
@@ -316,7 +318,7 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
 #     enable: start timer, send mode to virtual device, update check boxes
 #
    def enable(self):
-      self.UpdateTimer.start(UPDATE_TIMER)
+      self.UpdateTimer.start(PILGLOBALS.Update_Timer)
       self.toggle_active()
       return
 #
@@ -397,7 +399,7 @@ class cls_hp2225bWidget(QtWidgets.QWidget):
        if len(items):
           for c in items:
              self.process(c)
-       self.UpdateTimer.start(UPDATE_TIMER)
+       self.UpdateTimer.start(PILGLOBALS.Update_Timer)
        return
 #
 #  GUI command processing, commands issued by the HP-IL thread
@@ -688,7 +690,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #     set the font and font size
  
-      self.font=QtGui.QFont(FONT)
+      self.font=QtGui.QFont(PILGLOBALS.Font)
 
       self.font.setPixelSize(HP2225B_FONT_PIXELSIZE)
       metrics=QtGui.QFontMetrics(self.font)
@@ -829,8 +831,8 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #     A4 format is 8,27 inches x 11,7 inches
 #
-      if self.papersize== PDF_FORMAT_A4:
-         self.printer.setPageSize(QT_FORM_A4)
+      if self.papersize== PILGLOBALS.PDF_Format_A4:
+         self.printer.setPageSize(PILGLOBALS.QT_Form_A4)
          lmargin= ceil((8.27- PDF_PRINT_AREA_WIDTH)/2*PDF_DPI)
          scene_w= ceil(PDF_PRINT_AREA_WIDTH*PDF_DPI)
          t_height= PDF_LINES_PER_PAGE_A4* 32
@@ -842,7 +844,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #
 #     Letter format is 8.5 inches x 11 inches
 #
-         self.printer.setPageSize(QT_FORM_LETTER)
+         self.printer.setPageSize(PILGLOBALS.QT_Form_Letter)
          lmargin= int((8.5- PDF_PRINT_AREA_WIDTH)/2*PDF_DPI)
          scene_w= ceil(PDF_PRINT_AREA_WIDTH*PDF_DPI)
          t_height= PDF_LINES_PER_PAGE_LETTER* 32
@@ -994,7 +996,7 @@ class cls_hp2225bView(QtWidgets.QGraphicsView):
 #  return current vertical text length in pixel, depends on current lpi and text length settings
 #
    def text_length(self):
-      if self.papersize== PDF_FORMAT_A4:
+      if self.papersize== PILGLOBALS.PDF_Format_A4:
          lpp=PDF_LINES_PER_PAGE_A4
       else:
          lpp=PDF_LINES_PER_PAGE_LETTER

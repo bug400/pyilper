@@ -36,9 +36,11 @@
 # - introduced setBaudrate and flushInput methods
 # 11.07.2016 jsi
 # - use platform function from pilcore.py
+# 16.03.2026 jsi
+# - refactoring of global variables
 #
 import serial,time
-from .pilcore import isWINDOWS
+from .pilglobals import PILGLOBALS
 
 #
 class Rs232Error(Exception):
@@ -76,7 +78,7 @@ class cls_rs232:
 #
 #     use Windows device naming (hint by cg)
 #
-      if isWINDOWS():
+      if PILGLOBALS.isWindows:
          self.__device__="\\\\.\\"+device
       else:
          self.__device__= device

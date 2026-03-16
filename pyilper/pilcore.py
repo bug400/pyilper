@@ -20,7 +20,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-# pyILPER support and constants  -----------------------------------------------
+# pyILPER support -----------------------------------------------
 #
 # Changelog
 # 08.07.16 - jsi:
@@ -165,206 +165,31 @@
 # - refactoring of interface constants
 # 03.10.2025
 # - use Qt5 bindings instead of PySide6, if FORCE_QT5 environment variable is set
+# 15.03.2026
+# - removed constant definitions -> pilglobals.py
 #
-import platform
-import os
 import re
-import sys
+import os
 
-
-#
-# Program constants --------------------------------------------------
-#
-# General constants:
-#
-PRODUCTION=  False     # Production/Development Version
-VERSION="1.9.0"        # pyILPR version number
-CONFIG_VERSION="2"     # Version number of pyILPER config file, must be string
-#
-# Python minimum version
-#
-PYTHON_REQUIRED_MAJOR=3
-PYTHON_REQUIRED_MINOR=5
-
-#
-# Interface classes
-#
-CLASS_INTERFACE_BOX=0
-CLASS_INTERFACE_NET=1
-#
-#
-# PIL-Box communication
-#
-USE8BITS= True        # use 8 bit data transfer to PIL-Box
-TMOUTCMD=1            # time out for PIL-Box commands
-TMOUTFRM=0.05         # time out for HP-IL frames
-
-#
-# TCP/IP, socket and pipe communication
-#
-COMTMOUTREAD=0.1      # time out for read
-COMTMOUTACK=1         # time out for receiving an acknowledge
-COMTMOUTWRITE=1       # tine out for write
-
-#
-# Drive tab - directory listing
-#
-REFRESH_RATE=1000     # period to check whether a drive was altered and is idle
-NOT_TALKER_SPAN=3     # time (s) a drive must be inactive to be concidered as idle
-#
-# Drive tab - predefined xroms
-#
-APPLICATION_XROMS=[["Advantage","advantage"],["Aviation","aviation"],["CCD","ccd"],["Circuit Analysis","circuit"],["Clinical Lab","clinical"],["Data Acquisition","dataacq"],["Financial Decisions","finance"],["Home Management","homemgmt"],["Machine Design","machine"],["Math","math"],["MELROM","melrom"],["Navigation","navigation"],["Petroleum","petroleum"],["PPC","ppc"],["Real Estate","realestate"],["Standard Pac","standard"],["Statistics","statistics"],["Stress Analysis","stress"],["Structural Analysis","struct"],["Surveying","surveying"],["Thermal Science","thermal"]]
-
-DEVICE_XROMS=[["Card Reader","cardrdr"],["HP-IL Development","devil"],["HEPAX","hepax"],["HP-IL","hpil"],["Plotter","plotter"],["Printer","Thermal Printer","printer"],["Time Module (Cx)","timecx"],["Time Module","time"],["Wand","wand"],["X-Functions (CX)","xfncx"],["X-Functions","xfn"],["Extended I/O","xio"]]
-
-ALLDEVICE_XROM=["All HP Devices","hpdevices"]
-
-#
-# Terminal tab
-#
-UPDATE_TIMER=25                 # Poll timer (ms) for terminal output queue
-CURSOR_BLINK=500                # 500 ms cursor blink rate
-CURSOR_BLINK_INTERVAL= CURSOR_BLINK / UPDATE_TIMER
-AUTOSCROLL_RATE=100             # 500 ms cursor blink rate
-TERMINAL_MINIMUM_ROWS=24        # can't get beyond that
-KEYBOARD_DELAY=500              # autorepeat delay to prevent too fast kbd input
-
-#
-# predefined baudrates
-# the list controlles the baudrates that are supported by the application:
-# - the first list element sets the text in the combobox
-# - the second list element is the baud rate, a value of 0 means auto baud detection
-# the baudrates must be defined in ascending order
-BAUDRATES= [ ["Auto", 0], ["9600", 9600 ] , [ "115200", 115200 ], ["230400", 230400]]
-
-#
-# plotter tab, required version of emu7470
-#
-EMU7470_VERSION=900
-
-#
-# thermal printer tab
-#
-HP82162A_LINEBUFFERSIZE=2000
-
-#
-# if Development Version append string to VERSION and "d" to config file name
-#
-if not PRODUCTION:
-   VERSION=VERSION+" (Development)"
-#
-# Tab types
-#
-TAB_SCOPE=0
-TAB_PRINTER=1
-TAB_DRIVE=2
-TAB_TERMINAL=3
-TAB_PLOTTER=4
-TAB_HP82162A=5
-TAB_HP2225B=6
-TAB_RAWDRIVE=7
-#
-TAB_NAMES={TAB_SCOPE:'Scope',TAB_PRINTER:'Generic Printer',TAB_DRIVE:'Drive',TAB_TERMINAL:'Terminal',TAB_PLOTTER:'HP7470A',TAB_HP82162A:'HP82162A', TAB_HP2225B: 'HP2225B', TAB_RAWDRIVE: 'Raw Drive'}
-#
-# PDF Constants in 1/10 mm
-#
-PDF_MARGINS=100   
-PDF_FORMAT_A4=0
-PDF_FORMAT_LETTER=1
-PDF_ORIENTATION_PORTRAIT=0
-PDF_ORIENTATION_LANDSCAPE=1
-#
-# Barcode Constants in 1/10 mm
-#
-BARCODE_HEIGHT=100
-BARCODE_NARROW_W= 5
-BARCODE_WIDE_W= 10
-BARCODE_SPACING= 5
-
-#
-# determine QT Bindings
-#
-QTBINDINGS="None"
-HAS_WEBENGINE=False
-HAS_WEBKIT=False
-# already loaded
-for _b in('PyQt5','PySide6'):
-   if _b+'.QtCore' in sys.modules:
-      QTBINDINGS=_b
-      break
-else:
-   try:
-      import PySide6.QtCore
-   except ImportError:
-      if "PySide6" in sys.modules:
-         del sys.modules["Pyside6"]
-      try:
-         import PyQt5.QtCore
-      except ImportError:
-         if "PyQt5" in sys.modules:
-            del sys.modules["PyQt5"]
-         raise ImportError("No Qt bindings found")
-      else:
-         QTBINDINGS="PyQt5"
-         from PyQt5 import QtPrintSupport
-         QT_FORM_A4=QtPrintSupport.QPrinter.A4
-         QT_FORM_LETTER=QtPrintSupport.QPrinter.Letter
-         try:
-            from PyQt5 import QtWebKitWidgets
-            HAS_WEBKIT=True
-         except:
-            pass
-         try:
-            from PyQt5 import QtWebEngineWidgets
-            HAS_WEBENGINE=True
-         except:
-            pass
-         if HAS_WEBKIT and HAS_WEBENGINE:
-           HAS_WEBENGINE=False
-   else:
-      QTBINDINGS="PySide6"
-      from PySide6 import QtGui
-      QT_FORM_A4=QtGui.QPageSize.A4
-      QT_FORM_LETTER=QtGui.QPageSize.Letter
-      try:
-         from PySide6 import QtWebEngineWidgets
-         HAS_WEBENGINE=True
-      except:
-         pass
-
+from .pilglobals import *
 
 #
 #  portable function to get mouse cursor coordinate
 #
+if PILGLOBALS.QT_Bindings=="PyQt5":
    def getEventPosition(ev): 
-      if QTBINDINGS=="PyQt5":
-         return(ev.pos())
-      if QTBINDINGS== "PySide6":
-         return(ev.position().toPoint()) 
+      return(ev.pos())
+if PILGLOBALS.QT_Bindings== "PySide6":
+   def getEventPosition(ev): 
+       return(ev.position().toPoint()) 
 
-if "FORCE_QT5" in os.environ:
-   QTBINDINGS="PyQt5"
+#def getEventPosition(ev): 
+#   if PILGLOBALS.QT_Bindings=="PyQt5":
+#      return(ev.pos())
+#   if PILGLOBALS.QT_Bindings== "PySide6":
+#      return(ev.position().toPoint()) 
 #
 # utility functions --------------------------------------------------------------
-#
-#  get platform
-#
-def isLINUX():
-   return platform.system()=="Linux"
-def isWINDOWS():
-   return platform.system()=="Windows"
-def isMACOS():
-   return platform.system()=="Darwin"
-#
-# Standard FONT
-# Note: It would be more elegant to use "Andale Mono" on Macos and "Consolas" on 
-# Windows. "Consolas" is not available on XP and older Windows versions.
-#
-if isLINUX():
-   FONT="Monospace"
-else:
-   FONT="Courier New"
 #
 # decode version number of lifutils or emu7470
 #
@@ -402,19 +227,18 @@ def decode_pyILPERVersion(version_string):
 #  assemble frame from low and high byte according to 7- oder 8-bit format
 #
 def assemble_frame(hbyt,lbyt):
-   global USE8BITS
    if( lbyt & 0x80 ):
-      USE8BITS= True
+      PYGLOBALS.set8Bits(True)
       return ((hbyt & 0x1E) << 6) + (lbyt & 0x7F)
    else:
-      USE8BITS= False
+      PYGLOBALS.set8Bits(False)
       return ((hbyt & 0x1F) << 6) + (lbyt & 0x3F)
 #
 #  disassemble frame from low and high byte according to 7- oder 8-bit format
 #
 
 def disassemble_frame(frame):
-    if not USE8BITS :
+    if not PYGLOBALS.Use_8Bits :
        hbyt = ((frame >> 6) & 0x1F) | 0x20
        lbyt = (frame & 0x3F) | 0x40
     else:
@@ -436,17 +260,17 @@ def buildconfigfilename(progname,filename,configversion,instance,production):
 #
    userhome=os.path.expanduser("~")
 
-   if platform.system()=="Linux":
+   if PILGLOBALS.isLinux:
 #
 #     LINUX
 #        
       configpath=os.path.join(userhome,".config",progname)
-   elif platform.system()=="Windows":
+   elif PILGLOBALS.isWindows:
 #
 #     Windows
 #
       configpath=os.path.join(os.environ['APPDATA'],progname)
-   elif platform.system()=="Darwin":
+   elif PILGLOBALS.isMacos:
 #
 #     Mac OS X
 #

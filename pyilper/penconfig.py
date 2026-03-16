@@ -31,12 +31,15 @@
 # - add configversion parameter to open method
 # 04.05.2022 jsi:
 # - PySide6 migration
+# 16.03.2026 jsi:
+# - global variables refactoring
 #
 import copy
-from .pilcore import QTBINDINGS
-if QTBINDINGS=="PySide6":
+
+from .pilglobals import *
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .userconfig import cls_userconfig, ConfigError

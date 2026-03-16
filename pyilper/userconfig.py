@@ -62,6 +62,8 @@ class cls_userconfig:
 #  read configuration, if no configuration exists write default configuration
 #
    def read(self,default):
+#     print(self.__configfile__)
+#     print(self.__configpath__)
       if not os.path.isfile(self.__configfile__):
          if not os.path.exists(self.__configpath__):
             try:
@@ -73,6 +75,8 @@ class cls_userconfig:
          except OSError as e:
             raise ConfigError("Cannot write default configuration file", e.strerror)
          return default
+#     else:
+#        print(self.__configfile__," exists")
       f=None
       try:
          f= open(self.__configfile__,"r")

@@ -220,8 +220,10 @@
 # - refactoring of interfaces configuration
 # 27.08.2025 jsi
 # - added Qt Style configuration
-# 01.09.2025 ji
+# 01.09.2025 jsi
 # - change Qt style only on OK button pressed
+# 16.03.2026 jsi
+# - refactoring of global variables
 #
 import datetime
 import re
@@ -229,18 +231,20 @@ import sys
 import functools
 import pyilper
 from pathlib import Path
-from .pilcore import *
-if QTBINDINGS=="PySide6":
+
+from .pilglobals import *
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
-   if HAS_WEBENGINE:
+   if PILGLOBALS.Has_Webengine:
       from PySide6 import QtWebEngineWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
-   if HAS_WEBKIT:
+   if PILGLOBALS.Has_Webkit:
       from PyQt5 import QtWebKitWidgets
-   if HAS_WEBENGINE:
+   if PILGLOBALS.Has_Webengine:
       from PyQt5 import QtWebEngineWidgets
 
+from .pilcore import *
 from .pilqterm import QScrolledTerminalWidget
 from .pilcharconv import CHARSET_HP71, charsets
 from .pilconfig import PILCONFIG
@@ -251,7 +255,7 @@ from .pilthreads import cls_ConfigInterfaceGeneric
 #from .pilsocket import cls_PILSOCKET_Config
 #from .pililusb import cls_PILILUSB_Config
 
-if isWINDOWS():
+if PILGLOBALS.isWindows:
    import winreg
 #
 # constants for color schemes
@@ -274,9 +278,9 @@ O_DEFAULT= -1
 #
 class cls_config_tool_button(QtWidgets.QToolButton):
 
-   if QTBINDINGS=="PySide6":
+   if PILGLOBALS.QT_Bindings=="PySide6":
       config_changed_signal= QtCore.Signal()
-   if QTBINDINGS=="PyQt5":
+   if PILGLOBALS.QT_Bindings=="PyQt5":
       config_changed_signal= QtCore.pyqtSignal()
 
    def __init__(self,name,text):
@@ -584,7 +588,7 @@ class LogCheckboxWidget(QtWidgets.QCheckBox):
 #
    def logOpen(self):
       try:
-         if isWINDOWS() and PILCONFIG.get("pyilper","usebom"):
+         if PILGLOBALS.isWindows and PILCONFIG.get("pyilper","usebom"):
             self.log=open(self.filename,"a",encoding="UTF-8-SIG")
          else:
             self.log=open(self.filename,"a",encoding="UTF-8")
@@ -645,7 +649,7 @@ class cls_tabgeneric(QtWidgets.QWidget):
       self.name= name
       self.active= PILCONFIG.get(self.name,"active",False)
       self.parent=parent
-      self.font_name=FONT
+      self.font_name=PILGLOBALS.Font
       self.font_size=0
       self.font_width=0
       self.font_height=0
@@ -862,7 +866,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
    def enable(self):
       super().enable()
       self.guiobject.enable()
-      self.UpdateTimer.start(UPDATE_TIMER)
+      self.UpdateTimer.start(PILGLOBALS.Update_Timer)
 
    def disable(self):
       self.UpdateTimer.stop()
@@ -888,7 +892,7 @@ class cls_tabtermgeneric(cls_tabgeneric):
       if len(items):
          self.out_device(items)
       self.guiobject.HPTerminal.refresh()
-      self.UpdateTimer.start(UPDATE_TIMER)
+      self.UpdateTimer.start(PILGLOBALS.Update_Timer)
       return
 
 #
@@ -911,12 +915,13 @@ class cls_HelpWindow(QtWidgets.QDialog):
  
       self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
-      if HAS_WEBKIT:
+      if PILGLOBALS.Has_Webkit:
          self.view = QtWebKitWidgets.QWebView()
-      if HAS_WEBENGINE:
+      if PILGLOBALS.Has_Webengine:
          self.view = QtWebEngineWidgets.QWebEngineView()
-      if not HAS_WEBENGINE and not HAS_WEBKIT:
-         raise HelpError("The Python bindings for QtWebKit and QtWebEngine are missing. Can not display manual")
+      print(PILGLOBALS.Has_Webengine," ",PILGLOBALS.Has_Webkit)
+      if not PILGLOBALS.Has_Webengine and not PILGLOBALS.Has_Webkit:
+         raise HelpError("The Python bindings for QtWebKit and QtWebEngine are missing or disabled. Can not display manual")
 
       self.view.setMinimumWidth(600)
       self.vlayout.addWidget(self.view)
@@ -932,7 +937,7 @@ class cls_HelpWindow(QtWidgets.QDialog):
       self.hlayout.addWidget(self.buttonExit)
       self.hlayout.addWidget(self.buttonForward)
       self.vlayout.addLayout(self.hlayout)
-      if HAS_WEBKIT or HAS_WEBENGINE:
+      if PILGLOBALS.Has_Webkit or PILGLOBALS.Has_Webengine:
          self.buttonBack.clicked.connect(self.do_back)
          self.buttonForward.clicked.connect(self.do_forward)
 
@@ -984,9 +989,9 @@ class cls_AboutWindow(QtWidgets.QDialog):
 
    def __init__(self,version):
       super().__init__()
-      if QTBINDINGS=="PySide6":
+      if PILGLOBALS.QT_Bindings=="PySide6":
          self.qtversion=QtCore.__version__
-      if QTBINDINGS=="PyQt5":
+      if PILGLOBALS.QT_Bindings=="PyQt5":
          self.qtversion=QtCore.QT_VERSION_STR
 
       self.pyversion=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
@@ -1223,7 +1228,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       self.cbUseBom.stateChanged.connect(self.do_cbUseBom)
       self.vboxbom.addWidget(self.cbUseBom)
       self.gboxbom.setLayout(self.vboxbom)
-      if isWINDOWS():
+      if PILGLOBALS.isWindows:
          self.vbox2.addWidget(self.gboxbom)
 #
 #     Section qt style
@@ -1469,7 +1474,7 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
       for tab in self.tabList:
          typ= tab[0]
          name=tab[1]
-         self.devList.addItem(name+" ("+ TAB_NAMES[typ]+ ")")
+         self.devList.addItem(name+" ("+ PILGLOBALS.Tab_Names[typ]+ ")")
       self.devList.setCurrentRow(0)
 
    def do_ok(self):
@@ -1524,7 +1529,7 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
          return
       typ=retval[0]
       name=retval[1]
-      self.devList.addItem(name+" ("+ TAB_NAMES[typ]+ ")")
+      self.devList.addItem(name+" ("+ PILGLOBALS.Tab_Names[typ]+ ")")
       self.tabList.append([typ,name])
 
    @staticmethod
@@ -1572,8 +1577,8 @@ class cls_AddDeviceWindow(QtWidgets.QDialog):
 #     Combobox, omit the scope!
 #
       self.comboTyp=QtWidgets.QComboBox()
-      for i in range(1,len(TAB_NAMES)):
-         self.comboTyp.addItem(TAB_NAMES[i])
+      for i in range(1,len(PILGLOBALS.Tab_Names)):
+         self.comboTyp.addItem(PILGLOBALS.Tab_Names[i])
       self.vlayout.addWidget(self.comboTyp)
 
       self.buttonBox = QtWidgets.QDialogButtonBox()
@@ -1738,7 +1743,7 @@ class cls_ui(QtWidgets.QMainWindow):
       if instance == "":
          self.setWindowTitle("pyILPER "+version)
       else:
-         self.setWindowTitle("pyILPER "+version+" Instance: "+instance)
+         self.setWindowTitle("pyILPER "+version+" : "+instance)
 #
 #     signals
 #

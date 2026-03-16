@@ -36,11 +36,13 @@
 # - fixed backtab key
 # 04.05.2022 jsi
 # - PySide6 migration
+# 16.03.2026 jsi
+# - refactoring of global variables
 
-from .pilcore import isMACOS, QTBINDINGS
-if QTBINDINGS=="PySide6":
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
 #
@@ -204,7 +206,7 @@ keymap_hp75 = {
 #
 # add special shortcuts for macOS to the HP-71 and HP-75 keymap
 #
-if isMACOS():
+if PILGLOBALS.isMacos:
 #  Shift+Alt modifier 
    keymap_hp75[QtCore.Qt.Key_I | KEYBOARD_SHIFT | KEYBOARD_ALT]= [168] # Enter char
 #  Control+Alt modifier

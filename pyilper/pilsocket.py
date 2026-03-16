@@ -36,16 +36,20 @@
 # 29.06.2025 jsi
 # - Refactoring: moved socket thread class from pilthreads to this file
 # - Moved interface configuration GUI from pilwidgets to this file
+# 16.03.2026 jsi
+# - refactoring of global variables
 
 import select
 import socket
-from .pilcore import QTBINDINGS,assemble_frame, disassemble_frame, COMTMOUTREAD, COMTMOUTACK,CLASS_INTERFACE_NET
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
+   from PySide6 import QtCore, QtGui, QtWidgets
+if PILGLOBALS.QT_Bindings=="PyQt5":
+   from PyQt5 import QtCore, QtGui, QtWidgets
+
+from .pilcore import assemble_frame, disassemble_frame
 from .pilconfig import PILCONFIG
 from .pilthreads import PilThreadError, cls_pilthread_generic, cls_ConfigInterfaceGeneric
-if QTBINDINGS=="PySide6":
-   from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
-   from PyQt5 import QtCore, QtGui, QtWidgets
 
 MODE_SOCKET=2
 
@@ -150,7 +154,7 @@ class cls_pilsocket:
 class cls_PilSocketThread(cls_pilthread_generic):
 
    def __init__(self, parent,mode):
-      super().__init__(parent,mode,CLASS_INTERFACE_NET)
+      super().__init__(parent,mode,PILGLOBALS.Class_Interface_Net)
 
    def enable(self):
       self.send_message("Not connected to socket")
@@ -183,7 +187,7 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #
 #           read byte from socket
 #
-            ret=self.commobject.read(COMTMOUTREAD)
+            ret=self.commobject.read(PILGLOBALS.Com_Tmout_Read)
             if ret is None:
                continue
       
@@ -234,7 +238,7 @@ class cls_PilSocketThread(cls_pilthread_generic):
 #
 #                 read acknowledge
 #
-                  b= self.commobject.read(COMTMOUTACK)
+                  b= self.commobject.read(PILGLOBALS.Com_Tmout_Ack)
                   if b is None:
                      raise PilThreadError("cannot get acknowledge: ","timeout")
                   if ord(b)!= 0x0D:

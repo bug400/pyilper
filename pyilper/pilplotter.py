@@ -106,17 +106,21 @@
 # - force background to white (dark mode)
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
+# 16.03.2026 jsi
+# - refactoring of global variables
 
 import sys
 import subprocess
 import threading
 import array
-from .pilcore import *
-if QTBINDINGS=="PySide6":
+
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtPrintSupport, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 
+from .pilcore import getEventPosition, decode_version
 from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PENCONFIG
 from .pildevbase import cls_pildevbase
@@ -294,7 +298,7 @@ class cls_P1P2Mark(QtWidgets.QGraphicsTextItem):
 
     def __init__(self,string):
         super().__init__(string)
-        self.font=QtGui.QFont(FONT)
+        self.font=QtGui.QFont(PILGLOBALS.Font)
         self.font.setPixelSize(10)
 
     def setPos(self,x,y):
@@ -727,7 +731,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
 #     enable: start timer
 #
    def enable(self):
-      self.UpdateTimer.start(UPDATE_TIMER)
+      self.UpdateTimer.start(PILGLOBALS.Update_Timer)
       self.toggle_active()
       return
 #
@@ -793,9 +797,9 @@ class cls_PlotterWidget(QtWidgets.QWidget):
          return
       printer = QtPrintSupport.QPrinter (QtPrintSupport.QPrinter.HighResolution)
       if self.papersize==0:
-         printer.setPageSize(QT_FORM_A4)
+         printer.setPageSize(PILGLOBALS.QT_Form_A4)
       else:
-         printer.setPageSize(QT_FORM_LETTER)
+         printer.setPageSize(PILGLOBALS.QT_Form_Letter)
 
       printer.setPageOrientation(QtGui.QPageLayout.Landscape)
       printer.setOutputFormat(QtPrintSupport.QPrinter.PdfFormat)
@@ -997,7 +1001,7 @@ class cls_PlotterWidget(QtWidgets.QWidget):
           for c in items:
              self.process(c)
        self.plotview.update() 
-       self.UpdateTimer.start(UPDATE_TIMER)
+       self.UpdateTimer.start(PILGLOBALS.Update_Timer)
        return
 #
 #  GUI command processing
@@ -1303,7 +1307,7 @@ class cls_HP7470(QtCore.QObject):
       progpath=add_path("emu7470")
 
       try:
-         if isWINDOWS():
+         if PILGLOBALS.isWindows:
             creationflags=0x08000000 # CREATE_NO_WINDOW
          else:
             creationflags=0
@@ -1319,7 +1323,7 @@ class cls_HP7470(QtCore.QObject):
          version=int(line)
       except ValueError:
          version=0
-      if version < EMU7470_VERSION:
+      if version < PILGLOBALS.EMU7470_Version:
          self.proc.stdin.close()
          self.proc.stdout.close()
          self.proc.kill()

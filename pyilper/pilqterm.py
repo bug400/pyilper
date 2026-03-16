@@ -118,7 +118,7 @@
 # 30.09.2017 jsi:
 # - added copy and paste support
 # 05.10.2017 jsi:
-# - initial terminal line buffer with TERMINAL_MINIMUM_ROWS on start up
+# - initial terminal line buffer with PILGLOBALS.Terminal_Minimum_Rows on start up
 #   because hidden terminal tabs get their resize event not until they
 #   become visible.
 # - fixes to scrollbar parameter settings
@@ -184,9 +184,10 @@
 # - replaced deprecated cursor position method calls
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
-# 14.03.2024 jsi
+# 14.03.2026 jsi
 # - fix processing of the cursor positioning escape sequence. Credits go to github user McGandolf
-
+# 16.03.2026 jsi
+# - refactoring of global variables
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -195,12 +196,13 @@ import array
 import threading
 import time
 
-from .pilcore import UPDATE_TIMER, CURSOR_BLINK, TERMINAL_MINIMUM_ROWS,FONT, AUTOSCROLL_RATE, isMACOS, KEYBOARD_DELAY, QTBINDINGS, getEventPosition
-if QTBINDINGS=="PySide6":
+from .pilglobals import *
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
+from .pilcore import  getEventPosition
 from .pilcharconv import icharconv, CHARSET_HP71, CHARSET_HP75, CHARSET_HP41
 from .shortcutconfig import SHORTCUTCONFIG, SHORTCUT_EXEC, SHORTCUT_EDIT, SHORTCUT_INSERT
 from .pilconfig import PILCONFIG
@@ -413,7 +415,7 @@ class TermCursor(QtWidgets.QGraphicsItem):
       self.brush=QtGui.QBrush(foregroundcolor)
       self.draw=True
       self.blink_timer=QtCore.QTimer()
-      self.blink_timer.setInterval(CURSOR_BLINK)
+      self.blink_timer.setInterval(PILGLOBALS.Cursor_Blink)
       self.blink_timer.timeout.connect(self.do_blink)
       self.blink_timer.start()
       self.insertpolygon=QtGui.QPolygon([QtCore.QPoint(0,int(self.h/2)), 
@@ -507,7 +509,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._cursortype= CURSOR_OFF  # cursor mode (off, overwrite, insert)
         self._cursor_char= 0x20       # character at cursor position
         self._cursor_attr=-1          # attribute at cursor position
-        self._font=QtGui.QFont(FONT)  # monospaced font
+        self._font=QtGui.QFont(PILGLOBALS.Font)  # monospaced font
         self._isVisible= False        # visible state
         self._press_pos= None         # mouse click position
         self._selectionText=""        # text of selection
@@ -518,11 +520,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #       If this timer is active, autorpeat keyboard entries are ignored
 #
         self._inhibitAutorepeatTimer= QtCore.QTimer()
-        self._inhibitAutorepeatTimer.setInterval(KEYBOARD_DELAY)
+        self._inhibitAutorepeatTimer.setInterval(PILGLOBALS.Keyboard_Delay)
         self._inhibitAutorepeatTimer.setSingleShot(True)
         self._autoscrollMode= AUTOSCROLL_OFF
         self._autoscrollTimer=QtCore.QTimer()
-        self._autoscrollTimer.setInterval(AUTOSCROLL_RATE)
+        self._autoscrollTimer.setInterval(PILGLOBALS.Autoscroll_Rate)
         self._autoscrollTimer.timeout.connect(self.do_autoscroll)
 
 #
@@ -557,8 +559,8 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
         self._color_scheme_index=PILCONFIG.get(self._name,"colorscheme")
         self._font_size=PILCONFIG.get_dual(self._name,"terminalcharsize")
         self._scrollupbuffersize=PILCONFIG.get(self._name,"scrollupbuffersize")
-        if self._scrollupbuffersize < TERMINAL_MINIMUM_ROWS:
-           self._scrollupbuffersize= TERMINAL_MINIMUM_ROWS
+        if self._scrollupbuffersize < PILGLOBALS.Terminal_Minimum_Rows:
+           self._scrollupbuffersize= PILGLOBALS.Terminal_Minimum_Rows
 
 #
 #       determine font metrics and character size in pixel
@@ -583,7 +585,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #       set minimum dimensions for "cols" columns and 24 rows
 #
         self._minw= self._true_w[len(self._true_w)-1] # true width
-        self._minh= self._char_height* TERMINAL_MINIMUM_ROWS
+        self._minh= self._char_height* PILGLOBALS.Terminal_Minimum_Rows
 #
 #       calculate size hints
 #
@@ -765,12 +767,12 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
            self._modifier_flags= self._modifier_flags & 0x500000000
            return
         elif key == QtCore.Qt.Key_Control:
-           if not isMACOS():
+           if not PILGLOBALS.isMacos:
               self._ctrl_modifier= False
            self._modifier_flags= self._modifier_flags & 0x300000000
            return
         elif key == QtCore.Qt.Key_Meta:
-           if isMACOS():
+           if PILGLOBALS.isMacos:
               self._ctrl_modifier= False
         event.accept()
         return
@@ -808,10 +810,10 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
            self._modifier_flags= self._modifier_flags | KEYBOARD_SHIFT
         elif key == QtCore.Qt.Key_Control:
            self._modifier_flags= self._modifier_flags | KEYBOARD_CTRL
-           if not isMACOS():
+           if not PILGLOBALS.isMacos:
               self._ctrl_modifier=True
         elif key == QtCore.Qt.Key_Meta:
-           if isMACOS():
+           if PILGLOBALS.isMacos:
               self._ctrl_modifier=True
            self._modifier_flags= self._modifier_flags | KEYBOARD_CTRL
 #
@@ -846,7 +848,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
               else:
                  alt_mode_lookup=[]
-                 if isMACOS():
+                 if PILGLOBALS.isMacos:
 #                   print("keyboard ALT mode lookup for ",key)
                     alt_mode_lookup= keyboard_lookup(key | self._modifier_flags, self._keyboard_type)
 #                   print("lookup result",alt_mode_lookup)
@@ -931,7 +933,7 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #
 #      initial terminal size
 #
-       self._HPTerminal.resize_rows(TERMINAL_MINIMUM_ROWS)
+       self._HPTerminal.resize_rows(PILGLOBALS.Terminal_Minimum_Rows)
 #
 #   set keyboard type
 #
@@ -1157,8 +1159,8 @@ class HPTerminal:
 #
     def reconfigure(self):
        h = PILCONFIG.get(self.name,"scrollupbuffersize")
-       if h < TERMINAL_MINIMUM_ROWS:
-          h= TERMINAL_MINIMUM_ROWS
+       if h < PILGLOBALS.Terminal_Minimum_Rows:
+          h= PILGLOBALS.Terminal_Minimum_Rows
        if h != self.h:
           self.h=h
           self.reset_hard()

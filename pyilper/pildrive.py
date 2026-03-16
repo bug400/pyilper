@@ -126,20 +126,24 @@
 # - PySide6 migration
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase or pildrive class
+# 16.03.2026 jsi
+# - refactoring of global variables
 #
 import time
 import threading
 import os
-from .pilcore import *
-if QTBINDINGS=="PySide6":
+
+from .pilglobals import PILGLOBALS
+if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
-if QTBINDINGS=="PyQt5":
+if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, T_STRING, T_INTEGER, O_DEFAULT
 from .pilconfig import PilConfigError, PILCONFIG
 from .pilcharconv import CHARSET_HP71, charsets
+from .pilcore import getEventPosition
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt, putLifInt
 from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
@@ -222,7 +226,7 @@ class cls_tabdrive(cls_tabdrivegeneric):
 #
 #     create HPIL-device, notify object to drive gui object
 #
-      self.pildevice= cls_pildrive(isWINDOWS(),False)
+      self.pildevice= cls_pildrive(PILGLOBALS.isWindows,False)
       self.guiobject.set_pildevice(self.pildevice)
       self.cBut.config_changed_signal.connect(self.do_tabconfig_changed)
 #
@@ -243,7 +247,7 @@ class cls_tabrawdrive(cls_tabdrivegeneric):
 #
 #     create HPIL-device, notify object to drive gui object
 #
-      self.pildevice= cls_pildrive(isWINDOWS(),True)
+      self.pildevice= cls_pildrive(PILGLOBALS.isWindows,True)
       self.guiobject.set_pildevice(self.pildevice)
 #
 #  Generic drive widget class (contains definitions only) -----------------------
@@ -534,7 +538,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
 #     directory widget
 #
       self.vbox1= QtWidgets.QVBoxLayout()
-      self.lifdir=cls_LifDirWidget(self,self.name,0,FONT,self.papersize)
+      self.lifdir=cls_LifDirWidget(self,self.name,0,PILGLOBALS.Font,self.papersize)
       self.vbox1.addWidget(self.lifdir)
 
       self.hbox2= QtWidgets.QHBoxLayout()
@@ -649,7 +653,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
 #  becomes visible, activate update timer
 #
    def becomes_visible(self):
-      self.timer.start(REFRESH_RATE)
+      self.timer.start(PILGLOBALS.Refresh_Rate)
       return
 #
 #  becomes invisible, deactivate update timer
@@ -746,7 +750,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
 #     initialize pdf printer
 #
       title="Directory listing of: "+self.filename
-      pdfprinter=cls_pdfprinter(self.papersize,PDF_ORIENTATION_PORTRAIT, output_filename,title,True,1)
+      pdfprinter=cls_pdfprinter(self.papersize,PILGLOBALS.PDF_Orientation_Portrait, output_filename,title,True,1)
       pdfprinter.begin()
 
       model= self.lifdir.getModel()
@@ -773,7 +777,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
       modified, timestamp= self.pildevice.ismodified()
       self.update_pending= self.update_pending or modified
       if self.update_pending:
-         if tm - timestamp > NOT_TALKER_SPAN:
+         if tm - timestamp > PILGLOBALS.Not_Talker_Span:
             self.refreshDirList()
             self.update_pending= False
 
@@ -826,7 +830,7 @@ class cls_DriveWidget(cls_GenericDriveWidget):
 #     read lif file header
 #
       try:
-         if isWINDOWS():
+         if PILGLOBALS.isWindows:
             fd= os.open(filename,os.O_RDONLY | os.O_BINARY)
          else:
             fd= os.open(filename,os.O_RDONLY)
