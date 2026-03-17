@@ -173,6 +173,7 @@ import os
 
 from .pilglobals import *
 
+USE_8BITS=True
 #
 #  portable function to get mouse cursor coordinate
 #
@@ -227,18 +228,19 @@ def decode_pyILPERVersion(version_string):
 #  assemble frame from low and high byte according to 7- oder 8-bit format
 #
 def assemble_frame(hbyt,lbyt):
+   global USE_8BITS
    if( lbyt & 0x80 ):
-      PYGLOBALS.set8Bits(True)
+      USE_8BITS=True
       return ((hbyt & 0x1E) << 6) + (lbyt & 0x7F)
    else:
-      PYGLOBALS.set8Bits(False)
+      USE_8BITS= False
       return ((hbyt & 0x1F) << 6) + (lbyt & 0x3F)
 #
 #  disassemble frame from low and high byte according to 7- oder 8-bit format
 #
 
 def disassemble_frame(frame):
-    if not PYGLOBALS.Use_8Bits :
+    if not USE_8BITS:
        hbyt = ((frame >> 6) & 0x1F) | 0x20
        lbyt = (frame & 0x3F) | 0x40
     else:
