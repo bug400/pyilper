@@ -224,6 +224,8 @@
 # - change Qt style only on OK button pressed
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 20.03.2026 jsi
+# - pluggable interfaces and tabs
 #
 import datetime
 import re
@@ -919,7 +921,6 @@ class cls_HelpWindow(QtWidgets.QDialog):
          self.view = QtWebKitWidgets.QWebView()
       if PILGLOBALS.Has_Webengine:
          self.view = QtWebEngineWidgets.QWebEngineView()
-      print(PILGLOBALS.Has_Webengine," ",PILGLOBALS.Has_Webkit)
       if not PILGLOBALS.Has_Webengine and not PILGLOBALS.Has_Webkit:
          raise HelpError("The Python bindings for QtWebKit and QtWebEngine are missing or disabled. Can not display manual")
 
@@ -1068,12 +1069,11 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       
       cls_ConfigInterfaceGeneric.reset()
 
-      for mode,interface in self.__interfaces__.items():
-         self.vboxgbox.addWidget(interface[1](self.__name__,mode,interface[3]))
-#     self.vboxgbox.addWidget(cls_PILBOX_Config(self.__name__,0,"PIL-Box"))
-#     self.vboxgbox.addWidget(cls_PILTCPIP_Config(self.__name__,1,"HP-IL over TCP/IP"))
-#     self.vboxgbox.addWidget(cls_PILSOCKET_Config(self.__name__,2,"TCP/IP Socket Server (PIL-Box Emulation)"))
-#     self.vboxgbox.addWidget(cls_PILILUSB_Config(self.__name__,3,"ILUSB device"))
+      for k,v in self.__interfaces__.items():
+         self.vboxgbox.addWidget(v.config_class(self.__name__,v.id,v.title))
+
+#     for mode,interface in self.__interfaces__.items():
+#        self.vboxgbox.addWidget(interface[1](self.__name__,mode,interface[3]))
     
 #
 #     Section Working Directory
@@ -1430,9 +1430,10 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 
 class cls_DeviceConfigWindow(QtWidgets.QDialog):
 
-   def __init__(self,parent):
+   def __init__(self,parent,tabs):
       super().__init__()
       self.parent=parent
+      self.tabs=tabs
       self.setWindowTitle('Virtual HP-IL device config')
       self.vlayout = QtWidgets.QVBoxLayout()
 #
@@ -1474,7 +1475,8 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
       for tab in self.tabList:
          typ= tab[0]
          name=tab[1]
-         self.devList.addItem(name+" ("+ PILGLOBALS.Tab_Names[typ]+ ")")
+#        self.devList.addItem(name+" ("+ PILGLOBALS.Tab_Names[typ]+ ")")
+         self.devList.addItem(name+" ("+ self.tabs[typ].name+ ")")
       self.devList.setCurrentRow(0)
 
    def do_ok(self):
@@ -1524,17 +1526,18 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
       item= None
 
    def do_itemAdd(self):
-      retval=cls_AddDeviceWindow.getAddDevice(self)
+      retval=cls_AddDeviceWindow.getAddDevice(self,self.tabs)
       if retval== "":
          return
-      typ=retval[0]
+      id=retval[0]
       name=retval[1]
-      self.devList.addItem(name+" ("+ PILGLOBALS.Tab_Names[typ]+ ")")
-      self.tabList.append([typ,name])
+#     self.devList.addItem(name+" ("+ PILGLOBALS.Tab_Names[typ]+ ")")
+      self.devList.addItem(name+" ("+ self.tabs[id].name+ ")")
+      self.tabList.append([id,name])
 
    @staticmethod
-   def getDeviceConfig(parent):
-      dialog= cls_DeviceConfigWindow(parent)
+   def getDeviceConfig(parent,tabs):
+      dialog= cls_DeviceConfigWindow(parent,tabs)
       dialog.resize(350,100)
       result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
@@ -1556,10 +1559,12 @@ class cls_Device_validator(QtGui.QValidator):
 #
 class cls_AddDeviceWindow(QtWidgets.QDialog):
 
-   def __init__(self,parent):
+   def __init__(self,parent,tabs):
       super().__init__()
-      self.typ= None
+      self.id= None
       self.name=None
+      self.tabs=tabs
+      self.idList= [ ]
       self.tabList=parent.tabList
       self.setWindowTitle('New Virtual HP-IL device')
 #
@@ -1577,8 +1582,13 @@ class cls_AddDeviceWindow(QtWidgets.QDialog):
 #     Combobox, omit the scope!
 #
       self.comboTyp=QtWidgets.QComboBox()
-      for i in range(1,len(PILGLOBALS.Tab_Names)):
-         self.comboTyp.addItem(PILGLOBALS.Tab_Names[i])
+      for k,v in self.tabs.items():
+         if v.id!=PILGLOBALS.Tab_Scope:
+            self.comboTyp.addItem(v.name)
+            self.idList.append(v.id)
+
+#     for i in range(1,len(PILGLOBALS.Tab_Names)):
+#        self.comboTyp.addItem(PILGLOBALS.Tab_Names[i])
       self.vlayout.addWidget(self.comboTyp)
 
       self.buttonBox = QtWidgets.QDialogButtonBox()
@@ -1606,22 +1616,22 @@ class cls_AddDeviceWindow(QtWidgets.QDialog):
 #  return results
 #
    def getResult(self):
-      return([self.typ,self.name])
+      return([self.id,self.name])
 
 #
 #  only enabled if name is not empty and unique
 #
    def do_ok(self):
       self.name= self.leditName.text()
-      self.typ= self.comboTyp.currentIndex()+1
+      self.id= self.idList[self.comboTyp.currentIndex()]
       super().accept()
 
    def do_cancel(self):
       super().reject()
 
    @staticmethod
-   def getAddDevice(parent):
-      dialog= cls_AddDeviceWindow(parent)
+   def getAddDevice(parent,tabs):
+      dialog= cls_AddDeviceWindow(parent,tabs)
       dialog.resize(250,100)
       result= dialog.exec()
       if result== QtWidgets.QDialog.Accepted:
@@ -1797,8 +1807,8 @@ class cls_ui(QtWidgets.QMainWindow):
 #
 #  queued emit of the signal to indicate crash
 #
-   def emit_crash(self):
-      self.sig_crash.emit()
+   def emit_crash(self,reason):
+      self.sig_crash.emit(reason)
 #
 #  catch close event
 #

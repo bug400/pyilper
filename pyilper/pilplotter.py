@@ -108,6 +108,8 @@
 # - all queues, locks and shared variables are now part of the pildevbase class
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 
 import sys
 import subprocess
@@ -120,7 +122,7 @@ if PILGLOBALS.QT_Bindings=="PySide6":
 if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtPrintSupport, QtWidgets
 
-from .pilcore import getEventPosition, decode_version
+from .pilcore import getEventPosition, decode_version, cls_Tab_Spec
 from .pilconfig import PilConfigError, PILCONFIG
 from .penconfig import PENCONFIG
 from .pildevbase import cls_pildevbase
@@ -1698,3 +1700,6 @@ class cls_pilplotter(cls_pildevbase):
          if self.__outqueue__.empty():
             self.__status__= self.__status__ & 0xEF # clear ready for data bit
       return(frame)
+
+def pilplotter_spec():
+   return([cls_Tab_Spec(PILGLOBALS.Tab_Plotter,None,cls_tabplotter,"HP7470A")])

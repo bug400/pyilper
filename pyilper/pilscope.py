@@ -62,6 +62,8 @@
 # - all queues, locks and shared variables are now part of the pildevbase class
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 
 
 import datetime
@@ -74,6 +76,7 @@ if PILGLOBALS.QT_Bindings=="PyQt5":
 from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric, T_BOOLEAN, T_STRING,O_DEFAULT
 from .pildevbase import cls_pildevbase
+from .pilcore import cls_Tab_Spec
 
 
 LOG_INBOUND=0
@@ -366,3 +369,6 @@ class cls_pilscope(cls_pildevbase):
          s= s.lower()
       self.putGuiQueueItem(s)
       return (frame)
+
+def pilscope_spec():
+   return([cls_Tab_Spec(PILGLOBALS.Tab_Scope,None,cls_tabscope,"Scope")])

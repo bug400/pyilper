@@ -128,6 +128,8 @@
 # - all queues, locks and shared variables are now part of the pildevbase or pildrive class
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 #
 import time
 import threading
@@ -143,7 +145,7 @@ from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, T_STRING, T_INTEGER, O_DEFAULT
 from .pilconfig import PilConfigError, PILCONFIG
 from .pilcharconv import CHARSET_HP71, charsets
-from .pilcore import getEventPosition
+from .pilcore import getEventPosition, cls_Tab_Spec
 from .lifutils import cls_LifFile,cls_LifDir,LifError, getLifInt, putLifInt
 from .lifcore import *
 from .lifexec import cls_lifpack, cls_lifpurge, cls_lifrename, cls_lifexport, cls_lifimport, cls_lifview, cls_liflabel, check_lifutils, cls_lifbarcode
@@ -1681,3 +1683,6 @@ class cls_pildrive(cls_pildevbase):
             elif n == 4:
                self.__exchbuf__()
       return(frame)
+
+def pildrive_spec():
+   return([cls_Tab_Spec(PILGLOBALS.Tab_Drive,None,cls_tabdrive,"Drive"),cls_Tab_Spec(PILGLOBALS.Tab_Rawdrive,None,cls_tabrawdrive,"Raw Drive")])

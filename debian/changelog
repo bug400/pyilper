@@ -1,3 +1,11 @@
+pyilper (1.9.0.dev7) trixie; urgency=medium
+
+  * autoreconnect for non network devices
+  * pluggable interfaces and tabs 
+  * bug fix idy handling of pilbox interface (regression error)
+
+ -- trixie <achim@trillian>  Fri, 20 Mar 2026 08:24:12 +0100
+
 pyilper (1.9.0.dev6) trixie; urgency=medium
 
   * refactoring of global variables 

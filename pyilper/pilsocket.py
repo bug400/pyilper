@@ -38,6 +38,8 @@
 # - Moved interface configuration GUI from pilwidgets to this file
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 
 import select
 import socket
@@ -47,7 +49,7 @@ if PILGLOBALS.QT_Bindings=="PySide6":
 if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
-from .pilcore import assemble_frame, disassemble_frame
+from .pilcore import assemble_frame, disassemble_frame, cls_Interface_Spec
 from .pilconfig import PILCONFIG
 from .pilthreads import PilThreadError, cls_pilthread_generic, cls_ConfigInterfaceGeneric
 
@@ -154,7 +156,8 @@ class cls_pilsocket:
 class cls_PilSocketThread(cls_pilthread_generic):
 
    def __init__(self, parent,mode):
-      super().__init__(parent,mode,PILGLOBALS.Class_Interface_Net)
+      super().__init__(parent,mode)
+      self.interfaceSpec= pilsocket_spec()
 
    def enable(self):
       self.send_message("Not connected to socket")
@@ -288,6 +291,5 @@ class cls_PILSOCKET_Config(cls_ConfigInterfaceGeneric):
    def store_config(self):
       PILCONFIG.put(self.configName,"serverport",int(self.edtServerport.text()))
 
-
-
-
+def pilsocket_spec():
+   return(cls_Interface_Spec(PILGLOBALS.Interface_Socket,None,cls_PilSocketThread, cls_PILSOCKET_Config,PILGLOBALS.Interface_HW_Class_Network,"TCP/IP Socket Server (PIL-Box Emulation)",False))

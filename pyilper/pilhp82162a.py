@@ -84,6 +84,8 @@
 # - all queues, locks and shared variables are now part of the pildevbase class
 # 16.03.2026 jsi
 # -refactoring of global variables
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 #
 import copy
 import threading
@@ -99,6 +101,7 @@ from .pilcharconv import charconv, CHARSET_HP41, CHARSET_ROMAN8
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget, T_INTEGER, O_DEFAULT
 from .pilpdf import cls_pdfprinter
+from .pilcore import cls_Tab_Spec
 
 #
 # constants --------------------------------------------------------------
@@ -582,12 +585,12 @@ class cls_HP82162AWidget(QtWidgets.QWidget):
       self.printview=cls_ScrolledHP82162AView(self,self.name,self.pixelsize, self.pdfpixelsize,self.papersize,self.linebuffersize)
       self.hbox.addWidget(self.printview)
       self.vbox=QtWidgets.QVBoxLayout()
+      self.vbox.addWidget(QtWidgets.QLabel("Printer mode"))
 #
 #     radio buttons Man, Norm, Trace
 #
       self.gbox= QtWidgets.QGroupBox()
       self.gbox.setFlat(True)
-      self.gbox.setTitle("Printer mode")
       self.vboxgbox= QtWidgets.QVBoxLayout()
       self.gbox.setLayout(self.vboxgbox)
 #
@@ -2086,3 +2089,6 @@ class cls_pilhp82162a(cls_pildevbase):
 #     reset device 
 #
       self.__printer__.reset()
+
+def pilhp82162a_spec():
+   return([cls_Tab_Spec(PILGLOBALS.Tab_HP82162A,None,cls_tabhp82162a,"HP82162A")])

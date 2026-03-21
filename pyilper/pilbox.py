@@ -75,8 +75,11 @@
 # - moved interface configuration GUI part from pilwidgets to this file
 # 16.03.2026 jsi
 # - global variables refactoring
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
+# - autoreconnect
+# - fixed COFI handling
 
-MODE_PILBOX=0
 #
 # PIL-Box Commands
 #
@@ -84,6 +87,7 @@ COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 
+import os
 from .pilglobals import PILGLOBALS
 if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
@@ -91,7 +95,7 @@ if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilrs232 import Rs232Error, cls_rs232
 from .pilconfig import PILCONFIG
-from .pilcore import assemble_frame, disassemble_frame
+from .pilcore import assemble_frame, disassemble_frame, cls_Interface_Spec
 from .pilthreads import PilThreadError, cls_pilthread_generic, cls_TtyWindow, cls_ConfigInterfaceGeneric
 
 class PilBoxError(Exception):
@@ -105,13 +109,9 @@ class PilBoxError(Exception):
 
 class cls_pilbox:
 
-   MODE_COFF=0
-   MODE_COFI=1
-   MODE_PASSTHRU=2
-
-   def __init__(self,ttydevice,baudrate,mode):
+   def __init__(self,ttydevice,baudrate,idyframe):
       self.__baudrate__= baudrate  # baudrate of connection or 0 for autodetect
-      self.__mode__= mode          # switch box to mode
+      self.__idyframe__= idyframe  # enable idy frames
       self.__tty__= cls_rs232()    # serial device object
       self.__ttydevice__=ttydevice # serial port name
 
@@ -147,12 +147,7 @@ class cls_pilbox:
 #
    def open(self):
 
-      if self.__mode__== cls_pilbox.MODE_COFF:
-         cmd= COFF
-      elif self.__mode__== cls_pilbox.MODE_COFI:
-         cmd= COFI
-      elif self.__mode__== cls_pilbox.MODE_PASSTHRU:
-         cmd= PASSTHRU
+      cmd= COFF
 #
 #     open serial device, no autobaud mode
 #
@@ -205,6 +200,8 @@ class cls_pilbox:
          if not success:
             self.__tty__.close()
             raise PilBoxError("Cannot connect to PIL-Box", errmsg)
+      if self.__idyframe__:
+         self.__sendCmd__(COFI,PILGLOBALS.Tmout_Cmd)
 
 #
 #  Disconnect PIL-Box
@@ -235,28 +232,34 @@ class cls_pilbox:
          self.__tty__.snd(buf)
       except Rs232Error as e:
          raise PilBoxError("PIL-Box send frame error", e.value)
+
+   @classmethod
+   def config(cls):
+      return("cfg")
 #
 # PIL-Box communications thread over serial port
 #
 class cls_PilBoxThread(cls_pilthread_generic):
 
    def __init__(self,parent,mode):
-      super().__init__(parent,mode,PILGLOBALS.Class_Interface_Box) 
+      super().__init__(parent,mode) 
       self.__lasth__=0
       self.__baudrate__=0
+      self.__ttydevice__=""
+      self.interfaceSpec= pilbox_spec()
 
 
    def enable(self):
       super().enable()
       self.send_message("Not connected to PIL-Box")
       baud=PILCONFIG.get("pyilper",'ttyspeed')
-      ttydevice=PILCONFIG.get("pyilper",'tty')
+      self.__ttydevice__=PILCONFIG.get("pyilper",'tty')
       idyframe=PILCONFIG.get("pyilper",'idyframe')
       self.__lasth__=0
-      if ttydevice== "":
+      if self.__ttydevice__== "":
          raise PilThreadError("Serial device not configured ","Run pyILPER configuration")
       try:
-         self.commobject=cls_pilbox(ttydevice,baud,idyframe)
+         self.commobject=cls_pilbox(self.__ttydevice__,baud,idyframe)
          self.commobject.open()
       except PilBoxError as e:
          raise PilThreadError(e.msg,e.add_msg)
@@ -338,8 +341,21 @@ class cls_PilBoxThread(cls_pilthread_generic):
 
       except PilBoxError as e:
          self.send_message('PIL-Box disconnected after error. '+e.msg+': '+e.add_msg)
-         self.signal_crash()
+         if os.path.exists(self.__ttydevice__):
+            self.signal_crash(PILGLOBALS.Crash_Reason_Unknown)
+         else:
+            self.signal_crash(PILGLOBALS.Crash_Reason_No_Device)
       self.running=False
+
+   @classmethod
+   def checkDevice(cls):
+      ttydevice=PILCONFIG.get("pyilper",'tty')
+      if ttydevice=="":
+         return False
+      if os.path.exists(ttydevice):
+         return True
+      else:
+         return False
 
 
 class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
@@ -428,3 +444,6 @@ class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
       PILCONFIG.put(self.configName,"tty", self.tty)
       PILCONFIG.put(self.configName,"ttyspeed", PILGLOBALS.Baudrates[self.comboBaud.currentIndex()][1])
       PILCONFIG.put(self.configName,"idyframe",self.idyframe)
+
+def pilbox_spec():
+   return(cls_Interface_Spec(PILGLOBALS.Interface_Pilbox,None,cls_PilBoxThread,cls_PILBOX_Config,PILGLOBALS.Interface_HW_Class_Serial,"PIL-Box",True))

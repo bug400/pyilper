@@ -68,6 +68,8 @@
 # - Moved interface configuration GUI from pilwidgets to this file
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 
 import select
 import socket
@@ -77,7 +79,7 @@ if PILGLOBALS.QT_Bindings=="PySide6":
 if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
-from .pilcore import assemble_frame, disassemble_frame
+from .pilcore import assemble_frame, disassemble_frame, cls_Interface_Spec
 from .pilconfig import *
 from .pilthreads import PilThreadError, cls_pilthread_generic, cls_ConfigInterfaceGeneric
 
@@ -231,7 +233,8 @@ class cls_piltcpip:
 class cls_PilTcpIpThread(cls_pilthread_generic):
 
    def __init__(self, parent,mode):
-      super().__init__(parent,mode,PILGLOBALS.Class_Interface_Net)
+      super().__init__(parent,mode)
+      self.interfaceSpec = piltcpip_spec()
 
    def enable(self):
       port= PILCONFIG.get("pyilper","port")
@@ -355,3 +358,7 @@ class cls_PILTCPIP_Config(cls_ConfigInterfaceGeneric):
       PILCONFIG.put(self.configName,"port", int(self.edtPort.text()))
       PILCONFIG.put(self.configName,"remotehost", self.edtRemoteHost.text())
       PILCONFIG.put(self.configName,"remoteport", int(self.edtRemotePort.text()))
+
+def piltcpip_spec():
+   return(cls_Interface_Spec(PILGLOBALS.Interface_Tcpip,None,cls_PilTcpIpThread, cls_PILTCPIP_Config,PILGLOBALS.Interface_HW_Class_Network,"HP-IL over TCP/IP",False))
+

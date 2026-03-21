@@ -192,6 +192,9 @@
 # - added Qt style configuration
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 21.03.2026 jsi
+# - autoreconnect for non network devices
+# - pluggable interfaces and tabs
 #
 import os
 import sys
@@ -202,6 +205,8 @@ import pyilper
 import re
 import argparse
 import time
+from pathlib import Path
+import importlib
 from .pilglobals import *
 
 if PILGLOBALS.QT_Bindings=="PySide6":
@@ -216,34 +221,7 @@ from .penconfig import  PenConfigError, PENCONFIG, cls_PenConfigWindow
 from .shortcutconfig import  ShortcutConfigError, SHORTCUTCONFIG, cls_ShortcutConfigWindow
 from .lifexec import cls_lifinit, cls_liffix, cls_installcheck, check_lifutils
 
-#
-# Devices
-#
-from .pilplotter import cls_tabplotter
-from .pildrive import cls_tabdrive,cls_tabrawdrive
-from .pilscope import cls_tabscope
-from .pilprinter import cls_tabprinter
-from .pilterminal import cls_tabterminal
-from .pilhp2225b import cls_tabhp2225b
-from .pilhp82162a import cls_tabhp82162a
-
-TAB_CLASSES={PILGLOBALS.Tab_Scope:cls_tabscope,PILGLOBALS.Tab_Printer:cls_tabprinter,PILGLOBALS.Tab_Drive:cls_tabdrive,PILGLOBALS.Tab_Terminal:cls_tabterminal,PILGLOBALS.Tab_Plotter:cls_tabplotter,PILGLOBALS.Tab_HP82162A:cls_tabhp82162a,PILGLOBALS.Tab_HP2225B: cls_tabhp2225b, PILGLOBALS.Tab_Rawdrive: cls_tabrawdrive}
-#
-
-# Interfaces
-#
-from .pilbox import cls_PilBoxThread, cls_PILBOX_Config, MODE_PILBOX
-from .piltcpip import cls_PilTcpIpThread, cls_PILTCPIP_Config, MODE_TCPIP
-from .pilsocket import cls_PilSocketThread, cls_PILSOCKET_Config, MODE_SOCKET
 from .pilthreads import PilThreadError
-
-INTERFACES= {MODE_PILBOX:[cls_PilBoxThread,cls_PILBOX_Config,"","PIL-Box"],\
-MODE_TCPIP:[cls_PilTcpIpThread, cls_PILTCPIP_Config,"","HP-IL over TCP/IP" ],\
-MODE_SOCKET:[cls_PilSocketThread, cls_PILSOCKET_Config,"","TCP/IP Socket Server (PIL-Box Emulation)"]}
-
-if 'PYILPER_EXPERIMENTAL' in os.environ:
-   b=compile(os.environ['PYILPER_EXPERIMENTAL'],"<string>","exec")
-   exec(b)
 
 STAT_DISABLED = 0     # Application in cold state:  not running
 STAT_ENABLED = 1      # Application in warm state:  running
@@ -257,7 +235,7 @@ class cls_pyilper(QtCore.QObject):
 
    if PILGLOBALS.QT_Bindings=="PySide6":
        sig_show_message=QtCore.Signal(str)
-       sig_crash=QtCore.Signal()
+       sig_crash=QtCore.Signal(int)
        sig_quit=QtCore.Signal()
    if PILGLOBALS.QT_Bindings=="PyQt5":
        sig_show_message=QtCore.pyqtSignal(str)
@@ -269,6 +247,7 @@ class cls_pyilper(QtCore.QObject):
       super().__init__()
       self.name="pyilper"
       self.instance=""
+      self.mode=""
       self.clean=False
       if args.instance:
          if args.instance.isalnum():
@@ -283,9 +262,38 @@ class cls_pyilper(QtCore.QObject):
       self.aboutwin=None
       self.devstatuswin=None
       self.lifutils_installed= False
+      self.enableAutoreconnect= False
       self.message=""
       self.msgTimer=QtCore.QTimer()
       self.msgTimer.timeout.connect(self.show_refresh_message)
+      self.autoreconnectTimer=QtCore.QTimer()
+      self.autoreconnectTimer.timeout.connect(self.do_Autoreconnect)
+      self.autoreconnectTimer.setSingleShot(True)
+      self.autoreconnectTimer.setInterval(PILGLOBALS.AutoreconnectInterval)
+      self.scriptDir= Path(__file__).parent.absolute()
+#
+#     list of pluggable interface modules
+#
+      self.interfaces = { }
+      self.interfaceModules=PILGLOBALS.InterfaceModules
+      extraInterfaceModules=os.environ.get('PYILPER_EXTRA_INTERFACES') 
+      if extraInterfaceModules is not None:
+         for m in extraInterfaceModules.split(","):
+            self.interfaceModules.append(m)
+#
+#     list of pluggable tab modules
+#
+      self.tabs = { }
+      self.tabModules=PILGLOBALS.TabModules
+      extraTabModules=os.environ.get('PYILPER_EXTRA_TABS') 
+      if extraTabModules is not None:
+         for m in extraTabModules.split(","):
+            self.tabModules.append(m)
+#
+#     enable experimental autoreconnect
+#
+      if os.environ.get("PYILPER_ENABLE_AUTORECONNECT"):
+         self.enableAutoreconnect= True
 #
 #     get name of default style Qt6 only
 #
@@ -345,7 +353,7 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"port",60001)
          PILCONFIG.get(self.name,"remotehost","localhost")
          PILCONFIG.get(self.name,"remoteport",60000)
-         PILCONFIG.get(self.name,"mode",MODE_PILBOX)
+         PILCONFIG.get(self.name,"mode",PILGLOBALS.ModeDefault)
          PILCONFIG.get(self.name,"workdir",os.path.expanduser('~'))
          PILCONFIG.get(self.name,"position","")
          PILCONFIG.get(self.name,"serverport",59999)
@@ -414,12 +422,82 @@ class cls_pyilper(QtCore.QObject):
             sys.exit(1) 
       PILCONFIG.put(self.name,"version",PILGLOBALS.Version)
 #
-#     create tab objects, scope is fixed all others are configured by tabconfig
+#     load interface modules and specifications
+#
+      for m in self.interfaceModules:
+         try:
+#
+#           retrieve module object
+#
+            mod=importlib.import_module ("."+m,"pyilper")
+#
+#           get interface specification
+#
+            get_spec=getattr(mod,m+"_spec")
+            spec=get_spec()
+            spec.mod=mod
+            self.interfaces[spec.id]= spec
+         except Exception as e:
+            print(e)
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot load module "+m,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+            sys.exit(1)
+#
+#    load tab modules and specifcations
+#
+      for m in self.tabModules:
+         try:
+#
+#           retrieve module object
+#
+            mod=importlib.import_module ("."+m,"pyilper")
+#
+#           get tab specification
+#
+            get_spec=getattr(mod,m+"_spec")
+            specList=get_spec()
+            for spec in specList:
+               spec.mod=mod
+               self.tabs[spec.id]= spec
+         except Exception as e:
+            print(e)
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot load module "+m,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+#
+#     check if the interface in the pyILPER config is in self.interfaces
+#     otherwise default to PIL-Box      
+#
+      self.mode=PILCONFIG.get(self.name,"mode")
+      if self.interfaces.get(self.mode) is None:
+         self.mode=PILGLOBALS.ModeDefault
+         PILCONFIG.put(self.name,"mode",self.mode)
+         PILCONFIG.save()
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"unknown interface selected, defaulting to PIL-Box",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+#
+#     create tab objects, scope is fixed as the first tab
 #
       active_tab=PILCONFIG.get(self.name,"active_tab")
-      self.registerTab(cls_tabscope,"Scope")
-      for t in PILCONFIG.get(self.name,"tabconfig"):
-         self.registerTab(TAB_CLASSES[t[0]],t[1])
+      self.registerTab(self.tabs[PILGLOBALS.Tab_Scope].tab_class,self.tabs[PILGLOBALS.Tab_Scope].name)
+#
+#     now check, whether we have any non existing tabs in tabconfig
+#
+      tabconfigchanged= False
+      tabconfig=PILCONFIG.get(self.name,"tabconfig")
+      for i in range(len(tabconfig) - 1, -1, -1):
+         if self.tabs.get(tabconfig[i][0]) is None:
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"unknown tab "+tabconfig[i][1]+" removed",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+            del tabconfig[i]
+            tabconfigchanged= True
+#
+#     now register tabs
+#
+      for t in tabconfig:
+         self.registerTab(self.tabs[t[0]].tab_class,t[1])
+#
+#     store changed tabconfig
+#
+      if tabconfigchanged:
+         PILCONFIG.put(self.name,"tabconfigchanged",True)
+         PILCONFIG.put(self.name,"tabconfig",tabconfig)
+
 #
 #     remove config of non existing tabs
 #
@@ -457,7 +535,10 @@ class cls_pyilper(QtCore.QObject):
 #
 #     start application into warm state
 #
-      self.enable()
+      if self.interfaces[self.mode].autoreconnect and self.enableAutoreconnect:
+         self.do_Autoreconnect()
+      else:
+         self.enable()
       self.msgTimer.start(500)
 #
 #     if we run pyILPER for the first time (oldversion =0.0.0), show startup info
@@ -488,14 +569,9 @@ class cls_pyilper(QtCore.QObject):
 #
 #     create and enable thread
 #
-      mode=PILCONFIG.get(self.name,"mode")
-      if not mode in INTERFACES:
-         mode=MODE_PILBOX
-         PILCONFIG.put(self.name,"mode",MODE_PILBOX)
-         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"unknown interface selected, defaulting to PIL-Box",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       try:
-         commthread_class= INTERFACES[mode][0]
-         self.commthread= commthread_class(self.ui,mode)
+         commthread_class= self.interfaces[self.mode].thread_class
+         self.commthread= commthread_class(self.ui,self.mode)
          self.commthread.enable()
       except PilThreadError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+": "+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
@@ -548,10 +624,12 @@ class cls_pyilper(QtCore.QObject):
 #
 #  clean up from thread crash
 #
-   def do_crash_cleanup(self):
+   def do_crash_cleanup(self,reason):
       time.sleep(1)
       self.disable()
-
+      print("crash_cleanup ",reason)
+      if reason == PILGLOBALS.Crash_Reason_No_Device and self.enableAutoreconnect:
+         self.do_Autoreconnect()
 #
 #  show status message
 #
@@ -573,7 +651,7 @@ class cls_pyilper(QtCore.QObject):
 #  callback pyilper configuration, reset the communication only if needed
 #
    def do_pyilperConfig(self):
-      (accept, needs_reconnect, needs_reconfigure)= cls_PilConfigWindow.getPilConfig(self,INTERFACES)
+      (accept, needs_reconnect, needs_reconfigure)= cls_PilConfigWindow.getPilConfig(self,self.interfaces)
       if accept:
          if needs_reconnect:
             self.disable()
@@ -583,7 +661,11 @@ class cls_pyilper(QtCore.QObject):
             reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
          if needs_reconnect:
-            self.enable()
+            self.mode=PILCONFIG.get(self.name,"mode")
+            if self.interfaces[self.mode].autoreconnect and self.enableAutoreconnect:
+               self.do_Autoreconnect()
+            else:
+               self.enable()
 #
 #        reconfigure the tabs while the thread is stopped
 #
@@ -601,7 +683,7 @@ class cls_pyilper(QtCore.QObject):
 #  callback HP-IL device config
 #
    def do_DevConfig(self):
-      if not cls_DeviceConfigWindow.getDeviceConfig(self):
+      if not cls_DeviceConfigWindow.getDeviceConfig(self,self.tabs):
          return
       PILCONFIG.put(self.name,"tabconfigchanged",True)
       try:
@@ -648,7 +730,20 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_Reconnect(self):
       self.disable()
-      self.enable()
+      if self.interfaces[self.mode].autoreconnect and self.enableAutoreconnect:
+         self.do_Autoreconnect()
+      else:
+         self.enable()
+#
+#  callbeck auroreconnect
+#
+   def do_Autoreconnect(self):
+      commthread_class= self.interfaces[self.mode].thread_class
+      if commthread_class.checkDevice() :
+         self.enable()
+      else:
+         self.show_message(self.interfaces[self.mode].title+": waiting for device ...")
+         self.autoreconnectTimer.start()
 #
 #  callback exit, store windows position and size, close floating windows
 #

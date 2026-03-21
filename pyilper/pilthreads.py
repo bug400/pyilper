@@ -48,6 +48,8 @@
 # - created base class for interface configuration GUI
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 21.03.2026 jsi
+# - autoreconnect for non network devices
 #
 import sys
 import threading
@@ -76,17 +78,17 @@ class PilThreadError(Exception):
 #
 class cls_pilthread_generic(QtCore.QThread):
 
-   def __init__(self, parent,mode,ifclass):
+   def __init__(self, parent,mode):
       super().__init__(parent)
       self.parent=parent
       self.mode=mode
-      self.ifclass=ifclass
       self.pause= False
       self.running=True
       self.cond=QtCore.QMutex()
       self.stop=QtCore.QMutex()
       self.pauseCond=QtCore.QWaitCondition()
       self.stoppedCond=QtCore.QWaitCondition()
+      self.interfaceSpec= None                 # set by sub class
       self.commobject= None                    # i/o object (PIL-Box, TCP/IP...)
       self.framecounter=0                      # global frame counter
       self.addr_framecounter=0                 # frame counter of the last
@@ -105,8 +107,8 @@ class cls_pilthread_generic(QtCore.QThread):
 #
 #  signal crash to the main program
 #
-   def signal_crash(self):
-         self.parent.emit_crash()
+   def signal_crash(self,reason=0):
+         self.parent.emit_crash(reason)
 #
 #  pause thread
 #   
@@ -214,6 +216,17 @@ class cls_pilthread_generic(QtCore.QThread):
 #
    def run(self):
       sys.settrace(threading._trace_hook)
+#
+#  return interface spec
+#
+   def get_interfaceSpec(self):
+      return self.interfaceSpec
+#
+#  stub
+#
+   @classmethod
+   def checkDevice(cls):
+      return(True)
 
 #
 # Get TTy  Dialog class ------------------------------------------------------

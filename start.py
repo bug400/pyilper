@@ -5,6 +5,8 @@
 #
 # 01.03.2018 jsi
 # - consider the required python version specified in pilcore.py
+# 21.03.2026 jsi
+# - refactoring of global variables
 #
 import sys
 import os

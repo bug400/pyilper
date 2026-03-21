@@ -23,6 +23,9 @@
 # Changelog
 # 16.03.2026 jsi
 # - initial version
+# 21.03.2026 jsi
+# - autoreconnect for no network devices
+# - pluggable interfaces and tabs
 #
 import os
 import platform
@@ -42,16 +45,33 @@ class cls_pilglobals:
 #     Python minimum version
 #
       self.Python_Required_Major=3
-      self.Python_Required_Minor=5
+      self.Python_Required_Minor=7
 #
-#     Interface classes
+#     Thread crash reasons
 #
-      self.Class_Interface_Box=0
-      self.Class_Interface_Net=1
+      self.Crash_Reason_Unknown=0
+      self.Crash_Reason_No_Device=1
+#
+#     Interface ids, default is Pil-Box (id=0)
+#
+      self.Interface_Pilbox=0
+      self.Interface_Tcpip=1
+      self.Interface_Socket=2
+#
+#     Interface hardware classes
+#
+      self.Interface_HW_Class_Serial=0
+      self.Interface_HW_Class_Network=1
+      self.Interface_HW_Class_Usb=2
+#
+#     Interface Modules
+#
+      self.InterfaceModules= ["pilbox","piltcpip","pilsocket"]
+      self.ModeDefault=self.Interface_Pilbox
+      self.AutoreconnectInterval= 1000 # reconnect timer interval
 #
 #     PIL-Box communication
 #
-      self.Use_8bits= True        # use 8 bit data transfer to PIL-Box
       self.Tmout_Cmd=1            # time out for PIL-Box commands
       self.Tmout_Frm=0.05         # time out for HP-IL frames
 #
@@ -70,7 +90,7 @@ class cls_pilglobals:
       self.Com_Tmout_Write=1
 
 #
-#     Tab types and names
+#     Tab ids
 #
       self.Tab_Scope=0
       self.Tab_Printer=1
@@ -81,10 +101,14 @@ class cls_pilglobals:
       self.Tab_HP2225B=6
       self.Tab_Rawdrive=7
 #
-      self.Tab_Names={self.Tab_Scope:'Scope',self.Tab_Printer:'Generic Printer',self.Tab_Drive:'Drive',self.Tab_Terminal:'Terminal',self.Tab_Plotter:'HP7470A',self.Tab_HP82162A:'HP82162A', self.Tab_HP2225B: 'HP2225B', self.Tab_Rawdrive: 'Raw Drive'}
+#     self.Tab_Names={self.Tab_Scope:'Scope',self.Tab_Printer:'Generic Printer',self.Tab_Drive:'Drive',self.Tab_Terminal:'Terminal',self.Tab_Plotter:'HP7470A',self.Tab_HP82162A:'HP82162A', self.Tab_HP2225B: 'HP2225B', self.Tab_Rawdrive: 'Raw Drive'}
+#
+#     Tab modules
+#
+      self.TabModules=["pilscope","pilprinter","pilterminal","pildrive","pilplotter","pilhp82162a","pilhp2225b"]
 
 # 
-# Drive tab - directory listing
+#     Drive tab - directory listing
 # 
       self.Refresh_Rate=1000     # period to check whether a drive was altered and is idle
       self.Not_Talker_Span=3     # time (s) a drive must be inactive to be concidered as idle
@@ -157,7 +181,7 @@ class cls_pilglobals:
             break
       else:
          try:
-            if "FORCE_QT5" in os.environ:
+            if "PYILPER_FORCE_QT5" in os.environ:
                import xyz
             import PySide6.QtCore
          except ImportError:

@@ -45,7 +45,8 @@
 # - various improvements and fixes for page processing
 # 16.03.2026 jsi
 # - refactoring of global variables
-
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 #
 import copy
 import threading
@@ -62,6 +63,7 @@ from .pilcharconv import charconv, barrconv, CHARSET_HP2225
 from .pildevbase import cls_pildevbase
 from .pilwidgets import cls_tabgeneric, LogCheckboxWidget, T_INTEGER, O_DEFAULT, T_STRING
 from .pilpdf import cls_pdfprinter
+from .pilcore import cls_Tab_Spec
 
 #
 # constants --------------------------------------------------------------
@@ -1833,3 +1835,5 @@ class cls_pilhp2225b(cls_pildevbase):
 #
       self.__printer__.reset()
 
+def pilhp2225b_spec():
+   return([cls_Tab_Spec(PILGLOBALS.Tab_HP2225B,None,cls_tabhp2225b,"HP2225B")])

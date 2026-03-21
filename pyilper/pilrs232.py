@@ -88,8 +88,13 @@ class cls_rs232:
          self.__ser__= serial.Serial(port=device,baudrate=baudrate,timeout=0.10)
          self.__isOpen__= True
          time.sleep(0.5)
-      except:
+      except Exception as e:
           self.__device__=""
+#         if hasattr(e, 'message'):
+#            print(e.message)
+#         else:
+#            print(e)
+
           raise Rs232Error('cannot open serial device')
    def close(self):
       try:

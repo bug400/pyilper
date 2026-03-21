@@ -29,6 +29,7 @@ from .pilwidgets import cls_tabtermgeneric, T_STRING
 from .pilkeymap import KEYBOARD_TYPE_HP71, keyboardtypes
 from .pildevbase import cls_pildevbase
 from .pilcharconv import CHARSET_HP71, charsets
+from .pilcore import cls_Tab_Spec, PILGLOBALS
 #
 # Terminal tab object classes ----------------------------------------------
 #
@@ -50,6 +51,8 @@ from .pilcharconv import CHARSET_HP71, charsets
 # - put int not char on termqueue
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -210,3 +213,6 @@ class cls_pilterminal(cls_pildevbase):
             self.__status__= self.__status__ & 0xEF # clear ready for data bit
       self.__status_lock__.release()
       return(frame)
+
+def pilterminal_spec():
+   return([cls_Tab_Spec(PILGLOBALS.Tab_Terminal,None,cls_tabterminal,"Terminal")])

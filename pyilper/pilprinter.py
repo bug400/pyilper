@@ -26,6 +26,7 @@ from .pilconfig import PILCONFIG
 from .pilwidgets import cls_tabtermgeneric, T_STRING
 from .pildevbase import cls_pildevbase
 from .pilcharconv import CHARSET_HP71, charsets, icharconv
+from .pilcore import cls_Tab_Spec, PILGLOBALS
 #
 # Generic printer tab classes -------------------------------------------------
 #
@@ -44,6 +45,8 @@ from .pilcharconv import CHARSET_HP71, charsets, icharconv
 # - use int instead char for printer data
 # 21.12.2024 jsi:
 # - all queues, locks and shared variables are now part of the pildevbase class
+# 21.03.2026 jsi
+# - pluggable interfaces and tabs
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
@@ -169,3 +172,7 @@ class cls_pilprinter(cls_pildevbase):
       super().__clear_device__()
       self.__guiobject__.reset_terminal()
       return
+
+def pilprinter_spec():
+   return([cls_Tab_Spec(PILGLOBALS.Tab_Printer,None,cls_tabprinter,"Generic Printer")])
+

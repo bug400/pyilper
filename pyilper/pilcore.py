@@ -167,10 +167,13 @@
 # - use Qt5 bindings instead of PySide6, if FORCE_QT5 environment variable is set
 # 15.03.2026
 # - removed constant definitions -> pilglobals.py
+# 21.03.2026
+# - pluggable interfaces and tabs
 #
 import re
 import os
 
+from dataclasses import dataclass
 from .pilglobals import *
 
 USE_8BITS=True
@@ -286,3 +289,23 @@ def buildconfigfilename(progname,filename,configversion,instance,production):
    configfilename=os.path.join(configpath,fname)
     
    return configfilename,configpath
+
+#
+#  Interface specification dataclass
+#
+@dataclass
+class cls_Interface_Spec:
+   id             : int
+   mod            : object
+   thread_class   : object   
+   config_class   : object
+   hardware_class : int
+   title          : str
+   autoreconnect  : bool= False
+
+@dataclass
+class cls_Tab_Spec:
+   id             : int
+   mod            : object
+   tab_class      : object
+   name           : str

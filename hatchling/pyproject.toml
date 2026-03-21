@@ -7,7 +7,7 @@ exclude = ['debian/','img/','*.md']
 
 [project]
 name = "pyilper"
-version = "1.9.0.dev6"
+version = "1.9.0.dev7"
 description = "Virtual HP-IL devices for the PIL-Box"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -39,6 +39,7 @@ classifiers=[
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
     ]
 [project.gui-scripts]
 pyilper="pyilper:main"
