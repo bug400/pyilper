@@ -50,6 +50,8 @@
 # - refactoring of global variables
 # 21.03.2026 jsi
 # - autoreconnect for non network devices
+# 22.03.2026 jsi
+# - added standard USB CDC device name support in TtyWindow for mac os
 #
 import sys
 import threading
@@ -270,7 +272,7 @@ class cls_TtyWindow(QtWidgets.QDialog):
 #        Mac OS X /dev/tty.usbserial-*
 #
          elif PILGLOBALS.isMacos:
-            r=re.compile("tty.usbserial-*")
+            r=re.compile("(tty.usbserial-*)|(tty.usbmodem\\d+)")
 #
 #        Other
 #
