@@ -1,4 +1,4 @@
-pyilper (1.9.0.b1) trixie; urgency=medium
+pyilper (1.9.0beta1) trixie; urgency=medium
 
   * make autoreconnect configurable 
 

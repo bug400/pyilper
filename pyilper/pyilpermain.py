@@ -869,9 +869,11 @@ class cls_pyilper(QtCore.QObject):
       self.helpwin.show()
       self.helpwin.raise_()
 #
-#   migrate configurations
+#   migrate configurations, but not if we have an uninitialized config file (oldversion ==0)
 #
    def migrateConfig(self,thisversion,oldversion):
+      if oldversion == 0:
+         return
       print("Migrating pyilper configuration from version ",oldversion)
       if(oldversion < 10900):
          migList= [["pyilper_tty","if_pilbox_device"],
