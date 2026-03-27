@@ -26,6 +26,8 @@
 # 21.03.2026 jsi
 # - autoreconnect for no network devices
 # - pluggable interfaces and tabs
+# 24.03.2026 jsi
+# - make autoreconnect configurable
 #
 import os
 import platform
@@ -69,6 +71,12 @@ class cls_pilglobals:
       self.InterfaceModules= ["pilbox","piltcpip","pilsocket"]
       self.ModeDefault=self.Interface_Pilbox
       self.AutoreconnectInterval= 1000 # reconnect timer interval
+#
+#     Device check return values
+#
+      self.CheckDeviceUnconfigured=0
+      self.CheckDeviceExists=1
+      self.CheckDeviceNonexistent=2
 #
 #     PIL-Box communication
 #

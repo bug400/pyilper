@@ -40,6 +40,8 @@
 # - refactoring of global variables
 # 21.03.2026 jsi
 # - pluggable interfaces and tabs
+# 24.03.26 jsi
+# - refactoring of interface config parameters
 
 import select
 import socket
@@ -157,13 +159,17 @@ class cls_PilSocketThread(cls_pilthread_generic):
 
    def __init__(self, parent,mode):
       super().__init__(parent,mode)
-      self.interfaceSpec= pilsocket_spec()
+      self.__configName__= pilsocket_spec().name
+#
+#     init config for this interface
+#
+      self.__socket__= PILCONFIG.get(self.__configName__,"serverport",59999)
 
    def enable(self):
       self.send_message("Not connected to socket")
-      socket_name=PILCONFIG.get("pyilper","serverport")
+      self.__socket__=PILCONFIG.get(self.__configName__,"serverport")
       try:
-         self.commobject= cls_pilsocket(socket_name)
+         self.commobject= cls_pilsocket(self.__socket__)
          self.commobject.open()
       except SocketError as e:
          self.commobject.close()
@@ -261,7 +267,7 @@ class cls_PILSOCKET_Config(cls_ConfigInterfaceGeneric):
    def __init__(self,configName,configNumber, interfaceText):
 
       super().__init__(configName,configNumber,interfaceText)
-      self.serverport= PILCONFIG.get(configName,"serverport")
+      self.serverport= PILCONFIG.get(configName,"serverport",59999)
 
       self.intvalidator= QtGui.QIntValidator()
       self.splayout=QtWidgets.QGridLayout()
@@ -292,4 +298,4 @@ class cls_PILSOCKET_Config(cls_ConfigInterfaceGeneric):
       PILCONFIG.put(self.configName,"serverport",int(self.edtServerport.text()))
 
 def pilsocket_spec():
-   return(cls_Interface_Spec(PILGLOBALS.Interface_Socket,None,cls_PilSocketThread, cls_PILSOCKET_Config,PILGLOBALS.Interface_HW_Class_Network,"TCP/IP Socket Server (PIL-Box Emulation)",False))
+   return(cls_Interface_Spec(PILGLOBALS.Interface_Socket,"if_socket",cls_PilSocketThread, cls_PILSOCKET_Config,PILGLOBALS.Interface_HW_Class_Network,"TCP/IP Socket Server (PIL-Box Emulation)",False))

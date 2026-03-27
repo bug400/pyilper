@@ -63,7 +63,6 @@ class cls_userconfig:
 #
    def read(self,default):
 #     print(self.__configfile__)
-#     print(self.__configpath__)
       if not os.path.isfile(self.__configfile__):
          if not os.path.exists(self.__configpath__):
             try:

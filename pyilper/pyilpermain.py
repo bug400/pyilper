@@ -195,6 +195,10 @@
 # 21.03.2026 jsi
 # - autoreconnect for non network devices
 # - pluggable interfaces and tabs
+# 24.03.2026 jsi
+# - refactoring of interface config keys
+# - make autoreconnect configurable 
+# - migrate config from version < 1.9
 #
 import os
 import sys
@@ -262,7 +266,6 @@ class cls_pyilper(QtCore.QObject):
       self.aboutwin=None
       self.devstatuswin=None
       self.lifutils_installed= False
-      self.enableAutoreconnect= False
       self.message=""
       self.msgTimer=QtCore.QTimer()
       self.msgTimer.timeout.connect(self.show_refresh_message)
@@ -271,10 +274,12 @@ class cls_pyilper(QtCore.QObject):
       self.autoreconnectTimer.setSingleShot(True)
       self.autoreconnectTimer.setInterval(PILGLOBALS.AutoreconnectInterval)
       self.scriptDir= Path(__file__).parent.absolute()
+      self.autoreconnectEnabled = False
 #
 #     list of pluggable interface modules
 #
       self.interfaces = { }
+      self.interfaceName=""
       self.interfaceModules=PILGLOBALS.InterfaceModules
       extraInterfaceModules=os.environ.get('PYILPER_EXTRA_INTERFACES') 
       if extraInterfaceModules is not None:
@@ -289,11 +294,6 @@ class cls_pyilper(QtCore.QObject):
       if extraTabModules is not None:
          for m in extraTabModules.split(","):
             self.tabModules.append(m)
-#
-#     enable experimental autoreconnect
-#
-      if os.environ.get("PYILPER_ENABLE_AUTORECONNECT"):
-         self.enableAutoreconnect= True
 #
 #     get name of default style Qt6 only
 #
@@ -347,16 +347,9 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.open(self.name,PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
          PILCONFIG.get(self.name,"active_tab",0)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
-         PILCONFIG.get(self.name,"tty","")
-         PILCONFIG.get(self.name,"ttyspeed",0)
-         PILCONFIG.get(self.name,"idyframe",True)
-         PILCONFIG.get(self.name,"port",60001)
-         PILCONFIG.get(self.name,"remotehost","localhost")
-         PILCONFIG.get(self.name,"remoteport",60000)
          PILCONFIG.get(self.name,"mode",PILGLOBALS.ModeDefault)
          PILCONFIG.get(self.name,"workdir",os.path.expanduser('~'))
          PILCONFIG.get(self.name,"position","")
-         PILCONFIG.get(self.name,"serverport",59999)
          PILCONFIG.get(self.name,"tabconfig",[[PILGLOBALS.Tab_Printer,"Printer1"],[PILGLOBALS.Tab_Terminal,"Terminal1"],[PILGLOBALS.Tab_Plotter,"Plotter1"],[PILGLOBALS.Tab_Drive,"Drive1"],[PILGLOBALS.Tab_Drive,"Drive2"]])
          PILCONFIG.get(self.name,"version","0.0.0")
          PILCONFIG.get(self.name,"helpposition","")
@@ -420,6 +413,11 @@ class cls_pyilper(QtCore.QObject):
          reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"Your configuration files are of pyILPER version "+PILCONFIG.get(self.name,"version")+" which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
          if reply== QtWidgets.QMessageBox.Cancel:
             sys.exit(1) 
+#
+#     if we have a newer version, check if a migration is needed
+#
+      if thisversion > oldversion:
+         self.migrateConfig(thisversion,oldversion)
       PILCONFIG.put(self.name,"version",PILGLOBALS.Version)
 #
 #     load interface modules and specifications
@@ -435,7 +433,6 @@ class cls_pyilper(QtCore.QObject):
 #
             get_spec=getattr(mod,m+"_spec")
             spec=get_spec()
-            spec.mod=mod
             self.interfaces[spec.id]= spec
          except Exception as e:
             print(e)
@@ -456,7 +453,6 @@ class cls_pyilper(QtCore.QObject):
             get_spec=getattr(mod,m+"_spec")
             specList=get_spec()
             for spec in specList:
-               spec.mod=mod
                self.tabs[spec.id]= spec
          except Exception as e:
             print(e)
@@ -471,6 +467,14 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.put(self.name,"mode",self.mode)
          PILCONFIG.save()
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"unknown interface selected, defaulting to PIL-Box",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+#
+#     set some interface characteristics
+#
+      self.autoreconnectEnabled= False
+      self.interfaceName= self.interfaces[self.mode].name
+      if self.interfaces[self.mode].hasAutoreconnect:
+         if PILCONFIG.get(self.interfaceName,"autoreconnect",False):
+            self.autoreconnectEnabled= True
 #
 #     create tab objects, scope is fixed as the first tab
 #
@@ -535,7 +539,7 @@ class cls_pyilper(QtCore.QObject):
 #
 #     start application into warm state
 #
-      if self.interfaces[self.mode].autoreconnect and self.enableAutoreconnect:
+      if self.autoreconnectEnabled:
          self.do_Autoreconnect()
       else:
          self.enable()
@@ -627,8 +631,7 @@ class cls_pyilper(QtCore.QObject):
    def do_crash_cleanup(self,reason):
       time.sleep(1)
       self.disable()
-      print("crash_cleanup ",reason)
-      if reason == PILGLOBALS.Crash_Reason_No_Device and self.enableAutoreconnect:
+      if reason == PILGLOBALS.Crash_Reason_No_Device:
          self.do_Autoreconnect()
 #
 #  show status message
@@ -660,9 +663,18 @@ class cls_pyilper(QtCore.QObject):
          except PilConfigError as e:
             reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
+#
+#  New interface
+#
          if needs_reconnect:
             self.mode=PILCONFIG.get(self.name,"mode")
-            if self.interfaces[self.mode].autoreconnect and self.enableAutoreconnect:
+            self.autoreconnectEnabled= False
+            self.interfaceName= self.interfaces[self.mode].name
+            if self.interfaces[self.mode].hasAutoreconnect:
+               if PILCONFIG.get(self.interfaceName,"autoreconnect","False"):
+                  self.autoreconnectEnabled= True
+
+            if  self.autoreconnectEnabled:
                self.do_Autoreconnect()
             else:
                self.enable()
@@ -730,7 +742,7 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_Reconnect(self):
       self.disable()
-      if self.interfaces[self.mode].autoreconnect and self.enableAutoreconnect:
+      if self.autoreconnectEnabled:
          self.do_Autoreconnect()
       else:
          self.enable()
@@ -739,11 +751,14 @@ class cls_pyilper(QtCore.QObject):
 #
    def do_Autoreconnect(self):
       commthread_class= self.interfaces[self.mode].thread_class
-      if commthread_class.checkDevice() :
+      ret,device=commthread_class.checkDevice(self.interfaceName) 
+      if ret== PILGLOBALS.CheckDeviceNonexistent:
+         self.show_message(self.interfaces[self.mode].title+": waiting for device "+device+" ...")
+         self.autoreconnectTimer.start()
+      elif ret== PILGLOBALS.CheckDeviceExists:
          self.enable()
       else:
-         self.show_message(self.interfaces[self.mode].title+": waiting for device ...")
-         self.autoreconnectTimer.start()
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error', "Device not configured, run pyILPER configuration",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
 #
 #  callback exit, store windows position and size, close floating windows
 #
@@ -854,6 +869,22 @@ class cls_pyilper(QtCore.QObject):
       self.helpwin.show()
       self.helpwin.raise_()
 #
+#   migrate configurations
+#
+   def migrateConfig(self,thisversion,oldversion):
+      print("Migrating pyilper configuration from version ",oldversion)
+      if(oldversion < 10900):
+         migList= [["pyilper_tty","if_pilbox_device"],
+                   ["pyilper_ttyspeed","if_pilbox_baudrate"],  
+                   ["pyilper_idyframe","if_pilbox_idyframe"],
+                   ["pyilper_remotehost","if_tcpip_remotehost"],
+                   ["pyilper_remoteport","if_tcpip_remoteport"],
+                   ["pyilper_port","if_tcpip_port"],
+                   ["pyilper_serverport","if_socket_serverport"],
+                  ]
+      for m in migList:
+         PILCONFIG.migrateKey(m[0],m[1])
+#
 # copy configuration data from devel to production and vice versa
 # - a development/beta version of pyILPER copies the files of the
 #   production version
@@ -868,9 +899,9 @@ def copy_config(args):
    from_config=cls_pilconfig()
    to_config=cls_pilconfig()
    try:
-      from_config.open("pyilper",PILGLOBALS.Version,args.instance, not PILGLOBALS.Production,False)
+      from_config.open("pyilper",PILGLOBALS.Config_Version,args.instance, not PILGLOBALS.Production,False)
       from_version=from_config.get("pyilper","version","0.0.0")
-      to_config.open("pyilper",PILGLOBALS.Version,args.instance, PILGLOBALS.Production,False)
+      to_config.open("pyilper",PILGLOBALS.Config_Version,args.instance, PILGLOBALS.Production,False)
       to_version=to_config.get("pyilper","version","0.0.0")
    except PilConfigError as e:
       print(e.msg+': '+e.add_msg)
@@ -900,10 +931,10 @@ def copy_config(args):
 #  now copy configuration files
 #
    for name in ['pyilper','penconfig','shortcutconfig']:
-      from_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Version,args.instance,not PILGLOBALS.Production)[0]
+      from_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Config_Version,args.instance,not PILGLOBALS.Production)[0]
       if not os.path.isfile(from_filename):
          continue
-      to_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Version,args.instance, PILGLOBALS.Production)[0]
+      to_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Config_Version,args.instance, PILGLOBALS.Production)[0]
       try:
          shutil.copy(from_filename,to_filename)
       except OSError as e:

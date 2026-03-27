@@ -70,6 +70,8 @@
 # - refactoring of global variables
 # 21.03.2026 jsi
 # - pluggable interfaces and tabs
+# 24.03.2026 jsi
+# - refactoring of interface config parameters
 
 import select
 import socket
@@ -234,15 +236,21 @@ class cls_PilTcpIpThread(cls_pilthread_generic):
 
    def __init__(self, parent,mode):
       super().__init__(parent,mode)
-      self.interfaceSpec = piltcpip_spec()
+      self.__configName__= piltcpip_spec().name
+#
+#     init config for this interface
+#
+      self.__port__= PILCONFIG.get(self.__configName__,"port",60001)
+      self.__remote_host__=PILCONFIG.get(self.__configName__,"remotehost","localhost")
+      self.__remote_port__=PILCONFIG.get(self.__configName__,"remoteport",60000)
 
    def enable(self):
-      port= PILCONFIG.get("pyilper","port")
-      remote_host=PILCONFIG.get("pyilper","remotehost")
-      remote_port=PILCONFIG.get("pyilper","remoteport")
+      self.__port__= PILCONFIG.get(self.__configName__,"port")
+      self.__remote_host__=PILCONFIG.get(self.__configName__,"remotehost")
+      self.__remote_port__=PILCONFIG.get(self.__configName__,"remoteport")
       self.send_message('Not connected to virtual HP-IL devices')
       try:
-         self.commobject= cls_piltcpip(port, remote_host, remote_port)
+         self.commobject= cls_piltcpip(self.__port__, self.__remote_host__, self.__remote_port__)
          self.commobject.open()
       except TcpIpError as e:
          self.commobject.close()
@@ -308,9 +316,9 @@ class cls_PILTCPIP_Config(cls_ConfigInterfaceGeneric):
       self.configNumber=configNumber
       self.configName=configName
 
-      self.port= PILCONFIG.get(configName,"port")
-      self.remoteport= PILCONFIG.get(configName,"remoteport")
-      self.remotehost= PILCONFIG.get(configName,"remotehost")
+      self.port= PILCONFIG.get(configName,"port",60001)
+      self.remoteport= PILCONFIG.get(configName,"remoteport",60000)
+      self.remotehost= PILCONFIG.get(configName,"remotehost","localhost")
 
       self.intvalidator= QtGui.QIntValidator()
       self.glayout=QtWidgets.QGridLayout()
@@ -360,5 +368,5 @@ class cls_PILTCPIP_Config(cls_ConfigInterfaceGeneric):
       PILCONFIG.put(self.configName,"remoteport", int(self.edtRemotePort.text()))
 
 def piltcpip_spec():
-   return(cls_Interface_Spec(PILGLOBALS.Interface_Tcpip,None,cls_PilTcpIpThread, cls_PILTCPIP_Config,PILGLOBALS.Interface_HW_Class_Network,"HP-IL over TCP/IP",False))
+   return(cls_Interface_Spec(PILGLOBALS.Interface_Tcpip,"if_tcpip",cls_PilTcpIpThread, cls_PILTCPIP_Config,PILGLOBALS.Interface_HW_Class_Network,"HP-IL over TCP/IP",False))
 

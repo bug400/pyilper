@@ -169,6 +169,8 @@
 # - removed constant definitions -> pilglobals.py
 # 21.03.2026
 # - pluggable interfaces and tabs
+# 24.03.2026 jsi
+# - make autoreconnect configurable (cls_Interface_Spec)
 #
 import re
 import os
@@ -296,12 +298,12 @@ def buildconfigfilename(progname,filename,configversion,instance,production):
 @dataclass
 class cls_Interface_Spec:
    id             : int
-   mod            : object
+   name           : str
    thread_class   : object   
    config_class   : object
    hardware_class : int
    title          : str
-   autoreconnect  : bool= False
+   hasAutoreconnect: bool= False
 
 @dataclass
 class cls_Tab_Spec:

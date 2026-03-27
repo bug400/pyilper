@@ -79,6 +79,9 @@
 # - pluggable interfaces and tabs
 # - autoreconnect
 # - fixed COFI handling
+# 24.03.2026 jsi
+# - make autoreconnect configurable
+# - refactoring of interface config parameters
 
 #
 # PIL-Box Commands
@@ -243,23 +246,30 @@ class cls_PilBoxThread(cls_pilthread_generic):
 
    def __init__(self,parent,mode):
       super().__init__(parent,mode) 
+      self.__configName__= pilbox_spec().name
+#
+#     init config for this interface
+#
+      self.__idyframe__= PILCONFIG.get(self.__configName__,"idyframe",True)
+      self.__baudrate__= PILCONFIG.get(self.__configName__,"baudrate",0)
+      self.__ttydevice__= PILCONFIG.get(self.__configName__,"device","")
+      self.__autoreconnect__= PILCONFIG.get(self.__configName__,"autoreconnect",False)
       self.__lasth__=0
-      self.__baudrate__=0
-      self.__ttydevice__=""
-      self.interfaceSpec= pilbox_spec()
 
 
    def enable(self):
       super().enable()
       self.send_message("Not connected to PIL-Box")
-      baud=PILCONFIG.get("pyilper",'ttyspeed')
-      self.__ttydevice__=PILCONFIG.get("pyilper",'tty')
-      idyframe=PILCONFIG.get("pyilper",'idyframe')
+      self.__idyframe__= PILCONFIG.get(self.__configName__,"idyframe")
+      self.__baudrate__= PILCONFIG.get(self.__configName__,"baudrate")
+      self.__ttydevice__= PILCONFIG.get(self.__configName__,"device")
+      self.__autoreconnect__= PILCONFIG.get(self.__configName__,"autoreconnect")
       self.__lasth__=0
+      
       if self.__ttydevice__== "":
          raise PilThreadError("Serial device not configured ","Run pyILPER configuration")
       try:
-         self.commobject=cls_pilbox(self.__ttydevice__,baud,idyframe)
+         self.commobject=cls_pilbox(self.__ttydevice__,self.__baudrate__,self.__idyframe__)
          self.commobject.open()
       except PilBoxError as e:
          raise PilThreadError(e.msg,e.add_msg)
@@ -341,21 +351,22 @@ class cls_PilBoxThread(cls_pilthread_generic):
 
       except PilBoxError as e:
          self.send_message('PIL-Box disconnected after error. '+e.msg+': '+e.add_msg)
-         if os.path.exists(self.__ttydevice__):
-            self.signal_crash(PILGLOBALS.Crash_Reason_Unknown)
-         else:
+         if self.__autoreconnect__ and not os.path.exists(self.__ttydevice__) :
             self.signal_crash(PILGLOBALS.Crash_Reason_No_Device)
+         else:
+            self.signal_crash(PILGLOBALS.Crash_Reason_Unknown)
       self.running=False
 
    @classmethod
-   def checkDevice(cls):
-      ttydevice=PILCONFIG.get("pyilper",'tty')
-      if ttydevice=="":
-         return False
-      if os.path.exists(ttydevice):
-         return True
+   def checkDevice(cls,name):
+      device=PILCONFIG.get(name,"device","")
+      if device=="":
+         return [PILGLOBALS.CheckDeviceUnconfigured,device]
+      if os.path.exists(device):
+         return [PILGLOBALS.CheckDeviceExists,device]
       else:
-         return False
+         return [PILGLOBALS.CheckDeviceNonexistent,device]
+
 
 
 class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
@@ -363,9 +374,10 @@ class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
    def __init__(self,configName,configNumber, interfaceText):
 
       super().__init__(configName,configNumber,interfaceText)
-      self.tty= PILCONFIG.get(configName,"tty")
-      self.ttyspeed= PILCONFIG.get(configName,"ttyspeed")
-      self.idyframe= PILCONFIG.get(configName,"idyframe")
+      self.tty= PILCONFIG.get(configName,"device","")
+      self.ttyspeed= PILCONFIG.get(configName,"baudrate",0)
+      self.idyframe= PILCONFIG.get(configName,"idyframe",True)
+      self.autoreconnect= PILCONFIG.get(self.configName,"autoreconnect",False)
 
 #
 #     serial device
@@ -408,6 +420,14 @@ class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
       self.cbIdyFrame.setEnabled(True)
       self.cbIdyFrame.stateChanged.connect(self.do_cbIdyFrame)
       self.vb.addWidget(self.cbIdyFrame)
+#
+#     autoreconnect
+#
+      self.cbAutoreconnect= QtWidgets.QCheckBox('Autoreconnect')
+      self.cbAutoreconnect.setChecked(self.autoreconnect)
+      self.cbAutoreconnect.setEnabled(True)
+      self.cbAutoreconnect.stateChanged.connect(self.do_cbAutoreconnect)
+      self.vb.addWidget(self.cbAutoreconnect)
 
       if cls_ConfigInterfaceGeneric.interfaceMode == self.configNumber:
          self.radBut.setChecked(True)
@@ -416,9 +436,11 @@ class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
          self.radBut.setChecked(False)
          self.setActive(False)
 
-
    def do_cbIdyFrame(self):
       self.idyframe= self.cbIdyFrame.isChecked()
+
+   def do_cbAutoreconnect(self):
+      self.autoreconnect= self.cbAutoreconnect.isChecked()
 
    def do_config_interface(self):
       interface= cls_TtyWindow.getTtyDevice(self.tty)
@@ -430,20 +452,23 @@ class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):
    def setActive(self,flag):
       self.butTty.setEnabled(flag)
       self.cbIdyFrame.setEnabled(flag)
+      self.cbAutoreconnect.setEnabled(flag)
       self.comboBaud.setEnabled(flag)
       self.radBut.setChecked(flag)
 
    def check_reconnect(self):
       needs_reconnect= False
-      needs_reconnect |= self.check_param("tty", self.lblTty.text())
-      needs_reconnect |= self.check_param("ttyspeed", PILGLOBALS.Baudrates[self.comboBaud.currentIndex()][1])
+      needs_reconnect |= self.check_param("device", self.lblTty.text())
+      needs_reconnect |= self.check_param("baudrate", PILGLOBALS.Baudrates[self.comboBaud.currentIndex()][1])
       needs_reconnect |= self.check_param("idyframe",self.idyframe)
+      needs_reconnect |= self.check_param("autoreconnect",self.autoreconnect)
       return needs_reconnect
 
    def store_config(self):
-      PILCONFIG.put(self.configName,"tty", self.tty)
-      PILCONFIG.put(self.configName,"ttyspeed", PILGLOBALS.Baudrates[self.comboBaud.currentIndex()][1])
+      PILCONFIG.put(self.configName,"device", self.tty)
+      PILCONFIG.put(self.configName,"baudrate", PILGLOBALS.Baudrates[self.comboBaud.currentIndex()][1])
       PILCONFIG.put(self.configName,"idyframe",self.idyframe)
+      PILCONFIG.put(self.configName,"autoreconnect",self.autoreconnect)
 
 def pilbox_spec():
-   return(cls_Interface_Spec(PILGLOBALS.Interface_Pilbox,None,cls_PilBoxThread,cls_PILBOX_Config,PILGLOBALS.Interface_HW_Class_Serial,"PIL-Box",True))
+   return(cls_Interface_Spec(PILGLOBALS.Interface_Pilbox,"if_pilbox",cls_PilBoxThread,cls_PILBOX_Config,PILGLOBALS.Interface_HW_Class_Serial,"PIL-Box",True))

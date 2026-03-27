@@ -52,6 +52,8 @@
 # - autoreconnect for non network devices
 # 22.03.2026 jsi
 # - added standard USB CDC device name support in TtyWindow for mac os
+# 24.03.2026 jsi
+# - make autoreconnect configurable (checkDevice)
 #
 import sys
 import threading
@@ -227,7 +229,7 @@ class cls_pilthread_generic(QtCore.QThread):
 #  stub
 #
    @classmethod
-   def checkDevice(cls):
+   def checkDevice(cls,name):
       return(True)
 
 #

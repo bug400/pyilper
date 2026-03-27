@@ -35,6 +35,8 @@
 # - added the clean parameter to the open method
 # 12.12.2021 jsi
 # - add configversion parameter to open method
+# 24.03.2026 jsi
+# - added key migrate function
 #
 from .userconfig import cls_userconfig, ConfigError
 
@@ -122,6 +124,21 @@ class cls_pilconfig:
       except KeyError:
          pass
 #
+#  migrate a key
+#
+   def migrateKey(self,oldkey,newkey):
+      if oldkey in self.__config__.keys():
+         try:
+            self.__config__[newkey]= self.__config__[oldkey]
+            del(self.__config__[oldkey])
+         except KeyError:
+            pass
+#
+#  debug print
+#
+   def dump(self):
+      print(self.__config__)
+#         
 #  create config instance
 #
 PILCONFIG=  cls_pilconfig()

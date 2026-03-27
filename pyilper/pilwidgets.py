@@ -252,10 +252,6 @@ from .pilcharconv import CHARSET_HP71, charsets
 from .pilconfig import PILCONFIG
 
 from .pilthreads import cls_ConfigInterfaceGeneric
-#from .pilbox import cls_PILBOX_Config
-#from .piltcpip import cls_PILTCPIP_Config
-#from .pilsocket import cls_PILSOCKET_Config
-#from .pililusb import cls_PILILUSB_Config
 
 if PILGLOBALS.isWindows:
    import winreg
@@ -1070,11 +1066,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
       cls_ConfigInterfaceGeneric.reset()
 
       for k,v in self.__interfaces__.items():
-         self.vboxgbox.addWidget(v.config_class(self.__name__,v.id,v.title))
-
-#     for mode,interface in self.__interfaces__.items():
-#        self.vboxgbox.addWidget(interface[1](self.__name__,mode,interface[3]))
-    
+         self.vboxgbox.addWidget(v.config_class(v.name,v.id,v.title))
 #
 #     Section Working Directory
 #
