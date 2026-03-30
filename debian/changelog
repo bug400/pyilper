@@ -2,6 +2,7 @@ pyilper (1.9.0beta1) trixie; urgency=medium
 
   * make autoreconnect configurable 
   * command line parameters are now only accepted if pyILPER is called as a module
+  * Fixed shortcut configration file name. The production version always used the file of a test version.
 
  -- trixie <achim@trillian>  Wed, 25 Mar 2026 08:55:38 +0100
 

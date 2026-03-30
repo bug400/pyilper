@@ -366,6 +366,22 @@ class cls_pyilper(QtCore.QObject):
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
 #
+#     version check, warn user if the configuration files are of a newer
+#     version
+#
+      oldversion=decode_pyILPERVersion(PILCONFIG.get(self.name,"version"))
+      thisversion=decode_pyILPERVersion(PILGLOBALS.Version)
+      if thisversion < oldversion:
+         reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"Your configuration files are of pyILPER version "+PILCONFIG.get(self.name,"version")+" which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
+         if reply== QtWidgets.QMessageBox.Cancel:
+            sys.exit(1) 
+#
+#     if we have a newer version, check if a migration is needed
+#
+      if thisversion > oldversion:
+         self.migrateConfig(thisversion,oldversion)
+      PILCONFIG.put(self.name,"version",PILGLOBALS.Version)
+#
 #     2. pen configuration
 #
       try:
@@ -402,22 +418,6 @@ class cls_pyilper(QtCore.QObject):
       self.lifutils_installed= check_lifutils()[0]
       if self.lifutils_installed:
          self.ui.enableLIFControls()
-#
-#     version check, warn user if the configuration files are of a newer
-#     version
-#
-      oldversion=decode_pyILPERVersion(PILCONFIG.get(self.name,"version"))
-      thisversion=decode_pyILPERVersion(PILGLOBALS.Version)
-      if thisversion < oldversion:
-         reply=QtWidgets.QMessageBox.warning(self.ui,'Warning',"Your configuration files are of pyILPER version "+PILCONFIG.get(self.name,"version")+" which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Cancel)
-         if reply== QtWidgets.QMessageBox.Cancel:
-            sys.exit(1) 
-#
-#     if we have a newer version, check if a migration is needed
-#
-      if thisversion > oldversion:
-         self.migrateConfig(thisversion,oldversion)
-      PILCONFIG.put(self.name,"version",PILGLOBALS.Version)
 #
 #     load interface modules and specifications
 #
@@ -885,6 +885,26 @@ class cls_pyilper(QtCore.QObject):
                   ]
       for m in migList:
          PILCONFIG.migrateKey(m[0],m[1])
+#
+#     now handle bug in previous versions, the name of the shortcut config file was a l w a y s that
+#     of the development version
+#
+      if not PILGLOBALS.Production:
+         return
+      develConfigFilePath=buildconfigfilename("shortcutconfig",PILGLOBALS.Config_Version,self.instance,False)[1]
+#
+#     Nothing to do if we have no devel shortcut config file
+#
+      if not os.path.isfile(develConfigFilePath):
+         return
+#
+#     copy it
+#
+      productionConfigFilePath=buildconfigfilename("shortcutconfig",PILGLOBALS.ConfigVersion,self.instance,True)[1]
+      try:
+         shutil.copyfile(develConfigFilePath,productionConfigFilePath)
+      except OSError:
+         pass
 #
 # dump stack if signalled externally (for debugging)
 #

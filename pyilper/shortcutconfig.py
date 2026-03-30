@@ -33,6 +33,8 @@
 # - refactoring of global variables
 # 29.03.2026 jsi
 # - removed name parameter from open method
+# 30.03.2026 jsi
+# – fix: shortcut config was alwas stored in development config file
 #
 import copy
 from .pilglobals import *
@@ -261,7 +263,7 @@ class cls_shortcutconfig:
 #  If clean is true do not read an existing config file
 #
    def open(self,configversion,instance,production,clean):
-      self.__userconfig__= cls_userconfig("shortcutconfig",configversion,instance,clean)
+      self.__userconfig__= cls_userconfig("shortcutconfig",configversion,instance,production)
       try:
          self.__shortcutconfig__= self.__userconfig__.read(self.default_config(),clean)
       except ConfigError as e:
