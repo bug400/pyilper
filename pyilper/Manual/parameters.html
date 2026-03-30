@@ -79,16 +79,16 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 <p><em>pyILPER</em> supports command line parameters to carry out special actions (not for Windows).</p> 
 
-<p>Note: you must start <em>pyILPER</em> from the <b>command line</b> to specify command line parameters.</p>
+<p>Note: you must start <em>pyILPER</em> from the <b>command line</b> now <bold>as a module</bold> to specify command line parameters.</p>
 
 <p>Use the <em>-help</em> parameter to see the available arguments:</p>
 
-<pre>pyilper --help
-usage: pyilper [-h] [--instance INSTANCE] [--clean] [--cc]
+<pre>python -m pyilper --help
+usage: python -m pyilper [options]
 
-pyILPER command line invocation
+Start pyILPER with command line parameters
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   --instance INSTANCE, -instance INSTANCE
                         Start a pyILPER instance INSTANCE. This instance has an
@@ -97,26 +97,7 @@ optional arguments:
                         defaults
   --cc, -cc             Copy configuration from development to production version
                         and vice versa
-  --style, -style       Set a specific Qt style
-  --nohelp, -nohelp     Disable online help. Useful, if the Qt Web extension has issues
-</pre>
-
-<p><b>Note:</b> If <em>pyILPER</em> is invoked from the command line with the <em>pyilper</em> command
-there will be no output to the terminal. No help text is displayed and if there are any errors in
-command line parameters, the program will terminate silently.</p>
-
-<p>To get around this problem you can create a file <em>start_pyilper.py</em> with the following content:</p>
-
-<pre>
-import sys; 
-from pyilper import main; 
-sys.exit(main())
-</pre>
-
-<p>Now you can start <em>pyILPER</em> to get the help text:</p>
-
-<pre>
-python start_pyilper.py --help
+  --nohelp, -nohelp     Disable online help.
 </pre>
 
 <h3 class="w3-text-teal">Starting another instance of pyILPER</h3>
@@ -136,6 +117,10 @@ python start_pyilper.py --help
 </ul>
 
 <p>Note: You have to confirm the copy action. After completion, you must restart <em>pyILPER</em> without the <em>-cc</em> option.</p>
+
+<h3 class="w3-text-teal">Disable the help system</h3>
+
+<p>The parameter <em>--nohelp</em> disables the loading of the PySide6 web extensions which could cause compatibility problems.</p>
 <!-- End content -->
 </div>
 </div>

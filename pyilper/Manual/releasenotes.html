@@ -83,9 +83,41 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <li>Qt style configurable.</li>
 <li>Fixed escape sequence processing in terminal emulation.</li>
 <li>Autoreconnect for non network interfaces.</li>
+<li>Command line parameters are now only accepted, if <em>pyILPER</em> is called as a module.</li> 
+<li>Location of configuration files changed from AppData to the user home directory (Windows).</li>
 </ul>
 
-<p><b>Note:</b> <em>pyILPER</em> Version 1.9 does a migration of the connection parameters in the configuration file. If the migrated configuration files are used with a <em>pyILPER</em> version prior to version 1.9, the connection parameters are reset to defaults.</p>
+<h3 class="w3-text-teal">Incompatibilities</h3>
+
+<h4 class="w3-text-teal">Using command line parameters</h4>
+
+<p>Command line parameters are now only accepted, if <em>pyILPER</em> is called as a module:</em>
+<pre>
+      python -m pyiler [options]
+</pre>
+<p>This assures, that command line parameter processing is also supported on Windows.</p>
+
+<h4 class="w3-text-teal">Location of <em>pyILPER</em> configuration files changed (Windows)</h4>
+
+<p>It turned out, that Python interpreters which were installed from the Microsoft Store do not write to the AppData directory in the expected way. Instead access to AppData is silently redirected to a local cache of the installed Python app for "security reasons" (App isolation). This means, that the <em>pyILPER</em> configuration parameters are always lost if the interpreter app is replaced by a newer version.</p>
+
+<p>Since the use of AppData is becoming increasingly obfuscated, the location of the <em>pyILPER</em> configuration files is now:</p>
+
+<pre>
+    %HOMEDRIVE%%HOMEPATH%\pyilper_config
+</pre>
+
+<p>You can copy the <em>pyILPER</em> configuration files from the previous to the new location with the following command:</p>
+
+<pre>
+     python -m pyilper -mc
+</pre>
+
+<p><bold>Note:</b> you must use the Python interpreter which created the configuration in the cached AppData directory</p>
+
+<h4 class="w3-text-teal">Connection parameters changed in the <em>pyILPER</em> configuration</h4>
+
+<p><em>pyILPER</em> Version 1.9 does a migration of the connection parameters in the configuration file. If the migrated configuration files are used with a <em>pyILPER</em> version prior to version 1.9, the connection parameters are reset to defaults.</p>
 <!-- End content -->
 </div>
 </div>

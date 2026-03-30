@@ -28,6 +28,8 @@
 # - pluggable interfaces and tabs
 # 24.03.2026 jsi
 # - make autoreconnect configurable
+# 28.03.2026 jsi
+# - added standard configuration directory name parameter StandardConfigDir
 #
 import os
 import platform
@@ -176,6 +178,13 @@ class cls_pilglobals:
          self.Font="Monospace"
       else:
          self.Font="Courier New"
+#
+#     Standard configuration directory
+#
+      if self.isWindows:
+         self.StandardConfigDir="pyilper_config"
+      else:
+         self.StandardConfigDir="pyilper"
 #
 #     QtBindings and QTBinding globals
 #

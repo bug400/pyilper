@@ -39,6 +39,10 @@
 # 12.12.2021 jsi
 # - add configversion parameter to constructor
 # - use buildconfigfilename function from pilcore
+# 28.3.2026 jsi
+# - removed parameter progname
+# 30.3.2026 jsi
+# - handle clean in read
 
 import json
 import os
@@ -52,18 +56,17 @@ class ConfigError(Exception):
 
 class cls_userconfig:
 
-   def __init__(self,progname,filename,configversion,instance,production):
+   def __init__(self,filename,configversion,instance,production):
 #
 #  determine config file name
 #
-      self.__configfile__,self.__configpath__=buildconfigfilename(progname,filename,configversion,instance,production)
+      self.__configfile__,self.__configpath__=buildconfigfilename(filename,configversion,instance,production)
 
 #
-#  read configuration, if no configuration exists write default configuration
+#  read configuration, if no configuration exists or the clean flag is set write default configuration
 #
-   def read(self,default):
-#     print(self.__configfile__)
-      if not os.path.isfile(self.__configfile__):
+   def read(self,default,clean):
+      if not os.path.isfile(self.__configfile__) or clean:
          if not os.path.exists(self.__configpath__):
             try:
                os.makedirs(self.__configpath__)
@@ -74,8 +77,6 @@ class cls_userconfig:
          except OSError as e:
             raise ConfigError("Cannot write default configuration file", e.strerror)
          return default
-#     else:
-#        print(self.__configfile__," exists")
       f=None
       try:
          f= open(self.__configfile__,"r")

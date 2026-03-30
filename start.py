@@ -18,5 +18,6 @@ if sys.version_info < ( PILGLOBALS.Python_Required_Major, PILGLOBALS.Python_Requ
     sys.exit("This script requires Python "+str(PYTHON_REQUIRED_MAJOR)+"."+str(PYTHON_REQUIRED_MINOR)+" or newer!")
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 warnings.simplefilter("default")
-from pyilper import main
-main()
+from pyilper.__main__ import start
+start()
+

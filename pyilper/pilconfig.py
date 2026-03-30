@@ -37,6 +37,8 @@
 # - add configversion parameter to open method
 # 24.03.2026 jsi
 # - added key migrate function
+# 29.03.2026 jsi
+# - removed name parameter from open function
 #
 from .userconfig import cls_userconfig, ConfigError
 
@@ -64,12 +66,10 @@ class cls_pilconfig:
 #  if the configuration file does not exist, an empty file is created
 #  If clean is true do not read the config file
 #
-   def open(self,name,configversion,instance,production,clean):
-      self.__userconfig__= cls_userconfig(name,name,configversion,instance,production)
-      if clean:
-         return
+   def open(self,configversion,instance,production,clean):
+      self.__userconfig__= cls_userconfig("pyilper",configversion,instance,production)
       try:
-         self.__config__= self.__userconfig__.read(self.__config__)
+         self.__config__= self.__userconfig__.read(self.__config__,clean)
       except ConfigError as e:
          raise PilConfigError(e.msg,e.add_msg)
 #

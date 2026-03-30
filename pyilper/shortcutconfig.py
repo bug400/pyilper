@@ -31,6 +31,8 @@
 # - PySide6 migration
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 29.03.2026 jsi
+# - removed name parameter from open method
 #
 import copy
 from .pilglobals import *
@@ -258,12 +260,10 @@ class cls_shortcutconfig:
 #  exist, the default configuration is written to the shortcut config file
 #  If clean is true do not read an existing config file
 #
-   def open(self,name,configversion,instance,production,clean):
-      self.__userconfig__= cls_userconfig(name,"shortcutconfig",configversion,instance,clean)
-      if clean:
-         return
+   def open(self,configversion,instance,production,clean):
+      self.__userconfig__= cls_userconfig("shortcutconfig",configversion,instance,clean)
       try:
-         self.__shortcutconfig__= self.__userconfig__.read(self.default_config())
+         self.__shortcutconfig__= self.__userconfig__.read(self.default_config(),clean)
       except ConfigError as e:
          raise ShortcutConfigError(e.msg,e.add_msg)
 #

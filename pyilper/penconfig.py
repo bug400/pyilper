@@ -33,6 +33,10 @@
 # - PySide6 migration
 # 16.03.2026 jsi:
 # - global variables refactoring
+# 29.03.2026 jsi
+# - removed name parameter from open method
+# 30.03.2026 jsi
+# - handle default config in cls_userconfig
 #
 import copy
 
@@ -216,12 +220,10 @@ class cls_penconfig:
 #  exist, the default configuration is written to the pen config file
 #  If clean is true do not read an existing config file
 #
-   def open(self,name,configversion,instance,production,clean):
-      self.__userconfig__= cls_userconfig(name,"penconfig",configversion,instance,production)
-      if clean:
-         return
+   def open(self,configversion,instance,production,clean):
+      self.__userconfig__= cls_userconfig("penconfig",configversion,instance,production)
       try:
-         self.__penconfig__= self.__userconfig__.read(self.default_config())
+         self.__penconfig__= self.__userconfig__.read(self.default_config(),clean)
       except ConfigError as e:
          raise PenConfigError(e.msg,e.add_msg)
 #

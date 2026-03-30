@@ -10,8 +10,9 @@ Index
      * [Installation on Linux](#installation-on-linux)
 * [Installation from GitHub](#installation-from-github)
 * [Installation of the LIFUTILS](#installation-of-the-lifutils)
+* [Launch pyILPER](#launch-pyilper)
 * [pyILPER Setup](#pyilper-setup)
-* [Usage](#usage)
+* [Documentation](#documentation)
 * [Installation of development versions](#installation-of-development-versions)
 * [Virtual Environment Maintenance](#virtual-environment-maintenance)
 
@@ -115,6 +116,7 @@ You can invoke pyILPER without activating the environment by calling:
 
 Create a desktop shortcut for %USERPROFILE\pytest\scripts\pyilper.exe to conveniently start pyILPER.
 
+Note: The Python Foundation stopped to release newer versions than 3.13 in the Microsoft store and provides a Python Install Manager instead. It is possible to use the Install Manager if existing Python installations are removed, but this still needs to be documented here.
 
 ### Installation on macOS
 
@@ -190,11 +192,27 @@ Note: it depends on your operaing system configuration whether the Python interp
 
 The [pyILPER Releases page](https://github.com/bug400/pyilper/releases/) also provides an installation package for the current Debian release. Installing this package will add the necessary dependencies to the system and create a menu entry to start the program. This package might also be installable on Linux distributions which were derived from the Debian release in question (Ubuntu, Raspberry PI OS).
      
+
 ## Installation of the LIFUTILS
 
 In order to use the file and disk management functions and the virtual HP7470A plotter
 an up to date version of the [LIFUTILS](https://github.com/bug400/lifutils/releases)
 must be installed. See the [Installation Instructions](https://github.com/bug400/lifutils/blob/master/INSTALL.md) for further details.
+
+
+## Launch pyILPER
+
+Normally you start pyILPER from the command line as follows:
+
+      pyilper
+
+Use this command to invoke pyILPER from the desktop. See the installation instructions above. The pyilper command does not accept any command line parameters.
+
+If you would like to launch pyILPER with command line parameters you must start the program as a module from the command line:
+
+      python -m pyilper <command line parameters>
+
+You should also run pyILPER this way if you encounter any crashes because that's the only way to display any error messages needed to narrow down the problem.
 
 
 ## pyILPER Setup
@@ -229,7 +247,7 @@ virtual device (check box in the lower left corner of a device tab), because
 they are disabled by default.
 
 
-## Usage
+## Documentation
 
 See the online documentation which can be launched from the Help menu.
 

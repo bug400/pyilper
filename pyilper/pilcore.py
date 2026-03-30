@@ -171,6 +171,10 @@
 # - pluggable interfaces and tabs
 # 24.03.2026 jsi
 # - make autoreconnect configurable (cls_Interface_Spec)
+# 29.03.2026 jsi
+# - removed "name" parameter from buildconfigfilename
+# - directory name of config files is now in the PILGLOBALS.StandardConfigDir
+# - Windows config files are now in the user home directory
 #
 import re
 import os
@@ -255,7 +259,7 @@ def disassemble_frame(frame):
 #
 #  assemble file name of config file
 #
-def buildconfigfilename(progname,filename,configversion,instance,production):
+def buildconfigfilename(filename,configversion,instance,production):
 #
 #  determine config file name
 #
@@ -271,17 +275,17 @@ def buildconfigfilename(progname,filename,configversion,instance,production):
 #
 #     LINUX
 #        
-      configpath=os.path.join(userhome,".config",progname)
+      configpath=os.path.join(userhome,".config",PILGLOBALS.StandardConfigDir)
    elif PILGLOBALS.isWindows:
 #
 #     Windows
 #
-      configpath=os.path.join(os.environ['APPDATA'],progname)
+      configpath=os.path.join(os.environ['HOMEDRIVE'],os.environ['HOMEPATH'],PILGLOBALS.StandardConfigDir)
    elif PILGLOBALS.isMacos:
 #
 #     Mac OS X
 #
-      configpath=os.path.join(userhome,"Library","Application Support",progname)
+      configpath=os.path.join(userhome,"Library","Application Support",PILGLOBALS.StandardConfigDir)
 #
    else:
 #

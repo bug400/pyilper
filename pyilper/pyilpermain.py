@@ -199,6 +199,9 @@
 # - refactoring of interface config keys
 # - make autoreconnect configurable 
 # - migrate config from version < 1.9
+# 29.03.2026 jsi
+# - move command line processing to __main__.py
+# - move "copy_config" to __main__.py
 #
 import os
 import sys
@@ -246,18 +249,13 @@ class cls_pyilper(QtCore.QObject):
        sig_crash=QtCore.pyqtSignal()
        sig_quit=QtCore.pyqtSignal()
 
-   def __init__(self,args):
+   def __init__(self):
  
       super().__init__()
       self.name="pyilper"
-      self.instance=""
+      self.instance=PILGLOBALS.Instance
       self.mode=""
-      self.clean=False
-      if args.instance:
-         if args.instance.isalnum():
-            self.instance=args.instance
-      if args.clean:
-         self.clean=True
+      self.clean=PILGLOBALS.Clean
       self.status= STAT_DISABLED
       self.pilwidgets= [ ]
       self.commobject=None
@@ -341,10 +339,11 @@ class cls_pyilper(QtCore.QObject):
 
 #
 #     Set up configuration subsystem
+#
 #     1. pyILPER config
 #
       try:
-         PILCONFIG.open(self.name,PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
+         PILCONFIG.open(PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
          PILCONFIG.get(self.name,"active_tab",0)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
          PILCONFIG.get(self.name,"mode",PILGLOBALS.ModeDefault)
@@ -370,7 +369,7 @@ class cls_pyilper(QtCore.QObject):
 #     2. pen configuration
 #
       try:
-         PENCONFIG.open(self.name,PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
+         PENCONFIG.open(PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
       except PenConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -378,7 +377,7 @@ class cls_pyilper(QtCore.QObject):
 #     3. terminal keyboard shortcuts
 #
       try:
-         SHORTCUTCONFIG.open(self.name,PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
+         SHORTCUTCONFIG.open(PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
       except ShortcutConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -887,71 +886,6 @@ class cls_pyilper(QtCore.QObject):
       for m in migList:
          PILCONFIG.migrateKey(m[0],m[1])
 #
-# copy configuration data from devel to production and vice versa
-# - a development/beta version of pyILPER copies the files of the
-#   production version
-# - a production version of pyILPER copies the files of the development/beta
-#   version
-#
-def copy_config(args):
-   count=0
-#
-#  get version numbers
-#
-   from_config=cls_pilconfig()
-   to_config=cls_pilconfig()
-   try:
-      from_config.open("pyilper",PILGLOBALS.Config_Version,args.instance, not PILGLOBALS.Production,False)
-      from_version=from_config.get("pyilper","version","0.0.0")
-      to_config.open("pyilper",PILGLOBALS.Config_Version,args.instance, PILGLOBALS.Production,False)
-      to_version=to_config.get("pyilper","version","0.0.0")
-   except PilConfigError as e:
-      print(e.msg+': '+e.add_msg)
-      return
-   if from_version == "0.0.0":
-      print("There are no configuration files to copy")
-      return
-#
-#  ask for confirmation
-#
-   print("\nW A R N I N G!")
-   print("This overwrites the configuration files")
-   if PILGLOBALS.Production:
-      print("of the production version: ", to_version)
-   else:
-      print("of the development/beta version: ", to_version)
-   print("with the configuration files")
-   if PILGLOBALS.Production:
-      print("of the development/beta version: ",from_version)
-   else:
-      print("of the production version: ",from_version)
-   inp= input("Continue? (enter 'YES' uppercase): ")
-   if inp !="YES":
-      print("cancelled")
-      return
-#
-#  now copy configuration files
-#
-   for name in ['pyilper','penconfig','shortcutconfig']:
-      from_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Config_Version,args.instance,not PILGLOBALS.Production)[0]
-      if not os.path.isfile(from_filename):
-         continue
-      to_filename=buildconfigfilename("pyilper",name,PILGLOBALS.Config_Version,args.instance, PILGLOBALS.Production)[0]
-      try:
-         shutil.copy(from_filename,to_filename)
-      except OSError as e:
-         print("Error copying file "+from_filename+": "+e.strerror)
-         return
-      except  SameFileError as e:
-         print("Error copying file "+from_filename+" "+"source and destination file are identical")
-         return
-      print(from_filename)
-      print("copied to:")
-      print(to_filename)
-      count+=1
-   print(count,"files copied. Restart pyILPER without the 'cc' option now")
-
-#
 # dump stack if signalled externally (for debugging)
 #
 def dumpstacks(signal, frame):
@@ -959,25 +893,15 @@ def dumpstacks(signal, frame):
     print("Thread ID %x" % threadId)
     traceback.print_stack(f=stack)
 
-def main():
-   parser=argparse.ArgumentParser(description='pyILPER command line invocation')
-   parser.add_argument('--instance', '-instance', default="", help="Start a pyILPER instance INSTANCE. This instance has an own configuration file.")
-   parser.add_argument('--clean','-clean',action='store_true',help="Start pyILPER with a config file which is reset to defaults")
-   parser.add_argument('--cc','-cc',action='store_true',help="Copy configuration from development to production version and vice versa")
-   parser.add_argument('--nohelp','-nohelp',action='store_true',help="Disable online help")
-   args=parser.parse_args()
-   if args.cc:
-      copy_config(args)
-      sys.exit(1)
-   PILGLOBALS.setArgs(args)
+def main(args=None):
 
    if not PILGLOBALS.isWindows:
       signal.signal(signal.SIGQUIT, dumpstacks)
    app = QtWidgets.QApplication(sys.argv)
-   pyilper= cls_pyilper(args)
+   pyilper= cls_pyilper()
    sys.exit(app.exec())
 
 
 if __name__ == '__main__':
-
    main()
+
