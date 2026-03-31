@@ -82,6 +82,8 @@
 # 24.03.2026 jsi
 # - make autoreconnect configurable
 # - refactoring of interface config parameters
+# 31.03.2026 jsi
+# - improved serial device check
 
 #
 # PIL-Box Commands
@@ -90,7 +92,6 @@ COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 
-import os
 from .pilglobals import PILGLOBALS
 if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
@@ -98,7 +99,7 @@ if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 from .pilrs232 import Rs232Error, cls_rs232
 from .pilconfig import PILCONFIG
-from .pilcore import assemble_frame, disassemble_frame, cls_Interface_Spec
+from .pilcore import assemble_frame, disassemble_frame, cls_Interface_Spec, checkSerialDeviceExists
 from .pilthreads import PilThreadError, cls_pilthread_generic, cls_TtyWindow, cls_ConfigInterfaceGeneric
 
 class PilBoxError(Exception):
@@ -351,7 +352,7 @@ class cls_PilBoxThread(cls_pilthread_generic):
 
       except PilBoxError as e:
          self.send_message('PIL-Box disconnected after error. '+e.msg+': '+e.add_msg)
-         if self.__autoreconnect__ and not os.path.exists(self.__ttydevice__) :
+         if self.__autoreconnect__ and not checkSerialDeviceExists(self.__ttydevice__) :
             self.signal_crash(PILGLOBALS.Crash_Reason_No_Device)
          else:
             self.signal_crash(PILGLOBALS.Crash_Reason_Unknown)
@@ -362,11 +363,10 @@ class cls_PilBoxThread(cls_pilthread_generic):
       device=PILCONFIG.get(name,"device","")
       if device=="":
          return [PILGLOBALS.CheckDeviceUnconfigured,device]
-      if os.path.exists(device):
+      if checkSerialDeviceExists(device):
          return [PILGLOBALS.CheckDeviceExists,device]
       else:
          return [PILGLOBALS.CheckDeviceNonexistent,device]
-
 
 
 class cls_PILBOX_Config(cls_ConfigInterfaceGeneric):

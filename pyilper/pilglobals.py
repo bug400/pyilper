@@ -30,6 +30,8 @@
 # - make autoreconnect configurable
 # 28.03.2026 jsi
 # - added standard configuration directory name parameter StandardConfigDir
+# 31.03.2026 jsi
+# - Diagnostics variable added (argument)
 #
 import os
 import platform
@@ -45,6 +47,7 @@ class cls_pilglobals:
       self.Config_Version="2"     # Version number of pyILPER config file, must be string
       self.Instance=""            # Python config instance
       self.Clean=False            # Start with clean config
+      self.Diagnostics=False      # do not output diagnostic messages
 #
 #     Python minimum version
 #
@@ -253,6 +256,7 @@ class cls_pilglobals:
       if args.nohelp:
          self.Has_Webkit=False
          self.Has_Webengine=False  
+      self.Diagnostics=args.diag
 
 #
 #  set/clear 8bit PILBox format

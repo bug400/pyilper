@@ -54,6 +54,8 @@
 # - added standard USB CDC device name support in TtyWindow for mac os
 # 24.03.2026 jsi
 # - make autoreconnect configurable (checkDevice)
+# 31.03.2026 jsi
+# - change default devicename to /dev/cu.usbmodemxxx for mac OS to be compatible to serial.tools.list_ports
 #
 import sys
 import threading
@@ -271,10 +273,10 @@ class cls_TtyWindow(QtWidgets.QDialog):
          if PILGLOBALS.isLinux:
             r=re.compile("(ttyACM\\d+)|(ttyUSB\\d+)")
 #
-#        Mac OS X /dev/tty.usbserial-*
+#        Mac OS X /dev/cu.usbserial-* /dev/cu.usbmodem*
 #
          elif PILGLOBALS.isMacos:
-            r=re.compile("(tty.usbserial-*)|(tty.usbmodem\\d+)")
+            r=re.compile("(cu.usbserial-*)|(cu.usbmodem\\d+)")
 #
 #        Other
 #

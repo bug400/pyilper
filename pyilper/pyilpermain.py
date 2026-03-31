@@ -202,6 +202,8 @@
 # 29.03.2026 jsi
 # - move command line processing to __main__.py
 # - move "copy_config" to __main__.py
+# 31.03.2026 jsi
+# - diagnostics for Autoreconnect
 #
 import os
 import sys
@@ -751,6 +753,8 @@ class cls_pyilper(QtCore.QObject):
    def do_Autoreconnect(self):
       commthread_class= self.interfaces[self.mode].thread_class
       ret,device=commthread_class.checkDevice(self.interfaceName) 
+      if PILGLOBALS.Diagnostics:
+         print("Device ",device," checked, return value ",ret)
       if ret== PILGLOBALS.CheckDeviceNonexistent:
          self.show_message(self.interfaces[self.mode].title+": waiting for device "+device+" ...")
          self.autoreconnectTimer.start()

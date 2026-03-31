@@ -29,6 +29,8 @@
 # Change log
 # 29.03.2026 jsi
 # - initial version
+# 31.03.2026 jsi
+# - diagnostics option added
 #
 import os
 import sys
@@ -137,6 +139,7 @@ def start():
    if PILGLOBALS.isWindows:
       parser.add_argument('--mc','-mc',action='store_true',help="Move configuration from AppData to user home directory")
    parser.add_argument('--nohelp','-nohelp',action='store_true',help="Disable online help")
+   parser.add_argument('--diag','-diag',action='store_true',help=argparse.SUPPRESS)
    args=parser.parse_args()
 #
 #  run -cc and -mc commands

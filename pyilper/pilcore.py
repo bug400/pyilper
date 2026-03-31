@@ -175,9 +175,12 @@
 # - removed "name" parameter from buildconfigfilename
 # - directory name of config files is now in the PILGLOBALS.StandardConfigDir
 # - Windows config files are now in the user home directory
+# 31.03.2026 jsi
+# - checkSerialDeviceExists function added, check existence of ports with serial.tools.list_ports
 #
 import re
 import os
+import serial.tools.list_ports
 
 from dataclasses import dataclass
 from .pilglobals import *
@@ -295,6 +298,14 @@ def buildconfigfilename(filename,configversion,instance,production):
    configfilename=os.path.join(configpath,fname)
     
    return configfilename,configpath
+#
+#  check existence of a serial device
+#
+def checkSerialDeviceExists(device):
+   for p in serial.tools.list_ports.grep(device,True):
+      if p.device== device:
+         return True
+   return False
 
 #
 #  Interface specification dataclass
