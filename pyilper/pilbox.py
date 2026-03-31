@@ -84,6 +84,7 @@
 # - refactoring of interface config parameters
 # 31.03.2026 jsi
 # - improved serial device check
+# - improved serial device close on error
 
 #
 # PIL-Box Commands
@@ -136,13 +137,16 @@ class cls_pilbox:
       except Rs232Error as e:
          raise PilBoxError("PIL-Box command error:", e.value)
       if bytrx is None:
+         self.__tty__.close()
          raise PilBoxError("PIL-Box command error: timeout","")
       try:
          if ((ord(bytrx) & 0x3F) != (cmdfrm & 0x3F)):
 #           print("val err ",ord(bytrx))
+            self.__tty__.close()
             raise PilBoxError("PIL-Box command error: illegal retval","")
       except TypeError:
 #        print("type err")
+         self.__tty__.close()
          raise PilBoxError("PIL-Box command error: illegal retval","")
 #     print("command sent and acknowledged 0x{0:02x}".format(cmdfrm))
 

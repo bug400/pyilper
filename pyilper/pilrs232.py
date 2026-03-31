@@ -38,6 +38,8 @@
 # - use platform function from pilcore.py
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 31.03.2026 jsi
+# - improved serial device close on error
 #
 import serial,time
 from .pilglobals import PILGLOBALS
@@ -67,6 +69,7 @@ class cls_rs232:
          try:
             self.__ser__.timeout= timeout
          except:
+            self.close()
             raise Rs232Error('cannot set timeout value of serial device')
          self.__timeout__=timeout
 
@@ -78,6 +81,8 @@ class cls_rs232:
 #
 #     use Windows device naming (hint by cg)
 #
+      if PILGLOBALS.Diagnostics:
+         print("open device ",device)
       if PILGLOBALS.isWindows:
          self.__device__="\\\\.\\"+device
       else:
@@ -90,24 +95,34 @@ class cls_rs232:
          time.sleep(0.5)
       except Exception as e:
           self.__device__=""
-#         if hasattr(e, 'message'):
-#            print(e.message)
-#         else:
-#            print(e)
+          if PILGLOBALS.Diagnostics:
+             if hasattr(e, 'message'):
+                print(e.message)
+             else:
+                print(e)
 
           raise Rs232Error('cannot open serial device')
+#
+#  close serial device
+#
    def close(self):
+      if not self.__isOpen__:
+         return
       try:
+         if PILGLOBALS.Diagnostics:
+            print("close device ",self.__device__)
          self.__ser__.close()
          self.__isOpen__=False
       except:
-         raise Rs232Error('cannot close serial device')
+#        raise Rs232Error('cannot close serial device')
+         pass
       self.__device__=""
 
    def snd(self,buf):
       try:
          self.__ser__.write(buf)
       except:
+         self.close()
          raise Rs232Error('cannot write to serial device')
 
    def rcv(self,timeout,n):
@@ -115,6 +130,7 @@ class cls_rs232:
       try:
          c= self.__ser__.read(n)
       except:
+         self.close()
          raise Rs232Error('cannot read from serial device')
       return c
 
@@ -122,10 +138,12 @@ class cls_rs232:
       try:
          self.__ser__.flushInput()
       except:
+         self.close()
          raise Rs232Error('cannot reset serial device')
 
    def setBaudrate(self,baudrate):
       try:
          self.__ser__.baudrate= baudrate
       except:
+         self.close()
          raise Rs232Error('cannot set baudrate')
