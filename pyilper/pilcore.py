@@ -303,6 +303,8 @@ def buildconfigfilename(filename,configversion,instance,production):
 #
 def checkSerialDeviceExists(device):
    for p in serial.tools.list_ports.grep(device,True):
+      if PILGLOBALS.Diagnostics:
+         print("Device found: ",p.device," ",p.description," ",p.location," ",p.interface)
       if p.device== device:
          return True
    return False
