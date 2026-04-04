@@ -54,13 +54,15 @@
 # - added standard USB CDC device name support in TtyWindow for mac os
 # 24.03.2026 jsi
 # - make autoreconnect configurable (checkDevice)
-# 31.03.2026 jsi
-# - change default devicename to /dev/cu.usbmodemxxx for mac OS to be compatible to serial.tools.list_ports
+# 04.04.2026 jsi
+# - serial device detection now with serial.tools.list_ports
+# - show serial device information in tty selection window
 #
 import sys
 import threading
 import re
 from pathlib import Path
+import serial.tools.list_ports
 
 from .pilglobals import *
 if PILGLOBALS.QT_Bindings=="PySide6":
@@ -251,58 +253,81 @@ class cls_TtyWindow(QtWidgets.QDialog):
       self.label= QtWidgets.QLabel()
       self.label.setText("Select or enter serial port")
 #     self.label.setAlignment(QtCore.Qt.AlignCenter)
+      self.vlayout.addWidget(self.label)
+
+
+      if PILGLOBALS.isWindows:
+         pattern="COM\\d+"
+      if PILGLOBALS.isLinux:
+         pattern="(ttyACM\\d+)|(ttyUSB\\d+)"
+      if PILGLOBALS.isMacos:
+         pattern="(cu.usbserial-*)|(cu.usbmodem\\d+)"
 
       self.__ComboBox__ = QtWidgets.QComboBox() 
       self.__ComboBox__.setEditable(True)
+      self.vlayout.addWidget(self.__ComboBox__)
 
-      if PILGLOBALS.isWindows:
-#
-#        Windows COM ports from registry
-#
-         try:
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r"Hardware\DeviceMap\SerialComm",0,winreg.KEY_QUERY_VALUE|winreg.KEY_ENUMERATE_SUB_KEYS) as key:
-               for i in range (0, winreg.QueryInfoKey(key)[1]):
-                  port = winreg.EnumValue(key, i)[1]
-                  self.__ComboBox__.addItem( port, port )
-         except FileNotFoundError:
-            pass
-      else:
-#
-#        Linux /dev/ttyUSBxx /dev/ttyACMxx
-#
-         if PILGLOBALS.isLinux:
-            r=re.compile("(ttyACM\\d+)|(ttyUSB\\d+)")
-#
-#        Mac OS X /dev/cu.usbserial-* /dev/cu.usbmodem*
-#
-         elif PILGLOBALS.isMacos:
-            r=re.compile("(cu.usbserial-*)|(cu.usbmodem\\d+)")
-#
-#        Other
-#
-         else:
-            r=re.compile("ttyUSB\\d+")
-         
-         mainPath="/dev"
-         for port in (p.resolve() for p in Path(mainPath).iterdir() if r.match(p.name)):
-            self.__ComboBox__.addItem( str(port), str(port) )
+      self.gridLayout= QtWidgets.QGridLayout()
+      self.gridLayout.addWidget(QtWidgets.QLabel("Description"),0,0)
+      self.gridLayout.addWidget(QtWidgets.QLabel("UID"),1,0)
+      self.gridLayout.addWidget(QtWidgets.QLabel("Manufacturer"),2,0)
+      self.gridLayout.addWidget(QtWidgets.QLabel("Serial Number"),3,0)
+      self.gridLayout.addWidget(QtWidgets.QLabel("Product"),4,0)
+      self.gridLayout.addWidget(QtWidgets.QLabel("Interface"),5,0)
+      self.description= QtWidgets.QLabel("")
+      self.gridLayout.addWidget(self.description,0,1)
+      self.uid=QtWidgets.QLabel("")
+      self.gridLayout.addWidget(self.uid,1,1)
+      self.manufacturer=QtWidgets.QLabel("")
+      self.gridLayout.addWidget(self.manufacturer,2,1)
+      self.serialNumber=QtWidgets.QLabel("")
+      self.gridLayout.addWidget(self.serialNumber,3,1)
+      self.product=QtWidgets.QLabel("")
+      self.gridLayout.addWidget(self.product,4,1)
+      self.interface=QtWidgets.QLabel("")
+      self.gridLayout.addWidget(self.interface,5,1)
+      self.gridLayout.addWidget(QtWidgets.QLabel("Information above may be incomplete or nil"),6,0,1,2)
 
-      self.__ComboBox__.activated[int].connect(self.combobox_choosen)
-      self.__ComboBox__.editTextChanged.connect(self.combobox_textchanged)
+      self.vlayout.addLayout(self.gridLayout)
+
       self.buttonBox = QtWidgets.QDialogButtonBox()
       self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
       self.buttonBox.setCenterButtons(True)
       self.buttonBox.accepted.connect(self.do_ok)
       self.buttonBox.rejected.connect(self.do_cancel)
-      self.vlayout.addWidget(self.label)
-      self.vlayout.addWidget(self.__ComboBox__)
       self.hlayout = QtWidgets.QHBoxLayout()
       self.hlayout.addWidget(self.buttonBox)
       self.vlayout.addWidget(self.buttonBox)
+
+      self.portInfo= { }
+      for port in serial.tools.list_ports.grep(pattern,False):
+         self.__ComboBox__.addItem(port.device)
+         self.portInfo[port.device]=port
+
       self.__device__= ""
+
       idx=self.__ComboBox__.findText(self.oldTty,QtCore.Qt.MatchExactly)
-      if idx  > 0 :
+      if idx  >= 0 :
          self.__ComboBox__.setCurrentIndex(idx)
+      self.setDeviceInfo(self.__ComboBox__.currentText())
+      self.__ComboBox__.activated[int].connect(self.combobox_choosen)
+      self.__ComboBox__.editTextChanged.connect(self.combobox_textchanged)
+
+   def setDeviceInfo(self,device):
+      self.description.setText("")
+      self.uid.setText("")
+      self.manufacturer.setText("")
+      self.serialNumber.setText("")
+      self.product.setText("")
+      self.interface.setText("")
+      if device in self.portInfo.keys():
+         self.description.setText(self.portInfo[device].description)
+         if self.portInfo[device].vid is not None and self.portInfo[device].pid is not None:
+            self.uid.setText(hex(self.portInfo[device].vid)+":"+hex(self.portInfo[device].pid))
+         self.manufacturer.setText(self.portInfo[device].manufacturer)
+         self.serialNumber.setText(self.portInfo[device].serial_number)
+         self.product.setText(self.portInfo[device].product)
+         self.interface.setText(self.portInfo[device].interface)
       
 
    def do_ok(self):
@@ -318,9 +343,11 @@ class cls_TtyWindow(QtWidgets.QDialog):
 
    def combobox_textchanged(self, device):
       self.__device__= device
+      self.setDeviceInfo(self.__device__)
 
    def combobox_choosen(self, idx):
       self.__device__= self.__ComboBox__.itemText(idx)
+      self.setDeviceInfo(self.__device__)
 
    def getDevice(self):
       return self.__device__

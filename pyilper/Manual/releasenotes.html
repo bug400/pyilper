@@ -77,30 +77,37 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <h2 class="w3-text-teal">Release Notes for <em>pyILPER</em> 1.9.0</h2>
 <ul class="w3-ul">
 <li>Required Python version is now 3.7.</li>
-<li>Internal refactoring and cleanup.</li>
-<li>Thinkjet printer: bug fixes and page processing improvements.</li>
-<li>Prevent opening command window when invoking lifutils (Windows only).</li>
+<li>Configurable auto(re)connect for serial interfaces.</li>
+<li>Show additional information about serial devices in tty selection window.</li>
+<li>Thinkjet printer tab does now show page brakes.</li>
 <li>Qt style configurable.</li>
+<li>Fixed a brief flash of the command window when invoking lifutils programs (Windows).</li>
 <li>Fixed escape sequence processing in terminal emulation.</li>
-<li>Fixed shortcut configration file name. The production version always used the file of a test version.</li>
-<li>Autoreconnect for non network interfaces.</li>
-<li>Command line parameters are now only accepted, if <em>pyILPER</em> is called as a module.</li> 
-<li>Location of configuration files changed from AppData to the user home directory (Windows).</li>
+<li>Fixed shortcut configuration file name. The production version always used the file of a test version.</li>
+<li>Fixed page break processing in Thinkjet printer tab.
+<li>Command line parameters are now only accepted if <em>pyILPER</em> is called as a module (Incompatibility).</li> 
+<li>Location of configuration files changed from AppData to the user home directory (Incompatibility Windows only).</li>
+<li>Serial device name changed (Incompatibility macOS only)</li>
+<li>Internal refactoring and cleanup.</li>
 </ul>
 
-<h3 class="w3-text-teal">Incompatibilities</h3>
+<h3 class="w3-text-teal">Incompatibility</h3>
 
 <h4 class="w3-text-teal">Using command line parameters</h4>
 
-<p>Command line parameters are now only accepted, if <em>pyILPER</em> is called as a module:</em>
+<p>Command line parameters are now only accepted if <em>pyILPER</em> is called as a module:</em>
 <pre>
       python -m pyiler [options]
 </pre>
-<p>This assures, that command line parameter processing is also supported on Windows.</p>
+<p>This assures that command line parameter processing is also supported on Windows.</p>
+
+<h4 class="w3-text-teal">Serial device name change (macOS)</h4>
+
+<p>In older versions of <em>pyILPER</em> a device name like /dev/tty.usbserialFTDBxxx was used to connect to the PIL-Box. Unfortunately the auto(rec)connect feature does not work for this device name. Therefore use the device name /dev/cu.usbserialFTDBxx instead.</p>
 
 <h4 class="w3-text-teal">Location of <em>pyILPER</em> configuration files changed (Windows)</h4>
 
-<p>It turned out, that Python interpreters which were installed from the Microsoft Store do not write to the AppData directory in the expected way. Instead access to AppData is silently redirected to a local cache of the installed Python app for "security reasons" (App isolation). This means, that the <em>pyILPER</em> configuration parameters are always lost if the interpreter app is replaced by a newer version.</p>
+<p>It turned out that Python interpreters which were installed from the Microsoft Store do not write to the AppData directory in the expected way. Instead, the access to AppData is silently redirected to a local cache of the installed Python app for "security reasons" (App isolation). This means that the <em>pyILPER</em> configuration parameters are always lost if the interpreter app is replaced by another version.</p>
 
 <p>Since the use of AppData is becoming increasingly obfuscated, the location of the <em>pyILPER</em> configuration files is now:</p>
 
@@ -108,13 +115,13 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
     %HOMEDRIVE%%HOMEPATH%\pyilper_config
 </pre>
 
-<p>You can copy the <em>pyILPER</em> configuration files from the previous to the new location with the following command:</p>
+<p>You can copy the <em>pyILPER</em> configuration files from the previous location to the new location with the following command:</p>
 
 <pre>
      python -m pyilper -mc
 </pre>
 
-<p><bold>Note:</b> you must use the Python interpreter which created the configuration in the cached AppData directory</p>
+<p><bold>Note:</b> you must use the Python interpreter which created the configuration in the cached AppData directory.</p>
 
 <h4 class="w3-text-teal">Connection parameters changed in the <em>pyILPER</em> configuration</h4>
 
