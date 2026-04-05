@@ -151,7 +151,7 @@ def start():
 #  show version
 #
    if args.v:
-      print("Pyilper ",__version__)
+      print("pyILPER ",__version__)
 #
 #  run -cc and -mc commands
 #
