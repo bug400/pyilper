@@ -32,22 +32,32 @@
 # - added standard configuration directory name parameter StandardConfigDir
 # 31.03.2026 jsi
 # - Diagnostics variable added (argument)
+# 05.04.2026 jsi
+# - Version and production status now defined in __init__.py
+# - renamed Config_Version to ConfigVersion
 #
 import os
 import platform
 import sys
+
+from pyilper import __version__ , __isProduction__
 
 class cls_pilglobals:
 #
 #  initialize: create instance
 #
    def __init__(self):
-      self.Production=  False     # Production/Development Version
-      self.Version="1.9.0"        # pyILPR version number
-      self.Config_Version="2"     # Version number of pyILPER config file, must be string
-      self.Instance=""            # Python config instance
-      self.Clean=False            # Start with clean config
-      self.Diagnostics=False      # do not output diagnostic messages
+      self.Production=__isProduction__  # Production/Development Version
+      self.FullVersion=__version__      # pyILPER full package version
+      self.ConfigVersion="2"            # Version number of pyILPER config file, must be string
+      self.Instance=""                  # Python config instance
+      self.Clean=False                  # Start with clean config
+      self.Diagnostics=False            # do not output diagnostic messages
+#
+#     Base version number
+#
+      temp=self.FullVersion.split(".")
+      self.Version= temp[0]+"."+temp[1]+"."+temp[2]
 #
 #     Python minimum version
 #

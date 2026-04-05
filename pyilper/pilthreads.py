@@ -57,6 +57,9 @@
 # 04.04.2026 jsi
 # - serial device detection now with serial.tools.list_ports
 # - show serial device information in tty selection window
+# 05.04.2026 jsi
+# - remove winreg import
+# - renamed class method check_reconnect to needs_reconnect
 #
 import sys
 import threading
@@ -70,8 +73,6 @@ if PILGLOBALS.QT_Bindings=="PySide6":
 if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
-if PILGLOBALS.isWindows:
-   import winreg
 from .pilconfig import PILCONFIG
 
 
@@ -256,6 +257,7 @@ class cls_TtyWindow(QtWidgets.QDialog):
       self.vlayout.addWidget(self.label)
 
 
+      pattern=""
       if PILGLOBALS.isWindows:
          pattern="COM\\d+"
       if PILGLOBALS.isLinux:
@@ -410,7 +412,7 @@ class cls_ConfigInterfaceGeneric(QtWidgets.QFrame):
       return (value!= oldvalue)
      
    @staticmethod
-   def check_reconnect(old_mode):
+   def needs_reconnect(old_mode):
       needs_reconnect = False
       if cls_ConfigInterfaceGeneric.interfaceMode != old_mode:
          needs_reconnect = True

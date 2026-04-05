@@ -204,6 +204,9 @@
 # - move "copy_config" to __main__.py
 # 31.03.2026 jsi
 # - diagnostics for Autoreconnect
+# 05.03.2026 jsi
+# - renamed PILGLOBALS.Config_Version to PILGLOBALS.ConfigVersion
+# - fixed Pylint errors
 #
 import os
 import sys
@@ -345,7 +348,7 @@ class cls_pyilper(QtCore.QObject):
 #     1. pyILPER config
 #
       try:
-         PILCONFIG.open(PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
+         PILCONFIG.open(PILGLOBALS.ConfigVersion,self.instance,PILGLOBALS.Production,self.clean)
          PILCONFIG.get(self.name,"active_tab",0)
          PILCONFIG.get(self.name,"tabconfigchanged",False)
          PILCONFIG.get(self.name,"mode",PILGLOBALS.ModeDefault)
@@ -387,7 +390,7 @@ class cls_pyilper(QtCore.QObject):
 #     2. pen configuration
 #
       try:
-         PENCONFIG.open(PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
+         PENCONFIG.open(PILGLOBALS.ConfigVersion,self.instance,PILGLOBALS.Production,self.clean)
       except PenConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -395,7 +398,7 @@ class cls_pyilper(QtCore.QObject):
 #     3. terminal keyboard shortcuts
 #
       try:
-         SHORTCUTCONFIG.open(PILGLOBALS.Config_Version,self.instance,PILGLOBALS.Production,self.clean)
+         SHORTCUTCONFIG.open(PILGLOBALS.ConfigVersion,self.instance,PILGLOBALS.Production,self.clean)
       except ShortcutConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -822,11 +825,11 @@ class cls_pyilper(QtCore.QObject):
             return
       try:
          shutil.copy(srcfile,dstpath)
-      except OSError as e:
-         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot copy file: "+e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-         return
       except shutil.SameFileError:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Source and destination file are identical",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return
+      except OSError as e:
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot copy file: "+e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          return
 
 #
@@ -887,15 +890,15 @@ class cls_pyilper(QtCore.QObject):
                    ["pyilper_port","if_tcpip_port"],
                    ["pyilper_serverport","if_socket_serverport"],
                   ]
-      for m in migList:
-         PILCONFIG.migrateKey(m[0],m[1])
+         for m in migList:
+            PILCONFIG.migrateKey(m[0],m[1])
 #
 #     now handle bug in previous versions, the name of the shortcut config file was a l w a y s that
 #     of the development version
 #
       if not PILGLOBALS.Production:
          return
-      develConfigFilePath=buildconfigfilename("shortcutconfig",PILGLOBALS.Config_Version,self.instance,False)[1]
+      develConfigFilePath=buildconfigfilename("shortcutconfig",PILGLOBALS.ConfigVersion,self.instance,False)[1]
 #
 #     Nothing to do if we have no devel shortcut config file
 #

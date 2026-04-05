@@ -8,13 +8,17 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'DESCRIPTION.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+from pyilper import __version__
+
 setup(
     name='pyilper',
+    dynamic = ["version"],
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.9.0.b1',
+    # version='1.9.0.b1',
+    version = __version__,
     
     description='Virtual HP-IL devices for the PIL-Box',
     long_description=long_description,

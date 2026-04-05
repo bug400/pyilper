@@ -177,6 +177,8 @@
 # - Windows config files are now in the user home directory
 # 31.03.2026 jsi
 # - checkSerialDeviceExists function added, check existence of ports with serial.tools.list_ports
+# 05.04.2026 jsi
+# - fix from Pylint error check
 #
 import re
 import os
@@ -294,7 +296,7 @@ def buildconfigfilename(filename,configversion,instance,production):
 #
 #     Fallback
 #
-      configpath=os.path.join(userhome,progname)
+      configpath=os.path.join(userhome,PILGLOBALS.StandardConfigDir)
    configfilename=os.path.join(configpath,fname)
     
    return configfilename,configpath

@@ -226,6 +226,10 @@
 # - refactoring of global variables
 # 20.03.2026 jsi
 # - pluggable interfaces and tabs
+# 05.04.2026 jsi
+# - removed winreg import
+# - use single source pyILPER version from __init__.py
+# - renamed class method cls_ConfigInterfaceGeneric.check_reconnect to needs_reconnect
 #
 import datetime
 import re
@@ -252,9 +256,6 @@ from .pilcharconv import CHARSET_HP71, charsets
 from .pilconfig import PILCONFIG
 
 from .pilthreads import cls_ConfigInterfaceGeneric
-
-if PILGLOBALS.isWindows:
-   import winreg
 #
 # constants for color schemes
 #
@@ -998,7 +999,7 @@ class cls_AboutWindow(QtWidgets.QDialog):
       self.view = QtWidgets.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
-      self.view.setText("pyILPER "+version+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2022 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+" and Qt "+self.qtversion+"\n")
+      self.view.setText("pyILPER "+PILGLOBALS.FullVersion+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2022 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+" and Qt "+self.qtversion+"\n")
 
 
       self.button = QtWidgets.QPushButton('OK')
@@ -1322,7 +1323,7 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
 #     check if we need to restart the pyILPER communication
 #
       self.__needs_reconnect__= False
-      self.__needs_reconnect__ |= cls_ConfigInterfaceGeneric.check_reconnect(PILCONFIG.get(self.__name__,"mode"))
+      self.__needs_reconnect__ |= cls_ConfigInterfaceGeneric.needs_reconnect(PILCONFIG.get(self.__name__,"mode"))
       self.__needs_reconnect__ |= self.check_param("workdir", self.lblwdir.text())
 #
 #     we need to reconnect, so get confirmation

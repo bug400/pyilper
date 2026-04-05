@@ -31,6 +31,10 @@
 # - initial version
 # 31.03.2026 jsi
 # - diagnostics option added
+# 05.04.2026 jsi
+# - show version option added
+# - Pylint error fixes
+# - Renamed PILGLOBALS.Config_Version to PILGLOBALS.ConfigVersion
 #
 import os
 import sys
@@ -38,8 +42,9 @@ import shutil
 import argparse
 from .pyilpermain import main
 from .pilglobals import PILGLOBALS
-from .pilconfig import cls_pilconfig
+from .pilconfig import cls_pilconfig, PilConfigError
 from .pilcore import buildconfigfilename
+from pyilper import __version__
 #
 #   move configfiles from %APPDATA%\pyilper to %HOMEDRIVE%%HOMEPATH%\pyilper_config
 #
@@ -80,9 +85,9 @@ def copyConfig(args):
    from_config=cls_pilconfig()
    to_config=cls_pilconfig()
    try:
-      from_config.open(PILGLOBALS.Config_Version,args.instance, not PILGLOBALS.Production,False)
+      from_config.open(PILGLOBALS.ConfigVersion,args.instance, not PILGLOBALS.Production,False)
       from_version=from_config.get("pyilper","version","0.0.0")
-      to_config.open(PILGLOBALS.Config_Version,args.instance, PILGLOBALS.Production,False)
+      to_config.open(PILGLOBALS.ConfigVersion,args.instance, PILGLOBALS.Production,False)
       to_version=to_config.get("pyilper","version","0.0.0")
    except PilConfigError as e:
       print("Error reading pyILPER configuration file(s): ",e.msg+': '+e.add_msg)
@@ -112,16 +117,16 @@ def copyConfig(args):
 #  now copy configuration files
 #
    for name in ['pyilper','penconfig','shortcutconfig']:
-      from_filename=buildconfigfilename(name,PILGLOBALS.Config_Version,args.instance,not PILGLOBALS.Production)[0]
+      from_filename=buildconfigfilename(name,PILGLOBALS.ConfigVersion,args.instance,not PILGLOBALS.Production)[0]
       if not os.path.isfile(from_filename):
          continue
-      to_filename=buildconfigfilename(name,PILGLOBALS.Config_Version,args.instance, PILGLOBALS.Production)[0]
+      to_filename=buildconfigfilename(name,PILGLOBALS.ConfigVersion,args.instance, PILGLOBALS.Production)[0]
       try:
          shutil.copy(from_filename,to_filename)
       except OSError as e:
          print("Error copying file "+from_filename+": "+e.strerror)
          return
-      except  SameFileError as e:
+      except  shutil.SameFileError as e:
          print("Error copying file "+from_filename+" "+"source and destination file are identical")
          return
       print(from_filename)
@@ -140,7 +145,13 @@ def start():
       parser.add_argument('--mc','-mc',action='store_true',help="Move configuration from AppData to user home directory")
    parser.add_argument('--nohelp','-nohelp',action='store_true',help="Disable online help")
    parser.add_argument('--diag','-diag',action='store_true',help=argparse.SUPPRESS)
+   parser.add_argument('--v','-v',action='store_true',help="Show pyILPER version")
    args=parser.parse_args()
+#
+#  show version
+#
+   if args.v:
+      print("Pyilper ",__version__)
 #
 #  run -cc and -mc commands
 #

@@ -121,8 +121,10 @@
 # 14.08.2025
 # - added the CREATE_NO_WINDOW flag to the subprocess.run creationflags (Windows only) to
 #   prevent creation of a window when invoking the lifutils
-# 15.10.2026
+# 15.10.2026 jsi
 # - refactoring of global variables
+# 05.04.2026 jsi
+# - Pylint error fixes
 #
 import subprocess
 import tempfile
@@ -135,6 +137,7 @@ if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .lifcore import *
+from .pilcore import decode_version
 from .pilcharconv import barrconv
 from .pilpdf import cls_pdfprinter
 from .pilconfig import PILCONFIG
@@ -305,7 +308,7 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
       check_errormessages(parent,ret)
       os.close(fd)
       if ret.returncode!=0:
-         tempfile.close()
+         tmpfile.close()
          return
 #
 #  execute second command
