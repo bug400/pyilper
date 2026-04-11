@@ -26,6 +26,6 @@
 # 05.03.2023 - jsi
 # - implented __version__ and __isProduction__
 
-__version__="1.9.0.b1.post2"     # single source for pyILPER version
+__version__="1.9.0.b2"           # single source for pyILPER version
 __isProduction__= False          # set to True, if production version
 from .pyilpermain import main

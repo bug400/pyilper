@@ -237,8 +237,9 @@ import sys
 import functools
 import pyilper
 from pathlib import Path
+from serial import __version__
 
-from .pilglobals import *
+from .pilglobals import PILGLOBALS
 if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
    if PILGLOBALS.Has_Webengine:
@@ -993,13 +994,14 @@ class cls_AboutWindow(QtWidgets.QDialog):
          self.qtversion=QtCore.QT_VERSION_STR
 
       self.pyversion=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
+      self.serialversion=serial.__version__
       self.setWindowTitle('pyILPER About ...')
       self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtWidgets.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
-      self.view.setText("pyILPER "+PILGLOBALS.FullVersion+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2022 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+" and Qt "+self.qtversion+"\n")
+      self.view.setText("pyILPER "+PILGLOBALS.FullVersion+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2026 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+", pySerial "+self.serialversion+" and Qt "+self.qtversion+"\n")
 
 
       self.button = QtWidgets.QPushButton('OK')

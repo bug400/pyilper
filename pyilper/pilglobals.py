@@ -222,7 +222,8 @@ class cls_pilglobals:
             except ImportError:
                if "PyQt5" in sys.modules:
                   del sys.modules["PyQt5"]
-               raise ImportError("No Qt bindings found")
+               print("No Qt bindings found, exit program")
+               sys.exit(1)
             else:
                self.QT_Bindings="PyQt5"
                from PyQt5 import QtPrintSupport
@@ -250,6 +251,14 @@ class cls_pilglobals:
                self.Has_Webengine=True
             except:
                pass
+#
+#     check pySerial
+#
+      try:
+         from serial import __version__ as serial__version__
+      except ImportError:
+         print("No pySerial module found, exit program")
+         sys.exit(1)
 #
 #     If Development Version append string to Version and "d" to config file name
 #

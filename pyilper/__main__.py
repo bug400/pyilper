@@ -35,6 +35,9 @@
 # - show version option added
 # - Pylint error fixes
 # - Renamed PILGLOBALS.Config_Version to PILGLOBALS.ConfigVersion
+# 11.04.2026
+# - exit on -v option
+# - moved moveWindowsConfig to pilcore
 #
 import os
 import sys
@@ -43,34 +46,9 @@ import argparse
 from .pyilpermain import main
 from .pilglobals import PILGLOBALS
 from .pilconfig import cls_pilconfig, PilConfigError
-from .pilcore import buildconfigfilename
+from .pilcore import buildconfigfilename, moveWindowsConfig
 from pyilper import __version__
-#
-#   move configfiles from %APPDATA%\pyilper to %HOMEDRIVE%%HOMEPATH%\pyilper_config
-#
-def moveWindowsConfig(args):
-   if not PILGLOBALS.isWindows:
-      return
-   oldConfigPath=os.path.join(os.environ['APPDATA'],"pyilper")
-   newConfigPath=os.path.join(os.environ['HOMEDRIVE'],os.environ['HOMEPATH'],PILGLOBALS.StandardConfigDir)
-   print("Copy pyILPER configuration files from AppData to ",newConfigPath)
-   if not os.path.isdir(oldConfigPath):
-      print("Error: Directory "+oldConfigPath+" does not exist. Nothing to copy")
-      return
-   if os.path.isdir(newConfigPath):
-      print("Warning: Directory "+newConfigPath+" already exists. Files in that directory are overwritten!")
-      inp= input("Continue? (enter 'YES' uppercase): ")
-      if inp !="YES":
-         print("cancelled")
-         return
-   try:
-      shutil.copytree(oldConfigPath,newConfigPath,dirs_exist_ok=True)
-   except OSError as e:
-      print("Error copying config files: "+e.strerror)
-      return
-   print("pyILPER config files copied from AppData to ",newConfigPath)
 
-#
 # copy configuration data from devel to production and vice versa
 # - a development/beta version of pyILPER copies the files of the
 #   production version
@@ -152,6 +130,7 @@ def start():
 #
    if args.v:
       print("pyILPER ",__version__)
+      sys.exit(0)
 #
 #  run -cc and -mc commands
 #
@@ -160,7 +139,7 @@ def start():
          if args.cc:
             print("Error: mc and cc options are mutual exclusive")
             sys.exit(1)
-         moveWindowsConfig(args)
+         moveWindowsConfig(False)
          sys.exit(1)
    if args.cc: 
       copyConfig(args)

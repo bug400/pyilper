@@ -179,13 +179,16 @@
 # - checkSerialDeviceExists function added, check existence of ports with serial.tools.list_ports
 # 05.04.2026 jsi
 # - fix from Pylint error check
+# 11.04.2026 jsi
+# - moved moveWindowsConfig from __main__.py, added silent mode
 #
 import re
 import os
 import serial.tools.list_ports
+import shutil
 
 from dataclasses import dataclass
-from .pilglobals import *
+from .pilglobals import PILGLOBALS
 
 USE_8BITS=True
 #
@@ -300,6 +303,36 @@ def buildconfigfilename(filename,configversion,instance,production):
    configfilename=os.path.join(configpath,fname)
     
    return configfilename,configpath
+#
+#   move configfiles from %APPDATA%\pyilper to %HOMEDRIVE%%HOMEPATH%\pyilper_config
+#
+def moveWindowsConfig(silent):
+   if not PILGLOBALS.isWindows:
+      return
+   oldConfigPath=os.path.join(os.environ['APPDATA'],"pyilper")
+   newConfigPath=os.path.join(os.environ['HOMEDRIVE'],os.environ['HOMEPATH'],PILGLOBALS.StandardConfigDir)
+   if not silent:
+      print("Copy pyILPER configuration files from AppData to ",newConfigPath)
+   if not os.path.isdir(oldConfigPath):
+      if not silent:
+         print("Error: Directory "+oldConfigPath+" does not exist. Nothing to copy")
+      return
+   if os.path.isdir(newConfigPath):
+      if silent:
+         return
+      print("Warning: Directory "+newConfigPath+" already exists. Files in that directory are overwritten!")
+      inp= input("Continue? (enter 'YES' uppercase): ")
+      if inp !="YES":
+         print("cancelled")
+         return
+   try:
+      shutil.copytree(oldConfigPath,newConfigPath,dirs_exist_ok=True)
+   except OSError as e:
+      print("Error copying config files: "+e.strerror)
+      return
+   if not silent:
+      print("pyILPER config files copied from AppData to ",newConfigPath)
+#
 #
 #  check existence of a serial device
 #

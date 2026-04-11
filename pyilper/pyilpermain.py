@@ -207,6 +207,8 @@
 # 05.03.2026 jsi
 # - renamed PILGLOBALS.Config_Version to PILGLOBALS.ConfigVersion
 # - fixed Pylint errors
+# 11.04.2026
+# - added moveWindowsConfig call
 #
 import os
 import sys
@@ -219,14 +221,14 @@ import argparse
 import time
 from pathlib import Path
 import importlib
-from .pilglobals import *
+from .pilglobals import PILGLOBALS
+from .pilcore import *
 
 if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtWidgets
 if PILGLOBALS.QT_Bindings=="PyQt5":
    from PyQt5 import QtCore, QtWidgets
 
-from .pilcore import *
 from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilconfig import  PilConfigError, PILCONFIG, cls_pilconfig
 from .penconfig import  PenConfigError, PENCONFIG, cls_PenConfigWindow
@@ -366,7 +368,6 @@ class cls_pyilper(QtCore.QObject):
          PILCONFIG.get(self.name,"usebom",False)
          PILCONFIG.get(self.name,"qtstyle","Default")
 
-         PILCONFIG.save()
       except PilConfigError as e:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
          sys.exit(1)
@@ -386,6 +387,11 @@ class cls_pyilper(QtCore.QObject):
       if thisversion > oldversion:
          self.migrateConfig(thisversion,oldversion)
       PILCONFIG.put(self.name,"version",PILGLOBALS.Version)
+      try:
+         PILCONFIG.save()
+      except PilConfigError as e:
+         reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.msg+': '+e.add_msg,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         sys.exit(1)
 #
 #     2. pen configuration
 #
@@ -924,6 +930,8 @@ def main(args=None):
 
    if not PILGLOBALS.isWindows:
       signal.signal(signal.SIGQUIT, dumpstacks)
+   else:
+      moveWindowsConfig(True)
    app = QtWidgets.QApplication(sys.argv)
    pyilper= cls_pyilper()
    sys.exit(app.exec())
