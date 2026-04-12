@@ -47,7 +47,7 @@ from .pyilpermain import main
 from .pilglobals import PILGLOBALS
 from .pilconfig import cls_pilconfig, PilConfigError
 from .pilcore import buildconfigfilename, moveWindowsConfig
-from pyilper import __version__
+from pyilper import __version__, __isProduction__
 
 # copy configuration data from devel to production and vice versa
 # - a development/beta version of pyILPER copies the files of the
@@ -129,7 +129,11 @@ def start():
 #  show version
 #
    if args.v:
-      print("pyILPER ",__version__)
+      print("pyILPER ",__version__,end="")
+      if(__isProduction__):
+         print(" (Production)")
+      else:
+         print(" (Development)")
       sys.exit(0)
 #
 #  run -cc and -mc commands
