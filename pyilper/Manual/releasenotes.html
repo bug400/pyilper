@@ -107,7 +107,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 <h4 class="w3-text-teal">Location of <em>pyILPER</em> configuration files changed (Windows)</h4>
 
-<p>It turned out that Python interpreters which were installed from the Microsoft Store do not write to the AppData directory in the expected way. Instead, the access to AppData is silently redirected to a local cache of the installed Python app for "security reasons" (App isolation). This means that the <em>pyILPER</em> configuration parameters are always lost if the interpreter app is replaced by another version.</p>
+<p>It turned out that Python interpreters which were installed from the Microsoft Store do not write to the AppData directory in the expected way under certain circumstances. Instead, the access to AppData is silently redirected to a local cache of the installed Python app for "security reasons" (App isolation). This means that the <em>pyILPER</em> configuration parameters are always lost if the interpreter app is replaced by another version.</p>
 
 <p>Since the use of AppData is becoming increasingly obfuscated, the location of the <em>pyILPER</em> configuration files is now:</p>
 
