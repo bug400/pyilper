@@ -19,16 +19,16 @@ User Interface
 
 Features:
 * The virtual device tabs can be undocked from the main application and used as independent floating windows (see above)
-* The GUI settings like font sizes can be configured individually for each device
-* The local configuration of the devices is fast and easy accessible by cascading menus
+* The GUI settings, like font sizes, can be configured individually for each device
+* The local configuration of the devices is fast and easily accessible by cascading menus
 
 Drive
 -----
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_drive.png)
 
 Features:
-* Emulates a HP82161A tape drive, a HP9114B drive (filbert only) or a HDRIVE1 device with medium sizes up to 16 MB
-* Self updating directory listing 
+* Emulates a HP82161A tape drive, a HP9114B drive (filbert only), or a HDRIVE1 device with medium sizes up to 16 MB
+* Self-updating directory listing 
 * File management functions (load external file, export to external file, rename, purge, view)
 * Medium management functions (initialize, label, pack)
 
@@ -52,9 +52,9 @@ Features:
 * Supports all edit functions of the HP-71
 * 80 or 132 column output
 * Multiple color schemes
-* HP-41, HP-71 or Roman-8 character set
+* HP-41, HP-71, or Roman-8 character set
 * Scrollable
-* Select, copy and paste text
+* Select, copy, and paste text
 * Configurable keyboard shortcuts
 
 Scope
@@ -62,7 +62,7 @@ Scope
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_scope.png)
 
 Features:
-* Display mnemoic or hex codes
+* Display mnemonic or hex codes
 * Display incoming or outgoing traffic
 * 80 or 132 column output
 * Multiple color schemes

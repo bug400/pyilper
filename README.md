@@ -17,8 +17,8 @@ Description
 -----------
 HP-IL (Hewlett Packard Interface Loop) is a serial interconnection bus 
 introduced by Hewlett-Packard in the early 1980s. It enabled the communication 
-between peripheral devices such as printers, floppy disk drives etc. 
-with programmable calculators such as the HP-41C, HP71B and HP-75C/D.
+between peripheral devices such as printers, floppy disk drives, etc. 
+with programmable calculators such as the HP-41C, HP71B, and HP-75C/D.
 
 The connection to PCs was realized by either a generic ISA bus card or a 
 serial interface controller. As these devices are not available anymore, 
@@ -49,7 +49,7 @@ Features
 * The virtual devices can be either organized in a compact tabbed view or in independent floating windows
 * The output of the scope or the virtual printer(s) is logged to file(s)
 * Monitoring the status of the virtual HP-IL devices
-* Support for the PIL-Box via serial-over-usb interface
+* Support for the PIL-Box via serial-over-USB interface
 * Support for [virtual HP-IL over TCP/IP](http://hp.giesselink.com/hpil.htm) (dual TCP/IP V4/V6 stack)
 * Support to connect the emulators [EMU41, EMU71 and EMU75](http://www.jeffcalc.hp41.eu/index.html) running on DOSBox to pyILPER.
 
@@ -59,7 +59,7 @@ See the [pyILPER virtual devices gallery](https://github.com/bug400/pyilper/blob
 Compatibility
 -------------
 
-pyILPER has been successful tested with LINUX, Windows 11 and macOS.
+pyILPER has been successfully tested with LINUX, Windows 11 and macOS.
 
 
 Installation
@@ -69,8 +69,8 @@ pyILPER requires the Python interpreter and the Qt framework installed.
 
 See the [Installation Instructions](https://github.com/bug400/pyilper/blob/master/INSTALL.md) for details.
 
-In order to use the file and disk management functions and the virtual HP7470A plotter 
-an up to date version of the [LIFUTILS](https://github.com/bug400/lifutils/releases) 
+In order to use the file and disk management functions and the virtual HP7470A plotter, 
+an up-to-date version of the [LIFUTILS](https://github.com/bug400/lifutils/releases) 
 is required as well.
 
 
