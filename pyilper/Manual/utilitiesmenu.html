@@ -76,24 +76,24 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 <h2 class="w3-text-teal">Utilities Menu Entries</h2>
 
-<h3 class="w3-text-teal">Initialize LIF image file</h3>
+<h3 class="w3-text-teal" id="initialize-lif-image-files">Initialize LIF image file</h3>
 
 <p>Initialize a LIF image file. Various media types, the number of
-directory entries an an optional label can be specified. This utility
-allows the initialization of media types which can not be created
+directory entries and an optional label can be specified. This utility
+allows the initialization of media types that can not be created
 from the HP-71 by default.</p>
 
-<p><b>Warning:</b> do not initialize a LIF image file that is mounted 
+<p><b>Warning:</b> Do not initialize a LIF image file that is mounted 
 to a virtual drive.</p>
 
 <p><b>Note:</b> this menu entry is only accessible if the latest version
 of the 
 <a class="w3-hover-black" href="https://github.com/bug400/lifutils/releases">LIFUTILS</a>
-  are installed.</p>
+  is installed.</p>
 
-<h3 class="w3-text-teal">Fix header of LIF image file</h3>
+<h3 class="w3-text-teal" id="fix-header-of-lif-image-files">Fix header of LIF image files</h3>
 
-<p>Some HP-IL controller do not initialize the LIF image file header
+<p>Some HP-IL controllers do not initialize the LIF image file header
 properly. pyILPER will issue a warning if the image file header does
 not contain valid medium size information. This menu entry fixes this
 information. Be careful to specify the proper medium type.</p>
@@ -106,22 +106,22 @@ of the
 <a class="w3-hover-black" href="https://github.com/bug400/lifutils/releases">LIFUTILS</a>
   are installed.</p>
 
-<h3 class="w3-text-teal">HP-IL device status</h3>
+<h3 class="w3-text-teal" id="hp-il-device-status">HP-IL device status</h3>
 
-<p>Shows a pop up window with status information of the
+<p>This menu entry shows a pop up window with status information of the
 virtual HP-IL devices.</p>
 <p>The status information includes the current HP-IL
-device id, the accessory id, the HP-IL address (simple and extended)
+device ID, the accessory ID, the HP-IL address (simple and extended),
 and the internal HP-IL status of the virtual device.</p>
 <p>The status information is updated every 500 ms.</p>
 
-<h3 class="w3-text-teal">Copy PILIMAGE.DAT to workdir</h3>
+<h3 class="w3-text-teal" id="copy-pilimage.dat-to-workdir">Copy PILIMAGE.DAT to workdir</h3>
 
 <p>Copies the LIF image file that contains software to set up the 
 terminal emulator for the HP-71B to the current working directory.</p>
 
 
-<h3 class="w3-text-teal">Check LIFUTILS installation</h3>
+<h3 class="w3-text-teal" id="check-lifutils-installation">Check LIFUTILS installation</h3>
 
 <p>Display diagnostic information if a valid LIFUTILS version was found 
 on the system.</p>

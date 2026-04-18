@@ -99,9 +99,9 @@ keyboard operation more reliable.</li>
 <ul class="w3-ul">
 <li>Added LIF image file management functions (export, import, rename, purge, pack, view, label) to the drive tab.</li>
 <li>Added utility functions to initialize LIF image files and to fix invalid header information.</li>
-<li>Added navigation controls to help window. Make help window resize able</li>
-<li>Renamed and added file types for the drive tab directory. All file types of the Online LIF disk project should be considered now.</li>
-<li>The PILTERM basic program requires Rev C of the KEYBOARD lex file rom now on.</li>
+<li>Added navigation controls to the help window. Make the help window resizeable</li>
+<li>Renamed and added file types for the drive tab directory. All file types of the Online LIF Disk Project should be considered now.</li>
+<li>The PILTERM basic program requires Rev C of the KEYBOARD lex file.</li>
 <li>HDRIVE1 drive type now accepts arbitrary medium layouts.</li>
 <li>pyILPER reinstates the previous display position at launch.</li>
 </ul>
@@ -110,13 +110,13 @@ keyboard operation more reliable.</li>
 
 <ul class="w3-ul">
 <li>Added configurable charset for the text file viewer.</li>
-<li>Virtual keyboard is stable now.</li>
-<li>The PILTERM basic program does not require a certain revision of the KEYBOARD lex file any more.</li>
+<li>The virtual keyboard is stable now.</li>
+<li>The PILTERM basic program does not require a certain revision of the KEYBOARD lex file anymore.</li>
 <li>The PILTERM basic program now sets the delay for fast scrolling.</li>
 <li>The virtual HP-IL device status was moved to the utilities menu.</li>
 <li>Scrolling left and right now works for wrapped lines in the terminal.</li>
-<li>Terminal now supports switching between insert an replace cursor, the indicator was removed.</li>
-<li>Terminal size, terminal font size and terminal color scheme can now be configured via the pyILPER configuration menu. These settings now also affect the printer and the scope.</li>
+<li>Terminal now supports switching between insert and replace cursor. The indicator was removed.</li>
+<li>Terminal size, terminal font size, and terminal color scheme can now be configured via the pyILPER configuration menu. These settings now also affect the printer and the scope.</li>
 <li>Improved virtual device status window: shows internal HP-IL state as text.</li>
 </ul>
 
@@ -124,16 +124,16 @@ keyboard operation more reliable.</li>
 
 <ul class="w3-ul">
 <li>Support for 230400 baud. Requires at least PIL-Box firmware version 2.0.</li>
-<li>Changed the configuration file format from binary to JSON. It is not compatible to the previous format. Please configure pyILPER again.</li>
-<li>The device configuration dialog now detects the available COM ports on windows (contributed by Christoph Giesselink). The device detection on MAC OS X was improved.</li>
+<li>Changed the configuration file format from binary to JSON. It is not compatible with the previous format. Please configure pyILPER again.</li>
+<li>The device configuration dialog now detects the available COM ports on Windows (contributed by Christoph Giesselink). The device detection on macOS X was improved.</li>
 <li>Device clear now resets the printer display.</li>
 <li>The open file dialog now lists files without extension (bugfix) and remembers the last directory.</li>
 <li>On Windows the %APPDATA% path is used to store the pyILPER configuration.</li>
-<li>The baud rate of the PIL-Box device can now be auto detected (contributed by Christoph Giesselink).</li>
+<li>The baud rate of the PIL-Box device can now be auto-detected (contributed by Christoph Giesselink).</li>
 <li>The IDY frame processing option is now enabled by default.</li>
-<li>The scope can now be configured to show inbound, outbound or inbound/outbound traffic.</li>
-<li>The scope log file is now written without buffering. This slows down file output but you can now watch the file output with external commands.</li>
-<li>The terminal, printer and scope windows are now scrollable. The scroll buffer size is configurable.</li>
+<li>The scope can now be configured to show inbound, outbound, or inbound/outbound traffic.</li>
+<li>The scope log file is now written without buffering. This slows down file output, but you can now watch the file output with external commands.</li>
+<li>The terminal, printer, and scope windows are now scrollable. The scroll buffer size is configurable.</li>
 </ul>
 
 <h3 class="w3-text-teal">pyILPER 1.4.0</h3>
@@ -141,9 +141,9 @@ keyboard operation more reliable.</li>
 <ul class="w3-ul">
 <li>The script <em>startup.py</em> now accepts a parameter <em>-instance INSTANCE-NAME</em> to start multiple independent instances of pyILPER. Each instance has its own configuration file. Only letters or digits are allowed in an <em>INSTANCE-NAME.</em></li>
 <li>New device configuration facility to add or remove virtual HP-IL devices or
-to change their tab position. If a new device is added you must give it a 
+to change their tab position. If a new device is added, you must give it a 
 unique name. Since the configuration file format was changed in this case, 
-you have to re-estabish a previous custom configuration.</li>
+you have to re-establish a previous custom configuration.</li>
 <li>In the initial configuration of pyILPER, the printer is the first virtual
 device now (as in the original ILPer) to avoid MANIO issues with the HP-41C.</li>
 <li>New virtual HP-IL device: the HP7470A plotter! Note: at least version 
@@ -152,9 +152,9 @@ device now (as in the original ILPer) to avoid MANIO issues with the HP-41C.</li
 <li>Configuration dialog for the plotter pens added.</li>
 <li>Redraw the screen when the application window was resized (bug fix).</li>
 <li>Use wcat41 instead of wall to display wall files (bug fix).</li>
-<li>Allow mounting LIF image files with directory not starting at record 2.</li>
+<li>Allow mounting LIF image files with directories not starting at record 2.</li>
 <li>An experimental new version of the <em>PILTERM</em> utility (PILPERM2) to set up
-printer, display and keyboard of the HP-71B.</li>
+the printer, the display, and the keyboard of the HP-71B.</li>
 <li>New release notes and getting started documents.</li>
 </ul>
 
@@ -166,7 +166,7 @@ printer, display and keyboard of the HP-71B.</li>
 <em>PILTERM1</em> on the PILIMAGE.DAT image.</li>
 <li>Transition to Qt5.</li>
 <li>The font size of the drive directory listing can now be configured. The row
-height of the directory entries are now properly adjusted to the font size.</li>
+height of the directory entries is now properly adjusted to the font size.</li>
 <li>Improved online manual. The position and size of the manual browser is recorded in the program configuration file.</li>
 </ul>
 
@@ -174,26 +174,26 @@ height of the directory entries are now properly adjusted to the font size.</li>
 
 <ul class="w3-ul">
 
-<li>The number of lines of the printer, scope and drive directory output is adjusted
+<li>The number of lines of the printer, scope, and drive directory output is adjusted
 to the size of the main window automatically.</li>
 
-<li>The output window of the plotter is adjusted to the size of the main window
-maintaining the aspect ratio of the papser size setting (see below).</li>
+<li>The output window of the plotter is adjusted to the size of the main window,
+maintaining the aspect ratio of the paper size setting (see below).</li>
 
-<li>The terminal, printer and scope now support copy selected text to the system 
-clipboard. The terminal supports paste text from the system clipboard.</li>
+<li>The terminal, printer, and scope now support copying selected text to the system 
+clipboard. The terminal supports pasting text from the system clipboard.</li>
 
 <li>Most <em>pyILPER</em> configuration parameters that control the GUI layout now
-take effect at runtime. Only the scroll up buffer size and the paper size require a
+take effect at runtime. Only the scroll-up buffer size and the paper size require a
 restart of the application.</li>
 
 <li>The <em>pyILPER</em> configuration dialog now informs if configuration changes
 issue a reset of the communication or require a restart of the application.</li>
 
 <li>The previous size of the <em>pyILPER</em> main window is restored
-on start of the program.</li>
+on the start of the program.</li>
 
-<li>The HP82162A printer is now included as virtual HP-IL device. </li>
+<li>The HP82162A printer is now included as a virtual HP-IL device. </li>
 
 <li>Barcodes can be created from the context menu in the drive tab for
 HP-41 program and SDATA files.</li>
@@ -202,7 +202,7 @@ HP-41 program and SDATA files.</li>
 
 <li>The paper size option was moved from the plotter configuration to the
 <em>pyILPER</em> configuration in the file menu. It controls the paper size of PDF
-output, the plotter paper size switch and the aspect ratio of the plotter output
+output, the plotter paper size switch, and the aspect ratio of the plotter output
 window. A reconfiguration is required if the letter format is used.</li> 
 
 <li>The <em>terminal size</em> configuration parameter was replaced by the
@@ -210,30 +210,28 @@ parameter <em>terminal width</em>. A reconfiguration is required.</li>
 
 <li>The scope got an option to display the frames as hex codes.</li>
 
-<li>Added mouse screen scrolling support for terminal, scope and printer output
+<li>Added mouse screen scrolling support for terminal, scope, and printer output
 window.</li>
 
 <li>Various bug fixes of the terminal.</li>
 
 <li>The ROMAN8 character set now includes control pictures for most of the
-C0 control codes (code 0-31).</li>
+C0 control codes (codes 0-31).</li>
 
-<li>Improved diagnostics, if the configuration file is corrupt.</li>
+<li>Improved diagnostics if the configuration file is corrupt.</li>
 
-<li>The address of a reenabled virtual device is reset to zero, if a HP-IL
+<li>The address of a reenabled virtual device is reset to zero if an HP-IL
 device addressing operation took place while the device was not enabled.</li>
 
-<li>Version 1.7.7 of the <em>LIFUTILS</em> are needed.</li>
+<li>Version 1.7.7 of the <em>LIFUTILS</em> is needed.</li>
 
-<li>The detection of <em>LIFUTILS</em> installations was improved. A path can be configured to use <em>LIFUTILS</em> which were installed at non standard 
-locations.</li>
+<li>The detection of <em>LIFUTILS</em> installations was improved. A path can be configured to use <em>LIFUTILS</em>, which were installed at non-standard locations.</li>
 
 <li>The <em>PILTERM</em> utility was updated to version 2.1. This version deassigns any <em>DISPLAY IS, PRINTER IS</em> and <em>KEYBOARD IS</em>
 assignments before issuing a <em>RESTORE IO</em> to avoid possible data
 corruptions.</li>
 
-<li>The default <em>pyILPER</em> configurations now puts the virtual drive tabs at the end of the tab menu and therefore at the end of the
-virtual device chain.</li>
+<li>The default <em>pyILPER</em> configuration now puts the virtual drive tabs at the end of the tab menu and therefore at the end of the virtual device chain.</li>
 
 <li>Added a PIL-Box emulation by means of a TCP/IP socket server.</li>
 
@@ -248,40 +246,40 @@ windows.</li>
 <li>The configuration of a device tab/window is now implemented as cascading 
 menus.</li>
 <li>Pixel size of HP82162A display is now configurable.</li>
-<li>Log buffering can no be configured individually for all virtual tabs/windows that support logging.</li>
-<li>The number of terminal columns, the color scheme and the number of lines
+<li>Log buffering can now be configured individually for all virtual tabs/windows that support logging.</li>
+<li>The number of terminal columns, the color scheme, and the number of lines
 in the display scroll buffer are now configured individually in the 
 configuration menu of the device tab/window.</li>
-<li>Terminal, printer, scope and HP82162A keep now their scroll position on resize.</li>
+<li>Terminal, printer, scope, and HP82162A now keep their scroll position on resize.</li>
 <li>File management functions of the drive tab/window are now accessible by 
 push buttons.</li>
-<li>Display size indicator for terminal, printer and scope tab.</li>
+<li>Display size indicator for terminal, printer, and scope tab.</li>
 <li>A device as active talker now checks if the incoming data frame is equal 
 to the last send data frame.  Sends ETE if not.  
 Fix a bug in handling the SRQ bit in DOE frames (Both changes are courtesy of 
 Christoph Gie&szlig;elink).</li>
-<li>The selection feature of the Terminal, Printer and Scope now supports autoscrolling.</li>
+<li>The selection feature of the terminal, printer, and scope now supports autoscrolling.</li>
 <li>Removed the external plot view window.</li>
-<li>All font size parameters can be configured either at application or
+<li>All font size parameters can be configured either at the application or the
 tab/window level.</li>
 <li>Fixed crash if the selection area exceeds the display buffer 
 (Scope/Printer/Terminal).</li>
-<li>An "IN" command now termnates digitizing mode (Plotter).</li>
+<li>An "IN" command now terminates digitizing mode (Plotter).</li>
 <li>Writing a byte order mark (BOM) at the beginning of UTF-8 files was 
-removed on Linux and MacOS. It can be enabled on Windows to avoid problems with 
+removed on Linux and macOS. It can be enabled on Windows to avoid problems with 
 Windows programs that do not recognize the UTF-8 encoding correctly.</li>
 <li>Allow smaller font sizes for the directory listing and the terminal 
 widget.</li>
 <li>Added the --clean startup option to clear an existing config file.</li>
 <li>Added the "paper" colorscheme</li>
-<li>Various other bug fixes, see the internal changelogs. This change makes
-the log files compatible with other programs linke the <em>LIFUTILS</em></li>
+<li>Various other bug fixes; see the internal changelogs. This change makes
+the log files compatible with other programs like the <em>LIFUTILS</em></li>
 </ul>
 <h3 class="w3-text-teal">pyILPER 1.7.1</h3>
 
 <ul class="w3-ul">
 <li>Disabled the automatic shrinking of parent widgets. It caused
-unpredictible results on virtual device reconfiguration.</li>
+unpredictable results on virtual device reconfiguration.</li>
 </ul>
 
 <h3 class="w3-text-teal">pyILPER 1.7.2</h3>
@@ -289,8 +287,8 @@ unpredictible results on virtual device reconfiguration.</li>
 <ul class="w3-ul">
 <li>Extend the ASCII file import of the virtual drive. Distinguish between
 an import for the HP-71 and the import for the HP-41 wich needs special handling.</li>
-<li>Check the minimum required Python version on start of the application.</li>
-<li>Force to use a monospaced font for PDF listings bacause system defaults are not reliable on certain platforms.</li>
+<li>Check the minimum required Python version at the start of the application.</li>
+<li>Force to use a monospaced font for PDF listings because system defaults are not reliable on certain platforms.</li>
 <li>Added custom keyboard shortcuts for the terminal.</li>
 <li>Added scope log tagging.</li>
 </ul>
@@ -299,19 +297,19 @@ an import for the HP-71 and the import for the HP-41 wich needs special handling
 
 <ul class="w3-ul">
 <li>Added the HP-2225B ThinkJet printer.</li>
-<li>Keyboard handler code of the terminal tab rewritten. Keystroke definitions are now table driven (see pilkeysym.py).</li>
-<li>Added complete virtual terminal support for the HP-75 with a dedicated character set and keyboard layout and a HP-75 version of the <em>PILTERM</em> program which is provided on a new version of the <code>PILIMAGE.DAT</code> LIF image file.</li>
+<li>Keyboard handler code of the terminal tab rewritten. Keystroke definitions are now table-driven (see pilkeysym.py).</li>
+<li>Added complete virtual terminal support for the HP-75 with a dedicated character set and keyboard layout and an HP-75 version of the <em>PILTERM</em> program, which is provided on a new version of the <code>PILIMAGE.DAT</code> LIF image file.</li>
 <li><code>Next port</code> key supported for the HP-71.</li>
 <li>Added local controls to the terminal tab to scroll up and down one page. This required minor changes to the HP-71 keyboard layout (see below).</li>
 <li>Terminal emulation bug fixes.</li>
 <li>Various documentation amendments</li>
 <li>The most recent version of the <code>PILTERM</code> program is now 2.3.</li>
-<li>The minimum required version for Python is now 3.5 instead of 3.4. Features of Python 3.5 and above make the code for calling external applications more clearly and easy to maintain.</li>
+<li>The minimum required version for Python is now 3.5 instead of 3.4. Features of Python 3.5 and above make the code for calling external applications clearer and easier to maintain.</li>
 </ul>
-<p><b>Incompatibilities to previous pyILPER versions:</b></p>
+<p><b>Incompatibilities with previous pyILPER versions:</b></p>
 <ul>
-<p>Due to the introduction of the HP-75 character set the configuration of character sets in existing <em>pyILPER</em> installations must be adjusted if the <em>Roman-8</em> character set was used.</p>
-<p>For the HP-71 terminal emulation the keystrokes for <code>far left, far right, far up</code> and <code>far down</code> are now <code>shift left, shift right, shift up</code> and <code>shift down</code>.</p>
+<p>Due to the introduction of the HP-75 character set, the configuration of character sets in existing <em>pyILPER</em> installations must be adjusted if the <em>Roman-8</em> character set was used.</p>
+<p>For the HP-71 terminal emulation, the keystrokes for <code>far left, far right, far up</code> and <code>far down</code> are now <code>shift left, shift right, shift up</code> and <code>shift down</code>.</p>
 </ul>
 
 <h3 class="w3-text-teal">pyILPER 1.8.1</h3>
@@ -326,21 +324,21 @@ an import for the HP-71 and the import for the HP-41 wich needs special handling
 <h3 class="w3-text-teal">pyILPER 1.8.2</h3>
 <ul class="w3-ul">
 <li>Python 3.8 compatibility</li>
- <li>Fixed wrong address view for addresses &gt; 15 and changed device # address view to HP71 style in the virtual HP-IL device status window (courtesy by Christoph Gießelink)</li>
-<li>Clear device buffers on LIF Image file change and clear disk drive status after successful reading or writing (hint from Christoph Gießelink)</li>
+ <li>Fixed wrong address view for addresses &gt; 15 and changed device # address view to HP71 style in the virtual HP-IL device status window (courtesy of Christoph Gießelink)</li>
+<li>Clear device buffers on LIF image file change and clear disk drive status after successful reading or writing (hint from Christoph Gießelink)</li>
 </ul>
 
 <h3 class="w3-text-teal">pyILPER 1.8.3</h3>
 <ul class="w3-ul">
-<li>Disable right clicks into an empty diretory listing in the drive tab.</li>
-<li>Left-click on a selected row in the directory listing now deselects it.</li>
+<li>Disable right clicks into an empty directory listing in the drive tab.</li>
+<li>Left-clicking on a selected row in the directory listing now deselects it.</li>
 <li>Fix a bug that the file management controls in the drive tab were not disabled if no valid version of the <i>LIFUTILS</i> was installed.</li>
-<li>Fix that some error messages of the <i>LIFUTILS</i> were not shown in the graphical user interfaces</li>
+<li>Fix that some error messages of the <i>LIFUTILS</i> were not shown in the graphical user interfaces.</li>
 </ul>
 
 <h3 class="w3-text-teal">pyILPER 1.8.4</h3>
 <ul class="w3-ul">
-<li>Plotter Tab: activate ENTER key after having digitized or entered a
+<li>Plotter Tab: Activate the ENTER key after having digitized or entered a
 coordinate</li>
 </ul>
 
@@ -364,7 +362,7 @@ coordinate</li>
 <h3 class="w3-text-teal">pyILPER 1.8.7</h3>
 <ul class="w3-ul">
 <li>HP 82162A printer font improvements (contributed by Christoph Gießelink).</li>
-<li>HP 82162A printer output width corrected for pixel size=1</li>
+<li>HP 82162A printer output width corrected for pixelsize=1</li>
 <li>Harmonization of hex number output in the scope window (contributed by Christoph Gießelink).</li>
 <li>Fixed a cursor width problem, which occurred on some platforms.</li>
 </ul>
@@ -372,14 +370,14 @@ coordinate</li>
 <h3 class="w3-text-teal">pyILPER 1.8.8</h3>
 <ul class="w3-ul">
 <li>HTML reformatting of online documentation.</li>
-<li>Fixed some Pyside6 deprecation warnings.</li>
+<li>Fixed some PySide6 deprecation warnings.</li>
 <li>Forced plotter background color to be always white.</li>
 </ul>
 
 <h3 class="w3-text-teal">pyILPER 1.8.9</h3>
 <ul class="w3-ul">
 <li>
-<li>Fix: do not enable logging, if open logfile fails.</li>
+<li>Fix: Do not enable logging, if openening th logfile fails.</li>
 <li>HP 82162A line spacing fix (contributed by Christoph Gießelink).</li>
 <li>Added /dev/tty/ACMxx to PIL-Box device dropdown list for Linux.</li>
 </ul>
@@ -388,19 +386,20 @@ coordinate</li>
 <ul class="w3-ul">
 <li>Required LIFUTILS version is now 2.0.0</li>
 <li>Add HP-41 FOCAL source code compile and import to disk (Drive Tab).</li>
-<li>add selection of more xrom files for HP-41 FOCAL compile and decompile (Drive Tab).</li>
+<li>Add a selection of more XROM files for HP-41 FOCAL compile and decompile (Drive Tab).</li>
 </ul>
 
 <h3 class="w3-text-teal">pyILPER 1.9.0</h3>
 <ul class="w3-ul">
 li>Required Python version is now 3.7.</li>
 <li>Configurable auto(re)connect for serial interfaces.</li>
-<li>Show additional information about serial devices in tty selection window.</li>
-<li>Thinkjet printer tab does now show page brakes.</li>
+<li>Show additional information about serial devices in the tty selection window.</li>
+<li>Thinkjet printer tab now shows page brakes.</li>
 <li>Qt style configurable.</li>
+<li>Added command line parameter to force scaling for high-DPI displays.</li>
 <li>Command line parameters are now only accepted if <em>pyILPER</em> is called as a module (Incompatibility).</li>
-<li>Location of configuration files changed from AppData to the user home directory (Incompatibility Windows only).</li>
-<li>Serial device name changed (Incompatibility macOS only)</li>
+<li>Location of configuration files changed from AppData to the user home directory (Incompatibility, Windows only).</li>
+<li>Serial device name changed (Incompatibility, macOS only)</li>
 </ul>
 
 <!-- End content -->

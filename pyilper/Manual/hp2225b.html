@@ -77,7 +77,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <h2 class="w3-text-teal">HP2225B Tab</h2>
 
 <h3 class="w3-text-teal">Description</h3>
-<p>This virtual HP-IL device emulates a HP2225B ThinkJet printer.</p>
+<p>This virtual HP-IL device emulates an HP2225B ThinkJet printer.</p>
 
 <p>HP-IL configuration:</p>
 <table class="w3-table-all">
@@ -86,12 +86,12 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <tr><td>Device ID</td><td>HP2225B</td></tr>
 </table>
 
-<p>This virtual HP-IL device emulates a HP2225B ThinkJet printer and creates an approximated output of the real device. The formatted printer output is sent to a scrollable output window. The buffer size of the output window is configurable to keep up to 50 pages of graphics or text. The content of this buffer can be transferred to a high quality PDF file in the following way:</p>
+<p>This virtual HP-IL device creates an output similar to that of the real device. The formatted printer output is sent to a scrollable output window. The buffer size of the output window is configurable to keep up to 50 pages of graphics or text. The content of this buffer can be transferred to a high-quality PDF file in the following way:</p>
 
 <ul class="w3-ul">
-<li>Push the <em>Clear</em> button to clear the printer output window. Note: this also resets your printer settings </li>
-<li>Print a document on the printer. The formatted output is shown in the printer output window which can be scrolled.</li>
-<li>Generate a PDF file from the content of the scollable printer output window.</li>
+<li>Push the <em>Clear</em> button to clear the printer output window. Note: This also resets your printer settings </li>
+<li>Print a document on the printer. The formatted output is shown in the printer output window, which can be scrolled.</li>
+<li>Generate a PDF file from the content of the scrollable printer output window.</li>
 </ul>
 
 <p>A solid line in the printer output window indicates a form feed.</p>
@@ -103,25 +103,25 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <ul class="w3-ul">
 <li>The HP2225B printer bitmap font is emulated with a monospaced outline font. Character sizes are close to the character sizes of the original printer.</li>
 
-<li>Graphics dots are generated as squares. Therefore graphic lines are less smooth and less solid in comparison with the original printer output.</li>
+<li>Graphics dots are generated as squares. Therefore, graphic lines are less smooth and less solid in comparison with the original printer output.</li>
 
-<li>Printable output is generated as PDF file. The page size is limited to the dimensions of either the <em>Letter</em> or the <em>A4</em> format which is specified in the <em>pyILPER</em> system settings. Therefore the control codes for page length and perforation skip have no effect.</li>
+<li>Printable output is generated as a PDF file. The page size is limited to the dimensions of either the <em>Letter</em> or the <em>A4</em> format, which is specified in the <a class="w3-hover-black" href="filemenu.html#configuration-of-the-papersize"><em>configuration of the paper size</em></a> setting. Therefore, the control codes for page length and perforation skip have no effect.</li>
 
 <li>The maximum horizontal size of the text area is 60 (6 lpi) or 80 (8 lpi) lines for the letter and 63 (6 lpi) or 84 (8 lpi) lines for the A4 paper size. The text length can be changed within these limits.</li> 
 
 <li>The HP-IL printer status bytes always return the condition "ready to receive data" because the error conditions of the real device do not apply to the emulator.</li>
 
-<li>THe emulator never sends NRD messages because the buffer size is not limited.</li>
+<li>The emulator never sends NRD messages because the buffer size is not limited.</li>
 
-<li>The control codes for selftest or bidirectional printing have no effect.</li>
+<li>The control codes for self-test or bidirectional printing have no effect.</li>
 </ul>
 
-<p>Note: it is recommended to set the printer line width to indefinite to avoid undesirable effects because escape sequences are included in the text length.
+<p>Note: It is recommended to set the printer line width to indefinite to avoid undesirable effects because escape sequences are included in the text length.
 
 <h3 class="w3-text-teal">Issues</h3>
 
 <ul class="w3-ul">
-<li>On macOS stretched characters do not render correctly. This seems to be a problem with the Qt version for this operating system. As a work around the expanded font is displayed with unstretched characters but the correct character spacing.</li>
+<li>On macOS, stretched characters do not render correctly. This seems to be a problem with the Qt version for this operating system. As a workaround, the expanded font is displayed with unstretched characters but the correct character spacing.</li>
 
 <li>The alternate controls mode is not and will not be implemented. The emulator ignores all data in this mode.</li>
 </ul>
@@ -131,15 +131,14 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <p>The HP2225B printer tab has the following controls:</p>
 
 <ul class="w3-ul">
-<li><em>Clear:</em> Resets the device in the same way as a HP-IL device clear. The scrollable output window is cleared and the emulated printer is put to a default condition.</li>
-<li><em>LF:</em> Does a line feed on the printer. If the button is pushed for more than half a second multiple line feeds are generated until the button is released. </li>
+<li><em>Clear:</em> Resets the device in the same way as an HP-IL device clear. The scrollable output window is cleared, and the emulated printer is put to a default condition.</li>
+<li><em>LF:</em> Does a line feed on the printer. If the button is pushed for more than half a second, multiple line feeds are generated until the button is released. </li>
 <li><em>FF:</em> Does a form feed on the printer.</li>
 <li><em>PDF:</em> Generate a PDF file with the content of the printer output window.</li>
 
 <li><em>Device enabled</em> checkbox: If checked, the virtual HP-IL printer is
-available and can be used as HP-IL device. The HP-IL loop must
-always be reconfigured after activation or deactivation.
-</li>
+available and can be used as an HP-IL device. The HP-IL loop must
+always be reconfigured after activation or deactivation.</li>
 <li><em>Log HP2225B</em> checkbox: Activates writing printer output to the file
 <em>Devicename.log</em> in the <em>pyILPER</em> working directory. Output is 
 always appended to that file. A time stamp in the file marks the start and the
@@ -150,11 +149,11 @@ termination. Note: only printable text is logged to the file.</li>
 
 <h3 class="w3-text-teal">Tab configuration menu</h3>
 <ul class="w3-ul">
-<li><em>Screen width:</em> Set the width of the scrollable output window to either 640, 960 or 1280 pixel. A higher value scales up the presentation of text and graphics. Thus the content of the printer output window becomes more readable on small high resolution displays. If <em>Default</em> is selected, the setting of the <em>pyILPER</em> configuration is used.</li>
+<li><em>Screen width:</em> Set the width of the scrollable output window to either 640, 960, or 1280 pixels. A higher value scales up the presentation of text and graphics. Thus the content of the printer output window becomes more readable on small, high-resolution displays. If <em>Default</em> is selected, the setting of the <em>pyILPER</em> configuration is used.</li>
 <li><em>Buffer size:</em> Size of the scrollable output window in pages (approximately). <em>Note: </em>Changing this setting clears the printer output window.</li>
-<li><em>Print color:</em> Select black, red, blue or green color to emulate the color ink cartridges which were available for that device. Changing this setting affects the whole scrollable output window immediately.</li>
-<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
-was encountered. This enables watching the log file output but may decrease
+<li><em>Print color:</em> Select a black, red, blue, or green color to emulate the color ink cartridges that were available for that device. Changing this setting affects the whole scrollable output window immediately.</li>
+<li><em>Log buffering</em>: Enable or disable buffering of the log file. If log buffering is off, the log file output is flushed to disk after an end of line
+is encountered. This enables watching the log file output but may decrease
 the execution speed of <em>pyILPER</em> considerably.</li>
 </ul>
 <!-- End content -->

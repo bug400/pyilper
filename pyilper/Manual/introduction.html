@@ -79,13 +79,13 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <p>HP-IL (Hewlett Packard Interface Loop) is a
 serial interconnection bus introduced by Hewlett-Packard
 in the early 1980s. It enabled the communication between
-peripheral devices such as printers, floppy disk drives
+peripheral devices such as printers, floppy disk drives,
 etc. with programmable calculators such as the
-HP-41C, HP71B and HP-75C/D.</p>
+HP-41C, HP-71B, and HP-75C/D.</p>
 
-<p>The connection to PCs was realized by either an generic
+<p>The connection to PCs was realized by either a generic
 ISA bus card or a serial interface controller. As these
-devices are not available any more, Jean-Francois Garnier
+devices are not available anymore, Jean-Francois Garnier
 published his 
 <a class="w3-hover-black" href="http://www.jeffcalc.hp41.eu/hpil/index.html"> PIL-Box</a> 
 project in 2009 to link a PC via USB to the HP-IL system.</p>
@@ -96,44 +96,40 @@ the HP-IL Loop.</p>
 
 <p><em>pyILPER</em> is a program that reads incoming HP-IL frames from the
 PIL-Box, processes them by emulating some virtual HP-IL
-devices, like a printer, a disk drive or a terminal and sends
+devices, like a printer, a disk drive, or a terminal, and sends
 the processed frames back to the loop.</p>
 
-<p>The first program ILPER (HP-IL peripheral emulator) was
-written by Jean-Francois Garnier in VisualBasic. The current
-Version of ILPER is written in Visual C++ and is maintained
+<p>The first program, ILPER (HP-IL peripheral emulator), was
+written by Jean-Francois Garnier in Visual Basic. The current
+version of ILPER is written in Visual C++ and is maintained
 by Christoph Gie&szlig;elink. <em>pyILPER</em> is a Python version
 of ILPER with modifications and enhancements.</p>
 
 <p><em>pyILPER</em> provides the following virtual HP-IL devices in
 one application:</p>
 <ul class="w3-ul">
-<li>A scope to watch the HP-IL traffic</li>
-<li>Generic line printer(s)</li>
-<li>Mass storage device(s)</li>
-<li>Terminal emulator (display and keyboard)</li>
-<li>HP7470A plotter</li>
-<li>HP82161A thermal printer</li>
-<li>HP2225B ThinkJet printer</li>
+<li><a class="w3-hover-black" href="scope.html">A scope to watch the HP-IL traffic</a></li>
+<li><a class="w3-hover-black" href="printer.html">Generic line printer(s)</a></li>
+<li><a class="w3-hover-black" href="drive.html">Mass storage device(s)</a></li>
+<li><a class="w3-hover-black" href="terminal.html">Terminal emulator (display and keyboard)</a></li>
+<li><a class="w3-hover-black" href="plotter.html">HP7470A plotter</a></li>
+<li><a class="w3-hover-black" href="hp82162a.html">HP82162A thermal printer</a></li>
+<li><a class="w3-hover-black" href="hp2225b.html">HP2225B ThinkJet printer</a></li>
 </ul>
 
-<p>To use <em>pyILPER</em> you need at the PIL-Box and a
-HP-IL controller such as the HP-41, HP-75 or the HP-71B. Most fun you
-will have with the HP-71B which is a powerful device to
-control a HP-IL system.</p>
+<p>To use <em>pyILPER</em>, you need at the PIL-Box and an HP-IL controller such as the HP-41, HP-75 or HP-71B. Most fun you will have with the HP-71B which is a powerful device to control an HP-IL system.</p>
 
-<p>In addition <em>pyILPER</em> can be used with emulator programs for the HP-41, HP-71 or HP-75 which do not require a PIL-Box or any other HP calculator hardware. For this purposes <em>pyILPER</em> supports 
-<a class="w3-hover-black" href="http://hp.giesselink.com/hpil.htm">virtual HP-IL over TCP/IP</a>.
+<p>In addition, <em>pyILPER</em> can be used with emulator programs for the HP-41, HP-71 or HP-75 which do not require a PIL-Box or any other HP calculator hardware. For this purpose <em>pyILPER</em> supports 
+<a class="w3-hover-black" href="http://hp.giesselink.com/hpil.htm">virtual HP-IL over TCP/IP</a>
 and a <em>Serial over TCP/IP PIL-Box emulator</em> to connect to DOS based emulators running on <a class="w3-hover-black" href="http://www.dosbox.com">DOSBox</a> or <a class="w3-hover-black" href="https://www.virtualbox.org">VirtualBox</a>.</p>
 
-<p><em>pyILPER</em> can be used for stand alone file management operations for virtual LIF image files. The latest version of the 
+<p><em>pyILPER</em> can be used for standalone file management operations for virtual LIF image files. The latest version of the 
 <a class="w3-hover-black" href="https://github.com/bug400/lifutils/releases">LIFUTILS</a>
 must be installed to use this feature.</p>
 
-<p><em>pyILPER</em> was written in pure Python 3 and its user interface
+<p><em>pyILPER</em> was written in pure Python 3, and its user interface
 was implemented with the Qt framework. The software 
-was tested successfully on Ubuntu LINUX 16.04/18.04, Windows 7/10 
-and macOS 10.14.</p>
+was tested successfully on Debian Linux , Windows 11 and macOS.</p>
 
 <!-- End content -->
 </div>

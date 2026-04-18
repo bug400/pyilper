@@ -78,7 +78,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 <h3 class="w3-text-teal">Description</h3>
 
-<p>This virtual HP-IL device emulates a HP7470A plotter.</p>
+<p>This virtual HP-IL device emulates an HP7470A plotter.</p>
 
 <p>HP-IL configuration:</p>
 
@@ -88,39 +88,34 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <tr><td>Device ID</td><td>HP7470A</td></tr>
 </table>
 
-<p>This virtual HP-IL device emulates a HP7470A plotter. All
-HP-GL commands of the HP7470A plotter (HP-IL version) are
-supported. In addition the HP-GL commands AA, AR and CI are
-supported which were only available on the RS232C version of
+<p>All HP-GL commands of the HP7470A plotter (HP-IL version) are
+supported. In addition, the HP-GL commands AA, AR, and CI are
+supported, which were only available on the RS232C version of
 the HP7470A.</p>
 
-<p><b>Note:</b>The plotter tab requires the program <em>emu7470</em>
+<p><b>Note:</b> The plotter tab requires the <em>emu7470</em> executable,
 which is part of version 1.7.7 or later of the
 <a class="w3-hover-black" href="https://github.com/bug400/lifutils/releases/LIFUTILS"></a>.
 The default configuration of <em>pyILPER</em> does not contain a plotter tab. You
 have to add this device in the <em>Virtual HP-IL device configuration</em>.</p>
 
-<p>The paper size settings in the <em>pyILPER</em> configuration controls the
-papsersize setting of the plotter as well as the page size of the PDF output.</p>
+<p>The <a class="w3-hover-black" href="filemenu.html#configuration-of-the-papersize"><em>configuration of the paper size</em></a> setting determines both the page size in the plotter and the page size of the PDF output
 
 <h3 class="w3-text-teal">Device controls</h3>
 
 <p>The plotter tab has the following controls:</p>
 
 <ul class="w3-ul">
-<li><em>Pens</em> button: allows to assign pen configurations to pen 1 and pen 2.
+<li><em>Pens</em> button: allows assigning pen configurations to pen 1 and pen 2.
 </li>
 <li><em>Enter</em> button: register a digitized coordinate.</li>
 <li><em>P1/P2</em> button: display or alter the scaling points of the plotter.</li>
-<li><em>Clear</em> button: clears the plotter view and initializes plotter. 
+<li><em>Clear</em> button: clears the plotter view and initializes the plotter. 
 If the GUI is in digitizing mode, the digitizing mode is cancelled.</li>
 <li><em>PDF</em> button: Create a PDF file from the current plotter view.</li>
 <li><em>Status</em> button: Monitor the status byte and error information of the
 plotter</li>
-<li><em>Device enabled</em> checkbox: If checked, the virtual HP7470A is
-available and can be used as HP-IL device. The HP-IL loop must
-always be reconfigured after activation or deactivation.
-</li>
+<li><em>Device enabled</em> checkbox: If checked, the virtual HP7470A is available and can be used as an HP-IL device. The HP-IL loop must always be reconfigured after activation or deactivation.</li>
 <li><em>Log Plotter</em> checkbox: Activates logging the HP-GL commands and
 the status and response of the device  to the file
 <em>Devicename.log</em> in the <em>pyILPER</em> working directory. 
@@ -131,41 +126,39 @@ program termination.
 </li>
 </ul>
 
-<p>A yellow error led indicates a HPGL-Error. Use the status button to
+<p>A yellow error LED indicates an HPGL error. Use the status button to
 obtain information about the error code and additional diagnostics. If the
-error led is red then the external plotter emulator program <em>emu7470</em> 
+error LED is red, then the external plotter emulator program <em>emu7470</em> 
 could not be started or had crashed.</p>
 
 <h3 class="w3-text-teal">Tab configuration menu</h3>
 <ul class="w3-ul">
-<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
-was encountered. This enables watching the log file output but may decrease
-the execution speed of <em>pyILPER</em> considerably.</li>
-<li><em>Log level</em>: the extent of logging can be configured here.
+<li><em>Log buffering</em>: Enable or disable buffering of the log file. If log buffering is off, the log file output is flushed to disk after an end of line is encountered. This enables watching the log file output but may decrease the execution speed of <em>pyILPER</em> considerably.</li>
+<li><em>Log level</em>: The extent of logging can be configured here.
 </li>
 </ul>
 
 
 <h3 class="w3-text-teal">Digitizing</h3>
 
-<p>Digitizing is initiated by a HP-GL DI command. This puts the GUI
-into digitizing mode. A cross-hair cursor appears and you can digitize coordinates.
+<p>Digitizing is initiated by an HP-GL DI command. This puts the GUI
+into digitizing mode. A cross-hair cursor appears, and you can digitize coordinates.
 The <em>Enter</em> button registers the coordinates of the last clicked location. 
 They are now available for the HP-GL OD command.</p>
 
 <p>The <em>Clear</em> button cancels digitizing mode. No coordinate is 
 registered.</p>
 
-<p>In digitizing mode the coordinates of the clicked locations are shown at
-the right side of the tab. In addition numeric values of the coordinates can be 
+<p>In digitizing mode, the coordinates of the clicked locations are shown at
+the right side of the tab. In addition, numeric values of the coordinates can be 
 entered as well.</p>
 
 <h3 class="w3-text-teal">Display or alter locations of scaling points</h3>
 
-<p>The location of both scaling points are displayed and the GUI
-enters digitizing mode (see above).  You may digitize now a new position for P1. 
+<p>The location of both scaling points is displayed, and the GUI
+enters digitizing mode (see above).  You may now digitize a new position for P1. 
 Register the location of P1 with the <em>ENTER</em> button and digitize
-the location of P2. After registration of P2 the digitizing mode is
+the location of P2. After registration of P2, the digitizing mode is
 finished and the new positions of the scaling points are applied. The digitizing
 mode can be cancelled with the <em>Clear</em> button at any time.</p>
 

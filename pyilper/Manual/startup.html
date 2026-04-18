@@ -73,55 +73,116 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <div class="w3-twothird w3-container">
 
 <!-- Begin content --->
-<h2 class="w3-text-teal">Start Up</h2>
+<h2 class="w3-text-teal">Getting Started</h2>
 
 <p>If you use <em>pyILPER</em> for the first time, please read this document
 to get <em>pyILPER</em> up and running.</p>
 
-<p>To use the file management capabilities of the virtual drives or
-the HP7470A plotter the latest version of the
-<a href="https://github.com/bug400/lifutils/releases" class="w3-hover-black">LIFUTILS</a> must be installed. After installation of the <em>LIFUTILS</em> restart
-<em>pyILPER</em> and check from the "Utilities" menu if a <em>LIFUTILS</em>
-version was detected by <em>pyILPER</em>.</p>
+<h3 class="w3-text-teal">User interface</h3>
 
-<h3 class="w3-text-teal">Set the <em>pyILPER</em> working directory</h3>
-
-<p>Run "pyILPER configuration" from the "File" menu to set
-the <em>pyILPER</em> working directory.</p>
-
-<p><em>pyILPER</em> stores all log files in a working directory. The default
-of that directory is the users home directory. Change the working directory
-to an appropriate location.</p>
-
-<h3 class="w3-text-teal">Set up <em>pyILPER</em> with the PIL-Box</h3>
-
-<p>Connect the PIL-Box to your computer.</p>
-
-<p>Run "pyILPER configuration" from the "File" menu and configure the tty
-device of the PIL-Box.</p>
-
-<p>Open the <em>pyILPER</em> configuration dialog from the file menu. Change the
-name of the PIL-Box device to the USB serial device the box is
-connected to. <em>pyILPER</em> tries to figure out the proper device name.
-If that does not work, configure the device manually and check
-the <a href="https://github.com/bug400/pyilper/blob/master/INSTALL.md" class="w3-hover-black">Installation instructions</a> for further details.</p>
-
-<p><em>pyILPER</em> tries to determine the baud rate of the PIL-Box serial device.
-If that does not work, set the baud rate manually to the baud rate the
-PIL-Box is configured to. See the PIL-Box documentation for further details.</p>
+<p>The <em>pyILPER</em> user interface consists of the following main components:</p>
+<ul class="w3-ul">
+<li>A menu bar with the entries <em>File</em>, <em>Utilities</em> and <em>Help</em></li>
+<li>A tab bar with tabs for each virtual HP-IL device</li>
+<li>An <em>undock button</em> at the far right side of the tab bar</li>
+<li>The display and controls of the virtual HP-IL device currently in the foreground</li>
+<li>A status bar showing status and error messages<li>
+</ul>
 
 
-<p>Now initialize the loop with the HP-IL controller:</p>
+<h4 class="w3-text-teal">Menus</h4>
+
+<p>The <a class="w3-hover-black href="filemenu.html"><em>File</em> menu</a> contains functions to configure <em>pyILPER</em>. First of all, the <em>pyILPER configuration</em> menu entry is important. Use the <em>Quit</em> entry to exit the program.<p> 
+
+<p>The <a class="w3-hover-black" href="utilitymenu.html"><em>Utilities</em> menu</a> includes features that support working with <em>pyILPER</em>.</p>
+
+<p>The <a class="w-3-hover-black" href="helpmenu.html"><em>Help</em> menu</a> provides menu entries for the online help system and some technical and legal information</p>
+
+
+<h4 class="w3-text-teal">Tabs</h4>
+
+<p>The virtual devices of <em>pyILPER</em> are contained in separate labeled pages. Click the corresponding tab of the device to bring the display and controls of the device to the foreground.</p>
+
+<p>The  <em>undock button</em> allows you to detach the display and controls from the main user interface and view them in a separate window. You can move this "floating" window to any location on the desktop, including to a separate monitor. If you close a "floating" window, it is re-attached to the main user interface again.</p>
+
+<p>The  <em>pyILPER</em> main window and the "floating" windows can be resized by clicking and dragging edges. The number of lines of scope, terminal, printer, or plotter output will increase or decrease accordingly. This is necessary for "floating" windows, because they start with a minimum window size. The size and position of the windows are saved and restored when <em>pyILPER</em> restarts.</p>
+
+
+<h3 class="w3-text-teal">Basic configuration</h3>
+
+<p>In this chapter you'll learn what basic settings you need to configure to use the program.</p>
+
+<p>Run <em>pyILPER configuration</em> from the <em>File</em> menu.<p> 
+
+<p><em>pyILPER</em> stores all log files in a working directory. The default of that directory is the user's home directory. Change the <a class="w3-hover-black" href="filemenu.html#configuration-of-the-working-directory"><em>pyILPER working directory</em></a> to an appropriate location.</p>
+
+<p>Set the <a class="w3-hover-black" href="filemenu.html#configuration-of-the-papersize"><em>Papersize</em></a> for plotter and PDF output.
+
+<p>Check <em>PIL-Box</em> in the <em>Communication configuration</em> section (this should be enabled by default). Connect the PIL-Box to your computer and select or enter the <a class="w3-hover-black" href="filemenu.html#pil-box-checkbox"><em>tty device of the PIL-Box</em></a>.  
+
+<h3 class="w3-text-teal">Check <em>LIFUTILS</em> installation</h3>
+
+<p>To use the file management capabilities of the virtual drives or the HP7470A plotter, the latest version of the <a href="https://github.com/bug400/lifutils/releases" class="w3-hover-black">LIFUTILS</a> must be installed. After installation of the <em>LIFUTILS</em>, restart <em>pyILPER</em> and use <a class="w3-hover-black" href="utilitiesmenu.html#check-lifutils-installation"><em>Check LIFUTILS Installation</em></a> from the "Utilities" menu if a <em>LIFUTILS</em> version was detected by <em>pyILPER</em>.</p>
+
+
+<h3 class="w3-text-teal">Using virtual devices</h3>
+
+<h4 class="w3-text-teal">Basic configuration</h4>
+
+<p>If you start <em>pyILPER</em> for the first time, you get a graphical user interface with some menu entries and a tab for several virtual HP-IL devices:</p>
+<ul class="w3-ul">
+<li><a class="w3-hover-black" href="scope.html">Scope</a>: display HP-IL frames; this is no "real" HP-IL device</li>
+<li><a class="w3-hover-black" href="printer.html">Printer1</a>: generic printer</li>
+<li><a class="w3-hover-black" href="terminal.html">Terminal1</a>: HP-IL display and keyboard</li>
+<li><a class="w3-hover-black" href="plotter.html">Plotter1</a>: HP-7470A plotter</li>
+<li><a class="w3-hover-black" href="drive.html">Drive1</a>: HP-IL drive 1</li>
+<li><a class="w3-hover-black" href="drive.html">Drive2</a>: HP-IL drive 2</li>
+</ul>
+
+<p>You'll need to take <a class="w3-hover-black" href="terminal.html"><em>additional steps</em></a> if you want to use the terminal's keyboard.</p>
+
+<p>There are other virtual HP-IL devices, which are not available in the default configuration:</p>
+<ul class="W3-ul">
+<li><a cleass="w3-hover-black" href="hp82162a.html">HP-82162A thermal printer</a></li>
+<li><a cleass="w3-hover-black" href="hp2225b.html">HP-2225B Thinkjet printer</a></li>
+<li><a cleass="w3-hover-black" href="rawdrive.html">Raw drive emulation for HP Portable Plus</a></li>
+</ul>
+
+<p>The <em>Virtual HP-IL Device configuration</em> entry in the <em>File</em> menu allows you to add, remove, or reorder virtual HP-IL device tabs.</p>
+
+<h4 class="w3-text-teal">Enabling and disabling devices</h4>
+
+<p>You must check the "Device enabled" box on each tab to put it into the virtual HP-IL loop of <em>pyILPER</em>.
+The order of the tabs specifies the order of the devices in the loop.</p>
+
+<p>Disabling a device does not break the loop. It only removes the device out of the loop.</p>
+
+<p><b>Note</b>: you must always (re)initialize the loop if you enable or disable a device:</p>
+
 <ul class="w3-ul">
 <li>HP-41: switch the calculator OFF and ON.</li>
 <li>HP-71: issue an <code>RESET HPIL @ RESTORE IO @ CLEAR</code></li>
 <li>HP-75: do an <code>ASSIGN IO</code>.</li>
 </ul>
 
-<p>See the <a href="interface.html" class="w3-hover-black">User Interface Documentation</a> for further details.</p>
+<p>The <em>Virtual HP-IL device status</em> entry in the <em>Utilities</em> menu shows, which devices are active, and which HP-IL addresses are assigned to them.</p>
+
+<p>Note: The drive tab has controls that are only active if the device is disabled!</p>
+
+<h4 class="w3-text-teal">Logging information</h4>
+
+<p>Some devices support logging, e.g., of HP-IL frames, print output, or plot commands. This output is always written to a file in the pyILPER working directory. The name of the log file consists of the name of the device tab followed by the extension <em>.log</em>. Each time logging is enabled, the output is appended to the existing file. The start of each new output is marked by a timestamp.</p>
 
 
-<h3 class="w3-text-teal">Set up <em>pyILPER</em> with virtual HP-IL over TCP/IP</h3>
+<h4 class="w3-text-teal">Printing information</h4>
+
+<p>Some devices allow you to save a print or plot output as a PDF file. The PDF output is used to generate a print or plot output that closely resembles the output from the original device. Direct printing to a printer is not supported.</p>
+
+
+
+<h3 class="w3-text-teal">Other ways to connect pyILPER to an HP-IL controller</h3>
+
+<h4 class="w3-text-teal">Set up <em>pyILPER</em> with virtual HP-IL over TCP/IP</h4>
 
 <p><em>pyILPER</em> supports
 <a href="http://hp.giesselink.com/hpil.htm" class="w3-hover-black">virtual HP-IL over TCP/IP</a>.
@@ -129,15 +190,15 @@ You may connect the
 <a href="http://hp.giesselink.com/emu71.htm" class="w3-hover-black">HP-71B Emulator of 
 Christoph Gie&szlig;elink</a> or the HP-41 Emulator V41 (available at <a href="http://www.hp41.org" class="w3-hover-black">www.hp41.org</a> - a registration is required to access the software) with <em>pyILPER</em>.</p>
 
-<p>Run "pyILPER configuration" from the "File" menu to set
-the <em>pyILPER</em> TCP/IP configuration.</p>
+<p>Run <em>pyILPER configuration</em> from the <em>File</em> menu to set
+the <a class="w3-hover-black" href="filemenu.html#hp-il-over-tcp-ip-checkbox"><em>pyILPER TCP/IP configuration</em></a>.</p>
 
 <p>Change the communication mode to <em>TCP/IP</em>.
 Check if the TCP/IP configuration parameters (remote host, remote port, local port)
 are configured properly. See the documentation of the virtual HP-IL over
 TCP/IP and the documentation of EMU71 or V41 for further details.</p>
 
-<p>Emu71 includes remote keyboard support. See the <a href="terminal.html" class="w3-hover-black">Terminal Tab documentation</a> how to set up.</p> 
+<p>Emu71 includes remote keyboard support. See the <a href="terminal.html" class="w3-hover-black">Terminal Tab documentation</a> on how to set it up.</p> 
 
 <p>The recommended procedure to connect Emu71 to <em>pyILPER</em> is:</p>
 
@@ -147,7 +208,7 @@ shows: "not connected to virtual HP-IL devices."</li>
 <li>Start Emu71 with the HP-IL module configured properly. Switch the calculator
 on and press the ATTN key until the <em>pyILPER</em> status line shows "connected to
 virtual HP-IL devices".</li>
-<li>Initialize to loop as specified above.</li>
+<li>Initialize the loop as specified above.</li>
 </ul>
 
 <p>The recommended procedure to disconnect Emu71 from <em>pyILPER</em> is:</p>
@@ -157,17 +218,17 @@ virtual HP-IL devices".</li>
 <li>Close <em>pyILPER</em>.</li>
 </ul>
 
-<h3 class="w3-text-teal">Set up <em>pyILPER</em> with Emulators running on DOSBox</h3>
+<h4 class="w3-text-teal">Set up <em>pyILPER</em> with emulators running on DOSBox</h4>
 
 <p>The <a href="http://www.jeffcalc.hp41.eu/" class="w3-hover-black">HP-41, HP-71 and HP-75 emulators of J. F. Garnier</a> can be attached to <em>pyILPER</em> if they are executed on <a href="https://www.dosbox.com">DOSBox</a>.</p>
 
 <p>You need the <em>DOSBox</em> version 0.74-2 or later. Other versions will not work.</p>
 
-<p>Install the <em>DosBox</em> software and apply the following change to the serial section of the <em>DOSBox</em> configuration file:</p>
+<p>Install the <em>DOSBox</em> software and apply the following change to the serial section of the <em>DOSBox</em> configuration file:</p>
 
 <code>serial1=nullmodem server:localhost port:59999 transparent:1 txdelay:0</code>
 
-<p>See the <em>DOSBox</em> documentation how to locate the configuration file.</p>
+<p>See the <em>DOSBox</em> documentation on how to locate the configuration file.</p>
 
 <p>Install your favorite <em>EMUxx</em> emulator(s) on <em>DOSBox</em>.</p>
 
@@ -175,23 +236,23 @@ virtual HP-IL devices".</li>
 
 <code>XIL COM1</code>
 
-<p>Run "pyILPER configuration" from the "File" menu to set
-the <em>pyILPER</em> TCP/IP configuration.</p>
+<p>Run <em>pyILPER configuration</em> from the <em>File</em> menu to set
+the <a class="w3-hover-black" href="filemenu.html#tcp-ip-socket-server-checkbox"><em>TCP-IP socket server (PIL-Box emulator)</em></a> configuration.</p>
 
-<p>Change the communication configuration to <em>TCP/IP socket Server (PIL-Box emulator)</em>.</p>
+<p>Change the communication configuration to <em>TCP/IP socket server (PIL-Box emulator)</em>.</p>
 
 <p>Start <em>pyILPER</em>. You should see the message "waiting for client" in the status bar. Start <em>DOSBox</em>. The <em>pyILPER</em> status line should now say "client connected". Now start the <em>EMUxx</em> program on <em>DOSBox</em>.
 
 <p>Note:</p> 
 
 <ul class="w3-ul">
-<li>The <em>EMUxx</em> programs do not support sending IDY frames for asynchronous service requests . Therefore the virtual keyboard will not work for the HP-71. It works for the HP-75 because this calculator does not use service requests to query the virtual keyboard. The function keys of the HP-82162A thermal printer do not work either.</li>
+<li>The <em>EMUxx</em> programs do not support sending IDY frames for asynchronous service requests. Therefore, the virtual keyboard will not work for the HP-71. It works for the HP-75 because this calculator does not use service requests to query the virtual keyboard. The function keys of the HP-82162A thermal printer do not work either.</li>
 <li>Always start <em>pyILPER</em> before the <em>DOSBox</em> program.</li>
 </ul>
 
 <h3 class="w3-text-teal">Using <em>pyILPER</em> stand-alone</h3>
 
-<p>If you would like to use <em>pyILPER</em> stand-alone without connection to a real or emulated calculator set up the program to use virtual HP-IL over TCP/IP (see above). Then you can use the <a href="drive.html" class="w3-hover-black">the virtual drive</a> to manage the content of LIF image files.</p>
+<p>If you would like to use <em>pyILPER</em> stand-alone without connection to a real or emulated calculator, set up the program to use virtual HP-IL over TCP/IP (see above). Then you can use the <a href="drive.html" class="w3-hover-black">virtual drive</a> to manage the content of LIF image files.</p>
 <!-- End content -->
 </div>
 </div>

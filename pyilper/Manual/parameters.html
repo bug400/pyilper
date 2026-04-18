@@ -79,25 +79,27 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 <p><em>pyILPER</em> supports command line parameters to carry out special actions (not for Windows).</p> 
 
-<p>Note: you must start <em>pyILPER</em> from the <b>command line</b> now <bold>as a module</bold> to specify command line parameters.</p>
+<p>Note: You must start <em>pyILPER</em> from the <b>command line</b> now <bold>as a module</bold> to specify command line parameters.</p>
 
 <p>Use the <em>-help</em> parameter to see the available arguments:</p>
 
 <pre>python -m pyilper --help
-usage: python -m pyilper [options]
+Usage: python -m pyilper [options]
 
 Start pyILPER with command line parameters
 
 options:
   -h, --help            Show this help message and exit
   -v, --v               Show program version and exit
-  --instance INSTANCE, -instance INSTANCE
-                        Start a pyILPER instance INSTANCE. This instance has an
+  --instance INSTANCE, 
+   -instance INSTANCE   Start a pyILPER instance INSTANCE. This instance has an
                         own configuration file.
-  --clean, -clean       Start pyILPER with a config file which is reset to
-                        defaults
+  --clean, -clean       Start pyILPER with a config file that is reset to defaults.
   --cc, -cc             Copy configuration from development to production version
-                        and vice versa
+                        and vice versa.
+  --scale FACTOR
+  -scale FACTOR         Force scaling of the pyILPER GUI for use on high-DPI displays
+                        The FACTOR can take values between 1.0 and 4.0.
   --nohelp, -nohelp     Disable online help.
 </pre>
 
@@ -107,21 +109,21 @@ options:
 
 <h3 class="w3-text-teal">Reset the pyILPER configuration to default</h3>
 
-<p>If a <em>pyILPER</em> configuration became corrupted which can result in a crashing or misbehaving program then the configuration can be reset to default with the <em>-clean</em> parameter.</p>
+<p>If a <em>pyILPER</em> configuration has been corrupted, which can result in a crashing or misbehaving program, then the configuration can be reset to default with the <em>-clean</em> parameter.</p>
 
 <h3 class="w3-text-teal">Copy configuration data between beta/development and production versions</h3>
 
 <p>The beta and production versions of <em>pyILPER</em> use different configuration files. In this way a beta or production version can be tested without affecting the configuration of an installed production version. But sometimes it is required to copy the configuration data between production and beta or development versions. With the <em>-cc</em> option:</p>
 <ul>
-<li>the production version pulls the configuration data of a development or beta version</li>
-<li>a beta or development version pulls the configuration data of the production version</li>
+<li>The production version pulls the configuration data of a development or beta version</li>
+<li>A beta or development version pulls the configuration data of the production version</li>
 </ul>
 
 <p>Note: You have to confirm the copy action. After completion, you must restart <em>pyILPER</em> without the <em>-cc</em> option.</p>
 
 <h3 class="w3-text-teal">Disable the help system</h3>
 
-<p>The parameter <em>--nohelp</em> disables the loading of the PySide6 web extensions which could cause compatibility problems.</p>
+<p>The parameter <em>--nohelp</em> disables the loading of the PySide6 web extension, which could cause compatibility problems.</p>
 <!-- End content -->
 </div>
 </div>

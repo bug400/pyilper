@@ -95,11 +95,9 @@ Character mapping can be configured.</p>
 <h3 class="w3-text-teal">Device controls</h3>
 
 <ul class="w3-ul">
-<li><em>Device enabled</em> checkbox: If checked, the virtual HP-IL generic printer is available and can be used as HP-IL device. The HP-IL loop must
-always be reconfigured after activation or deactivation.
-</li>
+<li><em>Device enabled</em> checkbox: If checked, the virtual HP-IL generic printer is available and can be used as an HP-IL device. The HP-IL loop must always be reconfigured after activation or deactivation.</li>
 <li><em>Log Printer</em> checkbox: Activates writing printer output to the file
-<em>Devicename.log</em> in the <em>pyILPER</em> <a class="w3-hover-black" href="filemenu.html#workdir">working directory</a>. Output is 
+<em>Devicename.log</em> in the <em>pyILPER</em> <a class="w3-hover-black" href="filemenu.html#configuration-of-the-working-directory">working directory</a>. Output is 
 always appended to that file. A time stamp in the file marks the start and the
 end of each logging. The log file is closed automatically on
 program termination.</li>
@@ -107,19 +105,17 @@ program termination.</li>
 
 <h3 class="w3-text-teal">Tab configuration menu</h3>
 <ul class="w3-ul">
-<li><em>Terminal width</em>: Switches between a 80 column and a 120 column
-output Note: toggling this option will clear the display.</li>
-<li><em>Color scheme</em>: choose a black, amber, green or "paper" color scheme.</li>
-<li><em>Font size</em>: set the font size of the printer output. 
+<li><em>Terminal width</em>: Switches between an 80-column and a 120-column output Note: toggling this option will clear the display.</li>
+<li><em>Color scheme</em>: Choose a black, amber, green, or "paper" color scheme.</li>
+<li><em>Font size</em>: Set the font size of the printer output. 
 If <em>Default</em> is selected, the setting of the <em>pyILPER</em>
 configuration is used.</li>
 <li><em>Scrollup buffer</em>: alter the number of lines of the display scroll buffer. Note: changing this value will clear the display.</li>
-<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
-was encountered. This enables watching the log file output but may decrease
+<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off, the log file output is flushed to disk after an end of line
+is encountered. This enables watching the log file output but may decrease
 the execution speed of <em>pyILPER</em> considerably.</li>
 <li><em>Character set</em>: select the character set that is emulated.
-For details of character mapping see the documentation of the
-terminal tab.</li>
+See the documentation of the <a class="w3-hover-black" href="terminal.html"><em>Terminal Tab</em></a>.</li>
 </ul>
 <!-- End content -->
 </div>

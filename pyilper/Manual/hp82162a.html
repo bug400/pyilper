@@ -77,7 +77,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <h2 class="w3-text-teal">HP82162A Tab</h2>
 
 <h3 class="w3-text-teal">Description</h3>
-<p>This virtual HP-IL device emulates a HP82162A printer.</p>
+<p>This virtual HP-IL device emulates an HP82162A printer.</p>
 
 <p>HP-IL configuration:</p>
 <table class="w3-table-all">
@@ -86,8 +86,7 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 <tr><td>Device ID</td><td></td></tr>
 </table>
 
-<p>This virtual HP-IL device emulates a HP82162A thermal printer. The following
-features are not supported:</p>
+<p>The following features of the HP82162A printer are not supported:</p>
 
 <ul class="w3-ul">
 <li>Barcode printing. Use the virtual HP7470A plotter instead or create 
@@ -101,31 +100,30 @@ barcodes for HP-41 program and SDATA files from the context menu in the drive ta
 
 <p>The formatted printer output is sent to a scrollable display. The display
 buffer contains up to 2000 lines. The display buffer can be cleared either by
-a HP-IL device clear command or by pressing the <em>Clear</em> key. The width
+an HP-IL device clear command or by pressing the <em>Clear</em> key. The width
 of the display buffer is 24 characters (or 168 dots).</p>
 
 
-<p>The default configuration of <em>pyILPER</em> does not contain a 
+<p>The default configuration of <em>pyILPER</em> does not contain an
 HP82162A printer tab. You have to add this device in the <em>Virtual HP-IL 
 device configuration</em> in the file menu.</p>
 
-<p>The paper size setting in the <em>pyILPER</em> configuration controls the
-paper size of the PDF output (see below).</p>
+<p>The paper size in the <a class="w3-hover-black" href="filemenu.html#configuration-of-the-papersize"><em>configuration of the paper size</em></a> setting determines the paper size of the PDF output (see below).</p>
 
 <h3 class="w3-text-teal">Device controls</h3>
 
 <p>The HP82162A tab has the following controls:</p>
 
 <ul class="w3-ul">
-<li><em>Printer mode radio buttons</em>. Selects one of the three printer modes. </li>
-<li><em>Clear</em> Resets the device in the same way as a HP-IL device clear.</li>
-<li><em>Print</em> Signal the HP-IL controller that the print key is down.</li>
-<li><em>Advance</em> Signal the HP-IL controller that the paper advance key is
+<li><em>Printer mode radio buttons</em>: Selects one of the three printer modes. </li>
+<li><em>Clear</em> button: Resets the device in the same way as an HP-IL device clear.</li>
+<li><em>Print</em> button: Signal the HP-IL controller that the print key is down.</li>
+<li><em>Advance</em> button: Signal the HP-IL controller that the paper advance key is
 down.</li>
-<li><em>PDF</em> Generate a PDF file with the content of the printer display
-buffer. You may choose a filename, a header and the number of columns (1-3).</li>
+<li><em>PDF</em> button: Generate a PDF file with the content of the printer display
+buffer. You may choose a filename, a header, and the number of columns (1-3).</li>
 <li><em>Device enabled</em> checkbox: If checked, the virtual HP-IL printer is
-available and can be used as HP-IL device. The HP-IL loop must
+available and can be used as an HP-IL device. The HP-IL loop must
 always be reconfigured after activation or deactivation.</li>
 
 <li><em>Log Printer</em> checkbox: Activates writing printer output to the file
@@ -137,11 +135,11 @@ program termination. Note: only character information is sent to the log file.
 </ul>
 <h3 class="w3-text-teal">Tab configuration menu</h3>
 <ul class="w3-ul">
-<li><em>Pixel size</em>: set the pixel size of the printer output. 
+<li><em>Pixel size</em>: Sets the pixel size of the printer output. 
 If <em>Default</em> is selected, the setting of the <em>pyILPER</em>
 configuration is used.  The pixel size of the PDF output is not affected.</li>
-<li><em>Log buffering</em>: enable or disable buffering of the log file. If log buffering is off the log file output is flushed to disk after an end of line
-was encountered. This enables watching the log file output but may decrease
+<li><em>Log buffering</em>: Enable or disable buffering of the log file. If log buffering is off, the log file output is flushed to disk after an end of line
+is encountered. This enables watching the log file output but may decrease
 the execution speed of <em>pyILPER</em> considerably.</li>
 </ul>
 <!-- End content -->

@@ -113,6 +113,11 @@ def copyConfig(args):
       count+=1
    print(count,"files copied. Restart pyILPER without the 'cc' option now")
 
+class ValidateScale(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values < 1.0 or values > 4.0:
+            parser.error("Scale must between 1.0 and 4.0.")
+        setattr(namespace, self.dest, values)
 
 def start():
    parser=argparse.ArgumentParser(description='Start pyILPER with command line parameters',usage="python -m pyilper [options]")
@@ -123,6 +128,7 @@ def start():
       parser.add_argument('--mc','-mc',action='store_true',help="Move configuration from AppData to user home directory")
    parser.add_argument('--nohelp','-nohelp',action='store_true',help="Disable online help")
    parser.add_argument('--diag','-diag',action='store_true',help=argparse.SUPPRESS)
+   parser.add_argument('--scale','-scale',type=float,action=ValidateScale,help="Force scaling for high-DPI displays. 1.0<=SCALE<=4.0")
    parser.add_argument('--v','-v',action='store_true',help="Show pyILPER version")
    args=parser.parse_args()
 #
@@ -149,7 +155,13 @@ def start():
       copyConfig(args)
       sys.exit(1) 
 #
+#  set scaling, if specified
+#
+   if args.scale:
+      os.putenv('QT_SCALE_FACTOR',str(args.scale))
+#
 #  set command line arguments to PILGLOBALS and run pyILPER
+#
    PILGLOBALS.setArgs(args)
    main()
 

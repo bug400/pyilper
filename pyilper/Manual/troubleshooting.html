@@ -76,67 +76,80 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 
 <h2 class="w3-text-teal">Troubleshooting</h2>
 
+<h3 class="w3-text-teal">Program does not start or exists unexpectedly</h3>
+
+<p>If the program exits without displaying an error message or fails to start at all, you must run the program from the command line using:</p>
+<pre>
+python -m pyilper
+</pre>
+
+<p>This is how error messages are displayed in the console. There are two types of error messages to distinguish between</p>
+<ul class="w3-ul">
+<li>Python errors: A Python error message (traceback) can be recognized by a structured text output in the terminal, which usually begins with the line `Traceback (most recent call last):`. Python provides detailed information about where (file, line number) and what type of error occurred. This error message is usually caused by a programming error in <em>pyILPER</em> or configuration file problems (see below).</li>
+<li>Other errors: Other error messages that can mean all sorts of things usually indicate installation problems or incompatibilities of the Python or Qt software and your operating system.</li>
+</ul>
+
 <h3 class="w3-text-teal">Configuration file problems</h3>
 
-<p>Crashes at start of the program are often caused by a corruped 
+<p>Crashes at the start of the program are often caused by a corrupted 
 configuration file. In this case the configuration file must be
 deleted.  The location of the file is platform dependent:</p>
 
 <table class="w3-table-all">
 <tr><th>Platform</th><th>Directory</th></tr>
 <tr><td>LINUX</td><td>$HOME/.config/pyilper</td></tr>
-<tr><td>Windows</td><td>%APPDATA%\pyilper</td></tr>
+<tr><td>Windows</td><td>%HOMEDRIVE%%HOMEPATH%\pyilper_config</td></tr>
 <tr><td>Mac OS X</td><td>$HOME/Library/Application Support/pyilper</td></tr>
 <tr><td>Other</td><td>$HOME</td></tr>
 </table>
 
-<p>The name of the configuration file is pyilper<em>n</em> where <em>n</em> is
-the version number of the configuration file. The version number of the file is increased every time, if the layout of the configuration file of a new <em>pyILPR</em> version changed. In this case <em>pyILPER</em> must be configured again.</p>
+<p>The name of the configuration file is pyilper<em>n</em>, where <em>n</em> is
+the version number of the configuration file. The version number of the file is increased every time if the layout of the configuration file of a new <em>pyILPR</em> version changes. In this case, <em>pyILPER</em> must be configured again.</p>
 
-<p>If the program does not start at all you should delete the configuration file and check the file permissions of the configuration directory.</p>
+<p>If the program does not start at all, you should delete the configuration file and check the file permissions of the configuration directory.</p>
 
-<p>You can invoke <em>pyILPER</em> with the <em>--clean</em> option to initialize the configuration file with default values as well.</p>
+<p>You can invoke <em>pyILPER</em> with the <em>--clean</em> option in initializing the configuration file with default values as well.</p>
 
 <h3 class="w3-text-teal">Main application error messages</h3>
 
 <p><code>Cannot connect to PIL-Box </code><br>
-The application did not succeed to initialize the PIL-Box.
+The application did not succeed in initializing the PIL-Box.
 Check if the PIL-Box is connected to the correct port and if the baud rate
-is configured according to the PIL-Box jumper setting. Check also, 
+is configured according to the PIL-Box jumper setting. Check also 
 if the correct port is specified in the program configuration.</p>
 
 <p><code>Cannot create configuration path</code><br>
-The application did not succeed to create the directory
-for the configuration file (see above). Check path and
+The application did not succeed in creating the directory
+for the configuration file (see above). Check the path and
 permissions.</p>
 
 <p><code>Cannot read configuration file></code><br>
-The application could not read the configuration file. Check
+The application could not read the configuration file. Check the
 file permissions. If the permissions are correct, purge the file.</p>
 
 <p><code>Cannot write default configuration</code><br>
-The application did not succeed to create the configuration file.
+The application did not succeed in creating the configuration file.
 Check path and permissions.</p>
 
 <p><code>Cannot write to configuration file></code><br>
-The application did not succeed to write to the configuration file.
+The application did not succeed in writing to the configuration file.
 Check path and permissions.</p>
 
 <p><code>Cannot change to working directory</code><br>
-The application did not succeed to change the working
-directory to the configured file path. Check path and permissions.
+The application did not succeed in changing the working
+directory to the configured file path. Check the path and permissions.
 
 <p><code>Cannot close xxx log file</code><br>
-The application did not succeed to close the printer or
+The application did not succeed in closing the printer or
 scope log file</p>
 
 <p><code>Cannot open xxx log file</code><br>
-The application did not succeed to open the printer or
-scope logfile. Check path and permissions of the working directory.
+The application did not succeed in opening the printer or
+scope log file. Check path and permissions of the working directory.
 
 <p><code>Cannot write to xxx log file</code><br>
-The application did not succeed to write to the printer or
-scope logfile. Check file an directory permissions.</p>
+The application did not succeed in  writing to the printer or
+scope log file. Check file and directory permissions.</p>
 
 <p><code>PIL-Box disconnected after error (Status line message)</code><br>
 The application was terminated due to a runtime error. These may
@@ -148,14 +161,10 @@ The LIF image file does not contain a properly initialized header
 with valid layout information. The default layout is used.</p>
 
 <p><b>Warning!</b> If the default layout does not match the
-current medium data corruption may occur!</p>
+current medium, data corruption may occur!</p>
 
-<p><code>Your configuration files are of pyILPER version: XXX which is newer than the version you are running. The program might crash or mishehave. Do you want to continue?</code><br>
-You probably downgraded <em>pyILPER</em> to an older version. The current configuration files might contain data which are not compatible with the running version. To avoid problems, you should reset the configuration files. See the chapter above.</p>
-
-<h3 class="w3-text-teal">Further hints if the program crashes</h3>
-
-<p>Calling <em>pyILPER</em> from the console gives access to Python runtime errors.</p>
+<p><code>Your configuration files are of pyILPER version: XXX that is newer than the version you are running. The program might crash or mishehave. Do you want to continue?</code><br>
+You probably downgraded <em>pyILPER</em> to an older version. The current configuration files might contain data that are not compatible with the running version. To avoid problems, you should reset the configuration files. See the chapter above.</p>
 
 <!-- End content -->
 </div>
