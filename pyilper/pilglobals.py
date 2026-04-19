@@ -301,7 +301,8 @@ class cls_pilglobals:
       except ImportError:
          print("No pySerial module found, exit program")
          sys.exit(1)
-      checkVersion("pySerial",serial__version__,self.PyserialRequiredMajor,self.PyserialRequiredMinor)
+      self.PyserialVersion= serial__version__
+      checkVersion("pySerial",self.PyserialVersion,self.PyserialRequiredMajor,self.PyserialRequiredMinor)
 #
 #     If Development Version append string to Version and "d" to config file name
 #
