@@ -256,7 +256,7 @@ class cls_pyilper(QtCore.QObject):
        sig_quit=QtCore.Signal()
    if PILGLOBALS.QT_Bindings=="PyQt5":
        sig_show_message=QtCore.pyqtSignal(str)
-       sig_crash=QtCore.pyqtSignal()
+       sig_crash=QtCore.pyqtSignal(int)
        sig_quit=QtCore.pyqtSignal()
 
    def __init__(self):
