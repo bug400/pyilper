@@ -39,6 +39,8 @@
 # - added SerialDevicePlugDelay
 # - pySerial version check
 # - pyQt5 and PySide6 version check
+# 19.04.2026 jsi
+# - checkVersion fix
 #
 import os
 import platform
@@ -50,9 +52,11 @@ def checkVersion(package,version,requiredMajor,requiredMinor):
    splitVersion=version.split(".")
    major=int(splitVersion[0])
    minor=int(splitVersion[1])
-   if major < requiredMajor or minor < requiredMinor:
-      print(f"{package} {requiredMajor}.{requiredMinor} required. Found {version}. Cannot start pyILPER")
-      sys.exit(1)
+   if major >= requiredMajor:
+      if minor >= requiredMinor:
+         return
+   print(f"{package} {requiredMajor}.{requiredMinor} required. Found {version}. Cannot start pyILPER")
+   sys.exit(1)
 
 
 class cls_pilglobals:
