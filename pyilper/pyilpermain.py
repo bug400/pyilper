@@ -209,6 +209,9 @@
 # - fixed Pylint errors
 # 11.04.2026
 # - added moveWindowsConfig call
+# 18.04.2026
+# - introduce a delay in autoreconnect callback to allow a newly discovered device to become ready
+# - remove Python version check (now in pilglobals.py)
 #
 import os
 import sys
@@ -309,15 +312,6 @@ class cls_pyilper(QtCore.QObject):
 #     create user interface instance
 #
       self.ui= cls_ui(self,PILGLOBALS.Version,self.instance)
-#
-#     check minimum python version
-#
-      if sys.version_info < ( PILGLOBALS.Python_Required_Major, PILGLOBALS.Python_Required_Minor):
-         required_version= str(PILGLOBALS.Python_Required_Major)+"."+str(PILGLOBALS.Python_Required_Minor)
-         found_version=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
-         reply=QtWidgets.QMessageBox.critical(self.ui,'Error','pyILPER requires at least Python version '+required_version+". You rund Python version "+found_version,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-         sys.exit(1)
-
 #
 #     Initialize Main Window, connect callbacks
 #
@@ -768,6 +762,7 @@ class cls_pyilper(QtCore.QObject):
          self.show_message(self.interfaces[self.mode].title+": waiting for device "+device+" ...")
          self.autoreconnectTimer.start()
       elif ret== PILGLOBALS.CheckDeviceExists:
+         time.sleep(PILGLOBALS.SerialDeviceDetectDelay)
          self.enable()
       else:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error', "Device not configured, run pyILPER configuration",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)

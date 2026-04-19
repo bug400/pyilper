@@ -13,9 +13,9 @@ import os
 import warnings
 from pyilper.pilglobals import PILGLOBALS
 
-if sys.version_info < ( PILGLOBALS.Python_Required_Major, PILGLOBALS.Python_Required_Minor):
+if sys.version_info < ( PILGLOBALS.PythonRequiredMajor, PILGLOBALS.PythonRequiredMinor):
     # python too old, kill the script
-    sys.exit("This script requires Python "+str(PYTHON_REQUIRED_MAJOR)+"."+str(PYTHON_REQUIRED_MINOR)+" or newer!")
+    sys.exit("This script requires Python "+str(PILGLOBALS.PythonRequiredMajor)+"."+str(PILGLOBALS.PythonRequiredMinor)+" or newer!")
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 warnings.simplefilter("default")
 from pyilper.__main__ import start

@@ -181,6 +181,8 @@
 # - fix from Pylint error check
 # 11.04.2026 jsi
 # - moved moveWindowsConfig from __main__.py, added silent mode
+# 19.04.2026 jsi
+# - removed parameter from list_ports.comports and list_ports.grep
 #
 import re
 import os
@@ -339,9 +341,9 @@ def moveWindowsConfig(silent):
 def checkSerialDeviceExists(device):
    if PILGLOBALS.Diagnostics:
       print("check for ",device)
-      for p in serial.tools.list_ports.comports(True):
+      for p in serial.tools.list_ports.comports():
          print("Device found: ",p.device," ",p.description," ",p.manufacturer," ",p.product," ",p.location," ",p.interface)
-   for p in serial.tools.list_ports.grep(device,True):
+   for p in serial.tools.list_ports.grep(device):
       if p.device== device:
          return True
    return False

@@ -85,6 +85,8 @@
 # 31.03.2026 jsi
 # - improved serial device check
 # - improved serial device close on error
+# 19.04.2026 jsi
+# - added delay after disconnect to allow an unplugged device to disappear
 
 #
 # PIL-Box Commands
@@ -93,6 +95,7 @@ COFF= 0x497   # initialize in controller off mode
 TDIS= 0x494   # disconnect
 COFI= 0x495   # switch PIL-Box to transmit real IDY frames
 
+import time
 from .pilglobals import PILGLOBALS
 if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
@@ -356,6 +359,7 @@ class cls_PilBoxThread(cls_pilthread_generic):
 
       except PilBoxError as e:
          self.send_message('PIL-Box disconnected after error. '+e.msg+': '+e.add_msg)
+         time.sleep(PILGLOBALS.SerialDevicePlugDelay)
          if self.__autoreconnect__ and not checkSerialDeviceExists(self.__ttydevice__) :
             self.signal_crash(PILGLOBALS.Crash_Reason_No_Device)
          else:

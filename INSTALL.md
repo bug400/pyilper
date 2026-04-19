@@ -25,8 +25,12 @@ To run pyILPER you need:
 * Python version 3.7 or higher. Version 3.13 is currently recommended.
 * Qt version 6.3 or higher (recommended) with the PySide6 language bindings (Qt version 5.15 with the PyQt5 language bindings is still supported)
 * The Python bindings for either Qt Webkit (Qt5 only) or Qt Webengine (recommended)
-* pySerial  3.0 or higher
+* pySerial  3.5 or higher
 * [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
+
+pyILPER has only been tested with the versions of Python and Python packages listed as recommended.
+
+Minimum version means that earlier versions will definitely not work.
 
 More recent macOS versions and Windows 11 already provide a USB serial driver for the PIL-Box.
 
@@ -158,7 +162,7 @@ After installing the .deb package, you can check the pyILPER version:
 
     python -m pyilper -v
 
-from the command line.
+from the command line. If no error messages are displayed, the installation was successful.
 
 
 For non-DEBIAN Linux systems, you should try to install the [required components](#requirements) from
@@ -216,34 +220,7 @@ On macOS use the Automator application to create a desktop shortcut. Use the "ru
 
 ## pyILPER Setup
 
-If pyILPER is started for the first time, the serial device of the PIL-Box
-and the working directory must be configured.
-
-Open the pyILPER configuration dialog from the file menu. Change the
-name of the PIL-Box device to the USB serial device the box is
-connected to. pyILPER tries to make an appropriate proposal for the device name.
-
-On Linux, the device name is usually /dev/ttyUSBn. Check if you have read and
-write access to the device. Some Linux distributions require membership of
-the dialout group to access the device.
-
-On Windows, the device is COMn. If you are uncertain, check the COM ports
-in the device manager. 
-
-On macOS the device name is usually /dev/cu.usbserial-FTDxxxx.
-
-pyILPER tries to determine the baud rate of the PIL-BOX serial device.
-If that does not work, set the baud rate manually to the baud rate the
-PIL-Box is configured to. See the PIL-Box documentation for further details.
-
-pyILPER stores all log files in a working directory. The default
-of that directory is the user home directory. Change the working directory
-to an appropriate location.
-
-If the message "connected to PIL-BOX at xxx baud" is displayed in the
-status bar, pyILPER is ready to run. Now you have to enable each
-virtual device (check the box in the lower left corner of a device tab), because
-they are disabled by default.
+If pyILPER is started for the first time, quit the message <em>Serial device not configured</em>. The built-in help window opens and explains the first steps for getting started. Leave the help window open and follow the instructions to complete the necessary configuration steps.
 
 
 ## Documentation

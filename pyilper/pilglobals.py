@@ -35,12 +35,25 @@
 # 05.04.2026 jsi
 # - Version and production status now defined in __init__.py
 # - renamed Config_Version to ConfigVersion
+# 18.04.2026 jsi
+# - added SerialDevicePlugDelay
+# - pySerial version check
+# - pyQt5 and PySide6 version check
 #
 import os
 import platform
 import sys
 
 from pyilper import __version__ , __isProduction__
+
+def checkVersion(package,version,requiredMajor,requiredMinor):
+   splitVersion=version.split(".")
+   major=int(splitVersion[0])
+   minor=int(splitVersion[1])
+   if major < requiredMajor or minor < requiredMinor:
+      print(f"{package} {requiredMajor}.{requiredMinor} required. Found {version}. Cannot start pyILPER")
+      sys.exit(1)
+
 
 class cls_pilglobals:
 #
@@ -61,8 +74,23 @@ class cls_pilglobals:
 #
 #     Python minimum version
 #
-      self.Python_Required_Major=3
-      self.Python_Required_Minor=7
+      self.PythonRequiredMajor=3
+      self.PythonRequiredMinor=7
+#
+#     pySerial minimum version
+#
+      self.PyserialRequiredMajor=3
+      self.PyserialRequiredMinor=5
+#
+#     pyQt5 minimum version
+#
+      self.Pyqt5RequiredMajor=5
+      self.Pyqt5RequiredMinor=15
+#
+#     PySide6 minimum version
+#
+      self.PysideRequiredMajor=6
+      self.PysideRequiredMinor=3
 #
 #     Thread crash reasons
 #
@@ -92,6 +120,10 @@ class cls_pilglobals:
       self.CheckDeviceUnconfigured=0
       self.CheckDeviceExists=1
       self.CheckDeviceNonexistent=2
+#
+#     Time delay for an USB serial device to become ready or to disappear from the system
+#
+      self.SerialDevicePlugDelay=1
 #
 #     PIL-Box communication
 #
@@ -199,7 +231,12 @@ class cls_pilglobals:
       else:
          self.StandardConfigDir="pyilper"
 #
-#     QtBindings and QTBinding globals
+#     Check Python interpreter version
+#
+      self.PythonVersion=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
+      checkVersion("Python",self.PythonVersion,self.PythonRequiredMajor,self.PythonRequiredMinor)
+#
+#     Check PyQt5, PySide6 availability and version
 #
       self.QT_Bindings="None"
       self.Has_Webengine=False
@@ -214,11 +251,15 @@ class cls_pilglobals:
             if "PYILPER_FORCE_QT5" in os.environ:
                import xyz
             import PySide6.QtCore
+            self.QtVersion=PySide6.QtCore.__version__
+            checkVersion("PySide6",self.QtVersion,self.PysideRequiredMajor,self.PysideRequiredMinor)
          except ImportError:
             if "PySide6" in sys.modules:
                del sys.modules["Pyside6"]
             try:
                import PyQt5.QtCore
+               self.QtVersion=PyQt5.QtCore.QT_VERSION_STR
+               checkVersion("pyQt5",self.QtVersion,self.Pyqt5RequiredMajor,self.Pyqt5RequiredMinor)
             except ImportError:
                if "PyQt5" in sys.modules:
                   del sys.modules["PyQt5"]
@@ -251,6 +292,7 @@ class cls_pilglobals:
                self.Has_Webengine=True
             except:
                pass
+
 #
 #     check pySerial
 #
@@ -259,6 +301,7 @@ class cls_pilglobals:
       except ImportError:
          print("No pySerial module found, exit program")
          sys.exit(1)
+      checkVersion("pySerial",serial__version__,self.PyserialRequiredMajor,self.PyserialRequiredMinor)
 #
 #     If Development Version append string to Version and "d" to config file name
 #

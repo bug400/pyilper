@@ -120,6 +120,20 @@ to get <em>pyILPER</em> up and running.</p>
 
 <p>Check <em>PIL-Box</em> in the <em>Communication configuration</em> section (this should be enabled by default). Connect the PIL-Box to your computer and select or enter the <a class="w3-hover-black" href="filemenu.html#pil-box-checkbox"><em>tty device of the PIL-Box</em></a>.  
 
+<p>On Linux, the device name is usually /dev/ttyUSBn. Check if you have read and
+write access to the device. Some Linux distributions require membership of
+the dialout group to access the device.</p>
+
+<p>On Windows, the device is COMn. If you are uncertain, check the COM ports
+in the device manager.</p>
+
+<p>On macOS the device name is usually /dev/cu.usbserial-FTDxxxx.</p>
+
+<p>pyILPER tries to determine the baud rate of the PIL-BOX serial device.
+If that does not work, set the baud rate manually to the baud rate the
+PIL-Box is configured to. See the PIL-Box documentation for further details.</p>
+
+
 <h3 class="w3-text-teal">Check <em>LIFUTILS</em> installation</h3>
 
 <p>To use the file management capabilities of the virtual drives or the HP7470A plotter, the latest version of the <a href="https://github.com/bug400/lifutils/releases" class="w3-hover-black">LIFUTILS</a> must be installed. After installation of the <em>LIFUTILS</em>, restart <em>pyILPER</em> and use <a class="w3-hover-black" href="utilitiesmenu.html#check-lifutils-installation"><em>Check LIFUTILS Installation</em></a> from the "Utilities" menu if a <em>LIFUTILS</em> version was detected by <em>pyILPER</em>.</p>

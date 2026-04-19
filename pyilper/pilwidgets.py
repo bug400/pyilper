@@ -230,6 +230,8 @@
 # - removed winreg import
 # - use single source pyILPER version from __init__.py
 # - renamed class method cls_ConfigInterfaceGeneric.check_reconnect to needs_reconnect
+# 19.04.2026 jsi
+# - get version of Python and Python packages from PILGLOBALS in the about window
 #
 import datetime
 import re
@@ -237,7 +239,6 @@ import sys
 import functools
 import pyilper
 from pathlib import Path
-from serial import __version__
 
 from .pilglobals import PILGLOBALS
 if PILGLOBALS.QT_Bindings=="PySide6":
@@ -988,20 +989,13 @@ class cls_AboutWindow(QtWidgets.QDialog):
 
    def __init__(self,version):
       super().__init__()
-      if PILGLOBALS.QT_Bindings=="PySide6":
-         self.qtversion=QtCore.__version__
-      if PILGLOBALS.QT_Bindings=="PyQt5":
-         self.qtversion=QtCore.QT_VERSION_STR
-
-      self.pyversion=str(sys.version_info.major)+"."+str(sys.version_info.minor)+"."+str(sys.version_info.micro)
-      self.serialversion=serial.__version__
       self.setWindowTitle('pyILPER About ...')
       self.vlayout = QtWidgets.QVBoxLayout()
       self.setLayout(self.vlayout)
       self.view = QtWidgets.QLabel()
       self.view.setFixedWidth(300)
       self.view.setWordWrap(True)
-      self.view.setText("pyILPER "+PILGLOBALS.FullVersion+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2026 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+self.pyversion+", pySerial "+self.serialversion+" and Qt "+self.qtversion+"\n")
+      self.view.setText("pyILPER "+PILGLOBALS.FullVersion+ "\n\nAn emulator for virtual HP-IL devices for the PIL-Box derived from ILPER 1.4.5 for Windows\n\nCopyright (c) 2008-2013   Jean-Francois Garnier\nC++ version (c) 2017 Christoph Gießelink\nTerminal emulator code Henning Schröder\nPython Version (c) 2015-2026 Joachim Siebold\n\nGNU General Public License Version 2\n\nYou run Python "+PILGLOBALS.PythonVersion+", pySerial "+PILGLOBALS.PyserialVersion+" and Qt "+PILGLOBALS.QtVersion+"\n")
 
 
       self.button = QtWidgets.QPushButton('OK')

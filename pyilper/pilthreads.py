@@ -60,6 +60,8 @@
 # 05.04.2026 jsi
 # - remove winreg import
 # - renamed class method check_reconnect to needs_reconnect
+# 19.04.2026 jsi
+# - removed second parameter from list_ports.grep
 #
 import sys
 import threading
@@ -302,7 +304,7 @@ class cls_TtyWindow(QtWidgets.QDialog):
       self.vlayout.addWidget(self.buttonBox)
 
       self.portInfo= { }
-      for port in serial.tools.list_ports.grep(pattern,False):
+      for port in serial.tools.list_ports.grep(pattern):
          self.__ComboBox__.addItem(port.device)
          self.portInfo[port.device]=port
 
