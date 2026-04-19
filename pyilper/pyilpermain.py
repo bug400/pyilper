@@ -762,7 +762,7 @@ class cls_pyilper(QtCore.QObject):
          self.show_message(self.interfaces[self.mode].title+": waiting for device "+device+" ...")
          self.autoreconnectTimer.start()
       elif ret== PILGLOBALS.CheckDeviceExists:
-         time.sleep(PILGLOBALS.SerialDeviceDetectDelay)
+         time.sleep(PILGLOBALS.SerialDevicePlugDelay)
          self.enable()
       else:
          reply=QtWidgets.QMessageBox.critical(self.ui,'Error', "Device not configured, run pyILPER configuration",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
