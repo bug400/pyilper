@@ -188,6 +188,8 @@
 # - fix processing of the cursor positioning escape sequence. Credits go to github user McGandolf
 # 16.03.2026 jsi
 # - refactoring of global variables
+# 29.94.2026 jsi
+# - fixed out_terminal call
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -316,11 +318,6 @@ class QScrolledTerminalWidget(QtWidgets.QWidget):
     def becomes_invisible(self):
         self.terminalwidget.becomes_invisible()
         self.HPTerminal.becomes_invisible()
-#
-#   output character to terminal
-#
-    def out_terminal(self,t):
-        self.HPTerminal.out_terminal(t)
 #
 #   reset terminal
 #
@@ -878,11 +875,11 @@ class QTerminalWidget(QtWidgets.QGraphicsView):
 #          local keys (not table driven at the moment)
 #
            if key== QtCore.Qt.Key_PageUp:
-               self._HPTerminal.out_terminal(0x1B)
-               self._HPTerminal.out_terminal(0x56)
+               self._HPTerminal.process(0x1B)
+               self._HPTerminal.process(0x56)
            elif key== QtCore.Qt.Key_PageDown:
-               self._HPTerminal.out_terminal(0x1B)
-               self._HPTerminal.out_terminal(0x55)
+               self._HPTerminal.process(0x1B)
+               self._HPTerminal.process(0x55)
 #
 #          all other remote keys
 #

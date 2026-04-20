@@ -28,7 +28,7 @@ To run pyILPER you need:
 * pySerial  3.5 or higher
 * [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
 
-pyILPER has only been tested with the versions of Python and Python packages listed as recommended.
+pyILPER has only been tested on a larger scale with the versions of Python and Python packages listed as recommended.
 
 Minimum version means that earlier versions will definitely not work.
 

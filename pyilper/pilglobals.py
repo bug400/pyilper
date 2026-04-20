@@ -84,7 +84,7 @@ class cls_pilglobals:
 #     pySerial minimum version
 #
       self.PyserialRequiredMajor=3
-      self.PyserialRequiredMinor=5
+      self.PyserialRequiredMinor=2
 #
 #     pyQt5 minimum version
 #
