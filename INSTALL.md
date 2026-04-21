@@ -25,7 +25,7 @@ To run pyILPER you need:
 * Python version 3.7 or higher. Version 3.13 is currently recommended.
 * Qt version 6.3 or higher (recommended) with the PySide6 language bindings (Qt version 5.15 with the PyQt5 language bindings is still supported)
 * The Python bindings for either Qt Webkit (Qt5 only) or Qt Webengine (recommended)
-* pySerial  3.5 or higher
+* pySerial  3.2 or higher
 * [LIFUTILS](https://github.com/bug400/lifutils/releases) (the most recent version)
 
 pyILPER has only been tested on a larger scale with the versions of Python and Python packages listed as recommended.
