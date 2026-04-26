@@ -232,6 +232,9 @@
 # - renamed class method cls_ConfigInterfaceGeneric.check_reconnect to needs_reconnect
 # 19.04.2026 jsi
 # - get version of Python and Python packages from PILGLOBALS in the about window
+# 25.04.2026 jsi
+# - simplified paramters of loadDocument in cls_HelpWindow
+# - fix in style change code
 #
 import datetime
 import re
@@ -950,11 +953,7 @@ class cls_HelpWindow(QtWidgets.QDialog):
    def do_forward(self):
       self.view.forward()
 
-   def loadDocument(self,subdir,document):
-      if subdir=="":
-         docPath=Path(pyilper.__file__).parent / "Manual" / document
-      else:
-         docPath=Path(pyilper.__file__).parent / "Manual" / subdir / document
+   def loadDocument(self,docPath):
       self.view.load(QtCore.QUrl.fromLocalFile(str(docPath.resolve())))
 #
 # Release Info Dialog class --------------------------------------------------
@@ -1382,8 +1381,8 @@ class cls_PilConfigWindow(QtWidgets.QDialog):
                QtWidgets.QApplication.setStyle(self.__parent__.defaultStyle)
             else:
                reply=QtWidgets.QMessageBox.warning(self,'Warning',"Resetting to default style requires restart of the application",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-      else:
-         QtWidgets.QApplication.setStyle(self.__qtstyle__)
+         else:
+            QtWidgets.QApplication.setStyle(self.__qtstyle__)
 #
 #     store parameters
 #

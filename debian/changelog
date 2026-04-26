@@ -1,3 +1,9 @@
+pyilper (1.9.0~beta4) trixie; urgency=medium
+
+  * use default browser if no QtWebkit or QtWebengine bindings were found
+
+ -- trixie <achim@trillian>  Wed, 22 Apr 2026 07:41:43 +0200
+
 pyilper (1.9.0~beta3) trixie; urgency=medium
 
   * improved documentation

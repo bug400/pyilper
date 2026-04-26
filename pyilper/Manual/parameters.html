@@ -89,18 +89,19 @@ Usage: python -m pyilper [options]
 Start pyILPER with command line parameters
 
 options:
-  -h, --help            Show this help message and exit
-  -v, --v               Show program version and exit
+  -h, --help             Show this help message and exit
+  -v, --v                Show program version and exit
   --instance INSTANCE, 
-   -instance INSTANCE   Start a pyILPER instance INSTANCE. This instance has an
-                        own configuration file.
-  --clean, -clean       Start pyILPER with a config file that is reset to defaults.
-  --cc, -cc             Copy configuration from development to production version
-                        and vice versa.
+   -instance INSTANCE    Start a pyILPER instance INSTANCE. This instance has an
+                         own configuration file.
+  --clean, -clean        Start pyILPER with a config file that is reset to defaults.
+  --cc, -cc              Copy configuration from development to production version
+                         and vice versa.
   --scale FACTOR
-  -scale FACTOR         Force scaling of the pyILPER GUI for use on high-DPI displays
-                        The FACTOR can take values between 1.0 and 4.0.
-  --nohelp, -nohelp     Disable online help.
+  -scale FACTOR          Force scaling of the pyILPER GUI for use on high-DPI displays
+                         The FACTOR can take values between 1.0 and 4.0.
+  -use-system-browser    Use the system default browser for the help system.
+  --use-system-browser 
 </pre>
 
 <h3 class="w3-text-teal">Starting another instance of pyILPER</h3>
@@ -121,9 +122,9 @@ options:
 
 <p>Note: You have to confirm the copy action. After completion, you must restart <em>pyILPER</em> without the <em>-cc</em> option.</p>
 
-<h3 class="w3-text-teal">Disable the help system</h3>
+<h3 class="w3-text-teal">Use the system default browser for the help system</h3>
 
-<p>The parameter <em>--nohelp</em> disables the loading of the PySide6 web extension, which could cause compatibility problems.</p>
+<p>The parameter <em>--use-system-browser</em> disables the loading of the PyQt5 or PySide6 web extension, which could cause compatibility problems. The system default browser is used instead for the help system.</p>
 <!-- End content -->
 </div>
 </div>

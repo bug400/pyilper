@@ -207,11 +207,13 @@
 # 05.03.2026 jsi
 # - renamed PILGLOBALS.Config_Version to PILGLOBALS.ConfigVersion
 # - fixed Pylint errors
-# 11.04.2026
+# 11.04.2026 jsi
 # - added moveWindowsConfig call
-# 18.04.2026
+# 18.04.2026 jsi
 # - introduce a delay in autoreconnect callback to allow a newly discovered device to become ready
 # - remove Python version check (now in pilglobals.py)
+# 25.04.2026 jsi
+# - call system default browser in show_Help method, if no bindings for QtWebkit or QtWebengine exist
 #
 import os
 import sys
@@ -228,9 +230,9 @@ from .pilglobals import PILGLOBALS
 from .pilcore import *
 
 if PILGLOBALS.QT_Bindings=="PySide6":
-   from PySide6 import QtCore, QtWidgets
+   from PySide6 import QtGui,QtCore, QtWidgets
 if PILGLOBALS.QT_Bindings=="PyQt5":
-   from PyQt5 import QtCore, QtWidgets
+   from PyQt5 import QtGui,QtCore, QtWidgets
 
 from .pilwidgets import cls_ui, cls_AboutWindow, cls_HelpWindow, HelpError, cls_DeviceConfigWindow, cls_DevStatusWindow, cls_PilConfigWindow
 from .pilconfig import  PilConfigError, PILCONFIG, cls_pilconfig
@@ -859,14 +861,24 @@ class cls_pyilper(QtCore.QObject):
 #
 #  show help windows for a certain document
 #
-   def show_Help(self,path,document):
+   def show_Help(self,subdir,document):
+      if subdir=="":
+         docPath=Path(pyilper.__file__).parent / "Manual" / document
+      else:
+         docPath=Path(pyilper.__file__).parent / "Manual" / subdir / document
+      if not PILGLOBALS.Has_Webengine and not PILGLOBALS.Has_Webkit:
+         ret=QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(docPath.resolve())))
+         if not ret:
+            reply=QtWidgets.QMessageBox.critical(self.ui,'Error',"Cannot launch system default browser to display a pyILPER help page",QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+         return
       if self.helpwin is None:
          try:
             self.helpwin= cls_HelpWindow()
-            self.helpwin.loadDocument(path,document)
+            self.helpwin.loadDocument(docPath)
          except HelpError as e:
             reply=QtWidgets.QMessageBox.critical(self.ui,'Error',e.value,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
             return
+
          helpposition=PILCONFIG.get(self.name,"helpposition")
          if helpposition!= "":
             self.helpwin.move(QtCore.QPoint(helpposition[0],helpposition[1]))

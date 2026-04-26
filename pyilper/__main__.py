@@ -38,6 +38,8 @@
 # 11.04.2026
 # - exit on -v option
 # - moved moveWindowsConfig to pilcore
+# 25.04.2026
+# - parameter "nohelp" renamed to "use-system-browser"
 #
 import os
 import sys
@@ -101,11 +103,11 @@ def copyConfig(args):
       to_filename=buildconfigfilename(name,PILGLOBALS.ConfigVersion,args.instance, PILGLOBALS.Production)[0]
       try:
          shutil.copy(from_filename,to_filename)
-      except OSError as e:
-         print("Error copying file "+from_filename+": "+e.strerror)
-         return
       except  shutil.SameFileError as e:
          print("Error copying file "+from_filename+" "+"source and destination file are identical")
+         return
+      except OSError as e:
+         print("Error copying file "+from_filename+": "+e.strerror)
          return
       print(from_filename)
       print("copied to:")
@@ -126,7 +128,7 @@ def start():
    parser.add_argument('--cc','-cc',action='store_true',help="Copy configuration from development to production version and vice versa")
    if PILGLOBALS.isWindows:
       parser.add_argument('--mc','-mc',action='store_true',help="Move configuration from AppData to user home directory")
-   parser.add_argument('--nohelp','-nohelp',action='store_true',help="Disable online help")
+   parser.add_argument('--use-system-browser','--use-system-browser',action='store_true',help="Use default system browser for help system",dest="useSystemBrowser")
    parser.add_argument('--diag','-diag',action='store_true',help=argparse.SUPPRESS)
    parser.add_argument('--scale','-scale',type=float,action=ValidateScale,help="Force scaling for high-DPI displays. 1.0<=SCALE<=4.0")
    parser.add_argument('--v','-v',action='store_true',help="Show pyILPER version")

@@ -41,6 +41,8 @@
 # - pyQt5 and PySide6 version check
 # 19.04.2026 jsi
 # - checkVersion fix
+# 25.04.26 jsi
+# - parameter "nohelp renamed to useSystemBrowser"
 #
 import os
 import platform
@@ -320,7 +322,7 @@ class cls_pilglobals:
       if args.instance.isalnum():
          self.Instance=args.instance
       self.Clean=args.clean
-      if args.nohelp:
+      if args.useSystemBrowser:
          self.Has_Webkit=False
          self.Has_Webengine=False  
       self.Diagnostics=args.diag
