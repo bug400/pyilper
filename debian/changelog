@@ -1,3 +1,9 @@
+pyilper (1.9.0) trixie; urgency=medium
+
+  * production 
+
+ -- trixie <achim@trillian>  Fri, 01 May 2026 20:58:40 +0200
+
 pyilper (1.9.0~beta4) trixie; urgency=medium
 
   * use default browser if no QtWebkit or QtWebengine bindings were found
