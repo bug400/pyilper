@@ -1,3 +1,14 @@
+pyilper (1.9.1~dev1) trixie; urgency=medium
+
+  * Fixed the broken autobaud detection. The connect to the PIL-Box always failed if the BOX was configured to 115200 baud and the interface baud rate was set to Auto.
+  * Use the full display width for frame output in the scope.
+  * Changes in the virtual HP-IL device configuration are now discarded, if the window was closed using the Cancel button.
+  * Initialize PIL-Box always with TDIS after opening serial device.
+
+
+
+ -- trixie <achim@trillian>  Thu, 01 Oct 2026 08:59:06 +0200
+
 pyilper (1.9.0) trixie; urgency=medium
 
   * production 

@@ -87,6 +87,9 @@
 # - improved serial device close on error
 # 19.04.2026 jsi
 # - added delay after disconnect to allow an unplugged device to disappear
+# 30.09.2026 jsi
+# - fixed error in autobaud detection
+
 
 #
 # PIL-Box Commands
@@ -131,7 +134,7 @@ class cls_pilbox:
 #
 #  send command to PIL-Box, check return value. 
 #
-   def __sendCmd__(self,cmdfrm,tmout):
+   def __sendCmd__(self,cmdfrm,tmout,closeOnError=True):
 #     print("about to send command 0x{0:02x}".format(cmdfrm))
       hbyt,lbyt= disassemble_frame(cmdfrm)
       try:
@@ -140,25 +143,28 @@ class cls_pilbox:
       except Rs232Error as e:
          raise PilBoxError("PIL-Box command error:", e.value)
       if bytrx is None:
-         self.__tty__.close()
+         if closeOnError:
+            self.__tty__.close()
          raise PilBoxError("PIL-Box command error: timeout","")
       try:
          if ((ord(bytrx) & 0x3F) != (cmdfrm & 0x3F)):
 #           print("val err ",ord(bytrx))
-            self.__tty__.close()
+            if closeOnError:
+               self.__tty__.close()
             raise PilBoxError("PIL-Box command error: illegal retval","")
       except TypeError:
 #        print("type err")
-         self.__tty__.close()
+         if closeOnError:
+            self.__tty__.close()
          raise PilBoxError("PIL-Box command error: illegal retval","")
 #     print("command sent and acknowledged 0x{0:02x}".format(cmdfrm))
 
 #
-#  Connect to PIL-Box and set mode
+#  Connect to PIL-Box and send TDIS command
 #
    def open(self):
 
-      cmd= COFF
+      cmd= TDIS
 #
 #     open serial device, no autobaud mode
 #
@@ -199,7 +205,7 @@ class cls_pilbox:
 #           initialize PIL-Box with current baud rates
 #
             try:
-               self.__sendCmd__(COFF,PILGLOBALS.Tmout_Cmd)
+               self.__sendCmd__(cmd,PILGLOBALS.Tmout_Cmd,False)
                success= True
                self.__baudrate__=baudrate
                break
@@ -213,6 +219,8 @@ class cls_pilbox:
             raise PilBoxError("Cannot connect to PIL-Box", errmsg)
       if self.__idyframe__:
          self.__sendCmd__(COFI,PILGLOBALS.Tmout_Cmd)
+      else:
+         self.__sendCmd__(COFF,PILGLOBALS.Tmout_Cmd)
 
 #
 #  Disconnect PIL-Box

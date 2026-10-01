@@ -402,6 +402,13 @@ li>Required Python version is now 3.7.</li>
 <li>Serial device name changed (Incompatibility, macOS only)</li>
 </ul>
 
+<h3 class="w3-text-teal">pyILPER 1.9.1</h3>
+<ul class="w3-ul">
+<li>Fixed the broken autobaud detection. The connect to the PIL-Box always failed if the BOX was configured to 115200 baud and the interface baud rate was set to Auto.</li>
+<li>Use the full display width for frame output in the scope.</li>
+<li>Changes in the virtual HP-IL device configuration are now discarded, if the window was closed using the Cancel button.</li>
+<li>Initialize PIL-Box always with TDIS after opening serial device.</li>
+</ul>
 <!-- End content -->
 </div>
 </div>

@@ -190,6 +190,9 @@
 # - refactoring of global variables
 # 29.94.2026 jsi
 # - fixed out_terminal call
+# 30.09.2026 jsi
+# - renamed process method to processTerminal method in HPTerminal
+# - added processPrinter method for generic printer and scope output
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -1632,9 +1635,50 @@ class HPTerminal:
        self.needsUpdate=False
        
 #
-#   process output to display
+# process printer output to display, simplified output to HPTerm, all controlcharacters except CR/LF are ignored
+# The only valid escape sequence is ESC e (clear)
+#
+    def processPrinter(self, t):
+        #
+        #      start of ESC sequence, set flag and return
+        #
+        if t == 27:
+            self.fesc = True
+            return
+        #
+        #      process escape sequences
+        #
+        if self.fesc:
+            if t == 101:
+                self.reset_soft()
+                self.reset_screen()
+            self.fesc = False
+            self.needsUpdate = True
+            return
+
+        self.needsUpdate = True
+        if t == 0xD:  # CR
+            self.cx = 0
+            return
+        elif t == 0xA:  # LF
+            self.cy = self.add_bufferline(self.cy)
+            return
+        if t < 32:
+            return
+        if t > 127:
+            self.attr = CHAR_ATTRIB[self.charset]
+        else:
+            self.attr = CHAR_ATTRIB_NONE
+        cc = icharconv(t, self.charset)
+        if self.cx == self.w:
+            self.cx = 0
+            self.cy = self.add_bufferline(self.cy)
+        self.poke(self.cy, self.cx, array.array("i", [self.attr | ord(cc)]))
+        self.cx += 1
+#
+#   process terminal output to display
 # 
-    def process(self,t):
+    def processTerminal(self,t):
  
        self.needsUpdate=True
 #

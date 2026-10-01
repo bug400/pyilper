@@ -155,8 +155,9 @@ def get_lifutils_version(cmd):
    try:
       ret=subprocess.run([cmd,"-v"],stdout=subprocess.PIPE,creationflags=SUBPROCESS_FLAG)
       retval=int(ret.stdout.decode())
-   finally:
-      return retval
+   except Exception:
+      pass
+   return retval
 #
 # check if lifutils are installed, return if required version found
 #
@@ -264,10 +265,9 @@ def exec_single(parent,cmd):
    try:
       ret=subprocess.run(cmd,stderr=subprocess.PIPE,creationflags=SUBPROCESS_FLAG)
       check_errormessages(parent,ret)
-   except OSError as e:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   finally:
-      return
+   except Exception as e:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',str(e),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+   return
 #
 # exec single command, return output
 #
@@ -281,10 +281,9 @@ def exec_single_export(parent,cmd):
 #
 #  catch errors
 #
-   except OSError as e:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
-   finally:
-      return returnvalue
+   except Exception as e:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',str(e),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+   return returnvalue
 
 #
 # exec piped command, read input from file, return True if success, False otherwise
@@ -323,12 +322,12 @@ def exec_double_import(parent,cmd1,cmd2,inputfile):
 #
 #  catch errors
 #
-   except OSError as e:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+   except Exception as e:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',str(e),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    finally:
       if tmpfile is not None:
          tmpfile.close()
-      return
+   return
 #
 # exec piped command, write output to file or stdout
 #
@@ -377,14 +376,14 @@ def exec_double_export(parent,cmd1,cmd2,outputfile):
 #
 #  catch errors
 #
-   except OSError as e:
-      reply=QtWidgets.QMessageBox.critical(parent,'Error',e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+   except Exception as e:
+      reply=QtWidgets.QMessageBox.critical(parent,'Error',str(e),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
    finally:
       if tmpfile is not None:
          tmpfile.close()
       if fd is not None:
          os.close(fd)
-      return returnvalue
+   return returnvalue
 
 #
 # validator checks for valid lif label or file names, converts to capital lettes
@@ -1109,8 +1108,20 @@ class cls_chk_import(QtWidgets.QDialog):
          self.lblMessage.setText("Ready to import")
          self.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
       
-      except OSError as e:
+      except Exception as e:
          self.lblMessage.setText("Error while examining file")
+         reply = QtWidgets.QMessageBox.critical(
+                parent,
+                "Error",
+                str(e),
+                QtWidgets.QMessageBox.Ok,
+                QtWidgets.QMessageBox.Ok,
+         )
+         self.lblMessage.setText("Error while examining file")
+         try:
+            os.close(fd)
+         except Exception:
+            pass
 
    def do_ok(self):
       self.retval=True
@@ -1314,8 +1325,8 @@ class cls_lifview(QtWidgets.QDialog):
 
          outfile.write(str(self.viewer.toPlainText()))
          outfile.close()
-      except OSError as e:
-         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to file: "+ e.strerror,QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
+      except Exception as e:
+         reply=QtWidgets.QMessageBox.critical(self,'Error',"Cannot write to file: "+ str(e),QtWidgets.QMessageBox.Ok,QtWidgets.QMessageBox.Ok)
       return
 
 #

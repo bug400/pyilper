@@ -241,6 +241,7 @@ import re
 import sys
 import functools
 import pyilper
+import copy
 from pathlib import Path
 
 from .pilglobals import PILGLOBALS
@@ -1459,7 +1460,7 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
 #
 #     fill list widget
 #
-      self.tabList=PILCONFIG.get(self.parent.name,"tabconfig")
+      self.tabList=copy.deepcopy(PILCONFIG.get(self.parent.name,"tabconfig"))
       for tab in self.tabList:
          typ= tab[0]
          name=tab[1]
@@ -1469,6 +1470,7 @@ class cls_DeviceConfigWindow(QtWidgets.QDialog):
 
    def do_ok(self):
       PILCONFIG.put(self.parent.name,"tabconfig",self.tabList)
+      PILCONFIG.put(self.parent.name,"tabconfigchanged",True)
       super().accept()
 
    def do_cancel(self):

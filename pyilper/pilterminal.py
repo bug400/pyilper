@@ -53,6 +53,8 @@ from .pilcore import cls_Tab_Spec, PILGLOBALS
 # - all queues, locks and shared variables are now part of the pildevbase class
 # 21.03.2026 jsi
 # - pluggable interfaces and tabs
+# 30.09.2026 jsi
+# - use processTerminal method of HPTerminal
 
 class cls_tabterminal(cls_tabtermgeneric):
 
@@ -120,7 +122,7 @@ class cls_tabterminal(cls_tabtermgeneric):
 #
    def out_device(self,items):
       for i in items:
-         self.guiobject.HPTerminal.process(i)
+         self.guiobject.HPTerminal.processTerminal(i)
 #
 # HP-IL virtual terminal object class ---------------------------------------
 #

@@ -47,6 +47,8 @@ from .pilcore import cls_Tab_Spec, PILGLOBALS
 # - all queues, locks and shared variables are now part of the pildevbase class
 # 21.03.2026 jsi
 # - pluggable interfaces and tabs
+# 30.09.2026 jsi
+# - user processPrinter method of HPTerminal
 #
 class cls_tabprinter(cls_tabtermgeneric):
 
@@ -95,7 +97,7 @@ class cls_tabprinter(cls_tabtermgeneric):
 #
    def out_device(self,items):
       for i in items:
-         self.guiobject.HPTerminal.process(i)
+         self.guiobject.HPTerminal.processPrinter(i)
          if i !=8 and  i!= 13:
             self.cbLogging.logWrite(icharconv(i,self.charset))
          if i== 10:
