@@ -2,7 +2,7 @@
 Name=pyILPER
 Comment=Virtual HP-IL devices for PIL-BOX
 Exec=pyilper
-Icon=hpil
+Icon=hpil-pyilper
 GenericName=Virtual HP-IL devices
 GenericName[de]=Virtuelle HP-IL Geräte
 Terminal=false

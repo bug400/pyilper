@@ -4,7 +4,8 @@ pyilper (1.9.1~dev1) trixie; urgency=medium
   * Use the full display width for frame output in the scope.
   * Changes in the virtual HP-IL device configuration are now discarded, if the window was closed using the Cancel button.
   * Initialize PIL-Box always with TDIS after opening serial device.
-
+  * The scope now has a clear button
+  * Improved establishing connections to virtual HP-IL over TCP/IP devices
 
 
  -- trixie <achim@trillian>  Thu, 01 Oct 2026 08:59:06 +0200
