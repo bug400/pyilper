@@ -114,6 +114,14 @@ class cls_tabscope(cls_tabtermgeneric):
       self.tagButton.setEnabled(False)
       self.tagButton.clicked.connect(self.do_tagbutton)
 #
+#     add clear button
+#
+      self.clearButton = QtWidgets.QPushButton("Clear")
+      self.add_controlwidget(self.clearButton)
+      self.clearButton.setEnabled(True)
+      self.clearButton.clicked.connect(self.do_clearbutton)
+
+#
 #     add scope config options to cascading menu
 #
       self.cBut.add_option("Show IDY frames","showidy",T_BOOLEAN,[True,False])
@@ -186,6 +194,16 @@ class cls_tabscope(cls_tabtermgeneric):
          self.tagButton.setEnabled(True)
       else:
          self.tagButton.setEnabled(False)
+   #
+   # clear button, clear display and write line feed to log file
+   #
+   def do_clearbutton(self):
+      self.guiobject.HPTerminal.reset_soft()
+      self.guiobject.HPTerminal.reset_screen()
+      self.guiobject.HPTerminal.refresh()
+      self.cbLogging.logWrite("\n")
+
+
 #
 # exec tag button, because we may write it asynchronous pause the thread
 #

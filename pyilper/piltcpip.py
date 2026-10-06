@@ -72,9 +72,12 @@
 # - pluggable interfaces and tabs
 # 24.03.2026 jsi
 # - refactoring of interface config parameters
+# 05.10.2026 jsi
+# - set linger time to zero to force close sockets to be compatible to EMU71 etc.
 
 import select
 import socket
+import struct
 from .pilglobals import PILGLOBALS
 if PILGLOBALS.QT_Bindings=="PySide6":
    from PySide6 import QtCore, QtGui, QtWidgets
@@ -109,6 +112,11 @@ class cls_piltcpip:
       self.__outsocket__= None
       self.__outconnected__= False
       self.__inconnected__= False
+#
+# socket option for forced close to be compatible with EMU71 etc. 
+# Set linger time to zero.
+#
+      self.lingerOpt = struct.pack("ii", 1, 0)
 
    def isConnected(self):
       return self.__outconnected__ and self.__inconnected__
@@ -133,6 +141,7 @@ class cls_piltcpip:
             continue
          try:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, self.lingerOpt)
             s.bind(sa)
             s.listen(1)
             self.__serverlist__.append(s)
@@ -152,6 +161,7 @@ class cls_piltcpip:
          af, socktype, proto, canonname, sa = res
          try:
             self.__outsocket__ = socket.socket(af, socktype, proto)
+            self.__outsocket__.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, self.lingerOpt)
          except OSError as msg:
             self.__outsocket__ = None
             continue
@@ -322,11 +332,11 @@ class cls_PILTCPIP_Config(cls_ConfigInterfaceGeneric):
 
       self.intvalidator= QtGui.QIntValidator()
       self.glayout=QtWidgets.QGridLayout()
-      self.lbltxt3=QtWidgets.QLabel("Port:")
+      self.lbltxt3=QtWidgets.QLabel("In Port:")
       self.glayout.addWidget(self.lbltxt3,0,0)
-      self.lbltxt4=QtWidgets.QLabel("Remote host:")
+      self.lbltxt4=QtWidgets.QLabel("Out TCP/IP Address:")
       self.glayout.addWidget(self.lbltxt4,1,0)
-      self.lbltxt5=QtWidgets.QLabel("Remote port:")
+      self.lbltxt5=QtWidgets.QLabel("Out Port:")
       self.glayout.addWidget(self.lbltxt5,2,0)
       self.edtPort= QtWidgets.QLineEdit()
       self.glayout.addWidget(self.edtPort,0,1)

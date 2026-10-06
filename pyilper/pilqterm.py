@@ -193,6 +193,8 @@
 # 30.09.2026 jsi
 # - renamed process method to processTerminal method in HPTerminal
 # - added processPrinter method for generic printer and scope output
+# 03.10.2026 jsi
+# - set needsUpdate to True if screen was cleared
 #
 # to do:
 # fix the reason for a possible index error in HPTerminal.dump()
@@ -1207,6 +1209,7 @@ class HPTerminal:
         self.win.scrollbar.setSingleStep(1)
         self.win.scrollbar.setPageStep(self.view_h)
         self.saved_cursortype= CURSOR_OVERWRITE
+        self.needsUpdate = True
 #
 #   enable: start update timer (one shot timer)
 #

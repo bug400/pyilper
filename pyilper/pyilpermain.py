@@ -214,6 +214,8 @@
 # - remove Python version check (now in pilglobals.py)
 # 25.04.2026 jsi
 # - call system default browser in show_Help method, if no bindings for QtWebkit or QtWebengine exist
+# 05.10.2026 jsi
+# -fixed autoreconnect handling when changing interface types in pyilper config
 #
 import os
 import sys
@@ -673,12 +675,15 @@ class cls_pyilper(QtCore.QObject):
 #  New interface
 #
          if needs_reconnect:
+            self.autoreconnectTimer.stop()
             self.mode=PILCONFIG.get(self.name,"mode")
             self.autoreconnectEnabled= False
             self.interfaceName= self.interfaces[self.mode].name
             if self.interfaces[self.mode].hasAutoreconnect:
                if PILCONFIG.get(self.interfaceName,"autoreconnect","False"):
                   self.autoreconnectEnabled= True
+            else:
+               self.autoreconnectEnabled= False
 
             if  self.autoreconnectEnabled:
                self.do_Autoreconnect()

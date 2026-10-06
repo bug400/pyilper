@@ -271,7 +271,7 @@ class cls_PILSOCKET_Config(cls_ConfigInterfaceGeneric):
 
       self.intvalidator= QtGui.QIntValidator()
       self.splayout=QtWidgets.QGridLayout()
-      self.splayout.addWidget(QtWidgets.QLabel("Server port:"),0,0)
+      self.splayout.addWidget(QtWidgets.QLabel("In/Out Port:"),0,0)
       self.edtServerport=QtWidgets.QLineEdit()
       self.edtServerport.setValidator(self.intvalidator)
       self.splayout.addWidget(self.edtServerport,0,1)
