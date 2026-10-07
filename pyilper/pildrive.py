@@ -1248,8 +1248,8 @@ class cls_pildrive(cls_pildevbase):
 #
 #     disk management variables
 #
-      self.__devl__ =0            # device listener
-      self.__devt__ =0            # device talker
+      self.__devl__ =31           # device listener
+      self.__devt__ =31           # device talker
       self.__oc__ = 0             # byte pointer
       self.__pe__ = 0             # record pointer
       self.__pe0__=0
