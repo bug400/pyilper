@@ -1,21 +1,5 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-#
-# Helper script to start pyilper from package directory
-#
-# 01.03.2018 jsi
-# - consider the required python version specified in pilcore.py
-# 21.03.2026 jsi
-# - refactoring of global variables
-# 21.04.2026 jsi
-# - removed Python version check, now in pilglobals.py
-#
-import sys
-import os
-import warnings
+#!/usr/bin/env python
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-warnings.simplefilter("default")
-from pyilper.__main__ import start
-start()
-
+""" start.py: run pyilper as a module located in the current directory """
+import runpy
+ret=runpy.run_module("pyilper",run_name="__main__",alter_sys=True)

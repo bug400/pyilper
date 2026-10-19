@@ -33,6 +33,8 @@ pyILPER is a program that reads incoming HP-IL frames from the PIL-Box,
 processes them by emulating some virtual HP-IL devices, like a printer, 
 a disk drive or a terminal and sends the processed frames back to the loop.
 
+Note: pyiILPER version 1.x is now in maintenance mode, during which only critical bug fixes will be addressed. 
+The successor to version 1.x is [pyILPER version 2.x](https://github.com/bug400/pyilper2), which is currently in beta testing.
 
 Features
 --------
