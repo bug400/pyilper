@@ -10,7 +10,6 @@ path = "pyilper/__init__.py"
 
 [project]
 name = "pyilper"
-#version = "1.9.0.b1"
 description = "Virtual HP-IL devices for the PIL-Box"
 readme = "README.md"
 license = { file = "LICENSE" }

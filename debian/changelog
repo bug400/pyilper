@@ -1,3 +1,9 @@
+pyilper (1.9.1) trixe; urgency=medium
+
+  * release 
+
+ -- trixie <achim@trillian>  Tue, 20 Oct 2026 07:49:11 +0200
+
 pyilper (1.9.1~dev1) trixie; urgency=medium
 
   * Fixed the broken autobaud detection. The connect to the PIL-Box always failed if the BOX was configured to 115200 baud and the interface baud rate was set to Auto.
