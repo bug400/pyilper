@@ -12,6 +12,7 @@ pyilper (1.9.1~dev1) trixie; urgency=medium
   * Initialize PIL-Box always with TDIS after opening serial device.
   * The scope now has a clear button
   * Improved establishing connections to virtual HP-IL over TCP/IP devices
+  * Do not remove interface config if tabconfig was changed
 
 
  -- trixie <achim@trillian>  Thu, 01 Oct 2026 08:59:06 +0200

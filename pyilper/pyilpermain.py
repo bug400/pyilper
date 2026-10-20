@@ -216,6 +216,9 @@
 # - call system default browser in show_Help method, if no bindings for QtWebkit or QtWebengine exist
 # 05.10.2026 jsi
 # -fixed autoreconnect handling when changing interface types in pyilper config
+# 20.10.2026 jsi
+# - hide device status window on exit
+# - do not delete iterface keys from config if tab config was changed
 #
 import os
 import sys
@@ -522,6 +525,8 @@ class cls_pyilper(QtCore.QObject):
          removekeys=[]
          for key in PILCONFIG.getkeys():
             prefix=key.split(sep="_")[0]
+            if prefix == "if":
+               continue
             if not prefix in names:
                removekeys.append(key)
          for key in removekeys:
@@ -777,6 +782,8 @@ class cls_pyilper(QtCore.QObject):
 #  callback exit, store windows position and size, close floating windows
 #
    def do_Exit(self):
+      if self.devstatuswin is not None:
+         self.devstatuswin.hide()
       self.disable()
       pos_x=self.ui.pos().x()
       pos_y=self.ui.pos().y()
