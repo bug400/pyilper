@@ -1,5 +1,5 @@
-pyILPR (Virtual HP-IL Devices)
-==============================
+pyILPER (Virtual HP-IL Devices)
+===============================
 
 ![pyilper](https://github.com/bug400/pyilper/raw/master/img/pyilper_drive.png)
 
